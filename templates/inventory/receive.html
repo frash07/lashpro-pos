@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}Receive stock · LashPro{% endblock %}
+
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">Back to checkout</a></header><main class="page"><h1>Receive stock</h1><p>Supplier stock receipts update the product balance and create an audited inventory movement.</p><p><a href="{% url 'inventory:product_import' %}">Import products from CSV or Excel</a></p>{% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}<section class="card"><form method="post">{% csrf_token %}{{ form.as_p }}<button>Record stock receipt</button></form></section></main>
+{% endblock %}

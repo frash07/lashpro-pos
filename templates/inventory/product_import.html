@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Import products · LashPro{% endblock %}
+
+{% block head_extra %}
+<style>
+    .import-table-wrap{overflow-x:auto}.import-table{width:100%;border-collapse:collapse;margin:1rem 0}.import-table th,.import-table td{border-bottom:1px solid #ddd;padding:.65rem;text-align:left;vertical-align:top}.import-table th{background:#f5f7f8;white-space:nowrap}.row-errors{color:#9b1c1c;margin:.25rem 0}.muted{color:#555}.actions{display:flex;gap:.75rem;flex-wrap:wrap}.sku-generated{font-size:.8rem;color:#555;display:block}
+  </style>
+{% endblock %}
+
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Back to inventory</a></header>
+<main class="page">
+  <h1>Import products</h1>
+  <p>Upload a CSV or Excel workbook to preview new products before saving. This import creates products only; existing SKUs are never overwritten.</p>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <section class="card">
+    <h2>File format</h2>
+    <p>Use the first row for headings. Required columns are <code>name</code>, <code>cost_price</code>, and <code>selling_price</code>. Optional columns are <code>sku</code>, <code>opening_stock</code>, and <code>reorder_level</code>.</p>
+    <p>Prices use up to two decimal places; quantities use up to three. Enter numbers without currency symbols or thousands separators. A blank SKU is generated automatically. Supplied SKUs must be uppercase, use letters, numbers and dashes, exclude I and O, and contain no more than 20 characters. The preferred length is 8–12 characters.</p>
+    <p>Excel imports read the first worksheet. Replace formulas with values before upload. Files are limited to 5 MB and 2,000 product rows.</p>
+    <pre>name,sku,cost_price,selling_price,opening_stock,reorder_level
+Classic Lash Glue,,450.00,800.00,12,3
+Lash Cleanser,LSH-CLN-2026,300.00,650.00,8,2</pre>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="stage" value="preview">
+      {{ upload_form.as_p }}
+      <button type="submit">Preview import</button>
+    </form>
+  </section>
+
+  {% if preview %}
+  <section class="card">
+    <h2>Preview: {{ preview.filename }}</h2>
+    <p>{{ preview.row_count }} product row{{ preview.row_count|pluralize }}. Generated SKUs are shown below and will be preserved if confirmed.</p>
+    <div class="import-table-wrap">
+      <table class="import-table">
+        <thead><tr><th>File row</th><th>Product</th><th>SKU</th><th>Cost</th><th>Selling price</th><th>Opening stock</th><th>Reorder level</th><th>Validation</th></tr></thead>
+        <tbody>
+          {% for row in preview.rows %}
+          <tr>
+            <td>{{ row.row_number }}</td><td>{{ row.name }}</td>
+            <td>{{ row.sku }}{% if row.sku_generated %}<span class="sku-generated">Generated</span>{% endif %}</td>
+            <td>{{ row.cost_price }}</td><td>{{ row.selling_price }}</td><td>{{ row.opening_stock }}</td><td>{{ row.reorder_level }}</td>
+            <td>{% if row.errors %}{% for error in row.errors %}<div class="row-errors">{{ error }}</div>{% endfor %}{% else %}<span class="muted">Ready</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="actions">
+      {% if preview.can_confirm %}
+      <form method="post">
+        {% csrf_token %}<input type="hidden" name="stage" value="confirm"><input type="hidden" name="batch_id" value="{{ preview.batch_id }}">
+        <button type="submit">Confirm and import {{ preview.row_count }} product{{ preview.row_count|pluralize }}</button>
+      </form>
+      {% else %}<p class="row-errors">Correct every row with an error, then upload the corrected file for a new preview.</p>{% endif %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="stage" value="cancel"><button type="submit">Discard preview</button></form>
+    </div>
+    <p class="muted">Nothing is added to the product catalogue or stock ledger until you confirm. Opening stock is recorded as an audited stock receipt.</p>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

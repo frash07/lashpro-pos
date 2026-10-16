@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: lashpro-pos-alpha
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 2 --access-logfile - --error-logfile -
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DEBUG
+        value: "false"
+      - key: SECURE_SSL_REDIRECT
+        value: "true"
+      - key: SECURE_HSTS_SECONDS
+        value: "300"
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "true"
+      - key: SECURE_HSTS_PRELOAD
+        value: "true"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CSRF_COOKIE_SECURE
+        value: "true"
+      - key: TRUST_PROXY_SSL_HEADER
+        value: "true"
+      - key: AXES_IPWARE_PROXY_COUNT
+        value: "1"
+      - key: DB_CONN_MAX_AGE
+        value: "0"
+      - key: DB_DISABLE_SERVER_SIDE_CURSORS
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DJANGO_BOOTSTRAP_OWNER_USERNAME
+        sync: false
+      - key: DJANGO_BOOTSTRAP_OWNER_EMAIL
+        sync: false
+      - key: DJANGO_BOOTSTRAP_OWNER_PASSWORD
+        sync: false

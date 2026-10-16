@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Service queue · LashPro{% endblock %}
+
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><nav><a href="{% url 'sales:checkout' %}">Checkout</a> · <a href="{% url 'commissions:dashboard' %}">Commissions</a></nav></header>
+<main class="page"><div class="heading"><div><small>SERVICE WORK</small><h1>Service queue</h1><p>{% if is_manager %}Assigned services awaiting completion{% else %}Services assigned to you{% endif %}</p></div><span class="ready">{{ pending_services|length }} pending</span></div>
+{% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+<section><h2>Ready to complete</h2>{% for line in pending_services %}<article class="service-card"><h3>{{ line.description }} · {{ line.quantity }} service{{ line.quantity|pluralize }}</h3><p>Receipt {{ line.sale.receipt_number }}{% if line.sale.customer %} · {{ line.sale.customer.name }}{% endif %}</p><p>Assigned to {{ line.technician.get_full_name|default:line.technician.username }} · Sold {{ line.sale.created_at|date:"d M Y H:i" }}</p><form method="post">{% csrf_token %}<input type="hidden" name="sale_line_id" value="{{ line.pk }}"><button class="submit" type="submit">Mark service complete</button></form></article>{% empty %}<p>No assigned services are waiting for completion.</p>{% endfor %}</section>
+</main>
+{% endblock %}

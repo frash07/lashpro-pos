@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}Staff login · LashPro{% endblock %}
+
+{% block content %}
+<main class="login"><h1>LashPro POS</h1><p>Staff sign in</p>{% if form.errors %}<p class="message error">Username or password not recognised.</p>{% endif %}<form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><label>Username {{ form.username }}</label><label>Password {{ form.password }}</label><button class="submit">Sign in</button></form></main>
+{% endblock %}

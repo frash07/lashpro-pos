@@ -1,0 +1,20 @@
+# Python virtual environments
+venv314/
+.venv/
+venv/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.production.example
+
+# Generated static files
+staticfiles/
+
+# Local development databases
+*.sqlite3
