@@ -55,7 +55,7 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: Apply migrations against fresh PostgreSQL
         run: python manage.py migrate --noinput
-      - name: Run tests
-        run: python manage.py test
       - name: Build static assets
         run: python manage.py collectstatic --noinput
+      - name: Run tests
+        run: python manage.py test
