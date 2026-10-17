@@ -35,7 +35,7 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: DJANGO_ENV
-        value: production
+        value: synthetic-test
       - key: SYNTHETIC_DATA_ENABLED
         value: "false"
       - key: DJANGO_BOOTSTRAP_OWNER_USERNAME
