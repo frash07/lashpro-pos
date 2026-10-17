@@ -37,7 +37,7 @@ services:
       - key: DJANGO_ENV
         value: synthetic-test
       - key: SYNTHETIC_DATA_ENABLED
-        value: "false"
+        sync: false
       - key: DJANGO_BOOTSTRAP_OWNER_USERNAME
         sync: false
       - key: DJANGO_BOOTSTRAP_OWNER_EMAIL
