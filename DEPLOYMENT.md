@@ -31,7 +31,10 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` provisions PostgreSQL 
    - a first owner username, email, and strong password for the three DJANGO_BOOTSTRAP_OWNER_* settings.
 6. Let the first build finish. It checks the deployment settings, collects static files, migrates the empty Neon database, and creates the owner account. Open the Render URL and sign in.
 7. After confirming that owner login works, remove all three DJANGO_BOOTSTRAP_OWNER_* values from Render. The command then skips on later builds. If a later build fails after the owner was created, the rerun detects the same owner and leaves its password unchanged.
-8. If you add a custom domain, add its hostname to ALLOWED_HOSTS and its https:// origin to CSRF_TRUSTED_ORIGINS. Keep HTTPS enabled.
+8. Keep SYNTHETIC_DATA_ENABLED=false unless deliberately preparing synthetic test records. For the dedicated Alpha test service only, set DJANGO_ENV=synthetic-test, add SYNTHETIC_DATA_CONFIRM_DATABASE equal to the exact database name from the Neon connection URL, set a strong SYNTHETIC_STAFF_PASSWORD, and then set SYNTHETIC_DATA_ENABLED=true. Redeploy once; build.sh runs the guarded seed command after migrations. The command refuses non-PostgreSQL databases and requires the exact database-name confirmation.
+9. The seed creates demo users demo_manager, demo_cashier, demo_technician_1, and demo_technician_2; five fictional customers; three products; three services; one consumable rule; and ledgered opening stock. The password supplied is applied only to new demo accounts; reruns do not change existing passwords. It does not create sales or payments, so exercise checkout, reconciliation, refunds, commissions and cash sessions manually.
+10. Never enable synthetic seeding against real business data. Keep the test-only environment settings aligned with the values in render.yaml if synchronizing the Blueprint.
+11. If you add a custom domain, add its hostname to ALLOWED_HOSTS and its https:// origin to CSRF_TRUSTED_ORIGINS. Keep HTTPS enabled.
 
 Render supplies RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_URL; settings use those for the generated service domain. Do not put secrets in the repository or commit .env.production.example values after replacing its placeholders.
 
