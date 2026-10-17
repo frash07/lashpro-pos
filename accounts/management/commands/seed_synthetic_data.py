@@ -1,7 +1,6 @@
 import os
+import uuid
 from decimal import Decimal
-
-from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
@@ -12,9 +11,15 @@ from catalog.models import Product, Service
 from customers.models import Customer
 from inventory.models import InventoryMovement, ServiceConsumable
 from inventory.services import receive_stock
+from payments.models import CashSession
+from payments.services import open_cash_session
+from sales.models import Sale
+from sales.services import checkout_sale
+from commissions.services import complete_service_line
 
 
 SEED_VERSION = "lashpro-synthetic-alpha-v1"
+SYNTHETIC_SALE_KEY = uuid.UUID("d0086c12-14dd-4aa8-b0c0-1112a1100001")
 OPENING_STOCK_REASON = f"Synthetic test opening stock ({SEED_VERSION})"
 SYNTHETIC_USERS = (
     ("demo_manager", "demo_manager@synthetic.invalid", User.Role.MANAGER, "Demo", "Manager"),
@@ -98,7 +103,7 @@ class Command(BaseCommand):
         if not password:
             raise CommandError("Set SYNTHETIC_STAFF_PASSWORD to a strong, test-only password for newly created demo staff.")
 
-        created = {"users": 0, "customers": 0, "products": 0, "services": 0, "stock_receipts": 0}
+        created = {"users": 0, "customers": 0, "products": 0, "services": 0, "stock_receipts": 0, "sales": 0, "completed_services": 0}
         with transaction.atomic():
             users = {}
             for username, email, role, first_name, last_name in SYNTHETIC_USERS:
@@ -203,17 +208,68 @@ class Command(BaseCommand):
                 defaults={"quantity_per_service": Decimal("0.025"), "active": True},
             )
 
+            customers = {}
             for number in range(1, 6):
                 name = f"Synthetic Test Customer {number:03d}"
-                _, was_created = Customer.objects.get_or_create(
+                customer, was_created = Customer.objects.get_or_create(
                     name=name,
                     defaults={
                         "phone": "",
                         "notes": f"Fictional QA record ({SEED_VERSION}); no real customer data.",
                     },
                 )
+                customers[number] = customer
                 if was_created:
                     created["customers"] += 1
+
+            # Add one stable, synthetic mixed sale so reports, stock, commissions,
+            # cash sessions and manual-M-Pesa reconciliation are usable immediately.
+            cashier = users[User.Role.CASHIER, "demo_cashier"]
+            technician = users[User.Role.TECHNICIAN, "demo_technician_1"]
+            sample_sale = Sale.objects.filter(checkout_idempotency_key=SYNTHETIC_SALE_KEY).first()
+            if sample_sale is None:
+                active_session = CashSession.objects.filter(
+                    cashier=cashier,
+                    status__in=(CashSession.Status.OPEN, CashSession.Status.PENDING_APPROVAL),
+                ).first()
+                if active_session and active_session.status != CashSession.Status.OPEN:
+                    raise CommandError(
+                        "The synthetic cashier has a session awaiting approval; review it before seeding the sample sale."
+                    )
+                if active_session is None:
+                    open_cash_session(
+                        cashier=cashier,
+                        opening_float=Decimal("2000.00"),
+                        actor=manager,
+                    )
+                sample_sale = checkout_sale(
+                    cashier=cashier,
+                    customer=customers[1],
+                    items=[
+                        {"product_id": products_by_sku["SYN-LASH-SHAMPOO-001"].pk, "quantity": 1},
+                        {
+                            "service_id": services["[Synthetic Test] Classic Lash Set"].pk,
+                            "technician_id": technician.pk,
+                        },
+                    ],
+                    payments=[
+                        {"method": "CASH", "amount": "1000.00"},
+                        {"method": "MPESA", "amount": "1950.00", "reference": "SYNTHMPESA001"},
+                    ],
+                    idempotency_key=SYNTHETIC_SALE_KEY,
+                )
+                created["sales"] += 1
+
+            service_line = sample_sale.lines.filter(
+                service=services["[Synthetic Test] Classic Lash Set"]
+            ).first()
+            if service_line and not service_line.service_completed_at:
+                complete_service_line(
+                    sale_line=service_line,
+                    technician=technician,
+                    actor=manager,
+                )
+                created["completed_services"] += 1
 
         self.stdout.write(self.style.SUCCESS(
             "Synthetic test seed complete. "
