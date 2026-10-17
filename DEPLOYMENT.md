@@ -13,6 +13,12 @@ This setup creates a public alpha deployment on Render's free web service and us
 
 The app currently has no persistent uploaded-file fields, so the free service's ephemeral local disk does not need to hold business media. Do not add persistent user uploads without external object storage.
 
+## Compatibility and automated validation
+
+The alpha pins Django 6.0.9 alongside WhiteNoise 6.12.0. The released WhiteNoise 6.12.0 package metadata lists Django 6.0 support; Django 6.1 support is not listed in that release. Keep these versions together unless a newer released WhiteNoise version explicitly supports the selected Django version and CI passes.
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` provisions PostgreSQL and runs dependency checks, Django system checks, migration-drift checks, fresh migrations, the test suite, and static collection. Treat a failing workflow as a release blocker.
+
 ## Create the alpha
 
 1. Push the project to a private GitHub repository that Render can access. Do not include .env, local databases, virtual environments, or staticfiles/.
