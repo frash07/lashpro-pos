@@ -16,7 +16,7 @@ Appointments, automated M-Pesa integration, a PWA, and multi-branch support are 
 ## Release blockers to close
 
 - Provision the Alpha host, DNS name, TLS certificate, production PostgreSQL database, and a production WSGI server. The development runserver is not suitable for Alpha.
-- Install the real host and proxy values in a private .env. Do not copy the placeholder secret from .env.example. The repository's current local environment is development-configured and does not pass the deployment check.
+- Install the real host and proxy values in Render's environment settings (or an untracked private `.env` for local use). Use `.env.production.example` as the reference and never use its placeholder secret. The local development environment is not configured for production deployment.
 - Keep Django 6.0.9 and WhiteNoise 6.12.0 pinned together on this deployment branch unless a released WhiteNoise version explicitly supports the intended Django version and the full PostgreSQL CI workflow passes.
 - Create at least two distinct owner/manager accounts for independent approvals. A user cannot approve their own refund or cash variance.
 - Review any existing PENDING payments in the target Alpha database before migration; the payment migration intentionally stops if any remain. The local development row was user-confirmed as abandoned, cancelled, and audited during stabilization.
