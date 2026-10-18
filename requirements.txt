@@ -14,3 +14,4 @@ whitenoise==6.12.0
 et-xmlfile==2.0.0
 openpyxl==3.1.5
 gunicorn==26.2.0
+reportlab==5.0.1
