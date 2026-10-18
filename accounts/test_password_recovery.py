@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from unittest.mock import patch
 
 
 User = get_user_model()
@@ -25,14 +26,15 @@ class PasswordRecoveryTests(TestCase):
         EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend",
     )
     def test_reset_does_not_emit_sensitive_link_into_console_logs_when_email_missing(self):
-        response = self.client.post(
-            reverse("password_reset"),
-            {"email": self.user.email},
-            follow=True,
-        )
+        with patch("django.core.mail.message.EmailMultiAlternatives.send") as send:
+            response = self.client.post(
+                reverse("password_reset"),
+                {"email": self.user.email},
+                follow=True,
+            )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Password recovery email is not configured")
-        self.assertEqual(len(mail.outbox), 0)
+        send.assert_not_called()
 
     @override_settings(
         EMAIL_HOST="smtp.test.example",
