@@ -38,6 +38,10 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` provisions PostgreSQL 
 
 Render supplies RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_URL; settings use those for the generated service domain. Do not put secrets in the repository or commit .env.production.example values after replacing its placeholders.
 
+### Staff password recovery
+
+The staff login provides password reset by email and authenticated password change. To activate email recovery, configure the Render environment variables `EMAIL_HOST`, `EMAIL_PORT` (usually `587`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS=true`, and `DEFAULT_FROM_EMAIL` using a verified SMTP provider. Do not use a console email backend in production: reset links must be delivered privately, not written to deployment logs. Until SMTP is configured, the reset form instructs the user to contact a manager. Users who are already signed in can change their password from the staff checkout navigation.
+
 ## Free-tier behavior and data limits
 
 Render free web services spin down after 15 minutes without traffic and may take about a minute to start again. Their local filesystem is ephemeral, and free web services do not provide SSH shell access, one-off jobs, or a separate pre-deploy command. This is why this alpha runs migrations in the build command. Test every migration against a disposable Neon database before deploying schema changes.
