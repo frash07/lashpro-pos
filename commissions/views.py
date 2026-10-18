@@ -2,6 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Sum
+from decimal import Decimal
 
 from accounts.models import User
 from payments.models import CashSession
@@ -49,15 +51,40 @@ def commission_dashboard(request):
     technicians = User.objects.filter(role=User.Role.TECHNICIAN, is_active=True).order_by("first_name", "username")
     requests = CommissionPayoutRequest.objects.select_related("technician", "requested_by", "reviewed_by")
     records = CommissionPayoutRecord.objects.select_related("technician", "issued_by")
+    technician_balances = []
     if not is_manager:
         requests = requests.filter(technician=request.user)
         records = records.filter(technician=request.user)
-        ledger = CommissionLedgerEntry.objects.filter(technician=request.user)
+        ledger = CommissionLedgerEntry.objects.filter(technician=request.user).select_related("technician", "sale_line")
         balance = available_commission(technician=request.user)
     else:
-        ledger, balance = CommissionLedgerEntry.objects.none(), None
+        ledger = CommissionLedgerEntry.objects.select_related("technician", "sale_line")
+        zero = Decimal("0.00")
+        for technician in technicians:
+            earned = CommissionLedgerEntry.objects.filter(
+                technician=technician, entry_type=CommissionLedgerEntry.Type.EARNED,
+            ).aggregate(total=Sum("amount"))["total"] or zero
+            reversals = CommissionLedgerEntry.objects.filter(
+                technician=technician, entry_type=CommissionLedgerEntry.Type.REVERSAL,
+            ).aggregate(total=Sum("amount"))["total"] or zero
+            paid = CommissionPayoutRecord.objects.filter(technician=technician).aggregate(
+                total=Sum("amount")
+            )["total"] or zero
+            pending = CommissionPayoutRequest.objects.filter(
+                technician=technician, status=CommissionPayoutRequest.Status.REQUESTED,
+            ).aggregate(total=Sum("amount"))["total"] or zero
+            technician_balances.append({
+                "technician": technician,
+                "earned": earned,
+                "reversed": abs(reversals),
+                "paid": paid,
+                "pending": pending,
+                "available": available_commission(technician=technician),
+            })
+        balance = None
     return render(request, "commissions/dashboard.html", {
         "is_manager": is_manager, "technicians": technicians,
         "payout_form": CommissionPayoutForm(), "payout_requests": requests[:100],
         "payout_records": records[:100], "ledger": ledger[:100], "available_balance": balance,
+        "technician_balances": technician_balances,
     })
