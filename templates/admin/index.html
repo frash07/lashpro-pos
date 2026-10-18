@@ -1,0 +1,32 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+{% block content %}
+<div class="module">
+  <table>
+    <caption>Inventory quick links</caption>
+    <tr><th scope="row"><a href="{% url 'admin:catalog_product_changelist' %}">Products and stock levels</a></th><td>View current stock and reorder levels</td></tr>
+    <tr><th scope="row"><a href="{% url 'inventory:receive' %}">Receive stock</a></th><td>Record stock received from a supplier</td></tr>
+    <tr><th scope="row"><a href="{% url 'admin:inventory_inventorymovement_changelist' %}">Inventory movement history</a></th><td>Review the stock ledger</td></tr>
+    <tr><th scope="row"><a href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}">Stock adjustment requests</a></th><td>Review adjustment approvals</td></tr>
+    <tr><th scope="row"><a href="{% url 'admin:inventory_serviceconsumable_changelist' %}">Service consumables</a></th><td>Manage products consumed by services</td></tr>
+  </table>
+</div>
+<div class="module">
+  <h2>Low-stock alert</h2>
+  {% if admin_low_stock_count %}
+    <p><strong>{{ admin_low_stock_count }}</strong> active product(s) are at or below their reorder level.</p>
+    <table>
+      <thead><tr><th>Product</th><th>On hand</th><th>Reorder level</th></tr></thead>
+      <tbody>
+      {% for product in admin_low_stock_products %}
+        <tr><th><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></th><td>{{ product.on_hand }}</td><td>{{ product.reorder_level }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p><a href="{% url 'admin:catalog_product_changelist' %}?stock_level=low">View low-stock products</a></p>
+  {% else %}
+    <p>No low-stock alerts for products with a configured reorder level.</p>
+  {% endif %}
+</div>
+{{ block.super }}
+{% endblock %}
