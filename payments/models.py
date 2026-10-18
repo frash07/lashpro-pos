@@ -76,6 +76,13 @@ class SalePayment(models.Model):
         if self.payment_transaction_id and self.amount is not None and self.amount > self.payment_transaction.amount:
             raise ValidationError({"amount": "Allocation cannot exceed its payment transaction."})
 
+    @property
+    def change_due(self):
+        """Change returned for a cash tender; M-Pesa has no cash change."""
+        if self.payment_transaction.method != PaymentTransaction.Method.CASH:
+            return Decimal("0.00")
+        return max(self.payment_transaction.amount - self.amount, Decimal("0.00"))
+
     def __str__(self):
         return f"{self.amount} allocated to Sale #{self.sale_id}"
 
