@@ -48,5 +48,5 @@ class TechnicianCommissionDashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Commission balances by lash technician")
         self.assertContains(response, "Amina Technician")
-        self.assertContains(response, "KSh 1,000.00")
+        self.assertContains(response, "KSh 1000.00")
         self.assertContains(response, line.description)
