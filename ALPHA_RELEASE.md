@@ -21,7 +21,7 @@ Appointments, automated M-Pesa integration, a PWA, and multi-branch support are 
 - Create at least two distinct owner/manager accounts for independent approvals. A user cannot approve their own refund or cash variance.
 - Review any existing PENDING payments in the target Alpha database before migration; the payment migration intentionally stops if any remain. The local development row was user-confirmed as abandoned, cancelled, and audited during stabilization.
 - Load and verify the real catalogue, opening stock, service prices, technician accounts, and staff roles. Open a cash session with the correct float before accepting cash.
-- Choose who receives deployment errors and who can restore backups. Configure an account-recovery path; the default email backend writes to the console and is not suitable for staff emails.
+- Choose who receives deployment errors and who can restore backups. Configure the SMTP variables documented in DEPLOYMENT.md before relying on email password recovery. With SMTP unset, users are directed to a manager rather than having reset links written to logs.
 
 ## Configure the Alpha host
 
