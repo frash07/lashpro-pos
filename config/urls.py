@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 from django.views.generic import RedirectView
-from core.views import service_worker
+from core.views import health_check, service_worker
 from accounts.auth_views import SafePasswordResetView
 urlpatterns = [
+    path("healthz", health_check, name="health_check"),
     path("sw.js", service_worker, name="service_worker"),
     path("admin/", admin.site.urls),
     path("accounts/login/", auth_views.LoginView.as_view(

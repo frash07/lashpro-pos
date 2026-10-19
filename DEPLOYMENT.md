@@ -21,7 +21,7 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` provisions PostgreSQL 
 
 ## Create the alpha
 
-1. Push the project to a private GitHub repository that Render can access. Do not include .env, local databases, virtual environments, or staticfiles/.
+1. Connect the repository that Render should use; grant Render access to it, and keep the source private if it should not be publicly visible. Do not include .env, local databases, virtual environments, or staticfiles/.
 2. Create a Neon project. Choose a region close to the Render service and, if possible, use the same region for both to reduce database latency.
 3. In Neon, copy the pooled connection string (its hostname includes -pooler) and ensure it includes sslmode=require. Keep it private.
 4. In Render, create a new Blueprint from the repository containing render.yaml. Choose the same or nearest supported region to Neon.
@@ -49,6 +49,23 @@ Render free web services spin down after 15 minutes without traffic and may take
 Neon Free currently includes 1 GB of database storage per project, 100 CU-hours per month, and a six-hour restore window. Limits and plan terms can change. Monitor the Neon dashboard and keep a separate backup before any important data is entered.
 
 These services are suitable for trying the app with synthetic records. Upgrade to a paid hosting/database plan with backups, monitoring, and an operational restore process before using it for actual salon transactions or personal data. The free-tier alpha may be slow after idle, and it is not an availability guarantee.
+
+## Staging and production blueprints
+
+The Alpha Blueprint (`render.yaml`) is intentionally tied to the free synthetic-test service. Paid environments use separate files and service names:
+
+- `render.staging.yaml` creates `lashpro-pos-staging` with `DJANGO_ENV=staging`.
+- `render.production.yaml` creates `lashpro-pos-production` with `DJANGO_ENV=production`.
+
+Create each service as its own Render Blueprint and select the matching YAML file. Both paid blueprints use a paid 1 CPU / 2 GB plan in Frankfurt as a starting point, target `main`, wait for CI checks to pass, and use `/healthz`. Confirm the plan fits the expected usage and budget. Choose a Neon project in the same region as the service; if the approved database region differs, change the Render region before creating the service because Render regions cannot be changed later. Set a distinct `DATABASE_URL` and unique `DJANGO_SECRET_KEY` for staging and production. Never reuse Alpha credentials or point Alpha at a business database.
+
+The paid build script runs Django's deployment check and collects static files without connecting to the database or applying migrations. Render's pre-deploy command applies migrations, then creates the initial owner only when all three bootstrap credentials are set. After confirming that owner can sign in, remove those three values from the service. The command leaves an existing owner unchanged and skips when the credentials are absent. Keep `SYNTHETIC_DATA_ENABLED=false`; the paid build fails if it is enabled, and never run the Alpha seed command in staging or production. Prepare staging with synthetic records or properly masked data through an approved process.
+
+The `/healthz` endpoint returns only a short, uncached liveness response; it does not expose database state or diagnostics. Gunicorn access logs are disabled because receipt URLs and password-reset URLs contain bearer tokens. The application log filter redacts known reset/receipt paths, secret assignments, connection URLs, and sensitive query values. Configure external monitoring and uptime alerts separately, and confirm that any monitoring provider also scrubs request paths and sensitive fields.
+
+The `.env.production.example` file is a local reference with placeholders. Set secrets only in Render. Keep HSTS subdomain and preload directives off until the owner has reviewed every affected hostname. Configure a verified SMTP sender before relying on password recovery.
+
+These blueprints prepare the app configuration only. Before actual business use, still complete the isolated restore rehearsal, SMTP delivery checks, role-based acceptance tests, privacy and tax review, and the owner/accountant go/no-go decisions in the production-readiness guide.
 
 ## Before sharing the URL
 

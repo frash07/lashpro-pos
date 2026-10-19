@@ -73,6 +73,9 @@ def checkout(request):
     return render(request, "sales/checkout.html", {
         "details": details, "lines": lines, "payments": payments_formset,
         "prices": prices, "cash_session": cash_session,
+        "can_discount": request.user.is_superuser or request.user.role in {
+            User.Role.OWNER, User.Role.MANAGER,
+        },
     })
 
 

@@ -8,6 +8,15 @@ from django.views.decorators.http import require_GET
 
 
 @require_GET
+def health_check(request):
+    """Expose a minimal liveness response for the hosting platform."""
+    response = HttpResponse("ok", content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@require_GET
 def service_worker(request):
     precache_urls = [
         static("sales/checkout.css"),

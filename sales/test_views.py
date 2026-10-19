@@ -36,6 +36,27 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "Classic Set")
         self.assertContains(response, "Lash Glue")
 
+    def test_discount_controls_are_shown_only_to_managers(self):
+        self.client.force_login(self.cashier)
+        cashier_response = self.client.get(reverse("sales:checkout"))
+        self.assertNotContains(cashier_response, "Discount (KSh)")
+        self.assertContains(cashier_response, "Discounts require a manager.")
+
+        manager = User.objects.create_user(
+            username="checkout-manager", password="pass", role=User.Role.MANAGER
+        )
+        self.client.force_login(manager)
+        manager_response = self.client.get(reverse("sales:checkout"))
+        self.assertContains(manager_response, "Discount (KSh)")
+
+    def test_checkout_uses_cash_and_mpesa_specific_amount_labels(self):
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("sales:checkout"))
+        self.assertContains(response, "Payment amount (KSh)")
+        self.assertContains(response, "Cash received (KSh)")
+        self.assertContains(response, "Amount applied (KSh)")
+        self.assertContains(response, "M-Pesa awaiting verification")
+
     def test_technician_is_denied(self):
         self.client.force_login(self.tech)
         self.assertEqual(self.client.get(reverse("sales:checkout")).status_code, 403)

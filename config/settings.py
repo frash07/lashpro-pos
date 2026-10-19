@@ -262,10 +262,16 @@ LOGGING = {
             "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
         },
     },
+    "filters": {
+        "redact_sensitive_data": {
+            "()": "core.log_filters.RedactSensitiveDataFilter",
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "standard",
+            "filters": ["redact_sensitive_data"],
             "stream": "ext://sys.stdout",
         },
     },
