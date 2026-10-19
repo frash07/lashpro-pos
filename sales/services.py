@@ -279,6 +279,11 @@ def record_sale_payment(*, sale, method, amount, reference="", actor=None, idemp
         ).exists():
             raise ValidationError({"reference": "This M-Pesa reference has already been recorded."}) from None
         raise
+    from training.models import Enrollment
+    enrollment = Enrollment.objects.filter(sale=locked_sale).first()
+    if enrollment:
+        from training.services import sync_enrollment_payment_status
+        sync_enrollment_payment_status(enrollment)
     return payment
 
 
@@ -512,6 +517,23 @@ def issue_refund(*, refund, approver, review_reason=""):
     locked.status, locked.reviewed_by = SaleRefund.Status.ISSUED, approver
     locked.review_reason, locked.reviewed_at = reason, timezone.now()
     locked.save(update_fields=("status", "reviewed_by", "review_reason", "reviewed_at"))
+
+    from training.models import Certificate, Enrollment
+    training_enrollment = Enrollment.objects.select_for_update().filter(sale=locked.sale).first()
+    if training_enrollment:
+        if locked.sale.refunded_amount >= training_enrollment.tuition_fee:
+            if training_enrollment.status != Enrollment.Status.WITHDRAWN:
+                training_enrollment.status = Enrollment.Status.WITHDRAWN
+                training_enrollment.withdrawn_at = timezone.now()
+                training_enrollment.withdrawal_reason = reason
+                training_enrollment.save(update_fields=("status", "withdrawn_at", "withdrawal_reason"))
+            certificate = Certificate.objects.filter(enrollment=training_enrollment).first()
+            if certificate and certificate.status == Certificate.Status.ISSUED:
+                from training.services import revoke_certificate
+                revoke_certificate(certificate=certificate, actor=approver, reason=reason)
+        elif training_enrollment.status in (Enrollment.Status.PENDING_PAYMENT, Enrollment.Status.ENROLLED):
+            from training.services import sync_enrollment_payment_status
+            sync_enrollment_payment_status(training_enrollment)
 
     for refund_line in locked.lines.select_related("sale_line__product", "sale_line__service"):
         line = refund_line.sale_line

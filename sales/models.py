@@ -116,6 +116,11 @@ class Sale(models.Model):
 
 
 class SaleLine(models.Model):
+    class LineType(models.TextChoices):
+        PRODUCT = "PRODUCT", "Retail product"
+        SERVICE = "SERVICE", "Salon service"
+        TRAINING = "TRAINING", "Training tuition"
+
     sale = models.ForeignKey(
         Sale,
         related_name="lines",
@@ -135,6 +140,7 @@ class SaleLine(models.Model):
         null=True,
         blank=True,
     )
+    line_type = models.CharField(max_length=12, choices=LineType.choices, default=LineType.PRODUCT)
     # Snapshots preserve the sold name and price if the catalog later changes.
     description = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField(
@@ -169,10 +175,11 @@ class SaleLine(models.Model):
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    Q(product__isnull=False, service__isnull=True)
-                    | Q(product__isnull=True, service__isnull=False)
+                    Q(line_type="PRODUCT", product__isnull=False, service__isnull=True)
+                    | Q(line_type="SERVICE", product__isnull=True, service__isnull=False)
+                    | Q(line_type="TRAINING", product__isnull=True, service__isnull=True)
                 ),
-                name="sales_line_exactly_one_catalog_item",
+                name="sales_line_matches_item_type",
             ),
         ]
 
@@ -181,13 +188,17 @@ class SaleLine(models.Model):
         errors = {}
         has_product = self.product_id is not None
         has_service = self.service_id is not None
+        if self.line_type == self.LineType.PRODUCT and not (has_product and not has_service):
+            errors["product"] = "A retail line must reference exactly one product."
+        elif self.line_type == self.LineType.SERVICE and not (has_service and not has_product):
+            errors["service"] = "A salon service line must reference exactly one service."
+        elif self.line_type == self.LineType.TRAINING and (has_product or has_service):
+            errors["line_type"] = "A training tuition line cannot reference a retail product or salon service."
+        elif self.line_type not in self.LineType.values:
+            errors["line_type"] = "Choose a valid sale line type."
 
-        # Existing unlinked draft rows remain readable, but every newly created
-        # line must be tied to exactly one catalog item.
-        if has_product and has_service:
-            errors["service"] = "A sale line can reference a product or a service, not both."
-        elif self._state.adding and not (has_product or has_service):
-            errors["product"] = "Choose one product or one service for this sale line."
+        if self.line_type != self.LineType.SERVICE and (self.technician_id or self.completed_by_id or self.service_completed_at):
+            errors["technician"] = "Only salon service lines can be assigned or completed by a technician."
 
         if self.quantity is not None and self.quantity < 1:
             errors["quantity"] = "Quantity must be at least 1."
@@ -212,6 +223,7 @@ class SaleLine(models.Model):
         return cls(
             sale=sale,
             product=product,
+            line_type=cls.LineType.PRODUCT,
             description=product.name,
             quantity=quantity,
             unit_price=product.selling_price,
@@ -224,10 +236,23 @@ class SaleLine(models.Model):
         return cls(
             sale=sale,
             service=service,
+            line_type=cls.LineType.SERVICE,
             description=service.name,
             quantity=quantity,
             unit_price=service.price,
             discount=discount,
+        )
+
+    @classmethod
+    def from_training_tuition(cls, *, sale, description, tuition_fee):
+        """Build a tuition invoice line without classifying it as a salon service."""
+        return cls(
+            sale=sale,
+            line_type=cls.LineType.TRAINING,
+            description=description,
+            quantity=1,
+            unit_price=tuition_fee,
+            discount=ZERO,
         )
 
     def line_total(self):

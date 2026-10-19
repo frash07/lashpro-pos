@@ -39,6 +39,10 @@ def daily_report(request):
     )
     completed_sales = Sale.objects.filter(status=Sale.Status.COMPLETED, created_at__date__range=(start, end))
     gross_sales = _sum(SaleLine.objects.filter(**sales_filter).annotate(line_total=sale_line_total), "line_total")
+    training_tuition = _sum(
+        SaleLine.objects.filter(**sales_filter, line_type=SaleLine.LineType.TRAINING).annotate(line_total=sale_line_total),
+        "line_total",
+    )
 
     cash_received = _sum(SalePayment.objects.filter(
         payment_transaction__method=PaymentTransaction.Method.CASH,
@@ -95,6 +99,7 @@ def daily_report(request):
     report = {
         "completed_sale_count": completed_sales.count(),
         "gross_sales": gross_sales,
+        "training_tuition": training_tuition,
         "confirmed_collection": confirmed_collection,
         "unverified_collection": unverified_collection,
         "confirmed_refunds": confirmed_refunds,

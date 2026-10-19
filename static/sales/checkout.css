@@ -134,6 +134,18 @@ button[type="button"]:hover, #add-item:hover, #add-payment:hover { border-color:
 .import-table th { background: var(--pink-soft); color: var(--pink-hover); font-size: 12px; }
 .sku-generated { display: inline-block; margin-left: 7px; padding: 2px 7px; border-radius: 999px; background: var(--pink-wash); color: var(--pink-hover); font-size: 10px; font-weight: 700; }
 .card { margin: 12px 0; }
+.inline-form { display: flex; min-width: 230px; align-items: center; gap: 7px; }
+.inline-form select { min-height: 38px; padding: 6px 8px; }
+.inline-form button, .result-form button { min-height: 38px; padding: 6px 10px; }
+.result-form { display: grid; min-width: 210px; gap: 8px; }
+.training-manage { margin-bottom: 18px; }
+.training-certificate { max-width: 850px; min-height: 500px; margin: 28px auto; padding: 64px 40px; border: 8px double var(--pink); background: #fff; text-align: center; box-shadow: 0 8px 30px rgb(76 13 47 / 10%); }
+.training-certificate h1 { margin: 16px 0 30px; color: var(--pink-hover); font-family: Georgia, serif; }
+.training-certificate h2 { margin: 16px 0; font-size: 28px; }
+.certificate-brand { color: var(--pink); font-size: 13px; font-weight: 800; letter-spacing: .2em; }
+.certificate-number { margin-top: 34px; font-weight: 700; }
+.certificate-signature { margin-top: 42px; color: var(--muted); }
+.certificate-revoked { filter: grayscale(.6); }
 details.card > summary { color: var(--pink-hover); cursor: pointer; font-weight: 700; }
 #cart { padding-left: 20px; }
 @media (max-width: 850px) { .columns { grid-template-columns: 1fr; } }
@@ -159,5 +171,6 @@ details.card > summary { color: var(--pink-hover); cursor: pointer; font-weight:
   body { background: #fff; color: #111; }
   .no-print { display: none !important; }
   .receipt { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  .training-certificate { max-width: none; min-height: 0; margin: 0; box-shadow: none; break-inside: avoid; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }

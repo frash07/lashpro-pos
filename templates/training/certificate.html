@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Certificate {{ certificate.certificate_number }} · LashPro{% endblock %}
+
+{% block content %}
+<header class="no-print"><a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a><a href="{% url 'training:cohort' certificate.enrollment.cohort.pk %}">Back to cohort</a><button type="button" onclick="window.print()">Print certificate</button><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<main class="page">
+  <article class="training-certificate{% if certificate.status == 'REVOKED' %} certificate-revoked{% endif %}">
+    <p class="certificate-brand">LASHPRO BEAUTY STUDIO</p>
+    <h1>{% if certificate.status == "REVOKED" %}Certificate revoked{% else %}Certificate of completion{% endif %}</h1>
+    <p>This certifies that</p>
+    <h2>{{ certificate.student_name }}</h2>
+    <p>has successfully completed the lash-tech training course</p>
+    <h2>{{ certificate.course_name }}</h2>
+    <p>Cohort {{ certificate.cohort_name }} · Issued {{ certificate.issued_at|date:"d F Y" }}</p>
+    <p class="certificate-number">Certificate No. {{ certificate.certificate_number }}</p>
+    {% if certificate.status == "REVOKED" %}<p class="message error">Revoked {{ certificate.revoked_at|date:"d F Y" }} by {{ certificate.revoked_by }}. Reason: {{ certificate.revocation_reason }}</p>{% else %}<p class="certificate-signature">Issued by {{ certificate.issued_by.get_full_name|default:certificate.issued_by.username }}</p>{% endif %}
+  </article>
+</main>
+{% endblock %}

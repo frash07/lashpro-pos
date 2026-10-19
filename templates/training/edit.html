@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · LashPro training{% endblock %}
+
+{% block content %}
+<header><a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a><a href="{% url 'training:manage' %}">Courses &amp; cohorts</a><a href="{% url 'sales:checkout' %}">Checkout</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<main class="page"><div class="heading"><div><small>TRAINING SETUP</small><h1>{{ title }}</h1></div></div><section class="card"><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save changes</button> <a href="{% url back_url %}">Cancel</a></form></section></main>
+{% endblock %}

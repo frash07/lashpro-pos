@@ -1,10 +1,19 @@
 import hashlib
 import json
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.http import require_GET
+
+
+@login_required(login_url="login")
+def home(request):
+    if getattr(request.user, "role", None) == "TRAINER" and not request.user.is_superuser:
+        return redirect("training:dashboard")
+    return redirect("sales:checkout")
 
 
 @require_GET

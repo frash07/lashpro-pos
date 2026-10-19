@@ -54,6 +54,14 @@ def reconcile_manual_mpesa(*, payment, actor, decision, reason):
             "amount": str(locked.amount),
         },
     )
+    allocation_sale = allocation.sale if allocation else None
+    enrollment = None
+    if allocation_sale:
+        from training.models import Enrollment
+        enrollment = Enrollment.objects.filter(sale=allocation_sale).first()
+    if enrollment:
+        from training.services import sync_enrollment_payment_status
+        sync_enrollment_payment_status(enrollment)
     return reconciliation
 
 
