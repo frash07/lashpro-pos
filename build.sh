@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# This build is intentionally limited to the synthetic Alpha service. Paid
+# staging/production services use build_paid.sh and preDeployCommand instead.
+if [[ "${DJANGO_ENV:-}" != "synthetic-test" ]]; then
+  echo "build.sh is only for the DJANGO_ENV=synthetic-test Alpha service." >&2
+  exit 1
+fi
+
 python -m pip install -r requirements.txt
 python manage.py check --deploy
 python manage.py collectstatic --noinput

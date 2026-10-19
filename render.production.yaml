@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: lashpro-pos-production
+    runtime: python
+    region: frankfurt
+    plan: 1c-2g
+    branch: main
+    autoDeployTrigger: checksPass
+    healthCheckPath: /healthz
+    buildCommand: bash build_paid.sh
+    preDeployCommand: python manage.py migrate --noinput && python manage.py bootstrap_deploy_owner
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 2 --error-logfile -
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DEBUG
+        value: "false"
+      - key: DJANGO_ENV
+        value: production
+      - key: SYNTHETIC_DATA_ENABLED
+        value: "false"
+      - key: SECURE_SSL_REDIRECT
+        value: "true"
+      - key: SECURE_HSTS_SECONDS
+        value: "300"
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "false"
+      - key: SECURE_HSTS_PRELOAD
+        value: "false"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CSRF_COOKIE_SECURE
+        value: "true"
+      - key: TRUST_PROXY_SSL_HEADER
+        value: "true"
+      - key: AXES_IPWARE_PROXY_COUNT
+        value: "1"
+      - key: DB_CONN_MAX_AGE
+        value: "0"
+      - key: DB_DISABLE_SERVER_SIDE_CURSORS
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DJANGO_BOOTSTRAP_OWNER_USERNAME
+        sync: false
+      - key: DJANGO_BOOTSTRAP_OWNER_EMAIL
+        sync: false
+      - key: DJANGO_BOOTSTRAP_OWNER_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: "true"
+      - key: DEFAULT_FROM_EMAIL
+        sync: false

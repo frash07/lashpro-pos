@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Manage training · LashPro{% endblock %}
+
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a><a href="{% url 'training:dashboard' %}">Training dashboard</a><a href="{% url 'sales:checkout' %}">Checkout</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<main class="page">
+  <div class="heading"><div><small>COURSE SETUP</small><h1>Manage courses and cohorts</h1><p>Create training courses, then schedule a cohort with a trainer, dates, capacity and tuition.</p></div></div>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <div class="columns training-manage">
+    <section><h2>New course</h2><form method="post">{% csrf_token %}<input type="hidden" name="form_type" value="course">{{ course_form.as_p }}<button type="submit">Create course</button></form></section>
+    <section><h2>New cohort</h2>{% if courses %}<form method="post">{% csrf_token %}<input type="hidden" name="form_type" value="cohort">{{ cohort_form.as_p }}<button type="submit">Create cohort</button></form>{% else %}<p>Create a course before adding its cohort.</p>{% endif %}</section>
+  </div>
+  <section><h2>Courses</h2><div class="import-table-wrap"><table class="import-table"><thead><tr><th>Code</th><th>Course</th><th>Duration</th><th>Tuition</th><th>Active</th><th></th></tr></thead><tbody>{% for course in courses %}<tr><td>{{ course.code }}</td><td>{{ course.name }}</td><td>{{ course.duration_days }} days</td><td>KSh {{ course.tuition_fee|floatformat:2 }}</td><td>{{ course.is_active|yesno:"Yes,No" }}</td><td><a href="{% url 'training:edit_course' course.pk %}">Edit</a></td></tr>{% empty %}<tr><td colspan="6">No courses yet.</td></tr>{% endfor %}</tbody></table></div></section>
+  <section><h2>Cohorts</h2><div class="import-table-wrap"><table class="import-table"><thead><tr><th>Course</th><th>Cohort</th><th>Dates</th><th>Status</th><th></th></tr></thead><tbody>{% for cohort in cohorts %}<tr><td>{{ cohort.course.name }}</td><td>{{ cohort.name }}</td><td>{{ cohort.start_date|date:"d M Y" }} – {{ cohort.end_date|date:"d M Y" }}</td><td>{{ cohort.get_status_display }}</td><td><a href="{% url 'training:edit_cohort' cohort.pk %}">Edit details</a></td></tr>{% empty %}<tr><td colspan="5">No cohorts yet.</td></tr>{% endfor %}</tbody></table></div></section>
+</main>
+{% endblock %}

@@ -1,10 +1,28 @@
 import hashlib
 import json
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.http import require_GET
+
+
+@login_required(login_url="login")
+def home(request):
+    if getattr(request.user, "role", None) == "TRAINER" and not request.user.is_superuser:
+        return redirect("training:dashboard")
+    return redirect("sales:checkout")
+
+
+@require_GET
+def health_check(request):
+    """Expose a minimal liveness response for the hosting platform."""
+    response = HttpResponse("ok", content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @require_GET
