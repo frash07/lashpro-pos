@@ -1,15 +1,15 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
-from django.views.generic import RedirectView
 from core.views import health_check, service_worker
+from core.views import home
 from accounts.auth_views import SafePasswordResetView
 urlpatterns = [
     path("healthz", health_check, name="health_check"),
     path("sw.js", service_worker, name="service_worker"),
     path("admin/", admin.site.urls),
     path("accounts/login/", auth_views.LoginView.as_view(
-        template_name="registration/login.html", next_page=reverse_lazy("sales:checkout")),
+        template_name="registration/login.html", next_page=reverse_lazy("home")),
         name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("accounts/password-change/", auth_views.PasswordChangeView.as_view(
@@ -36,9 +36,10 @@ urlpatterns = [
         template_name="registration/password_reset_complete.html",
     ), name="password_reset_complete"),
     path("sales/", include("sales.urls")),
+    path("training/", include("training.urls")),
     path("payments/", include("payments.urls")),
     path("commissions/", include("commissions.urls")),
     path("inventory/", include("inventory.urls")),
     path("reports/", include("reporting.urls")),
-    path("", RedirectView.as_view(pattern_name="sales:checkout", permanent=False)),
+    path("", home, name="home"),
 ]

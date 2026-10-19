@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Lash-tech training · LashPro{% endblock %}
+
+{% block content %}
+<header>
+  {% if request.user.role == "TRAINER" %}<a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a>{% else %}<a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a>{% endif %}
+  <nav>{% if request.user.role != "TRAINER" %}<a href="{% url 'sales:checkout' %}">Checkout</a>{% endif %}{% if can_enroll %} · <a href="{% url 'training:enroll' %}">Enroll a student</a>{% endif %}{% if is_manager %} · <a href="{% url 'training:manage' %}">Courses &amp; cohorts</a>{% endif %}</nav>
+  <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+</header>
+<main class="page">
+  <div class="heading"><div><small>EDUCATION</small><h1>Lash-tech training</h1><p>Manage courses, scheduled cohorts, student attendance, assessments and certificates.</p></div>{% if can_enroll %}<a class="button" href="{% url 'training:enroll' %}">Enroll a student</a>{% endif %}</div>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <section>
+    <h2>Cohorts</h2>
+    <div class="import-table-wrap"><table class="import-table"><thead><tr><th>Course</th><th>Cohort</th><th>Dates</th><th>Trainer</th><th>Students</th><th>Status</th><th></th>{% if is_manager %}<th>Update status</th>{% endif %}</tr></thead><tbody>
+      {% for cohort in cohorts %}<tr><td>{{ cohort.course.name }}</td><td>{{ cohort.name }}</td><td>{{ cohort.start_date|date:"d M Y" }} – {{ cohort.end_date|date:"d M Y" }}</td><td>{{ cohort.trainer.get_full_name|default:cohort.trainer.username|default:"Not assigned" }}</td><td>{{ cohort.enrolled_count }}/{{ cohort.capacity }}</td><td>{{ cohort.get_status_display }}</td><td><a href="{% url 'training:cohort' cohort.pk %}">Open</a></td>{% if is_manager %}<td>{% if cohort.status == "PLANNED" or cohort.status == "ENROLLING" or cohort.status == "IN_PROGRESS" %}<form class="inline-form" method="post" action="{% url 'training:change_status' cohort.pk %}">{% csrf_token %}<select name="status" required><option value="" selected disabled>Change status</option>{% if cohort.status == "PLANNED" %}<option value="ENROLLING">Open enrollment</option><option value="IN_PROGRESS">Start training</option><option value="CANCELLED">Cancel cohort</option>{% elif cohort.status == "ENROLLING" %}<option value="IN_PROGRESS">Start training</option><option value="CANCELLED">Cancel cohort</option>{% elif cohort.status == "IN_PROGRESS" %}<option value="COMPLETED">Complete training</option><option value="CANCELLED">Cancel cohort</option>{% endif %}</select><button type="submit">Save</button></form>{% else %}—{% endif %}</td>{% endif %}</tr>
+      {% empty %}<tr><td colspan="8">No cohorts are assigned or scheduled yet.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</main>
+{% endblock %}

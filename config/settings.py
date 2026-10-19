@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     "commissions",
     "inventory",
     "appointments",
+    "training",
     "audit",
     "reporting",
 ]

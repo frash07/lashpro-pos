@@ -6,7 +6,7 @@
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">New checkout</a><a href="{% url 'payments:cash-session' %}">Cash session</a></header>
 <main class="page"><h1>Collect a sale balance</h1><p>Choose a completed sale to record an additional cash or manual M-Pesa payment. Manual M-Pesa remains unverified until a manager reconciles it.</p>
 {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
-{% for sale in sales %}<article class="card"><h2>{{ sale.receipt_number }} · {{ sale.customer.name|default:"Walk-in customer" }}</h2><p>{{ sale.created_at|date:"d M Y H:i" }} · Cashier {{ sale.cashier.get_full_name|default:sale.cashier.username }}</p>
+{% for sale in sales %}<article class="card"><h2>{{ sale.receipt_number }} · {{ sale.customer.name|default:"Walk-in customer" }}{% if sale.training_enrollment %} · Training tuition{% endif %}</h2><p>{{ sale.created_at|date:"d M Y H:i" }} · Cashier {{ sale.cashier.get_full_name|default:sale.cashier.username }}</p>
 <p>Total KSh {{ sale.total_amount|floatformat:2 }} · Confirmed KSh {{ sale.paid_amount|floatformat:2 }}{% if sale.unverified_amount %} · M-Pesa awaiting verification KSh {{ sale.unverified_amount|floatformat:2 }}{% endif %} · Available to collect KSh {{ sale.available_for_collection|floatformat:2 }}</p>
 {% if sale.available_for_collection > 0 %}<form method="post">{% csrf_token %}<input type="hidden" name="sale" value="{{ sale.pk }}"><input type="hidden" name="idempotency_key" value="{{ sale.payment_form_key }}">
 <label>Method <select name="method" required><option value="CASH">Cash</option><option value="MPESA">M-Pesa (manual)</option></select></label>
