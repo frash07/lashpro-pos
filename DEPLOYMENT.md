@@ -13,6 +13,12 @@ This setup creates a public alpha deployment on Render's free web service and us
 
 The app currently has no persistent uploaded-file fields, so the free service's ephemeral local disk does not need to hold business media. Do not add persistent user uploads without external object storage.
 
+## Compatibility and automated validation
+
+The alpha pins Django 6.0.9 alongside WhiteNoise 6.12.0. The released WhiteNoise 6.12.0 package metadata lists Django 6.0 support; Django 6.1 support is not listed in that release. Keep these versions together unless a newer released WhiteNoise version explicitly supports the selected Django version and CI passes.
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` provisions PostgreSQL and runs dependency checks, Django system checks, migration-drift checks, fresh migrations, the test suite, and static collection. Treat a failing workflow as a release blocker.
+
 ## Create the alpha
 
 1. Push the project to a private GitHub repository that Render can access. Do not include .env, local databases, virtual environments, or staticfiles/.
@@ -25,9 +31,16 @@ The app currently has no persistent uploaded-file fields, so the free service's 
    - a first owner username, email, and strong password for the three DJANGO_BOOTSTRAP_OWNER_* settings.
 6. Let the first build finish. It checks the deployment settings, collects static files, migrates the empty Neon database, and creates the owner account. Open the Render URL and sign in.
 7. After confirming that owner login works, remove all three DJANGO_BOOTSTRAP_OWNER_* values from Render. The command then skips on later builds. If a later build fails after the owner was created, the rerun detects the same owner and leaves its password unchanged.
-8. If you add a custom domain, add its hostname to ALLOWED_HOSTS and its https:// origin to CSRF_TRUSTED_ORIGINS. Keep HTTPS enabled.
+8. During the initial Blueprint sync, set SYNTHETIC_DATA_ENABLED to false. After the owner can log in, use the Render service's Environment page to add SYNTHETIC_DATA_CONFIRM_DATABASE equal to the exact database name from the Neon URL and a strong SYNTHETIC_STAFF_PASSWORD. On the dedicated disposable Alpha service only, set SYNTHETIC_DATA_ENABLED=true and save/deploy once; build.sh runs the guarded seed command after migrations. Immediately set SYNTHETIC_DATA_ENABLED=false again and save/deploy, leaving the two test-only variables present only if you want controlled reseeding later. The command refuses non-PostgreSQL databases and requires the exact database-name confirmation.
+9. The seed creates demo users demo_manager, demo_cashier, demo_technician_1, and demo_technician_2; five fictional customers; three products; three services; a consumable rule; ledgered opening stock; and one mixed product/service sale paid by synthetic cash and an unverified synthetic M-Pesa reference. It completes the sample service so stock consumption and commission reporting have an example entry. The password supplied is applied only to new demo accounts; reruns do not change existing passwords. Use the sample transaction to test receipt, reporting, cash-session and M-Pesa reconciliation workflows; never represent its synthetic M-Pesa reference as a real payment.
+10. Never enable synthetic seeding against real business data. Keep the test-only environment settings aligned with the values in render.yaml if synchronizing the Blueprint.
+11. If you add a custom domain, add its hostname to ALLOWED_HOSTS and its https:// origin to CSRF_TRUSTED_ORIGINS. Keep HTTPS enabled.
 
 Render supplies RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_URL; settings use those for the generated service domain. Do not put secrets in the repository or commit .env.production.example values after replacing its placeholders.
+
+### Staff password recovery
+
+The staff login provides password reset by email and authenticated password change. To activate email recovery, configure the Render environment variables `EMAIL_HOST`, `EMAIL_PORT` (usually `587`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS=true`, and `DEFAULT_FROM_EMAIL` using a verified SMTP provider. Do not use a console email backend in production: reset links must be delivered privately, not written to deployment logs. Until SMTP is configured, the reset form instructs the user to contact a manager. Users who are already signed in can change their password from the staff checkout navigation.
 
 ## Free-tier behavior and data limits
 
@@ -41,6 +54,6 @@ These services are suitable for trying the app with synthetic records. Upgrade t
 
 - Confirm python manage.py check --deploy is clean in the Render build log.
 - Verify login, product/service setup, checkout, cash/manual M-Pesa, receipt, refunds, cash-session close, and reconciliation using synthetic data.
-- Keep owner credentials private, remove bootstrap credentials after the first owner login, and create named staff accounts with appropriate roles.
-- Keep HSTS at 300 seconds during the alpha. includeSubDomains applies to subdomains below the configured hostname; leave it enabled only if those subdomains all use HTTPS. The preload flag does not submit a host to browser preload lists.
+- Keep owner credentials private and remove bootstrap credentials after the first owner login. Treat the seeded `demo_*` accounts as shared disposable QA identities only; create individual named accounts for any real pilot staff, with the least privilege required.
+- Keep HSTS at 300 seconds during the alpha. `SECURE_HSTS_INCLUDE_SUBDOMAINS` and `SECURE_HSTS_PRELOAD` are false in the deployment Blueprint until the domain policy is deliberately reviewed.
 - Take a database backup and verify that you can restore it before moving beyond synthetic trial data.

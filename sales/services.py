@@ -221,8 +221,15 @@ def record_sale_payment(*, sale, method, amount, reference="", actor=None, idemp
         sale=locked_sale,
         payment_transaction__status__in=ACTIVE_PAYMENT_STATUSES,
     ).aggregate(total=Sum("amount"))["total"] or ZERO
-    if already_allocated + payment_amount > locked_sale.total_amount:
-        raise ValidationError({"amount": "Payment would exceed the sale balance."})
+    remaining_balance = max(locked_sale.total_amount - already_allocated, ZERO)
+    if remaining_balance <= ZERO:
+        raise ValidationError({"amount": "This sale has no balance due."})
+    if method == PaymentTransaction.Method.MPESA and payment_amount > remaining_balance:
+        raise ValidationError({"amount": "M-Pesa payment cannot exceed the sale balance."})
+    # For cash, PaymentTransaction.amount records the notes received, while
+    # SalePayment.amount records only the amount applied to the sale.
+    # The difference is change returned to the customer.
+    allocation_amount = min(payment_amount, remaining_balance) if method == PaymentTransaction.Method.CASH else payment_amount
 
     cash_session = None
     if method == PaymentTransaction.Method.CASH:
@@ -249,7 +256,7 @@ def record_sale_payment(*, sale, method, amount, reference="", actor=None, idemp
             allocation = SalePayment(
                 sale=locked_sale,
                 payment_transaction=payment,
-                amount=payment_amount,
+                amount=allocation_amount,
             )
             allocation.full_clean()
             allocation.save()
@@ -344,7 +351,13 @@ def _create_checkout_sale(*, cashier, items, customer, payments, idempotency_key
     sale.status = Sale.Status.COMPLETED
     sale.save(update_fields=("status",))
 
-    for payment in payment_specs:
+    # Process M-Pesa allocations before cash so a cash tender can correctly
+    # cover the remaining balance and calculate change independent of form order.
+    ordered_payment_specs = sorted(
+        payment_specs,
+        key=lambda item: 0 if isinstance(item, Mapping) and str(item.get("method", "")).upper() == PaymentTransaction.Method.MPESA else 1,
+    )
+    for payment in ordered_payment_specs:
         if not isinstance(payment, Mapping):
             raise ValidationError({"payments": "Each payment must be a mapping."})
         extra_keys = set(payment) - {"method", "amount", "reference"}

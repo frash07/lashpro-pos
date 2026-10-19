@@ -17,9 +17,9 @@ services:
       - key: SECURE_HSTS_SECONDS
         value: "300"
       - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
-        value: "true"
+        value: "false"
       - key: SECURE_HSTS_PRELOAD
-        value: "true"
+        value: "false"
       - key: SESSION_COOKIE_SECURE
         value: "true"
       - key: CSRF_COOKIE_SECURE
@@ -34,9 +34,25 @@ services:
         value: "true"
       - key: LOG_LEVEL
         value: INFO
+      - key: DJANGO_ENV
+        value: synthetic-test
+      - key: SYNTHETIC_DATA_ENABLED
+        sync: false
       - key: DJANGO_BOOTSTRAP_OWNER_USERNAME
         sync: false
       - key: DJANGO_BOOTSTRAP_OWNER_EMAIL
         sync: false
       - key: DJANGO_BOOTSTRAP_OWNER_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: "true"
+      - key: DEFAULT_FROM_EMAIL
         sync: false

@@ -5,6 +5,7 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, close_old_connections, connection, transaction
+from django.urls import reverse
 from django.test import TestCase, TransactionTestCase
 
 from accounts.models import User
@@ -155,15 +156,46 @@ class CheckoutFlowTests(TestCase):
         self.assertEqual(Sale.objects.count(), before_sales)
         self.assertEqual(PaymentTransaction.objects.count(), before_payments)
 
-    def test_overpayment_is_rejected_and_rolls_back(self):
-        before_sales = Sale.objects.count()
-        with self.assertRaises(ValidationError):
-            checkout_sale(
-                cashier=self.cashier,
-                items=[{"service_id": self.service.pk}],
-                payments=[{"method": "CASH", "amount": "2000.01"}],
-            )
-        self.assertEqual(Sale.objects.count(), before_sales)
+    def test_cash_overpayment_records_tender_and_change_separately(self):
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"service_id": self.service.pk}],
+            payments=[{"method": "CASH", "amount": "2500.00"}],
+        )
+        payment = PaymentTransaction.objects.get(sale_allocation__sale=sale, method="CASH")
+        allocation = SalePayment.objects.get(sale=sale, payment_transaction=payment)
+        self.assertEqual(payment.amount, Decimal("2500.00"))
+        self.assertEqual(allocation.amount, Decimal("2000.00"))
+        self.assertEqual(allocation.change_due, Decimal("500.00"))
+        self.assertEqual(sale.paid_amount, Decimal("2000.00"))
+        self.assertEqual(sale.balance_due, Decimal("0.00"))
+
+    def test_mixed_payment_allocates_mpesa_before_cash_and_calculates_change(self):
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"service_id": self.service.pk}],
+            payments=[
+                {"method": "CASH", "amount": "1500.00"},
+                {"method": "MPESA", "amount": "1000.00", "reference": "MIXEDCHANGE001"},
+            ],
+        )
+        cash = PaymentTransaction.objects.get(sale_allocation__sale=sale, method="CASH")
+        cash_allocation = SalePayment.objects.get(sale=sale, payment_transaction=cash)
+        self.assertEqual(cash.amount, Decimal("1500.00"))
+        self.assertEqual(cash_allocation.amount, Decimal("1000.00"))
+        self.assertEqual(cash_allocation.change_due, Decimal("500.00"))
+        self.assertEqual(sale.unverified_amount, Decimal("1000.00"))
+        self.assertEqual(sale.allocated_amount, Decimal("2000.00"))
+
+    def test_receipt_pdf_returns_a_downloadable_pdf(self):
+        sale = checkout_sale(cashier=self.cashier, items=[{"service_id": self.service.pk}])
+        response = self.client.get(
+            reverse("sales:receipt_pdf", kwargs={"token": sale.receipt_token})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF"))
+        self.assertIn("attachment;", response["Content-Disposition"])
 
     def test_later_cash_payment_reduces_balance(self):
         sale = checkout_sale(

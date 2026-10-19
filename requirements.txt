@@ -1,5 +1,5 @@
 asgiref==3.12.1
-Django==6.1.2
+Django==6.0.9
 django-axes[ipware]==8.3.1
 django-ipware==8.0.0
 python-ipware==4.1.1
@@ -14,3 +14,4 @@ whitenoise==6.12.0
 et-xmlfile==2.0.0
 openpyxl==3.1.5
 gunicorn==26.2.0
+reportlab==5.0.1

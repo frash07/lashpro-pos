@@ -1,9 +1,11 @@
 import uuid
+from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from accounts.models import User
 from catalog.models import Product, Service
@@ -113,6 +115,120 @@ def service_queue(request):
     return render(request, "sales/service_queue.html", {
         "pending_services": pending[:200], "is_manager": is_manager,
     })
+
+
+@never_cache
+def receipt_pdf(request, token):
+    """Return a printable, downloadable PDF for the unguessable receipt token."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.utils import simpleSplit
+    from reportlab.pdfgen import canvas
+
+    sale = get_object_or_404(
+        Sale.objects.select_related("customer", "cashier").prefetch_related(
+            "lines__technician",
+            "payment_allocations__payment_transaction",
+            "refunds__payout",
+        ),
+        receipt_token=token,
+    )
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4, pageCompression=1)
+    pdf.setTitle(f"LashPro receipt {sale.receipt_number}")
+    page_width, page_height = A4
+    left, right = 44, page_width - 44
+    y = page_height - 48
+
+    def write(text="", *, bold=False, size=9, gap=14):
+        nonlocal y
+        font = "Helvetica-Bold" if bold else "Helvetica"
+        lines = simpleSplit(str(text), font, size, right - left)
+        for wrapped in lines or [""]:
+            if y < 48:
+                pdf.showPage()
+                y = page_height - 48
+            pdf.setFont(font, size)
+            pdf.drawString(left, y, wrapped)
+            y -= gap
+
+    write("LASHPRO POS", bold=True, size=18, gap=24)
+    write("SALE RECEIPT", bold=True, size=12, gap=20)
+    write(f"Receipt: {sale.receipt_number}", bold=True)
+    write(f"Date: {sale.created_at:%d %b %Y, %H:%M}")
+    write(f"Customer: {sale.customer.name if sale.customer_id else 'Walk-in customer'}")
+    write(f"Cashier: {sale.cashier.get_full_name() or sale.cashier.username}")
+    y -= 6
+    pdf.setLineWidth(0.6)
+    pdf.line(left, y, right, y)
+    y -= 18
+
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(left, y, "Item / service")
+    pdf.drawRightString(365, y, "Qty")
+    pdf.drawRightString(440, y, "Unit price")
+    pdf.drawRightString(right, y, "Total")
+    y -= 15
+    for item in sale.lines.all():
+        desc = item.description
+        if item.service_id and item.technician_id:
+            desc += f" (Technician: {item.technician.get_full_name() or item.technician.username})"
+        if item.discount:
+            desc += f" - Discount KSh {item.discount:,.2f}"
+        wrapped = simpleSplit(desc, "Helvetica", 8, 230)
+        for index, text in enumerate(wrapped or [""]):
+            if y < 55:
+                pdf.showPage()
+                y = page_height - 48
+                pdf.setFont("Helvetica-Bold", 8)
+                pdf.drawString(left, y, "Item / service")
+                pdf.drawRightString(365, y, "Qty")
+                pdf.drawRightString(440, y, "Unit price")
+                pdf.drawRightString(right, y, "Total")
+                y -= 15
+            pdf.setFont("Helvetica", 8)
+            pdf.drawString(left, y, text)
+            if index == 0:
+                pdf.drawRightString(365, y, str(item.quantity))
+                pdf.drawRightString(440, y, f"{item.unit_price:,.2f}")
+                pdf.drawRightString(right, y, f"{item.line_total():,.2f}")
+            y -= 12
+        y -= 3
+
+    y -= 4
+    pdf.line(left, y, right, y)
+    y -= 17
+    write(f"Sale total: KSh {sale.total_amount:,.2f}", bold=True, size=11, gap=17)
+    if sale.refunded_amount:
+        write(f"Refunds issued: KSh {sale.refunded_amount:,.2f}")
+        write(f"Net sale total: KSh {sale.net_total:,.2f}")
+    write(f"Confirmed paid: KSh {sale.paid_amount:,.2f}")
+    if sale.unverified_amount:
+        write(f"M-Pesa awaiting verification: KSh {sale.unverified_amount:,.2f}")
+    write(f"Balance due (excluding unverified payments): KSh {sale.balance_due:,.2f}")
+    y -= 5
+    write("PAYMENTS", bold=True, size=10, gap=16)
+    for allocation in sale.payment_allocations.all():
+        payment = allocation.payment_transaction
+        label = f"{payment.get_method_display()}: KSh {allocation.amount:,.2f} applied ({payment.get_status_display()})"
+        if payment.display_reference:
+            label += f" · Ref {payment.display_reference}"
+        write(label)
+        if payment.method == "CASH" and payment.amount > allocation.amount:
+            write(f"  Cash tendered: KSh {payment.amount:,.2f}")
+            write(f"  Change returned: KSh {payment.amount - allocation.amount:,.2f}")
+    for refund in sale.refunds.all():
+        if refund.status == "ISSUED":
+            write(f"Refund issued: KSh {refund.amount:,.2f} · {refund.get_method_display()}")
+    y -= 7
+    write("Thank you for choosing LashPro.", bold=True, size=10, gap=16)
+    write("Keep this receipt for your records.")
+    pdf.save()
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="LashPro-{sale.receipt_number}.pdf"'
+    response["Cache-Control"] = "no-store"
+    response["X-Robots-Tag"] = "noindex, nofollow"
+    response["Referrer-Policy"] = "no-referrer"
+    return response
 
 
 @never_cache
