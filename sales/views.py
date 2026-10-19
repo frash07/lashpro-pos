@@ -21,6 +21,7 @@ def check_role(user):
         raise PermissionDenied
 
 
+@never_cache
 @login_required(login_url="login")
 def checkout(request):
     check_role(request.user)

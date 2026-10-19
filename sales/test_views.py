@@ -35,6 +35,7 @@ class CashierViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Classic Set")
         self.assertContains(response, "Lash Glue")
+        self.assertContains(response, "Clear checkout")
 
     def test_technician_is_denied(self):
         self.client.force_login(self.tech)
@@ -56,6 +57,42 @@ class CashierViewTests(TestCase):
         payment = PaymentTransaction.objects.get(sale_allocation__sale=sale)
         self.assertEqual(payment.status, PaymentTransaction.Status.UNVERIFIED)
         self.assertEqual(payment.reference, "QAB123XYZ")
+
+    def test_split_cash_and_mpesa_checkout_completes_with_both_payments(self):
+        self.client.force_login(self.cashier)
+        data = self.data("CASH", amount="1000.00")
+        data.update({
+            "payments-TOTAL_FORMS": "2",
+            "payments-1-method": "MPESA",
+            "payments-1-amount": "1500.00",
+            "payments-1-reference": "SPLITCHECKOUT001",
+        })
+
+        response = self.client.post(reverse("sales:checkout"), data)
+
+        self.assertEqual(response.status_code, 302)
+        sale = Sale.objects.get()
+        self.assertEqual(sale.status, Sale.Status.COMPLETED)
+        self.assertEqual(sale.payment_allocations.count(), 2)
+        self.assertEqual(
+            set(PaymentTransaction.objects.filter(sale_allocation__sale=sale).values_list("method", flat=True)),
+            {"CASH", "MPESA"},
+        )
+        mpesa = PaymentTransaction.objects.get(sale_allocation__sale=sale, method="MPESA")
+        cash = PaymentTransaction.objects.get(sale_allocation__sale=sale, method="CASH")
+        self.assertEqual(mpesa.status, PaymentTransaction.Status.UNVERIFIED)
+        self.assertEqual(cash.status, PaymentTransaction.Status.SUCCEEDED)
+        self.assertEqual(cash.amount, Decimal("1000.00"))
+
+    def test_checkout_displays_payment_validation_errors(self):
+        self.client.force_login(self.cashier)
+        response = self.client.post(
+            reverse("sales:checkout"),
+            self.data("MPESA", amount="2500.00", reference=""),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Sale.objects.count(), 0)
+        self.assertContains(response, "Enter the M-Pesa reference.")
 
     def test_empty_cart_does_not_create_sale(self):
         self.client.force_login(self.cashier)
