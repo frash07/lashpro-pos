@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#c00068">
+  <meta name="theme-color" content="#100e0d">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>{% block title %}LashPro POS{% endblock %}</title>
@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   {% block head_extra %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   {% block content %}{% endblock %}
   <script>
     if ("serviceWorker" in navigator) {

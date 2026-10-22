@@ -3,5 +3,14 @@
 {% block title %}Staff login · LashPro{% endblock %}
 
 {% block content %}
-<main class="login"><h1>LashPro POS</h1><p>Staff sign in</p>{% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}{% if form.errors %}<p class="message error">Username or password not recognised.</p>{% endif %}<form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><label>Username {{ form.username }}</label><label>Password {{ form.password }}</label><button class="submit">Sign in</button></form><p><a href="{% url 'password_reset' %}">Forgot your password?</a></p></main>
+<main class="login login-page">
+  <a class="brand-lockup login-brand" href="{% url 'login' %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Salon &amp; Academy</span></span></a>
+  <span class="eyebrow login-eyebrow">TEAM ACCESS</span>
+  <h1>Welcome back</h1>
+  <p>Sign in to open your LashPro workspace.</p>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
+  {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><label>Username {{ form.username }}</label><label>Password {{ form.password }}</label><button class="submit" type="submit">Sign in <span aria-hidden="true">→</span></button></form>
+  <p class="login-help"><a href="{% url 'password_reset' %}">Forgot your password?</a> · For account access help, contact your manager.</p>
+</main>
 {% endblock %}

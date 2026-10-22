@@ -113,4 +113,8 @@ def daily_report(request):
         "cash_session_variance_total": _sum(closed_sessions, "variance"),
         "cash_sessions_pending_approval": sessions_awaiting_review.count(),
     }
-    return render(request, "reporting/dashboard.html", {"form": form, "report": report, "start": start, "end": end})
+    inventory_products = Product.objects.filter(active=True).order_by("name")[:100]
+    return render(request, "reporting/dashboard.html", {
+        "form": form, "report": report, "start": start, "end": end,
+        "inventory_products": inventory_products,
+    })

@@ -1,11 +1,53 @@
 {% extends "base.html" %}
-
-{% block title %}Operations report · LashPro{% endblock %}
+{% load static %}
+{% block title %}Admin portal · LashPro{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}">{% endblock %}
 
 {% block content %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">Checkout</a><a href="{% url 'payments:cash-session' %}">Cash sessions</a><a href="{% url 'commissions:dashboard' %}">Commissions</a><a href="{% url 'payments:reconciliation' %}">M-Pesa review</a></header><main class="page"><h1>Operations report</h1><p>Summary from {{ start|date:"d M Y" }} to {{ end|date:"d M Y" }}. Unverified M-Pesa and payout references are shown separately from confirmed funds.</p><form method="get" class="card">{{ form.non_field_errors }}<label>From {{ form.start_date }}</label><label>To {{ form.end_date }}</label><button>Update report</button></form>
-<section class="card"><h2>Sales and collections</h2><p>Completed sales <strong>{{ report.completed_sale_count }}</strong></p><p>Gross sales <strong>KSh {{ report.gross_sales|floatformat:2 }}</strong></p><p>Confirmed collection <strong>KSh {{ report.confirmed_collection|floatformat:2 }}</strong></p><p>Unverified incoming M-Pesa <strong>KSh {{ report.unverified_collection|floatformat:2 }}</strong></p><p>Confirmed refunds <strong>KSh {{ report.confirmed_refunds|floatformat:2 }}</strong></p><p>Unverified M-Pesa refunds <strong>KSh {{ report.unverified_refunds|floatformat:2 }}</strong></p><p>Rejected M-Pesa refund references <strong>KSh {{ report.rejected_refunds|floatformat:2 }}</strong></p><p>Net confirmed collection <strong>KSh {{ report.net_confirmed_collection|floatformat:2 }}</strong></p></section>
-<section class="card"><h2>Commissions</h2><p>Earned <strong>KSh {{ report.commission_earned|floatformat:2 }}</strong></p><p>Reversed on refunds <strong>KSh {{ report.commission_reversed|floatformat:2 }}</strong></p><p>Net earned <strong>KSh {{ report.commission_net|floatformat:2 }}</strong></p><p>Payouts issued <strong>KSh {{ report.commission_payout_total|floatformat:2 }}</strong></p><p>M-Pesa payouts awaiting reconciliation <strong>KSh {{ report.commission_payout_unverified|floatformat:2 }}</strong></p></section>
-<section class="card"><h2>Inventory</h2><h3>Low stock</h3><ul>{% for product in report.low_stock %}<li>{{ product.name }} ({{ product.sku }}): {{ product.on_hand }} on hand · reorder at {{ product.reorder_level }}</li>{% empty %}<li>No products are below their reorder level.</li>{% endfor %}</ul><h3>Movements in period</h3><ul>{% for movement in report.inventory_movement_summary %}<li>{{ movement.type }}: {{ movement.quantity }} units across {{ movement.count }} movement(s)</li>{% empty %}<li>No inventory movements in this period.</li>{% endfor %}</ul></section>
-<section class="card"><h2>Cash control</h2><p>Cash sessions opened <strong>{{ report.cash_session_count }}</strong></p><p>Closed-session variance total <strong>KSh {{ report.cash_session_variance_total|floatformat:2 }}</strong></p><p>Sessions awaiting manager review <strong>{{ report.cash_sessions_pending_approval }}</strong></p><p>Refunds issued in period <strong>{{ report.issued_refund_count }}</strong></p></section></main>
+<header class="app-header">
+  <a class="brand-lockup" href="{% url 'reporting:dashboard' %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Nairobi · Salon &amp; Academy</span></span></a>
+  <nav class="mode-toggle" aria-label="Workspace"><a class="mode-link" href="{% url 'sales:checkout' %}">▣ &nbsp; Salon POS Mode</a><a class="mode-link is-active" href="{% url 'reporting:dashboard' %}" aria-current="page">▦ &nbsp; Admin Portal</a></nav>
+  <div class="header-actions"><div class="user-chip"><span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }}</small></span></div><form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form></div>
+</header>
+
+<main class="page report-page">
+  <section class="dashboard-hero">
+    <div>
+      <div class="dashboard-owner"><span class="eyebrow">EXECUTIVE SUITE</span>Owner: {{ request.user.get_full_name|default:request.user.username }}</div>
+      <h1>LashPro KE Executive Dashboard</h1>
+      <p>Live salon operations, inventory, collections, commissions, and cash controls.</p>
+    </div>
+    <form method="get" class="report-period">{{ form.non_field_errors }}<label>From {{ form.start_date }}</label><label>To {{ form.end_date }}</label><button type="submit">Update view</button></form>
+  </section>
+
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
+  <p class="report-range">Showing {{ start|date:"d M Y" }}{% if start != end %} – {{ end|date:"d M Y" }}{% endif %}</p>
+
+  <div class="metric-grid" aria-label="Summary for selected dates">
+    <article class="metric-card"><span class="metric-label">Gross sales</span><strong class="metric-value">KES {{ report.gross_sales|floatformat:2 }}</strong><span class="metric-caption">For the selected dates</span></article>
+    <article class="metric-card"><span class="metric-label">Confirmed collections</span><strong class="metric-value">KES {{ report.confirmed_collection|floatformat:2 }}</strong><span class="metric-caption">Cash and reconciled M-Pesa</span></article>
+    <article class="metric-card"><span class="metric-label">M-Pesa awaiting review</span><strong class="metric-value">KES {{ report.unverified_collection|floatformat:2 }}</strong><span class="metric-caption">Not included in confirmed funds</span></article>
+    <article class="metric-card"><span class="metric-label">Completed sales</span><strong class="metric-value">{{ report.completed_sale_count }}</strong><span class="metric-caption">For the selected dates</span></article>
+  </div>
+
+  <nav class="report-tabs" aria-label="Management tools">
+    <a class="is-active" href="{% if request.user.is_staff %}{% url 'admin:catalog_product_changelist' %}{% else %}{% url 'inventory:receive' %}{% endif %}" aria-current="page"><span aria-hidden="true">◇</span> Inventory &amp; Stock Control</a>
+    <a href="{% url 'commissions:dashboard' %}"><span aria-hidden="true">♙</span> Staff Commissions</a>
+    <a href="{% url 'payments:reconciliation' %}"><span aria-hidden="true">▤</span> M-Pesa Audit Logs</a>
+  </nav>
+
+  <section class="inventory-panel">
+    <div class="inventory-panel-header"><div><h2>Lash Supplies &amp; Retail Inventory</h2><p>Current stock and selling prices from your catalog.</p></div><a class="button-soft" href="{% url 'inventory:receive' %}">＋ &nbsp; Restock item</a></div>
+    <div class="inventory-table-wrap"><table class="inventory-table"><thead><tr><th>Product name</th><th>SKU</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    {% for product in inventory_products %}<tr><td><span class="product-name-cell"><span class="product-mark" aria-hidden="true">{% if product.low_stock %}⌁{% else %}◇{% endif %}</span>{{ product.name }}</span></td><td>{{ product.sku }}</td><td class="stock-number">{{ product.on_hand|floatformat:"-3" }} units</td><td class="price-number">KES {{ product.selling_price|floatformat:2 }}</td><td>{% if product.on_hand <= 0 %}<span class="stock-status low">OUT OF STOCK</span>{% elif product.low_stock %}<span class="stock-status low">LOW STOCK ALERT</span>{% else %}<span class="stock-status">IN STOCK</span>{% endif %}</td><td><a class="restock-link" href="{% url 'inventory:receive' %}">＋ Restock</a></td></tr>
+    {% empty %}<tr><td colspan="6"><p class="empty-state">No active products are in the catalog.</p></td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  <div class="report-support-grid">
+    <section class="report-section card"><span class="eyebrow">COLLECTIONS</span><h2>Payment overview</h2><div class="report-stat-list"><div class="report-stat"><span>Unverified M-Pesa refunds</span><strong>KES {{ report.unverified_refunds|floatformat:2 }}</strong></div><div class="report-stat"><span>Confirmed refunds</span><strong>KES {{ report.confirmed_refunds|floatformat:2 }}</strong></div><div class="report-stat"><span>Net confirmed collections</span><strong>KES {{ report.net_confirmed_collection|floatformat:2 }}</strong></div></div><a class="section-link" href="{% url 'payments:reconciliation' %}">Review M-Pesa references →</a></section>
+    <section class="report-section card"><span class="eyebrow">TEAM</span><h2>Commissions &amp; payouts</h2><div class="report-stat-list"><div class="report-stat"><span>Commissions earned</span><strong>KES {{ report.commission_earned|floatformat:2 }}</strong></div><div class="report-stat"><span>Reversed on refunds</span><strong>KES {{ report.commission_reversed|floatformat:2 }}</strong></div><div class="report-stat"><span>Payouts issued</span><strong>KES {{ report.commission_payout_total|floatformat:2 }}</strong></div></div><a class="section-link" href="{% url 'commissions:dashboard' %}">Manage team commissions →</a></section>
+    <section class="report-section card"><span class="eyebrow">CASH CONTROL</span><h2>Drawer sessions</h2><div class="report-stat-list"><div class="report-stat"><span>Sessions opened</span><strong>{{ report.cash_session_count }}</strong></div><div class="report-stat"><span>Closed-session variance</span><strong>KES {{ report.cash_session_variance_total|floatformat:2 }}</strong></div><div class="report-stat"><span>Awaiting manager review</span><strong>{{ report.cash_sessions_pending_approval }}</strong></div></div><a class="section-link" href="{% url 'payments:cash-session' %}">Open cash session tools →</a></section>
+  </div>
+</main>
 {% endblock %}

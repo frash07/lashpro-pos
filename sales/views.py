@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from accounts.models import User
 from catalog.models import Product, Service
+from customers.models import Customer
 from .forms import BalancePaymentForm, CheckoutDetailsForm, LineFormSet, PaymentFormSet
 from .models import Sale, SaleLine, SaleRefund
 from .services import checkout_sale, issue_refund, record_sale_payment, reject_refund, request_sale_refund
@@ -61,18 +62,41 @@ def checkout(request):
                 messages.success(request, f"Sale #{sale.pk} completed.")
                 return redirect("sales:receipt", token=sale.receipt_token)
     else:
-        details = CheckoutDetailsForm(initial={"idempotency_key": uuid.uuid4()})
+        default_customer = Customer.objects.filter(name__iexact="Wanjiku Njuguna").first()
+        details = CheckoutDetailsForm(initial={"idempotency_key": uuid.uuid4(), "customer": default_customer.pk if default_customer else None})
         lines = LineFormSet(prefix="items")
         payments_formset = PaymentFormSet(prefix="payments")
+    products = list(Product.objects.filter(active=True).order_by("name"))
+    sample_descriptions = {
+        "lashpro retention bond (10ml)": "Maximum Strength 1-Sec Lash Glue",
+        "silk cashmere trays 0.07": "Mixed Length C/D Curl Lash Trays",
+        "precision tweezers set": "Japanese Steel Isolation & Volume Tweezers",
+        "aftercare cleansing foam": "Oil-Free Lash Shampoo & Brush Kit",
+    }
+    for product in products:
+        product.pos_description = sample_descriptions.get(product.name.strip().casefold(), "")
+    services = list(Service.objects.filter(active=True).order_by("name"))
     prices = {
-        "products": {str(x.pk): str(x.selling_price) for x in Product.objects.filter(active=True)},
-        "services": {str(x.pk): str(x.price) for x in Service.objects.filter(active=True)},
+        "products": {str(x.pk): str(x.selling_price) for x in products},
+        "services": {str(x.pk): str(x.price) for x in services},
     }
     from payments.models import CashSession
     cash_session = CashSession.objects.filter(cashier=request.user, status=CashSession.Status.OPEN).first()
+    technicians = list(User.objects.filter(
+        role=User.Role.TECHNICIAN, is_active=True
+    ).order_by("first_name", "username"))
+    default_technician_id = next((technician.pk for technician in technicians
+        if technician.first_name.strip().casefold() == "lyn" or technician.username.casefold() == "lyn"), None)
+    if request.user.role == User.Role.TECHNICIAN:
+        default_technician_id = request.user.pk
     return render(request, "sales/checkout.html", {
         "details": details, "lines": lines, "payments": payments_formset,
-        "prices": prices, "cash_session": cash_session,
+        "prices": prices, "products": products, "services": services,
+        "cash_session": cash_session,
+        "can_discount": request.user.is_superuser or request.user.role in {
+            User.Role.OWNER, User.Role.MANAGER,
+        },
+        "technicians": technicians, "default_technician_id": default_technician_id,
     })
 
 
