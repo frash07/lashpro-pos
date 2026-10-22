@@ -1,53 +1,229 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Admin portal · LashPro{% endblock %}
-{% block head_extra %}<link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}">{% endblock %}
+
+{% block title %}Executive dashboard · LashPro KE{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}">
+  <link rel="stylesheet" href="{% static 'reporting/dashboard.css' %}">
+{% endblock %}
 
 {% block content %}
-<header class="app-header">
-  <a class="brand-lockup" href="{% url 'reporting:dashboard' %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Nairobi · Salon &amp; Academy</span></span></a>
-  <nav class="mode-toggle" aria-label="Workspace"><a class="mode-link" href="{% url 'sales:checkout' %}">▣ &nbsp; Salon POS Mode</a><a class="mode-link is-active" href="{% url 'reporting:dashboard' %}" aria-current="page">▦ &nbsp; Admin Portal</a></nav>
-  <div class="header-actions"><div class="user-chip"><span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }}</small></span></div><form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form></div>
-</header>
+<header class="app-header executive-header">
+  <a class="brand-lockup" href="{% url 'reporting:dashboard' %}">
+    <span class="brand-mark" aria-hidden="true">✦</span>
+    <span class="brand-copy"><strong>LASHPRO <small>KE</small></strong><span>Nairobi • Premier Lash &amp; Academy</span></span>
+  </a>
 
-<main class="page report-page">
-  <section class="dashboard-hero">
-    <div>
-      <div class="dashboard-owner"><span class="eyebrow">EXECUTIVE SUITE</span>Owner: {{ request.user.get_full_name|default:request.user.username }}</div>
-      <h1>LashPro KE Executive Dashboard</h1>
-      <p>Live salon operations, inventory, collections, commissions, and cash controls.</p>
-    </div>
-    <form method="get" class="report-period">{{ form.non_field_errors }}<label>From {{ form.start_date }}</label><label>To {{ form.end_date }}</label><button type="submit">Update view</button></form>
-  </section>
-
-  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
-  <p class="report-range">Showing {{ start|date:"d M Y" }}{% if start != end %} – {{ end|date:"d M Y" }}{% endif %}</p>
-
-  <div class="metric-grid" aria-label="Summary for selected dates">
-    <article class="metric-card"><span class="metric-label">Gross sales</span><strong class="metric-value">KES {{ report.gross_sales|floatformat:2 }}</strong><span class="metric-caption">For the selected dates</span></article>
-    <article class="metric-card"><span class="metric-label">Confirmed collections</span><strong class="metric-value">KES {{ report.confirmed_collection|floatformat:2 }}</strong><span class="metric-caption">Cash and reconciled M-Pesa</span></article>
-    <article class="metric-card"><span class="metric-label">M-Pesa awaiting review</span><strong class="metric-value">KES {{ report.unverified_collection|floatformat:2 }}</strong><span class="metric-caption">Not included in confirmed funds</span></article>
-    <article class="metric-card"><span class="metric-label">Completed sales</span><strong class="metric-value">{{ report.completed_sale_count }}</strong><span class="metric-caption">For the selected dates</span></article>
-  </div>
-
-  <nav class="report-tabs" aria-label="Management tools">
-    <a class="is-active" href="{% if request.user.is_staff %}{% url 'admin:catalog_product_changelist' %}{% else %}{% url 'inventory:receive' %}{% endif %}" aria-current="page"><span aria-hidden="true">◇</span> Inventory &amp; Stock Control</a>
-    <a href="{% url 'commissions:dashboard' %}"><span aria-hidden="true">♙</span> Staff Commissions</a>
-    <a href="{% url 'payments:reconciliation' %}"><span aria-hidden="true">▤</span> M-Pesa Audit Logs</a>
+  <nav class="mode-toggle" aria-label="Workspace">
+    <a class="mode-link" href="{% url 'sales:checkout' %}">Salon POS Mode</a>
+    <a class="mode-link is-active" href="{% url 'reporting:dashboard' %}" aria-current="page">Admin Portal</a>
   </nav>
 
-  <section class="inventory-panel">
-    <div class="inventory-panel-header"><div><h2>Lash Supplies &amp; Retail Inventory</h2><p>Current stock and selling prices from your catalog.</p></div><a class="button-soft" href="{% url 'inventory:receive' %}">＋ &nbsp; Restock item</a></div>
-    <div class="inventory-table-wrap"><table class="inventory-table"><thead><tr><th>Product name</th><th>SKU</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody>
-    {% for product in inventory_products %}<tr><td><span class="product-name-cell"><span class="product-mark" aria-hidden="true">{% if product.low_stock %}⌁{% else %}◇{% endif %}</span>{{ product.name }}</span></td><td>{{ product.sku }}</td><td class="stock-number">{{ product.on_hand|floatformat:"-3" }} units</td><td class="price-number">KES {{ product.selling_price|floatformat:2 }}</td><td>{% if product.on_hand <= 0 %}<span class="stock-status low">OUT OF STOCK</span>{% elif product.low_stock %}<span class="stock-status low">LOW STOCK ALERT</span>{% else %}<span class="stock-status">IN STOCK</span>{% endif %}</td><td><a class="restock-link" href="{% url 'inventory:receive' %}">＋ Restock</a></td></tr>
-    {% empty %}<tr><td colspan="6"><p class="empty-state">No active products are in the catalog.</p></td></tr>{% endfor %}
-    </tbody></table></div>
+  <div class="header-actions executive-header-actions">
+    <span class="online-status"><span class="status-dot" aria-hidden="true"></span>Online</span>
+    <button type="button" class="install-button" id="install-app"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v9m0 0 3.25-3.25M10 11.5 6.75 8.25M4 13.25v2.25A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-2.25"/></svg>Install App</button>
+    <div class="user-chip"><span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }} / Admin</small></span></div>
+    <form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form>
+  </div>
+</header>
+
+<main class="page report-page executive-dashboard">
+  <section class="report-hero executive-hero">
+    <div class="executive-hero-copy">
+      <div class="executive-owner-line"><span class="eyebrow">EXECUTIVE SUITE</span><span>Owner: {{ request.user.get_full_name|default:request.user.username }}</span></div>
+      <h1>Lashpro KE Executive Dashboard</h1>
+      <p>Real-time salon operations, inventory velocity, commission splits &amp; academy enrollments.</p>
+    </div>
+    <button type="button" class="export-button" id="export-report"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 12.5V3m0 0L6.5 6.5M10 3l3.5 3.5M4.5 11.5v3A2.5 2.5 0 0 0 7 17h6a2.5 2.5 0 0 0 2.5-2.5v-3"/></svg>Export Financial Report</button>
   </section>
 
-  <div class="report-support-grid">
-    <section class="report-section card"><span class="eyebrow">COLLECTIONS</span><h2>Payment overview</h2><div class="report-stat-list"><div class="report-stat"><span>Unverified M-Pesa refunds</span><strong>KES {{ report.unverified_refunds|floatformat:2 }}</strong></div><div class="report-stat"><span>Confirmed refunds</span><strong>KES {{ report.confirmed_refunds|floatformat:2 }}</strong></div><div class="report-stat"><span>Net confirmed collections</span><strong>KES {{ report.net_confirmed_collection|floatformat:2 }}</strong></div></div><a class="section-link" href="{% url 'payments:reconciliation' %}">Review M-Pesa references →</a></section>
-    <section class="report-section card"><span class="eyebrow">TEAM</span><h2>Commissions &amp; payouts</h2><div class="report-stat-list"><div class="report-stat"><span>Commissions earned</span><strong>KES {{ report.commission_earned|floatformat:2 }}</strong></div><div class="report-stat"><span>Reversed on refunds</span><strong>KES {{ report.commission_reversed|floatformat:2 }}</strong></div><div class="report-stat"><span>Payouts issued</span><strong>KES {{ report.commission_payout_total|floatformat:2 }}</strong></div></div><a class="section-link" href="{% url 'commissions:dashboard' %}">Manage team commissions →</a></section>
-    <section class="report-section card"><span class="eyebrow">CASH CONTROL</span><h2>Drawer sessions</h2><div class="report-stat-list"><div class="report-stat"><span>Sessions opened</span><strong>{{ report.cash_session_count }}</strong></div><div class="report-stat"><span>Closed-session variance</span><strong>KES {{ report.cash_session_variance_total|floatformat:2 }}</strong></div><div class="report-stat"><span>Awaiting manager review</span><strong>{{ report.cash_sessions_pending_approval }}</strong></div></div><a class="section-link" href="{% url 'payments:cash-session' %}">Open cash session tools →</a></section>
-  </div>
+  <details class="report-period-control">
+    <summary><span>Reporting period</span><strong>{{ start|date:"d M Y" }}{% if start != end %} – {{ end|date:"d M Y" }}{% endif %}</strong><span class="period-change">Change dates</span></summary>
+    <div class="report-period-panel">
+      <form method="get" class="report-period">
+        {{ form.non_field_errors }}
+        <label>{{ form.start_date.label }}{{ form.start_date }}{{ form.start_date.errors }}</label>
+        <label>{{ form.end_date.label }}{{ form.end_date }}{{ form.end_date.errors }}</label>
+        <button type="submit">Update view</button>
+      </form>
+    </div>
+  </details>
+  <p class="report-range">Showing {{ start|date:"d M Y" }}{% if start != end %} – {{ end|date:"d M Y" }}{% endif %}</p>
+
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
+
+  <section class="metric-grid executive-metrics" aria-label="Executive summary">
+    <article class="metric-card metric-revenue" data-export-label="Total revenue" data-export-value="{{ executive.revenue_display }}">
+      <span class="metric-label">{{ executive.revenue_label }}</span>
+      <svg class="metric-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5 9 11l3.5 3.5L20 7m-6 0h6v6"/></svg>
+      <strong class="metric-value">{{ executive.revenue_display }}</strong>
+      <span class="metric-caption trend-{{ executive.revenue_trend_class }}">{{ executive.revenue_trend }}</span>
+    </article>
+
+    <article class="metric-card metric-mpesa" data-export-label="M-PESA Express volume" data-export-value="{{ executive.mpesa_display }}">
+      <span class="metric-label">M-PESA Express Volume</span>
+      <svg class="metric-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="3" width="11" height="18" rx="2"/><path d="M10 17.5h4"/></svg>
+      <strong class="metric-value">{{ executive.mpesa_display }}</strong>
+      <span class="metric-caption">{{ executive.mpesa_share }}% of total payments</span>
+    </article>
+
+    <article class="metric-card metric-mix" data-export-label="Services / retail ratio" data-export-value="{{ executive.service_percent }}% / {{ executive.retail_percent }}%">
+      <span class="metric-label">Services / Retail Ratio</span>
+      <svg class="metric-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M15 3.5A8.5 8.5 0 0 1 20.5 9H15Z"/></svg>
+      <strong class="metric-value">{{ executive.service_percent }}% / {{ executive.retail_percent }}%</strong>
+      <span class="metric-caption">Top item: {{ executive.top_service }}</span>
+    </article>
+
+    <article class="metric-card metric-academy" data-export-label="Academy students enrolled" data-export-value="Not connected">
+      <span class="metric-label">Academy Students Enrolled</span>
+      <svg class="metric-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 11.5v4.7c2.8 2.3 7.2 2.3 10 0v-4.7M21 9v6"/></svg>
+      <strong class="metric-value">Not connected</strong>
+      <span class="metric-caption">Academy records aren’t available in this POS</span>
+    </article>
+  </section>
+
+  <section class="executive-workspace" aria-label="Executive management tools">
+    <div class="report-nav report-tabs" role="tablist" aria-label="Admin dashboard sections">
+      <button type="button" class="report-tab" id="tab-inventory" role="tab" aria-selected="false" aria-controls="panel-inventory" data-tab-target="panel-inventory"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2.5 7 4v7l-7 4-7-4v-7l7-4Z"/><path d="m3.3 6.6 6.7 3.9 6.7-3.9M10 10.5v7"/></svg>Inventory &amp; Stock Control</button>
+      <button type="button" class="report-tab" id="tab-academy" role="tab" aria-selected="false" aria-controls="panel-academy" data-tab-target="panel-academy"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2 7 8-4.5L18 7l-8 4.5L2 7Z"/><path d="M5.5 9v4.2c2.6 2 6.4 2 9 0V9M18 7v5"/></svg>Training Academy Hub</button>
+      <button type="button" class="report-tab" id="tab-commissions" role="tab" aria-selected="false" aria-controls="panel-commissions" data-tab-target="panel-commissions"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="6.5" cy="6" r="3"/><path d="M1.5 17v-1.5A4.5 4.5 0 0 1 6 11h1M13.5 9a3 3 0 1 0 0-6M12.5 12h2A4 4 0 0 1 18.5 16v1"/></svg>Staff Commissions</button>
+      <button type="button" class="report-tab is-active" id="tab-audit" role="tab" aria-selected="true" aria-controls="panel-audit" data-tab-target="panel-audit"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2"/><path d="M7 6h6M7 9.5h6M7 13h2"/></svg>M-PESA Audit Logs</button>
+    </div>
+
+    <section class="dashboard-panel audit-panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit">
+      <div class="panel-heading"><div><span class="eyebrow">PAYMENTS &amp; RECONCILIATION</span><h2>M-PESA Express Reconciliation Audit Log</h2><p>Incoming manual M-PESA references recorded during the selected reporting period.</p></div><a class="section-link" href="{% url 'payments:reconciliation' %}">Review pending references <span aria-hidden="true">→</span></a></div>
+      <div class="table-scroll">
+        <table class="executive-table" id="mpesa-audit-table">
+          <thead><tr><th scope="col">Timestamp</th><th scope="col">Receipt code</th><th scope="col">Client phone</th><th scope="col">Amount (KES)</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+            {% for row in mpesa_audit_rows %}
+            <tr><td class="timestamp-cell">{{ row.payment.created_at|date:"g:i A" }}</td><td><span class="receipt-code">{{ row.payment.reference }}</span></td><td>{{ row.phone }}</td><td class="amount-cell">KES {{ row.amount_display }}</td><td><span class="status-badge status-{{ row.status_class }}">{{ row.status_label }}</span></td></tr>
+            {% empty %}<tr><td class="table-empty" colspan="5">No M-PESA payment references were recorded during this period.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="audit-support-grid">
+        <article class="support-card"><span class="support-label">Confirmed collections</span><strong>KES {{ report.confirmed_collection|floatformat:"2g" }}</strong><span>Cash and reconciled M-PESA payments</span></article>
+        <article class="support-card"><span class="support-label">M-PESA awaiting review</span><strong>KES {{ report.unverified_collection|floatformat:"2g" }}</strong><span>Pending references remain outside confirmed funds</span></article>
+        <article class="support-card"><span class="support-label">Cash sessions opened</span><strong>{{ report.cash_session_count }}</strong><span>{{ report.cash_sessions_pending_approval }} awaiting manager review</span></article>
+      </div>
+      <details class="financial-details">
+        <summary>Collections, refunds &amp; cash controls</summary>
+        <div class="audit-support-grid financial-detail-grid">
+          <article class="support-card"><span class="support-label">Net confirmed collection</span><strong>KES {{ report.net_confirmed_collection|floatformat:"2g" }}</strong><span>After confirmed refunds</span></article>
+          <article class="support-card"><span class="support-label">Confirmed refunds</span><strong>KES {{ report.confirmed_refunds|floatformat:"2g" }}</strong><span>Refunds included in reconciled funds</span></article>
+          <article class="support-card"><span class="support-label">Unverified M-PESA refunds</span><strong>KES {{ report.unverified_refunds|floatformat:"2g" }}</strong><span>Outgoing references awaiting review</span></article>
+          <article class="support-card"><span class="support-label">Rejected refund references</span><strong>KES {{ report.rejected_refunds|floatformat:"2g" }}</strong><span>Rejected during this period</span></article>
+          <article class="support-card"><span class="support-label">Closed-session variance</span><strong>KES {{ report.cash_session_variance_total|floatformat:"2g" }}</strong><span>Across closed cash sessions</span></article>
+          <article class="support-card"><span class="support-label">Refunds issued</span><strong>{{ report.issued_refund_count }}</strong><span>Refunds completed in this period</span></article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dashboard-panel" id="panel-inventory" role="tabpanel" aria-labelledby="tab-inventory" hidden>
+      <div class="panel-heading"><div><span class="eyebrow">INVENTORY VELOCITY</span><h2>Inventory &amp; Stock Control</h2><p>Monitor reorder pressure and review stock movement across the salon.</p></div><div class="panel-actions">{% if request.user.is_staff %}<a class="section-link" href="{% url 'admin:catalog_product_changelist' %}">Open stock list <span aria-hidden="true">→</span></a>{% endif %}<a class="section-link" href="{% url 'inventory:receive' %}">Receive stock <span aria-hidden="true">→</span></a></div></div>
+      <div class="inventory-summary"><span><strong>{{ low_stock_count }}</strong> low-stock item{{ low_stock_count|pluralize }}</span><span><strong>{{ inventory_products|length }}</strong> catalog products shown</span><span><strong>{{ report.inventory_movement_summary|length }}</strong> movement type{{ report.inventory_movement_summary|length|pluralize }} in this period</span></div>
+      <div class="table-scroll">
+        <table class="executive-table">
+          <thead><tr><th scope="col">Product</th><th scope="col">SKU</th><th scope="col">Stock level</th><th scope="col">Unit price</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
+          <tbody>{% for product in inventory_products %}<tr><td><strong>{{ product.name }}</strong></td><td>{{ product.sku }}</td><td>{{ product.on_hand|floatformat:"-3" }} units</td><td>KES {{ product.selling_price|floatformat:"2g" }}</td><td>{% if product.on_hand <= 0 %}<span class="status-badge status-danger">OUT OF STOCK</span>{% elif product.low_stock %}<span class="status-badge status-warning">LOW STOCK</span>{% else %}<span class="status-badge status-success">IN STOCK</span>{% endif %}</td><td><a class="section-link" href="{% url 'inventory:receive' %}">＋ Restock</a></td></tr>{% empty %}<tr><td class="table-empty" colspan="6">No active products are in the catalog.</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <div class="panel-subsection"><div class="panel-heading"><div><span class="eyebrow">STOCK ACTIVITY</span><h3>Inventory movements</h3></div><a class="section-link" href="{% url 'admin:inventory_inventorymovement_changelist' %}">Movement history <span aria-hidden="true">→</span></a></div>
+        {% if report.inventory_movement_summary %}<div class="movement-list">{% for movement in report.inventory_movement_summary %}<div class="movement-row"><span>{{ movement.type }} <small>{{ movement.count }} movement{{ movement.count|pluralize }}</small></span><strong>{{ movement.quantity }} units</strong></div>{% endfor %}</div>{% else %}<p class="empty-state">No stock movements in this period.</p>{% endif %}
+      </div>
+    </section>
+
+    <section class="dashboard-panel" id="panel-academy" role="tabpanel" aria-labelledby="tab-academy" hidden>
+      <div class="panel-heading"><div><span class="eyebrow">LASHPRO ACADEMY</span><h2>Training Academy Hub</h2><p>Academy enrollment and certification records will appear here when connected.</p></div></div>
+      <div class="academy-notice" role="status"><span class="academy-notice-icon" aria-hidden="true">♧</span><div><strong>Academy management isn’t connected yet</strong><p>Training courses are not set up in this POS catalog, so this dashboard has no student or certification records to show.</p></div><a class="section-link" href="{% url 'sales:checkout' %}">Open Salon POS <span aria-hidden="true">→</span></a></div>
+    </section>
+
+    <section class="dashboard-panel" id="panel-commissions" role="tabpanel" aria-labelledby="tab-commissions" hidden>
+      <div class="panel-heading"><div><span class="eyebrow">TEAM PERFORMANCE</span><h2>Staff Commissions</h2><p>Track earned commission, reversals, and payouts for the selected reporting period.</p></div><a class="section-link" href="{% url 'commissions:dashboard' %}">Open commission management <span aria-hidden="true">→</span></a></div>
+      <div class="commission-summary-grid">
+        <article class="support-card"><span class="support-label">Commissions earned</span><strong>KES {{ report.commission_earned|floatformat:"2g" }}</strong><span>Earned by completed services</span></article>
+        <article class="support-card"><span class="support-label">Reversed on refunds</span><strong>KES {{ report.commission_reversed|floatformat:"2g" }}</strong><span>Returned to the commission ledger</span></article>
+        <article class="support-card"><span class="support-label">Net commissions</span><strong>KES {{ report.commission_net|floatformat:"2g" }}</strong><span>Net of commission reversals</span></article>
+        <article class="support-card"><span class="support-label">Payouts issued</span><strong>KES {{ report.commission_payout_total|floatformat:"2g" }}</strong><span>KES {{ report.commission_payout_unverified|floatformat:"2g" }} in M-PESA awaiting review</span></article>
+      </div>
+      <div class="commission-note"><span class="note-mark" aria-hidden="true">✦</span><span>Commission totals follow the service completion ledger. Refund reversals and payout reconciliation stay available in team commission tools.</span></div>
+    </section>
+  </section>
+  <p class="install-feedback" id="install-feedback" role="status" aria-live="polite" hidden></p>
 </main>
+
+<script>
+  (() => {
+    const tabs = Array.from(document.querySelectorAll("[data-tab-target]"));
+    const panels = tabs.map((tab) => document.getElementById(tab.dataset.tabTarget)).filter(Boolean);
+    tabs.forEach((tab) => { tab.tabIndex = tab.getAttribute("aria-selected") === "true" ? 0 : -1; });
+
+    function activateTab(tab, moveFocus = false) {
+      tabs.forEach((item) => {
+        const active = item === tab;
+        item.classList.toggle("is-active", active);
+        item.setAttribute("aria-selected", String(active));
+        item.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach((panel) => { panel.hidden = panel.id !== tab.dataset.tabTarget; });
+      if (moveFocus) tab.focus();
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => activateTab(tab));
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
+        activateTab(tabs[nextIndex], true);
+      });
+    });
+
+    const exportButton = document.getElementById("export-report");
+    exportButton?.addEventListener("click", () => {
+      const quote = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const range = document.querySelector(".report-period-control summary strong")?.innerText.trim() || "";
+      const rows = [["LashPro KE Executive Report", range], ["Metric", "Value"]];
+      document.querySelectorAll("[data-export-label]").forEach((card) => rows.push([card.dataset.exportLabel, card.dataset.exportValue]));
+      rows.push([], ["M-PESA Express Reconciliation Audit Log"]);
+      document.querySelectorAll("#mpesa-audit-table tr").forEach((row) => {
+        rows.push(Array.from(row.cells, (cell) => cell.innerText.trim()));
+      });
+      const csv = "\uFEFF" + rows.map((row) => row.map(quote).join(",")).join("\r\n");
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const download = document.createElement("a");
+      download.href = url;
+      download.download = "lashpro-executive-report.csv";
+      document.body.appendChild(download);
+      download.click();
+      download.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    const installButton = document.getElementById("install-app");
+    const installFeedback = document.getElementById("install-feedback");
+    let installPrompt = null;
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      installPrompt = event;
+    });
+    installButton?.addEventListener("click", async () => {
+      if (!installPrompt) {
+        installFeedback.hidden = false;
+        installFeedback.textContent = "To install LashPro, open your browser menu and choose Install App or Add to Home Screen.";
+        return;
+      }
+      installPrompt.prompt();
+      await installPrompt.userChoice;
+      installPrompt = null;
+    });
+    window.addEventListener("appinstalled", () => {
+      installFeedback.hidden = false;
+      installFeedback.textContent = "LashPro is installed on this device.";
+    });
+  })();
+</script>
 {% endblock %}

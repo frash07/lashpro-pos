@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -21,6 +22,21 @@ def _sum(queryset, field):
     return queryset.aggregate(total=Sum(field))["total"] or ZERO
 
 
+def _masked_phone(phone):
+    digits = "".join(character for character in (phone or "") if character.isdigit())
+    if not digits:
+        return "—"
+    if digits.startswith("254") and len(digits) >= 12:
+        return f"+254 {digits[3:6]}***{digits[-3:]}"
+    if digits.startswith("0") and len(digits) >= 10:
+        return f"+254 {digits[1:4]}***{digits[-3:]}"
+    return f"{digits[:4]}***{digits[-3:]}" if len(digits) > 7 else "••••"
+
+
+def _display_amount(amount):
+    return f"{amount:,.2f}".rstrip("0").rstrip(".")
+
+
 @login_required(login_url="login")
 def daily_report(request):
     if not (request.user.is_superuser or getattr(request.user, "role", None) in {User.Role.OWNER, User.Role.MANAGER}):
@@ -39,6 +55,70 @@ def daily_report(request):
     )
     completed_sales = Sale.objects.filter(status=Sale.Status.COMPLETED, created_at__date__range=(start, end))
     gross_sales = _sum(SaleLine.objects.filter(**sales_filter).annotate(line_total=sale_line_total), "line_total")
+
+    service_lines = SaleLine.objects.filter(**sales_filter, service__isnull=False)
+    retail_lines = SaleLine.objects.filter(**sales_filter, product__isnull=False)
+    service_total = _sum(service_lines.annotate(line_total=sale_line_total), "line_total")
+    retail_total = _sum(retail_lines.annotate(line_total=sale_line_total), "line_total")
+    service_retail_total = service_total + retail_total
+    service_percent = round(service_total * 100 / service_retail_total) if service_retail_total else 0
+    retail_percent = 100 - service_percent if service_retail_total else 0
+    top_service = service_lines.values("description").annotate(total=Sum(sale_line_total)).order_by("-total", "description").first()
+
+    valid_payment_statuses = (PaymentTransaction.Status.SUCCEEDED, PaymentTransaction.Status.UNVERIFIED)
+    period_allocations = SalePayment.objects.filter(
+        sale__status=Sale.Status.COMPLETED,
+        payment_transaction__created_at__date__range=(start, end),
+        payment_transaction__status__in=valid_payment_statuses,
+    )
+    mpesa_volume = _sum(period_allocations.filter(payment_transaction__method=PaymentTransaction.Method.MPESA), "amount")
+    payment_volume = _sum(period_allocations.filter(
+        payment_transaction__method__in=(PaymentTransaction.Method.MPESA, PaymentTransaction.Method.CASH),
+    ), "amount")
+    mpesa_share = round(mpesa_volume * 100 / payment_volume) if payment_volume else 0
+
+    audit_transactions = PaymentTransaction.objects.filter(
+        method=PaymentTransaction.Method.MPESA,
+        created_at__date__range=(start, end),
+    ).select_related(
+        "reconciliation", "sale_allocation__sale__customer",
+    ).order_by("-created_at", "-pk")[:20]
+    mpesa_audit_rows = []
+    for payment in audit_transactions:
+        sale_payment = getattr(payment, "sale_allocation", None)
+        customer = sale_payment.sale.customer if sale_payment and sale_payment.sale_id else None
+        if payment.status == PaymentTransaction.Status.SUCCEEDED:
+            status_label, status_class = "SUCCESS", "success"
+        elif payment.status == PaymentTransaction.Status.FAILED:
+            status_label, status_class = "REJECTED", "danger"
+        elif payment.status == PaymentTransaction.Status.UNVERIFIED:
+            status_label, status_class = "PENDING", "warning"
+        else:
+            status_label, status_class = payment.get_status_display().upper(), "muted"
+        amount = sale_payment.amount if sale_payment else payment.amount
+        mpesa_audit_rows.append({
+            "payment": payment,
+            "phone": _masked_phone(customer.phone if customer else ""),
+            "amount_display": _display_amount(amount),
+            "status_label": status_label,
+            "status_class": status_class,
+        })
+
+    period_length = (end - start).days + 1
+    prior_start = start - timedelta(days=period_length)
+    prior_end = end - timedelta(days=period_length)
+    prior_sales = _sum(SaleLine.objects.filter(
+        sale__status=Sale.Status.COMPLETED,
+        sale__created_at__date__range=(prior_start, prior_end),
+    ).annotate(line_total=sale_line_total), "line_total")
+    if prior_sales:
+        revenue_change = (gross_sales - prior_sales) * 100 / prior_sales
+        revenue_trend = f"{revenue_change:+.1f}% vs " + ("yesterday" if period_length == 1 else "previous period")
+        revenue_trend_class = "positive" if revenue_change >= 0 else "negative"
+    elif gross_sales:
+        revenue_trend, revenue_trend_class = "New revenue vs previous period", "positive"
+    else:
+        revenue_trend, revenue_trend_class = "No previous sales for comparison", "neutral"
 
     cash_received = _sum(SalePayment.objects.filter(
         payment_transaction__method=PaymentTransaction.Method.CASH,
@@ -89,6 +169,9 @@ def daily_report(request):
     low_stock = list(Product.objects.filter(
         active=True, reorder_level__gt=0, on_hand__lte=F("reorder_level"),
     ).order_by("on_hand", "name")[:50])
+    low_stock_count = Product.objects.filter(
+        active=True, reorder_level__gt=0, on_hand__lte=F("reorder_level"),
+    ).count()
     sessions_opened = CashSession.objects.filter(opened_at__date__range=(start, end))
     closed_sessions = CashSession.objects.filter(status=CashSession.Status.CLOSED, closed_at__date__range=(start, end))
     sessions_awaiting_review = CashSession.objects.filter(status=CashSession.Status.PENDING_APPROVAL, closed_at__date__range=(start, end))
@@ -115,6 +198,23 @@ def daily_report(request):
     }
     inventory_products = Product.objects.filter(active=True).order_by("name")[:100]
     return render(request, "reporting/dashboard.html", {
-        "form": form, "report": report, "start": start, "end": end,
+        "form": form,
+        "report": report,
+        "start": start,
+        "end": end,
         "inventory_products": inventory_products,
+        "low_stock_count": low_stock_count,
+        "mpesa_audit_rows": mpesa_audit_rows,
+        "executive": {
+            "revenue_label": "Today's Total Revenue" if start == end == today else "Total Revenue",
+            "revenue_display": f"KES {gross_sales:,.0f}",
+            "revenue_trend": revenue_trend,
+            "revenue_trend_class": revenue_trend_class,
+            "mpesa_display": f"KES {mpesa_volume:,.0f}",
+            "mpesa_share": mpesa_share,
+            "service_percent": service_percent,
+            "retail_percent": retail_percent,
+            "top_service": top_service["description"] if top_service else "No service sales yet",
+            "academy_connected": False,
+        },
     })
