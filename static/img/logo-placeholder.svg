@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="LashPro logo placeholder">
+  <defs><linearGradient id="pink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5a7c5"/><stop offset="1" stop-color="#e6317d"/></linearGradient></defs>
+  <rect x="3" y="3" width="90" height="90" rx="26" fill="#fff1f6"/>
+  <path d="M20 62c13-1 19-12 28-25 9 13 16 24 28 25" fill="none" stroke="url(#pink)" stroke-linecap="round" stroke-width="5"/>
+  <text x="48" y="78" fill="#1b1618" font-family="Georgia,serif" font-size="19" text-anchor="middle">LP</text>
+</svg>

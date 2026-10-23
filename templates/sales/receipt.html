@@ -1,18 +1,78 @@
 {% extends "base.html" %}
-
-{% block title %}Receipt {{ sale.receipt_number }} · LashPro{% endblock %}
-
-{% block head_extra %}
-<meta name="robots" content="noindex,nofollow">
-{% endblock %}
-
+{% load static %}
+{% block title %}Receipt {{ sale.receipt_number }} · Lashpro KE{% endblock %}
+{% block head_extra %}{{ block.super }}<meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="{% static 'css/receipt.css' %}">{% endblock %}
+{% block body_class %}receipt-body{% endblock %}
 {% block content %}
-<header class="no-print"><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">New sale</a></header><main class="receipt">
-<h1>Sale receipt</h1><p>Receipt {{ sale.receipt_number }}</p><p>{{ sale.created_at|date:"d M Y, H:i" }} · {{ sale.customer.name|default:"Walk-in customer" }}</p>
-<table><tr><th>Item</th><th>Qty</th><th>Unit price</th><th>Total</th></tr>{% for line in sale.lines.all %}<tr><td>{{ line.description }}{% if line.service_id and line.technician %}<small>Technician: {{ line.technician.get_full_name|default:line.technician.username }}</small>{% endif %}{% if line.discount %}<small>Discount KSh {{ line.discount|floatformat:2 }}</small>{% endif %}</td><td>{{ line.quantity }}</td><td>KSh {{ line.unit_price|floatformat:2 }}</td><td>KSh {{ line.line_total|floatformat:2 }}</td></tr>{% endfor %}</table>
-<p class="total">Sale total <b>KSh {{ sale.total_amount|floatformat:2 }}</b></p>{% if sale.refunded_amount %}<p>Refunds issued: KSh {{ sale.refunded_amount|floatformat:2 }}</p><p>Net sale total: KSh {{ sale.net_total|floatformat:2 }}</p>{% endif %}<p>Confirmed paid: KSh {{ sale.paid_amount|floatformat:2 }}</p>{% if sale.unverified_amount %}<p>M-Pesa pending verification: KSh {{ sale.unverified_amount|floatformat:2 }}</p>{% endif %}<p>Net paid after refunds: KSh {{ sale.net_paid_amount|floatformat:2 }}</p><p>Balance due: KSh {{ sale.balance_due|floatformat:2 }}</p>{% for refund in sale.refunds.all %}{% if refund.status == "ISSUED" %}<p>Refund issued · KSh {{ refund.amount|floatformat:2 }} · {{ refund.get_method_display }} · {{ refund.payout.verification_status }}</p>{% endif %}{% endfor %}
-{% for allocation in sale.payment_allocations.all %}<p>{{ allocation.payment_transaction.get_method_display }} {{ allocation.payment_transaction.display_reference }} — KSh {{ allocation.amount|floatformat:2 }} applied ({{ allocation.payment_transaction.get_status_display }}){% if allocation.payment_transaction.method == "CASH" and allocation.change_due > 0 %}<br>Cash received: KSh {{ allocation.payment_transaction.amount|floatformat:2 }} · Change returned: KSh {{ allocation.change_due|floatformat:2 }}{% endif %}</p>{% endfor %}
-<div class="no-print"><a class="button" href="{% url 'sales:receipt_pdf' token=sale.receipt_token %}">Download PDF receipt</a> <button onclick="shareReceipt()">Share / copy receipt link</button><button onclick="window.print()">Print receipt</button></div><p>Thank you for choosing LashPro.</p></main><script>
-async function shareReceipt(){try{if(navigator.share){await navigator.share({title:document.title,url:location.href});}else{await navigator.clipboard.writeText(location.href);alert("Receipt link copied.");}}catch(error){if(error.name!=="AbortError"){window.prompt("Copy this receipt link:",location.href);}}}
-</script>
+<main class="receipt-page">
+  <section class="success-header no-print" aria-labelledby="success-title">
+    <span class="success-check" aria-hidden="true">✓</span>
+    <p class="success-kicker">SALE COMPLETE</p>
+    <h1 id="success-title">Sale Completed!</h1>
+    <strong class="success-total">KSh {{ sale.total_amount|floatformat:"2g" }}</strong>
+    {% with first_allocation=sale.payment_allocations.all|first %}
+      {% if first_allocation.payment_transaction.method == "MPESA" and first_allocation.payment_transaction.status == "UNVERIFIED" %}
+        <p class="payment-confirmation">M-PESA reference recorded, awaiting verification</p>
+      {% elif first_allocation %}
+        <p class="payment-confirmation">Payment received via {{ first_allocation.payment_transaction.get_method_display }}</p>
+      {% else %}
+        <p class="payment-confirmation">Sale saved. Payment is still due.</p>
+      {% endif %}
+    {% endwith %}
+    <div class="receipt-actions">
+      <button type="button" class="btn btn-primary" onclick="window.print()">Print Receipt</button>
+      <button type="button" class="btn btn-secondary" id="share-receipt">Send Receipt</button>
+      <a class="receipt-pdf-link" href="{% url 'sales:receipt_pdf' token=sale.receipt_token %}">Download PDF</a>
+    </div>
+  </section>
+
+  <article class="receipt-card" aria-label="Sale receipt">
+    <header class="receipt-card-header">
+      <div class="receipt-brand"><img src="{% static 'img/logo-placeholder.svg' %}" alt=""><span><strong>Lashpro KE</strong><small>Beauty. Skills. Opportunities.</small></span></div>
+      <div class="receipt-meta"><span>Receipt number</span><strong>{{ sale.receipt_number }}</strong><span>{{ sale.created_at|date:"d M Y, H:i" }}</span></div>
+    </header>
+    <div class="receipt-customer"><span>Client</span><strong>{{ sale.customer.name|default:"Walk-in customer" }}</strong></div>
+
+    <div class="receipt-table-wrap">
+      <table class="receipt-table">
+        <thead><tr><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">Unit price</th><th scope="col">Total</th></tr></thead>
+        <tbody>
+          {% for line in sale.lines.all %}
+          <tr>
+            <td><strong>{{ line.description }}</strong>{% if line.service_id and line.technician %}<small>Technician: {{ line.technician.get_full_name|default:line.technician.username }}</small>{% endif %}{% if line.discount %}<small>Discount KSh {{ line.discount|floatformat:"2g" }}</small>{% endif %}</td>
+            <td>{{ line.quantity }}</td><td>KSh {{ line.unit_price|floatformat:"2g" }}</td><td>KSh {{ line.line_total|floatformat:"2g" }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="4" class="receipt-empty">No sale items were recorded.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <section class="receipt-totals" aria-label="Sale totals">
+      <div><span>Sale total</span><strong>KSh {{ sale.total_amount|floatformat:"2g" }}</strong></div>
+      {% if sale.refunded_amount %}<div><span>Refunds issued</span><strong>KSh {{ sale.refunded_amount|floatformat:"2g" }}</strong></div><div><span>Net sale total</span><strong>KSh {{ sale.net_total|floatformat:"2g" }}</strong></div>{% endif %}
+      <div><span>Confirmed paid</span><strong>KSh {{ sale.paid_amount|floatformat:"2g" }}</strong></div>
+      {% if sale.unverified_amount %}<div class="receipt-pending"><span>M-PESA pending verification</span><strong>KSh {{ sale.unverified_amount|floatformat:"2g" }}</strong></div>{% endif %}
+      <div><span>Net paid after refunds</span><strong>KSh {{ sale.net_paid_amount|floatformat:"2g" }}</strong></div>
+      <div class="receipt-balance"><span>Balance due</span><strong>KSh {{ sale.balance_due|floatformat:"2g" }}</strong></div>
+    </section>
+
+    {% if sale.payment_allocations.all %}
+    <section class="receipt-payments" aria-label="Payment details">
+      <h2>Payment details</h2>
+      {% for allocation in sale.payment_allocations.all %}
+      <div class="receipt-payment-row">
+        <span><strong>{{ allocation.payment_transaction.get_method_display }}</strong><small>{{ allocation.payment_transaction.display_reference }} · {{ allocation.payment_transaction.get_status_display }}</small></span>
+        <span class="receipt-payment-amount">KSh {{ allocation.amount|floatformat:"2g" }} applied</span>
+        {% if allocation.payment_transaction.method == "CASH" and allocation.change_due > 0 %}<small class="receipt-change">Cash received: KSh {{ allocation.payment_transaction.amount|floatformat:"2g" }} · Change returned: KSh {{ allocation.change_due|floatformat:"2g" }}</small>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% for refund in sale.refunds.all %}{% if refund.status == "ISSUED" %}<p class="receipt-refund">Refund issued · KSh {{ refund.amount|floatformat:"2g" }} · {{ refund.get_method_display }} · {{ refund.payout.verification_status }}</p>{% endif %}{% endfor %}
+    <footer class="receipt-thanks">Thank you for choosing Lashpro KE.</footer>
+  </article>
+  <p class="receipt-new-sale no-print"><a class="btn btn-primary" href="{% url 'sales:checkout' %}">Start a new sale</a></p>
+</main>
 {% endblock %}
+{% block page_scripts %}<script src="{% static 'js/receipt.js' %}" defer></script>{% endblock %}

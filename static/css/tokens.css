@@ -1,0 +1,50 @@
+﻿:root {
+  /* Brand */
+  --pink-600: #e6317d;      /* primary buttons, active pills, active sidebar item */
+  --pink-700: #c9246a;      /* hover */
+  --pink-100: #fde4ee;      /* soft fills, selected states */
+  --pink-50:  #fff1f6;      /* page background tint */
+  --bg-gradient: linear-gradient(180deg, #fde4ee 0%, #fff7fa 100%);
+
+  /* Neutrals */
+  --ink-900: #1b1618;       /* admin sidebar, headings */
+  --ink-700: #3b3337;
+  --ink-500: #7a6f74;       /* secondary text */
+  --line:    #eee4e8;       /* borders */
+  --surface: #ffffff;
+
+  /* Status */
+  --green-600: #1f9d63;     /* M-PESA button, In Stock, Active, Confirmed */
+  --green-100: #dff5e9;
+  --amber-600: #c98a12;     /* Low Stock, Pending */
+  --amber-100: #fdf0d2;
+  --red-600:  #d6334a;      /* Out of stock, Rejected, Clear All */
+  --red-100:  #fde2e6;
+  --purple-100: #eadcf7;    /* Card payment badge */
+
+  /* Shape and depth */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-card: 0 1px 2px rgba(27,22,24,.06), 0 4px 14px rgba(27,22,24,.06);
+
+  /* Type */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--ink-900);
+  background: var(--bg-gradient);
+  margin: 0;
+}
+
+h1, h2, h3 {
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.brand-wordmark {
+  font-family: var(--font-display);
+}

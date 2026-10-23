@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body_class %}pos-body{% endblock %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pos.css' %}">
+  {% block pos_head %}{% endblock %}
+{% endblock %}
+{% block shell %}
+<div class="pos-app-shell">
+  <header class="pos-topbar no-print">
+    <a class="pos-brand" href="{% url 'sales:checkout' %}" aria-label="Lashpro KE, Point of Sale">
+      <img src="{% static 'img/logo-placeholder.svg' %}" alt="" width="36" height="36">
+      <span><strong class="brand-wordmark">Lashpro KE</strong><small>Point of Sale</small></span>
+    </a>
+    <nav class="pos-desktop-links" aria-label="Staff navigation">
+      <a href="{% url 'sales:checkout' %}"{% if request.resolver_match.url_name == 'checkout' %} aria-current="page"{% endif %}>POS</a>
+      <a href="{% url 'sales:payments' %}"{% if request.resolver_match.url_name == 'payments' %} aria-current="page"{% endif %}>Sales</a>
+      <a href="{% url 'sales:services' %}"{% if request.resolver_match.url_name == 'services' %} aria-current="page"{% endif %}>Services</a>
+      {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}<a href="{% url 'reporting:dashboard' %}">Admin Portal</a>{% endif %}
+    </nav>
+    <div class="pos-topbar-actions">
+      <span class="connection-badge"><i class="status-dot" aria-hidden="true"></i><span id="network-status">Online</span></span>
+      <button type="button" class="install-button" id="install-app" hidden aria-label="Install LashPro">Install</button>
+      <span class="pos-user"><span class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }}</small></span></span>
+      <time id="clock" class="pos-clock" aria-label="Current time"></time>
+      <button type="button" class="register-toggle" id="register-toggle" aria-controls="register-panel" aria-expanded="false"><span aria-hidden="true">▣</span><span>Current Sale</span><b id="register-count">0</b><strong id="register-mobile-total">KSh 0.00</strong></button>
+      <form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form>
+    </div>
+  </header>
+  {% block content %}{% endblock %}
+  <nav class="tabbar no-print" aria-label="Main">
+    <a href="{% url 'sales:checkout' %}"{% if request.resolver_match.url_name == 'checkout' %} class="is-active" aria-current="page"{% endif %}><span aria-hidden="true">▦</span><span>POS</span></a>
+    <a href="{% url 'sales:payments' %}"{% if request.resolver_match.url_name == 'payments' %} class="is-active" aria-current="page"{% endif %}><span aria-hidden="true">＄</span><span>Sales</span></a>
+    <a href="{% url 'sales:services' %}"{% if request.resolver_match.url_name == 'services' %} class="is-active" aria-current="page"{% endif %}><span aria-hidden="true">✧</span><span>Services</span></a>
+    <details class="more-menu mobile-more">
+      <summary><span aria-hidden="true">•••</span><span>More</span></summary>
+      <div class="more-sheet">
+        <a href="{% url 'payments:cash-session' %}">Cash session</a>
+        <a href="{% url 'sales:refunds' %}">Refunds</a>
+        <a href="{% url 'payments:reconciliation' %}">M-PESA review</a>
+        <a href="{% url 'commissions:dashboard' %}">Commissions</a>
+        <a href="{% url 'password_change' %}">Change password</a>
+        {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}<a href="{% url 'reporting:dashboard' %}">Admin Portal</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+      </div>
+    </details>
+  </nav>
+  <details class="more-menu desktop-more no-print">
+    <summary>More</summary>
+    <div class="more-sheet">
+      <a href="{% url 'payments:cash-session' %}">Cash session</a>
+      <a href="{% url 'sales:refunds' %}">Refunds</a>
+      <a href="{% url 'payments:reconciliation' %}">M-PESA review</a>
+      <a href="{% url 'commissions:dashboard' %}">Commissions</a>
+      <a href="{% url 'password_change' %}">Change password</a>
+      {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}<a href="{% url 'reporting:dashboard' %}">Admin Portal</a>{% endif %}
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+    </div>
+  </details>
+</div>
+{% endblock %}
+{% block page_scripts %}<script src="{% static 'js/pos.js' %}" defer></script>{% endblock %}

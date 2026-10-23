@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9c4b71"/><stop offset=".5" stop-color="#d986aa"/><stop offset="1" stop-color="#f3c4d5"/></linearGradient><radialGradient id="glow"><stop stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/><circle cx="880" cy="260" r="480" fill="url(#glow)"/>
+  <path d="M210 500c185-215 597-215 780 0-183 206-595 206-780 0Z" fill="#fff" fill-opacity=".22" stroke="#fff" stroke-opacity=".7" stroke-width="8"/>
+  <path d="M260 500c165-154 516-154 680 0-164 150-515 150-680 0Z" fill="#60354a" fill-opacity=".55"/>
+  <ellipse cx="600" cy="500" rx="122" ry="142" fill="#4d8391" fill-opacity=".78"/><ellipse cx="600" cy="500" rx="56" ry="72" fill="#1b252e"/><circle cx="560" cy="457" r="29" fill="#fff" fill-opacity=".85"/>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="10" opacity=".9"><path d="M260 445 205 360"/><path d="M350 395 310 295"/><path d="M460 364 440 250"/><path d="M570 352 565 238"/><path d="M680 353 700 242"/><path d="M790 375 830 272"/><path d="M900 420 957 334"/></g>
+  <rect x="33" y="822" width="1134" height="47" rx="15" fill="#1b1618" fill-opacity=".58"/>
+  <text x="600" y="853" fill="#fff" font-family="Arial,sans-serif" font-size="22" text-anchor="middle">Replace this hero placeholder with your licensed LashPro image</text>
+</svg>

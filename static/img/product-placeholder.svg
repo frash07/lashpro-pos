@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Product image placeholder">
+  <rect width="400" height="400" rx="36" fill="#fff1f6"/>
+  <circle cx="200" cy="172" r="76" fill="#fde4ee"/>
+  <path d="M120 170c36-39 123-39 160 0-37 39-124 39-160 0Z" fill="none" stroke="#e6317d" stroke-width="8"/>
+  <path d="M135 146 119 119m45 12-6-37m49 34 8-39m35 49 18-27" fill="none" stroke="#c9246a" stroke-linecap="round" stroke-width="6"/>
+  <circle cx="200" cy="170" r="21" fill="#e6317d"/><circle cx="192" cy="161" r="6" fill="#fff"/>
+  <text x="200" y="292" fill="#7a6f74" font-family="Arial,sans-serif" font-size="18" text-anchor="middle">PRODUCT IMAGE</text>
+  <text x="200" y="322" fill="#7a6f74" font-family="Arial,sans-serif" font-size="14" text-anchor="middle">replace with your own photo</text>
+</svg>

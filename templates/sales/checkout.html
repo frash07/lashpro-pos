@@ -1,33 +1,12 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base_pos.html" %}{% load static %}
 {% block body_class %}pos-body{% endblock %}
-{% block title %}Salon POS · LashPro{% endblock %}
-{% block head_extra %}<link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}?v=pos-20261022">{% endblock %}
-
+{% block title %}Salon POS · Lashpro KE{% endblock %}
 {% block content %}
-<header class="app-header">
-  <a class="brand-lockup" href="{% url 'sales:checkout' %}">
-    <span class="brand-mark" aria-hidden="true">✦</span>
-    <span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>NAIROBI · PREMIER LASH &amp; ACADEMY</span></span>
-  </a>
-  <nav class="mode-toggle" aria-label="Workspace">
-    <a class="mode-link is-active" href="{% url 'sales:checkout' %}" aria-current="page">▣ &nbsp; Salon POS Mode</a>
-    {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}<a class="mode-link" href="{% url 'reporting:dashboard' %}">▦ &nbsp; Admin Portal</a>{% endif %}
-  </nav>
-  <div class="header-actions">
-    <span class="connection-badge"><i class="status-dot" aria-hidden="true"></i><span id="network-status">Online</span></span>
-    <button type="button" class="install-button" id="install-app" hidden>⇩ &nbsp; Install App</button>
-    <a class="button-quiet password-change" href="{% url 'password_change' %}">Change password</a>
-    <button type="button" class="register-toggle" id="register-toggle" aria-controls="register-panel" aria-expanded="false">🛒 <span>Order</span> <b id="register-count">0</b> <strong id="register-mobile-total">KES 0</strong></button>
-    <div class="user-chip"><span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }}</small></span></div>
-    <form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form>
-  </div>
-</header>
-
 <form method="post" id="checkout" class="pos-layout">
   {% csrf_token %}{{ details.idempotency_key }}
   <section class="catalog-pane" aria-label="Salon item catalog">
     <div class="pos-toolbar">
-      <label class="catalog-search"><span aria-hidden="true">⌕</span><span class="visually-hidden">Search catalog</span><input type="search" id="catalog-search" placeholder="Search lash sets, adhesive, services…" autocomplete="off"></label>
+      <label class="catalog-search"><span aria-hidden="true">⌕</span><span class="visually-hidden">Search catalog</span><input type="search" id="catalog-search" placeholder="Search products, services or scan barcode…" autocomplete="off"></label>
       <div class="pos-context">
         <a class="shift-badge {% if not cash_session %}shift-closed{% endif %}" href="{% url 'payments:cash-session' %}"><span aria-hidden="true">◷</span> Shift: {% if cash_session %}{{ cash_session.opened_at|date:"g:i A" }}{% else %}Closed{% endif %}</a>
         <span class="currency-badge">Rate: KES (Sh)</span>
@@ -35,10 +14,10 @@
     </div>
 
     <nav class="catalog-tabs" aria-label="Catalog categories">
-      <button type="button" class="catalog-filter" data-category="all" aria-pressed="false"><span aria-hidden="true">▦</span> All Catalog</button>
-      <button type="button" class="catalog-filter" data-category="service" aria-pressed="false"><span aria-hidden="true">✧</span> Lash Services</button>
-      <button type="button" class="catalog-filter" data-category="training" aria-pressed="false"><span aria-hidden="true">♧</span> Training &amp; Courses</button>
-      <button type="button" class="catalog-filter is-active" data-category="product" aria-pressed="true"><span aria-hidden="true">◇</span> Products &amp; Supplies</button>
+      <button type="button" class="catalog-filter" data-category="all" aria-pressed="false"><span aria-hidden="true">▦</span> All</button>
+      <button type="button" class="catalog-filter" data-category="service" aria-pressed="false"><span aria-hidden="true">✧</span> Services</button>
+      <button type="button" class="catalog-filter" data-category="training" aria-pressed="false"><span aria-hidden="true">♧</span> Training</button>
+      <button type="button" class="catalog-filter is-active" data-category="product" aria-pressed="true"><span aria-hidden="true">◇</span> Products</button>
     </nav>
 
     <div class="catalog-scroll">
@@ -48,20 +27,20 @@
       <div class="catalog-grid" id="catalog-grid">
         <p class="training-empty" id="training-empty" hidden>Training courses are not set up in this POS catalog yet.</p>
         {% for service in services %}
-        <button type="button" class="catalog-card service-card" data-catalog-card data-category="service" data-item-kind="service" data-item-id="{{ service.pk }}" data-item-name="{{ service.name }}" data-item-meta="Lash service · {{ service.duration_minutes }} min" data-item-price="{{ service.price }}">
-          <span class="catalog-card-top"><span class="catalog-icon" aria-hidden="true">✧</span><span class="catalog-type">SERVICE</span></span>
+        <button type="button" class="catalog-card service-card" data-catalog-card data-category="service" data-item-kind="service" data-item-id="{{ service.pk }}" data-item-name="{{ service.name }}" data-item-meta="Service" data-item-price="{{ service.price }}">
+          <span class="catalog-image"><img data-catalog-image src="{% static 'img/product-placeholder.svg' %}" alt="" loading="lazy"></span><span class="catalog-card-top"><span class="catalog-type">SERVICE</span></span>
           <strong>{{ service.name }}</strong>
           <span class="catalog-card-meta">{{ service.duration_minutes }} minute service</span>
-          <span class="catalog-card-bottom"><b>KES {{ service.price|floatformat:2 }}</b><span class="add-icon" aria-hidden="true">＋</span></span>
+          <span class="catalog-card-bottom"><b>KSh {{ service.price|floatformat:"0g" }}</b><span class="add-icon" aria-hidden="true">＋</span></span>
         </button>
         {% endfor %}
         {% for product in products %}
-        <button type="button" class="catalog-card product-card" data-catalog-card data-category="product" data-item-kind="product" data-item-id="{{ product.pk }}" data-item-name="{{ product.name }}" data-item-meta="Stock: {{ product.on_hand|floatformat:'-3' }}" data-item-price="{{ product.selling_price }}"{% if product.on_hand <= 0 %} disabled aria-disabled="true"{% endif %}>
-          <span class="catalog-card-top"><span class="catalog-icon" aria-hidden="true">◇</span><span class="catalog-type">PRODUCT</span></span>
+        <button type="button" class="catalog-card product-card" data-catalog-card data-category="product" data-item-kind="product" data-item-id="{{ product.pk }}" data-item-name="{{ product.name }}" data-item-sku="{{ product.sku|default:'' }}" data-item-meta="Product" data-item-price="{{ product.selling_price }}"{% if product.on_hand <= 0 %} disabled aria-disabled="true"{% endif %}>
+          <span class="catalog-image"><img data-catalog-image src="{% static 'img/product-placeholder.svg' %}" alt="" loading="lazy"></span><span class="catalog-card-top"><span class="catalog-type">PRODUCT</span></span>
           <strong>{{ product.name }}</strong>
           <span class="catalog-card-description">{{ product.pos_description }}</span>
           <span class="catalog-card-meta">{% if product.sku %}SKU {{ product.sku }}{% else %}&nbsp;{% endif %}</span>
-          <span class="catalog-card-bottom"><b>KES {{ product.selling_price|floatformat:2 }}</b><span class="catalog-stock">Stock: {{ product.on_hand|floatformat:"-3" }}</span><span class="add-icon" aria-hidden="true">{% if product.on_hand > 0 %}＋{% else %}—{% endif %}</span></span>
+          <span class="catalog-card-bottom"><b>KSh {{ product.selling_price|floatformat:"0g" }}</b><span class="catalog-stock">Stock: {{ product.on_hand|floatformat:"-3" }}</span><span class="add-icon" aria-hidden="true">{% if product.on_hand > 0 %}＋{% else %}—{% endif %}</span></span>
         </button>
         {% endfor %}
         {% if not services and not products %}<p class="empty-state catalog-empty">No active services or products are available in the catalog.</p>{% endif %}
@@ -70,12 +49,12 @@
   </section>
 
   <aside class="register-panel" id="register-panel" aria-label="Current order register">
-    <div class="register-header"><span class="register-title-icon" aria-hidden="true">▣</span><h1>Current Order Register</h1><button type="button" class="clear-order" id="clear-items">♧ &nbsp; Clear</button><button type="button" class="register-close" id="register-close" aria-label="Close order register">×</button></div>
+    <div class="register-header"><span class="register-title-icon" aria-hidden="true">▣</span><h1>Current Sale</h1><button type="button" class="clear-order" id="clear-items"><span aria-hidden="true">×</span> Clear All</button><button type="button" class="register-close" id="register-close" aria-label="Close order register">×</button></div>
     <div class="register-identity">
-      <label>Technician / Master
+      <label>Technician
         <select id="default-technician"><option value="">Choose technician</option>{% for technician in technicians %}<option value="{{ technician.pk }}"{% if technician.pk == default_technician_id %} selected{% endif %}>{{ technician.get_full_name|default:technician.username }}</option>{% endfor %}</select>
       </label>
-      <label>Client / Student
+      <label>Client
         {{ details.customer }}{{ details.customer.errors }}
       </label>
     </div>
@@ -85,7 +64,7 @@
       {% for line in lines %}
       <div class="item-row{% if not line.product.value and not line.service.value and not line.errors %} is-empty{% endif %}" data-item-row data-has-errors="{% if line.errors %}true{% else %}false{% endif %}">
         <div class="native-line-fields" aria-hidden="true">{{ line.product }}{{ line.service }}{{ line.DELETE }}</div>
-        <div class="line-card">
+        <div class="line-card"><img class="line-thumb" data-line-thumb src="{% static 'img/product-placeholder.svg' %}" alt="">
           <div class="line-card-top"><div class="line-copy"><strong data-line-name>Choose an item</strong><small data-line-meta></small></div><button type="button" class="remove-line" data-remove aria-label="Remove item">×</button></div>
           <div class="line-card-bottom">
             <div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div>
@@ -102,7 +81,7 @@
     <template id="item-template">{% with line=lines.empty_form %}
       <div class="item-row is-empty" data-item-row data-has-errors="false">
         <div class="native-line-fields" aria-hidden="true">{{ line.product }}{{ line.service }}{{ line.DELETE }}</div>
-        <div class="line-card">
+        <div class="line-card"><img class="line-thumb" data-line-thumb src="{% static 'img/product-placeholder.svg' %}" alt="">
           <div class="line-card-top"><div class="line-copy"><strong data-line-name>Choose an item</strong><small data-line-meta></small></div><button type="button" class="remove-line" data-remove aria-label="Remove item">×</button></div>
           <div class="line-card-bottom"><div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div><span class="line-quantity" data-line-quantity>× 1</span><strong class="line-total" data-line-total>KES 0.00</strong></div>
           <label class="technician-field" data-technician-field hidden>Assigned technician {{ line.technician }}{{ line.technician.errors }}</label>
@@ -110,12 +89,12 @@
         </div>
       </div>
     {% endwith %}</template>
-    <p class="empty-register" id="cart-empty"><span aria-hidden="true">🛒</span><strong>Register is empty</strong><small>Select items from the catalog to start a transaction.</small></p>
+    <p class="empty-register" id="cart-empty"><span aria-hidden="true">🛒</span><strong>Your sale is empty</strong><small>Choose services or products to start a sale.</small></p>
 
     <div class="register-footer">
       {{ payments.management_form }}
       {% if payments.non_form_errors %}<div class="error" role="alert">{{ payments.non_form_errors }}</div>{% endif %}
-      <div class="payment-rows" id="payments">
+      <div class="payment-rows" id="payments" hidden>
         {% for payment in payments %}
         <div class="payment-row" data-payment-row>
           <label class="payment-method">Method {{ payment.method }}{{ payment.method.errors }}</label>
@@ -135,203 +114,40 @@
       {% endwith %}</template>
 
       <label class="promo-entry"><span class="visually-hidden">Promo / Student Code</span><input type="text" id="promo-code" placeholder="PROMO / STUDENT CODE" autocomplete="off"><button type="button" id="apply-promo">Apply</button></label>
-      <div class="payment-actions">
-        <button type="button" class="payment-option mpesa-option" id="stk-payment">Pay via M-PESA Express (STK)</button>
-        <div class="payment-secondary"><button type="button" class="payment-option cash-option" data-add-payment="CASH"{% if not cash_session %} disabled title="Open a cash session before accepting cash"{% endif %}>Cash</button><button type="button" class="payment-option card-option" id="card-payment">Card / PDQ</button></div>
-        <button type="button" class="manual-mpesa-link" data-add-payment="MPESA">Record a manual M-Pesa reference</button>
-        <button type="button" class="manual-mpesa-link" id="fill-balance">Fill exact balance</button>
+      <div class="payment-method-block">
+        <span class="payment-method-title">Payment method</span>
+        <div class="payment-actions" role="group" aria-label="Payment method">
+          <button type="button" class="payment-option mpesa-option" id="stk-payment" data-add-payment="MPESA" aria-pressed="false">M-PESA</button>
+          <button type="button" class="payment-option cash-option" data-add-payment="CASH" aria-pressed="false"{% if not cash_session %} disabled title="Open a cash session before accepting cash"{% endif %}>Cash</button>
+          <button type="button" class="payment-option card-option" id="card-payment" disabled aria-disabled="true">Card <small>Coming soon</small></button>
+          <button type="button" class="payment-option split-option" id="split-payment" aria-pressed="false">Split</button>
+        </div>
+        <label class="mpesa-phone-field" id="mpesa-phone-field" hidden>Phone for future M-PESA prompt
+          <input type="tel" id="mpesa-phone" autocomplete="tel" placeholder="e.g. 0712 345 678">
+          <small>This number is optional and is not submitted with the sale.</small>
+        </label>
+        <div class="payment-secondary">
+          <button type="button" class="manual-mpesa-link" id="fill-balance">Fill exact balance</button>
+        </div>
       </div>
       <p class="pos-notice" id="pos-notice" role="status" hidden></p>
       {% if not cash_session %}<a class="cash-session-notice" href="{% url 'payments:cash-session' %}">Open a cash session to accept cash payments.</a>{% endif %}
 
       <div class="register-summary">
         <div><span>Subtotal</span><strong id="subtotal">KES 0.00</strong></div>
-        <div><span>VAT (16% Incl.)</span><strong id="vat">KES 0.00</strong></div>
-        <div class="balance-row"><span>Total Due</span><strong id="total">KES 0.00</strong></div>
+        <div><span>VAT (16% included)</span><strong id="vat">KES 0.00</strong></div>
+        <div class="balance-row"><span>Total</span><strong id="total">KES 0.00</strong></div>
         <div class="payment-allocation"><span>Cash received</span><strong id="cash-received">KES 0.00</strong></div>
         <div class="payment-allocation"><span>Change to return</span><strong id="cash-change">KES 0.00</strong></div>
         <div class="payment-allocation"><span>M-Pesa awaiting verification</span><strong id="mpesa-pending">KES 0.00</strong></div>
         <div class="payment-allocation balance-small"><span>Balance to collect</span><strong id="balance-due">KES 0.00</strong></div>
       </div>
       <p class="payment-note">Catalog prices are treated as VAT-inclusive for this display. Manual M-Pesa references remain unverified until reconciled. Cash requires an open shift.</p>
-      <button class="submit checkout-submit" type="submit">Complete Sale <span aria-hidden="true">→</span></button>
+      <button class="submit checkout-submit" type="submit"><span>Complete Sale</span><small id="submit-total">KSh 0.00</small></button>
     </div>
   </aside>
 </form>
 <div class="register-backdrop" id="register-backdrop" hidden></div>
 
 {{ prices|json_script:"prices" }}
-<script>
-(()=>{
-  const prices=JSON.parse(document.getElementById("prices").textContent);
-  const format=n=>new Intl.NumberFormat("en-KE",{style:"currency",currency:"KES"}).format(Number(n)||0);
-  const field=(row,name)=>row.querySelector('[name$="-'+name+'"]');
-  const activeRows=selector=>[...document.querySelectorAll(selector)].filter(row=>{const deleted=row.querySelector('input[name$="-DELETE"]');return !deleted||!deleted.checked;});
-  const rows=()=>activeRows("#items [data-item-row]");
-  const payments=()=>activeRows("#payments [data-payment-row]");
-  let orderTotal=0;
-  let noticeTimer=null;
-  function showNotice(message){const notice=document.getElementById("pos-notice");notice.textContent=message;notice.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.hidden=true,5200);}
-  const register=document.getElementById("register-panel"),backdrop=document.getElementById("register-backdrop"),registerToggle=document.getElementById("register-toggle");
-  function setRegisterOpen(open){register.classList.toggle("is-open",open);backdrop.hidden=!open;registerToggle.setAttribute("aria-expanded",String(open));document.body.classList.toggle("register-open",open);}
-  registerToggle.addEventListener("click",()=>setRegisterOpen(!register.classList.contains("is-open")));
-  document.getElementById("register-close").addEventListener("click",()=>setRegisterOpen(false));
-  backdrop.addEventListener("click",()=>setRegisterOpen(false));
-  document.addEventListener("keydown",event=>{if(event.key==="Escape")setRegisterOpen(false);});
-  document.getElementById("apply-promo").addEventListener("click",()=>showNotice("Promo and student codes are not connected yet. No discount was applied."));
-  document.getElementById("stk-payment").addEventListener("click",()=>showNotice("M-PESA Express is not connected yet. Use the manual M-Pesa reference option to record a payment."));
-  document.getElementById("card-payment").addEventListener("click",()=>showNotice("Card / PDQ processing is not connected yet. You can record cash or a manual M-Pesa reference."));
-
-  function cardFor(kind,id){return [...document.querySelectorAll("[data-catalog-card]")].find(card=>card.dataset.itemKind===kind&&card.dataset.itemId===String(id));}
-  function remainingBalance(exceptRow=null){
-    let cash=0,mpesa=0;
-    payments().filter(row=>row!==exceptRow).forEach(row=>{
-      const amount=Number(field(row,"amount").value)||0;
-      if(field(row,"method").value==="CASH")cash+=amount;
-      else if(field(row,"method").value==="MPESA")mpesa+=amount;
-    });
-    const afterMpesa=Math.max(0,orderTotal-Math.min(mpesa,orderTotal));
-    return Math.max(0,afterMpesa-Math.min(cash,afterMpesa));
-  }
-  function update(){
-    let total=0,count=0,cash=0,mpesa=0;
-    rows().forEach(row=>{
-      const product=field(row,"product"),service=field(row,"service");
-      const productId=product.value,serviceId=service.value,kind=productId?"product":serviceId?"service":"";
-      const id=productId||serviceId,selected=!!id,tech=field(row,"technician");
-      const techField=row.querySelector("[data-technician-field]");
-      if(techField){techField.hidden=!serviceId;tech.required=!!serviceId;if(!serviceId)tech.value="";}
-      const hasErrors=row.dataset.hasErrors==="true";
-      row.classList.toggle("is-empty",!selected&&!hasErrors);
-      if(!selected)return;
-      const card=cardFor(kind,id);
-      const select=productId?product:service;
-      const name=card?.dataset.itemName||select.options[select.selectedIndex]?.text.split(" — KSh ")[0]||"Catalog item";
-      const meta=card?.dataset.itemMeta||(kind==="service"?"Lash service":"Retail product");
-      const price=Number(prices[kind==="product"?"products":"services"][id])||0;
-      const qtyField=field(row,"quantity"),quantity=Math.max(1,Number(qtyField.value)||1),discountField=field(row,"discount");
-      const discount=discountField?Number(discountField.value)||0:0,lineTotal=Math.max(0,price*quantity-discount);
-      row.querySelector("[data-line-name]").textContent=name;
-      row.querySelector("[data-line-meta]").textContent=meta;
-      row.querySelector("[data-line-quantity]").textContent="× "+quantity;
-      row.querySelector("[data-line-total]").textContent=format(lineTotal);
-      total+=lineTotal;count+=quantity;
-    });
-
-    payments().forEach(row=>{
-      const method=field(row,"method"),amount=Number(field(row,"amount").value)||0,reference=row.querySelector("[data-reference-field]");
-      const value=method.value;
-      row.classList.toggle("is-empty",!value&&amount===0&&!(field(row,"reference").value||""));
-      if(reference)reference.hidden=value!=="MPESA";
-      if(value==="CASH")cash+=amount;else if(value==="MPESA")mpesa+=amount;
-    });
-    orderTotal=total;
-    const mpesaApplied=Math.min(mpesa,total),afterMpesa=Math.max(0,total-mpesaApplied);
-    const cashApplied=Math.min(cash,afterMpesa),change=Math.max(0,cash-cashApplied);
-    const balance=Math.max(0,afterMpesa-cashApplied);
-    const vat=total*16/116;
-    document.getElementById("subtotal").textContent=format(total-vat);
-    document.getElementById("vat").textContent=format(vat);
-    document.getElementById("total").textContent=format(total);
-    document.getElementById("cash-received").textContent=format(cash);
-    document.getElementById("cash-change").textContent=format(change);
-    document.getElementById("mpesa-pending").textContent=format(mpesa);
-    document.getElementById("balance-due").textContent=format(balance);
-    document.getElementById("cart-empty").hidden=count>0;document.querySelector(".register-panel").classList.toggle("has-items",count>0);
-    document.getElementById("register-count").textContent=String(count);document.getElementById("register-mobile-total").textContent=format(total);
-  }
-
-  function addRow(containerId,templateId,prefix){
-    const totalForms=document.getElementById("id_"+prefix+"-TOTAL_FORMS"),index=Number(totalForms.value);
-    const host=document.getElementById(containerId),template=document.getElementById(templateId);
-    host.insertAdjacentHTML("beforeend",template.innerHTML.replaceAll("__prefix__",index));
-    totalForms.value=index+1;
-    return host.lastElementChild;
-  }
-  function addPayment(method){
-    const row=addRow("payments","payment-template","payments");
-    field(row,"method").value=method;
-    field(row,"method").dispatchEvent(new Event("change",{bubbles:true}));
-    const due=remainingBalance(row);field(row,"amount").value=due>0?due.toFixed(2):"";
-    update();
-    if(method==="MPESA")field(row,"reference").focus();
-  }
-
-  document.querySelectorAll("[data-catalog-card]").forEach(card=>card.addEventListener("click",()=>{
-    const kind=card.dataset.itemKind,id=card.dataset.itemId;
-    const existing=rows().find(row=>field(row,kind).value===id);
-    if(existing){const qty=field(existing,"quantity");qty.value=(Number(qty.value)||1)+1;qty.dispatchEvent(new Event("input",{bubbles:true}));return;}
-    let row=rows().find(item=>!field(item,"product").value&&!field(item,"service").value);
-    if(!row)row=addRow("items","item-template","items");
-    field(row,kind).value=id;
-    const other=field(row,kind==="product"?"service":"product");other.value="";
-    if(kind==="service"&&document.getElementById("default-technician").value)field(row,"technician").value=document.getElementById("default-technician").value;
-    field(row,kind).dispatchEvent(new Event("change",{bubbles:true}));
-  }));
-
-  document.getElementById("default-technician").addEventListener("change",event=>{
-    rows().forEach(row=>{if(field(row,"service").value)field(row,"technician").value=event.target.value;});
-  });
-  document.getElementById("checkout").addEventListener("input",update);
-  document.getElementById("checkout").addEventListener("change",event=>{
-    const row=event.target.closest("[data-item-row]");
-    if(row&&event.target.name.endsWith("-product")&&event.target.value){field(row,"service").value="";field(row,"technician").value="";}
-    if(row&&event.target.name.endsWith("-service")&&event.target.value){field(row,"product").value="";if(!field(row,"technician").value)field(row,"technician").value=document.getElementById("default-technician").value;}
-    update();
-  });
-  document.querySelectorAll("[data-add-payment]").forEach(button=>button.addEventListener("click",()=>addPayment(button.dataset.addPayment)));
-  document.getElementById("fill-balance").addEventListener("click",()=>{
-    let target=payments().slice().reverse().find(row=>field(row,"method").value==="CASH")||payments().slice().reverse().find(row=>field(row,"method").value==="MPESA");
-    if(!target)target=payments().find(row=>!field(row,"method").value);
-    if(!target){if(!document.querySelector(".cash-option").disabled){target=addRow("payments","payment-template","payments");field(target,"method").value="CASH";}else{showNotice("Open a cash session before entering cash. Add a manual M-Pesa reference instead.");return;}}
-    if(!field(target,"method").value)field(target,"method").value=document.querySelector(".cash-option").disabled?"MPESA":"CASH";
-    const due=remainingBalance(target);field(target,"amount").value=due.toFixed(2);update();
-    if(field(target,"method").value==="MPESA"&&!field(target,"reference").value)field(target,"reference").focus();
-  });
-  document.getElementById("checkout").addEventListener("click",event=>{
-    const step=event.target.closest("[data-qty-step]");
-    if(step){const row=step.closest("[data-item-row]"),qty=field(row,"quantity");qty.value=Math.max(1,(Number(qty.value)||1)+Number(step.dataset.qtyStep));qty.dispatchEvent(new Event("input",{bubbles:true}));return;}
-    const remove=event.target.closest("[data-remove]");
-    if(remove){const row=remove.closest("[data-item-row],[data-payment-row]"),deleted=row.querySelector('input[name$="-DELETE"]');if(deleted){deleted.checked=true;row.hidden=true;}update();}
-  });
-  document.getElementById("clear-items").addEventListener("click",()=>{
-    const hasItems=rows().some(row=>field(row,"product").value||field(row,"service").value);
-    const hasPayments=payments().some(row=>field(row,"method").value||field(row,"amount").value||field(row,"reference").value);
-    if(!hasItems&&!hasPayments)return;
-    if(!window.confirm("Clear this order and its payment entries?"))return;
-    document.querySelectorAll("#items [data-item-row]").forEach(row=>{field(row,"product").value="";field(row,"service").value="";field(row,"technician").value="";field(row,"quantity").value="1";const discount=field(row,"discount"),reason=field(row,"discount_reason"),deleted=row.querySelector('input[name$="-DELETE"]');if(discount)discount.value="0.00";if(reason)reason.value="";if(deleted)deleted.checked=false;row.dataset.hasErrors="false";row.hidden=false;});
-    document.querySelectorAll("#payments [data-payment-row]").forEach(row=>{field(row,"method").value="";field(row,"amount").value="";field(row,"reference").value="";const deleted=row.querySelector('input[name$="-DELETE"]');if(deleted)deleted.checked=false;row.hidden=false;});
-    document.getElementById("promo-code").value="";
-    update();
-  });
-  let activeCategory="product";
-  const search=document.getElementById("catalog-search");
-  function filterCatalog(){
-    const query=search.value.trim().toLocaleLowerCase();
-    document.querySelectorAll("[data-catalog-card]").forEach(card=>{
-      card.hidden=(activeCategory!=="all"&&card.dataset.category!==activeCategory)||!card.textContent.toLocaleLowerCase().includes(query);
-    });
-    const trainingEmpty=document.getElementById("training-empty");trainingEmpty.hidden=activeCategory!=="training"||!!query;
-  }
-  search.addEventListener("input",filterCatalog);
-  document.querySelectorAll(".catalog-filter").forEach(button=>button.addEventListener("click",()=>{
-    activeCategory=button.dataset.category;
-    document.querySelectorAll(".catalog-filter").forEach(tab=>{const selected=tab===button;tab.classList.toggle("is-active",selected);tab.setAttribute("aria-pressed",String(selected));});
-    filterCatalog();
-  }));
-  document.querySelectorAll("[data-payment-row]").forEach(row=>{const method=field(row,"method");method.addEventListener("change",update);});
-  document.getElementById("checkout").addEventListener("submit",()=>{
-    const button=document.querySelector(".checkout-submit");button.disabled=true;button.textContent="Completing sale…";
-  });
-  const online=document.getElementById("network-status");
-  function networkState(){online.textContent=navigator.onLine?"Online":"Offline";online.parentElement.classList.toggle("is-offline",!navigator.onLine);}
-  window.addEventListener("online",networkState);window.addEventListener("offline",networkState);networkState();
-  let installPrompt=null;
-  const installButton=document.getElementById("install-app");
-  window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPrompt=event;installButton.hidden=false;});
-  installButton.addEventListener("click",async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installButton.hidden=true;});
-  filterCatalog();
-  update();
-})();
-</script>
 {% endblock %}
