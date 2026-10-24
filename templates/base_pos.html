@@ -2,6 +2,6 @@
 {% load static %}
 
 {% block head_extra %}
-  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
-  <link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}?v=pos-20261022">
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/pos.css' %}">
 {% endblock %}

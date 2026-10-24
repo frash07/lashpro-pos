@@ -2,6 +2,6 @@
 {% load static %}
 
 {% block head_extra %}
-  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
-  <link rel="stylesheet" href="{% static 'reporting/dashboard.css' %}">
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/admin-shell.css' %}">
 {% endblock %}
