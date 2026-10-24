@@ -30,7 +30,10 @@
       <span class="sidebar-link is-disabled" aria-disabled="true">Bookings</span>
       {% if request.user.is_staff %}<a href="{% url 'admin:index' %}"><span aria-hidden="true">⚙</span>Settings</a>{% endif %}
     </nav>
-    <div class="sidebar-user"><span class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }}</small></span></div>
+    <div class="sidebar-user">
+      <span class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:':1'|upper }}</span>
+      <span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.role|default:'Staff' }}</small></span>
+    </div>
   </aside>
   <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="Close navigation" hidden></button>
   <div class="admin-main">
@@ -48,4 +51,24 @@
   </div>
 </div>
 {% endblock %}
-{% block page_scripts %}{% block admin_scripts %}{% endblock %}{% endblock %}
+{% block page_scripts %}
+  {% block admin_scripts %}{% endblock %}
+  <script>
+    (() => {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('sidebar-toggle');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (!sidebar || !toggle) return;
+      const setOpen = (open) => {
+        sidebar.classList.toggle('is-open', open);
+        backdrop.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+      };
+      toggle.addEventListener('click', () => setOpen(!sidebar.classList.contains('is-open')));
+      backdrop?.addEventListener('click', () => setOpen(false));
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 900) setOpen(false);
+      });
+    })();
+  </script>
+{% endblock %}
