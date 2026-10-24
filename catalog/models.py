@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models, transaction
 from django.db.models import F, Q
@@ -6,9 +7,15 @@ from django.core.exceptions import ValidationError
 
 
 class Service(models.Model):
+    class Kind(models.TextChoices):
+        SERVICE = "SERVICE", "Service"
+        TRAINING = "TRAINING", "Training"
+
     name = models.CharField(max_length=100)
+    kind = models.CharField(max_length=20, choices=Kind.choices, default=Kind.SERVICE)
     duration_minutes = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to="catalog/", blank=True, null=True)
     commission_eligible = models.BooleanField(default=True)
     commission_rate = models.DecimalField(
         max_digits=5, decimal_places=4, default=Decimal("0.4000"),
@@ -33,6 +40,7 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to="catalog/", blank=True, null=True)
     active = models.BooleanField(default=True)
     on_hand = models.DecimalField(
         max_digits=12, decimal_places=3, default=Decimal("0.000"),
@@ -77,6 +85,7 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class SKUReservationQuerySet(models.QuerySet):
     def update(self, **kwargs):
