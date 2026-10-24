@@ -1,74 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
-{% block body_class %}admin-body{% endblock %}
+
 {% block head_extra %}
-  <link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   <link rel="stylesheet" href="{% static 'reporting/dashboard.css' %}">
-  <link rel="stylesheet" href="{% static 'css/admin-shell.css' %}">
-  {% block admin_head %}{% endblock %}
-{% endblock %}
-{% block shell %}
-<div class="admin-shell">
-  <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
-    <a class="sidebar-brand" href="{% url 'reporting:dashboard' %}">
-      <img src="{% static 'img/logo-placeholder.svg' %}" alt="" width="38" height="38">
-      <span><strong>Lashpro KE</strong><small>Admin Portal</small></span>
-    </a>
-    <nav>
-      <a href="{% url 'reporting:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}"><span aria-hidden="true">▦</span>Dashboard</a>
-      <a href="{% url 'sales:checkout' %}"><span aria-hidden="true">＋</span>Point of Sale</a>
-      <a href="{% url 'sales:payments' %}"><span aria-hidden="true">＄</span>Sales</a>
-      <a href="{% url 'sales:services' %}"><span aria-hidden="true">✧</span>Services queue</a>
-      <a href="{% url 'inventory:receive' %}"><span aria-hidden="true">◇</span>Inventory</a>
-      <span class="sidebar-section-label">Reports &amp; controls</span>
-      <a href="{% url 'payments:reconciliation' %}"><span aria-hidden="true">◷</span>M-PESA review</a>
-      <a href="{% url 'payments:cash-session' %}"><span aria-hidden="true">▤</span>Cash sessions</a>
-      <a href="{% url 'sales:refunds' %}"><span aria-hidden="true">↩</span>Refunds</a>
-      <a href="{% url 'commissions:dashboard' %}"><span aria-hidden="true">♙</span>Commissions</a>
-      <span class="sidebar-section-label">Not connected</span>
-      <span class="sidebar-link is-disabled" aria-disabled="true">Training</span>
-      <span class="sidebar-link is-disabled" aria-disabled="true">Bookings</span>
-      {% if request.user.is_staff %}<a href="{% url 'admin:index' %}"><span aria-hidden="true">⚙</span>Settings</a>{% endif %}
-    </nav>
-    <div class="sidebar-user">
-      <span class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:':1'|upper }}</span>
-      <span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.role|default:'Staff' }}</small></span>
-    </div>
-  </aside>
-  <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="Close navigation" hidden></button>
-  <div class="admin-main">
-    <header class="admin-topbar no-print">
-      <button class="icon-btn sidebar-toggle" id="sidebar-toggle" aria-label="Open admin navigation" type="button">☰</button>
-      <div class="admin-heading">{% block page_title %}<h1>Dashboard</h1>{% endblock %}</div>
-      <div class="admin-topbar-actions">
-        <a class="btn btn-secondary" href="{% url 'sales:checkout' %}">Open POS</a>
-        <button type="button" class="install-button" id="install-app" hidden>Install App</button>
-        <form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form>
-      </div>
-    </header>
-    <main class="admin-content">{% block content %}{% endblock %}</main>
-    <p class="install-feedback" id="install-feedback" role="status" aria-live="polite" hidden></p>
-  </div>
-</div>
-{% endblock %}
-{% block page_scripts %}
-  {% block admin_scripts %}{% endblock %}
-  <script>
-    (() => {
-      const sidebar = document.getElementById('sidebar');
-      const toggle = document.getElementById('sidebar-toggle');
-      const backdrop = document.getElementById('sidebar-backdrop');
-      if (!sidebar || !toggle) return;
-      const setOpen = (open) => {
-        sidebar.classList.toggle('is-open', open);
-        backdrop.hidden = !open;
-        toggle.setAttribute('aria-expanded', String(open));
-      };
-      toggle.addEventListener('click', () => setOpen(!sidebar.classList.contains('is-open')));
-      backdrop?.addEventListener('click', () => setOpen(false));
-      window.addEventListener('resize', () => {
-        if (window.innerWidth > 900) setOpen(false);
-      });
-    })();
-  </script>
 {% endblock %}

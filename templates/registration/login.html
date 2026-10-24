@@ -1,42 +1,16 @@
 {% extends "base_auth.html" %}
-{% load static %}
-{% block title %}Sign in · Lashpro KE{% endblock %}
+
+{% block title %}Staff login · LashPro{% endblock %}
+
 {% block content %}
-  <section class="auth-hero" aria-label="Lashpro brand">
-    <div class="auth-hero-content">
-      <img class="auth-logo" src="{% static 'img/logo-placeholder.svg' %}" alt="">
-      <h1 class="brand-wordmark">Lashpro KE</h1>
-      <p>Beauty. Skills. Opportunities.</p>
-      <span class="asset-note">Hero photo placeholder — replace with your licensed image.</span>
-    </div>
-  </section>
-  <section class="auth-panel" aria-labelledby="login-title">
-    <div class="auth-panel-inner">
-      <span class="auth-eyebrow">TEAM ACCESS</span>
-      <h2 id="login-title">Welcome back</h2>
-      <p class="muted">Sign in to continue to your LashPro workspace.</p>
-      {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
-      {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
-      <form method="post" class="auth-form">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-        <label class="field"><span>Username</span>{{ form.username }}{{ form.username.errors }}</label>
-        <label class="field password-field"><span>Password</span>{{ form.password }}<button type="button" class="toggle-pw" aria-label="Show password" aria-pressed="false">Show</button>{{ form.password.errors }}</label>
-        <button class="btn btn-primary btn-block auth-submit" type="submit">Sign in</button>
-        <div class="auth-row"><a href="{% url 'password_reset' %}">Forgot password?</a></div>
-      </form>
-      <p class="auth-footer">Proudly Kenyan · Lashes for a brighter you.</p>
-    </div>
-  </section>
-  <script>
-    document.querySelector(".toggle-pw")?.addEventListener("click", function () {
-      const input = this.parentElement.querySelector("input[type=password], input[type=text]");
-      if (!input) return;
-      const visible = input.type === "password";
-      input.type = visible ? "text" : "password";
-      this.textContent = visible ? "Hide" : "Show";
-      this.setAttribute("aria-label", visible ? "Hide password" : "Show password");
-      this.setAttribute("aria-pressed", String(visible));
-    });
-  </script>
+<main class="login login-page">
+  <a class="brand-lockup login-brand" href="{% url 'login' %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Salon &amp; Academy</span></span></a>
+  <span class="eyebrow login-eyebrow">TEAM ACCESS</span>
+  <h1>Welcome back</h1>
+  <p>Sign in to open your LashPro workspace.</p>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
+  {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><label>Username {{ form.username }}</label><label>Password {{ form.password }}</label><button class="submit" type="submit">Sign in <span aria-hidden="true">→</span></button></form>
+  <p class="login-help"><a href="{% url 'password_reset' %}">Forgot your password?</a> · For account access help, contact your manager.</p>
+</main>
 {% endblock %}

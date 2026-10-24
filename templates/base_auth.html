@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block body_class %}auth-body{% endblock %}
-{% block head_extra %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
-{% block shell %}<main class="auth">{% block content %}{% endblock %}</main>{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+{% endblock %}
