@@ -3,41 +3,58 @@
 {% block title %}Salon POS · LashPro{% endblock %}
 
 {% block content %}
-<header class="app-header">
-  <a class="brand-lockup" href="{% url 'sales:checkout' %}">
-    <span class="brand-mark" aria-hidden="true">✦</span>
-    <span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>NAIROBI · PREMIER LASH &amp; ACADEMY</span></span>
+<header class="pos-topbar">
+  <a class="pos-brand" href="{% url 'sales:checkout' %}">
+    <img src="{% static 'img/logo-lashpro.svg' %}" alt="">
+    <span><strong>LashPro</strong><small>Salon & Academy</small></span>
   </a>
-  <nav class="mode-toggle" aria-label="Workspace">
-    <a class="mode-link is-active" href="{% url 'sales:checkout' %}" aria-current="page">▣ &nbsp; Salon POS Mode</a>
-    {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}<a class="mode-link" href="{% url 'reporting:dashboard' %}">▦ &nbsp; Admin Portal</a>{% endif %}
+  <nav class="pos-desktop-links" aria-label="Workspace">
+    <a href="{% url 'sales:checkout' %}" aria-current="page">POS</a>
+    <a href="{% url 'sales:payments' %}">Sales</a>
+    <a href="{% url 'sales:services' %}">Services</a>
+    {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+      <a href="{% url 'reporting:dashboard' %}">Admin</a>
+    {% endif %}
   </nav>
-  <div class="header-actions">
+  <div class="pos-topbar-actions">
     <span class="connection-badge"><i class="status-dot" aria-hidden="true"></i><span id="network-status">Online</span></span>
-    <button type="button" class="install-button" id="install-app" hidden>⇩ &nbsp; Install App</button>
-    <a class="button-quiet password-change" href="{% url 'password_change' %}">Change password</a>
-    <button type="button" class="register-toggle" id="register-toggle" aria-controls="register-panel" aria-expanded="false">🛒 <span>Order</span> <b id="register-count">0</b> <strong id="register-mobile-total">KES 0.00</strong></button>
-    <div class="user-chip"><span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.role|default:"Staff" }}</small></span></div>
-    <form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form>
+    <button type="button" class="install-button" id="install-app" hidden>Install</button>
+    <button type="button" class="register-toggle" id="register-toggle" aria-controls="register-panel" aria-expanded="false"><span>Sale</span> <b id="register-count">0</b> <strong id="register-mobile-total">KSh 0</strong></button>
+    <time class="pos-clock" id="pos-clock" datetime="">--:--</time>
+    <div class="pos-user"><span class="avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.role|default:"Staff" }}</small></span></div>
   </div>
 </header>
+
+<details class="desktop-more">
+  <summary>More</summary>
+  <div class="more-sheet">
+    <a href="{% url 'payments:cash-session' %}">Cash session</a>
+    <a href="{% url 'sales:refunds' %}">Refunds</a>
+    <a href="{% url 'commissions:dashboard' %}">Commissions</a>
+    <a href="{% url 'password_change' %}">Change password</a>
+    {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+      <a href="{% url 'reporting:dashboard' %}">Admin portal</a>
+    {% endif %}
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+  </div>
+</details>
 
 <form method="post" id="checkout" class="pos-layout">
   {% csrf_token %}{{ details.idempotency_key }}
   <section class="catalog-pane" aria-label="Salon item catalog">
     <div class="pos-toolbar">
-      <label class="catalog-search"><span aria-hidden="true">⌕</span><span class="visually-hidden">Search catalog</span><input type="search" id="catalog-search" placeholder="Search lash sets, add-ons, retail items" autocomplete="off"></label>
+      <label class="catalog-search"><span aria-hidden="true">⌕</span><span class="visually-hidden">Search catalog</span><input type="search" id="catalog-search" placeholder="Search services, products, training" autocomplete="off"></label>
       <div class="pos-context">
-        <a class="shift-badge {% if not cash_session %}shift-closed{% endif %}" href="{% url 'payments:cash-session' %}"><span aria-hidden="true">◷</span> Shift: {% if cash_session %}{{ cash_session.label|default:"Open" }}{% else %}Closed{% endif %}</a>
-        <span class="currency-badge">Rate: KES (Sh)</span>
+        <a class="shift-badge {% if not cash_session %}shift-closed{% endif %}" href="{% url 'payments:cash-session' %}">Shift: {% if cash_session %}Open{% else %}Closed{% endif %}</a>
+        <span class="currency-badge">KSh</span>
       </div>
     </div>
 
     <nav class="catalog-tabs" aria-label="Catalog categories">
-      <button type="button" class="catalog-filter" data-category="all" aria-pressed="false"><span aria-hidden="true">▦</span> All Catalog</button>
-      <button type="button" class="catalog-filter" data-category="service" aria-pressed="false"><span aria-hidden="true">✧</span> Lash Services</button>
-      <button type="button" class="catalog-filter" data-category="training" aria-pressed="false"><span aria-hidden="true">♧</span> Training &amp; Courses</button>
-      <button type="button" class="catalog-filter is-active" data-category="product" aria-pressed="true"><span aria-hidden="true">◇</span> Products &amp; Supplies</button>
+      <button type="button" class="catalog-filter pill is-active" data-category="all" aria-pressed="true">All</button>
+      <button type="button" class="catalog-filter pill" data-category="service" aria-pressed="false">Services</button>
+      <button type="button" class="catalog-filter pill" data-category="product" aria-pressed="false">Products</button>
+      <button type="button" class="catalog-filter pill" data-category="training" aria-pressed="false">Training</button>
     </nav>
 
     <div class="catalog-scroll">
@@ -47,20 +64,21 @@
       <div class="catalog-grid" id="catalog-grid">
         <p class="training-empty" id="training-empty" hidden>Training courses are not set up in this POS catalog yet.</p>
         {% for service in services %}
-        <button type="button" class="catalog-card service-card" data-catalog-card data-category="service" data-item-kind="service" data-item-id="{{ service.pk }}" data-item-name="{{ service.name }}" data-item-meta="Lash service">
-          <span class="catalog-card-top"><span class="catalog-icon" aria-hidden="true">✧</span><span class="catalog-type">SERVICE</span></span>
+        <button type="button" class="catalog-card service-card" data-catalog-card data-category="{% if service.kind == 'TRAINING' %}training{% else %}service{% endif %}" data-item-kind="service" data-item-id="{{ service.pk }}" data-item-name="{{ service.name }}" data-item-meta="{% if service.kind == 'TRAINING' %}Training{% else %}Lash service{% endif %}">
+          <span class="catalog-image">{% if service.image %}<img src="{{ service.image.url }}" alt="">{% else %}<img src="{% static 'img/product-placeholder.svg' %}" alt="">{% endif %}</span>
+          <span class="catalog-card-top"><span class="catalog-type">{% if service.kind == 'TRAINING' %}TRAINING{% else %}SERVICE{% endif %}</span></span>
           <strong>{{ service.name }}</strong>
-          <span class="catalog-card-meta">{{ service.duration_minutes }} minute service</span>
-          <span class="catalog-card-bottom"><b>KES {{ service.price|floatformat:2 }}</b><span class="add-icon" aria-hidden="true">＋</span></span>
+          <span class="catalog-card-meta">{{ service.duration_minutes }} min</span>
+          <span class="catalog-card-bottom"><b>KSh {{ service.price|floatformat:0 }}</b><span class="add-icon" aria-hidden="true">＋</span></span>
         </button>
         {% endfor %}
         {% for product in products %}
-        <button type="button" class="catalog-card product-card" data-catalog-card data-category="product" data-item-kind="product" data-item-id="{{ product.pk }}" data-item-name="{{ product.name }}" data-item-meta="Retail product">
-          <span class="catalog-card-top"><span class="catalog-icon" aria-hidden="true">◇</span><span class="catalog-type">PRODUCT</span></span>
+        <button type="button" class="catalog-card product-card" data-catalog-card data-category="product" data-item-kind="product" data-item-id="{{ product.pk }}" data-item-name="{{ product.name }}" data-item-meta="Retail product" {% if product.on_hand <= 0 %}disabled{% endif %}>
+          <span class="catalog-image">{% if product.image %}<img src="{{ product.image.url }}" alt="">{% else %}<img src="{% static 'img/product-placeholder.svg' %}" alt="">{% endif %}</span>
+          <span class="catalog-card-top"><span class="catalog-type">PRODUCT</span></span>
           <strong>{{ product.name }}</strong>
-          <span class="catalog-card-description">{{ product.pos_description }}</span>
           <span class="catalog-card-meta">{% if product.sku %}SKU {{ product.sku }}{% else %}&nbsp;{% endif %}</span>
-          <span class="catalog-card-bottom"><b>KES {{ product.selling_price|floatformat:2 }}</b><span class="catalog-stock">Stock: {{ product.on_hand|floatformat:"-3" }}</span><span class="add-icon" aria-hidden="true">＋</span></span>
+          <span class="catalog-card-bottom"><b>KSh {{ product.selling_price|floatformat:0 }}</b><span class="catalog-stock">{{ product.on_hand|floatformat:"-3" }}</span><span class="add-icon" aria-hidden="true">＋</span></span>
         </button>
         {% endfor %}
         {% if not services and not products %}<p class="empty-state catalog-empty">No active services or products are available in the catalog.</p>{% endif %}
@@ -68,13 +86,17 @@
     </div>
   </section>
 
-  <aside class="register-panel" id="register-panel" aria-label="Current order register">
-    <div class="register-header"><span class="register-title-icon" aria-hidden="true">▣</span><h1>Current Order Register</h1><button type="button" class="clear-order" id="clear-items">♧ &nbsp; Clear all</button></div>
+  <aside class="register-panel" id="register-panel" aria-label="Current sale">
+    <div class="register-header">
+      <button type="button" class="register-close" id="register-close" aria-label="Close sale">×</button>
+      <h1>Current Sale</h1>
+      <button type="button" class="clear-order" id="clear-items">Clear All</button>
+    </div>
     <div class="register-identity">
-      <label>Technician / Master
+      <label>Technician
         <select id="default-technician"><option value="">Choose technician</option>{% for technician in technicians %}<option value="{{ technician.pk }}"{% if technician.pk == default_technician_id %} selected{% endif %}>{{ technician.get_full_name|default:technician.username }}</option>{% endfor %}</select>
       </label>
-      <label>Client / Student
+      <label>Client
         {{ details.customer }}{{ details.customer.errors }}
       </label>
     </div>
@@ -85,14 +107,15 @@
       <div class="item-row{% if not line.product.value and not line.service.value and not line.errors %} is-empty{% endif %}" data-item-row data-has-errors="{% if line.errors %}true{% else %}false{% endif %}">
         <div class="native-line-fields" aria-hidden="true">{{ line.product }}{{ line.service }}{{ line.DELETE }}</div>
         <div class="line-card">
+          <img class="line-thumb" data-line-thumb alt="" hidden>
           <div class="line-card-top"><div class="line-copy"><strong data-line-name>Choose an item</strong><small data-line-meta></small></div><button type="button" class="remove-line" data-remove aria-label="Remove item">×</button></div>
           <div class="line-card-bottom">
             <div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div>
             <span class="line-quantity" data-line-quantity>× 1</span>
-            <strong class="line-total" data-line-total>KES 0.00</strong>
+            <strong class="line-total" data-line-total>KSh 0</strong>
           </div>
           <label class="technician-field" data-technician-field hidden>Assigned technician {{ line.technician }}{{ line.technician.errors }}</label>
-          {% if can_discount %}<details class="discount-details"><summary>Apply line discount</summary><div class="discount-fields"><label>Discount (KES) {{ line.discount }}{{ line.discount.errors }}</label></div></details>{% endif %}
+          {% if can_discount %}<details class="discount-details"><summary>Discount</summary><div class="discount-fields"><label>Discount (KSh) {{ line.discount }}{{ line.discount.errors }}</label></div></details>{% endif %}
           <div class="row-errors" role="alert">{{ line.product.errors }}{{ line.service.errors }}{{ line.quantity.errors }}{% if line.non_field_errors %}{{ line.non_field_errors }}{% endif %}</div>
         </div>
       </div>
@@ -102,23 +125,36 @@
       <div class="item-row is-empty" data-item-row data-has-errors="false">
         <div class="native-line-fields" aria-hidden="true">{{ line.product }}{{ line.service }}{{ line.DELETE }}</div>
         <div class="line-card">
+          <img class="line-thumb" data-line-thumb alt="" hidden>
           <div class="line-card-top"><div class="line-copy"><strong data-line-name>Choose an item</strong><small data-line-meta></small></div><button type="button" class="remove-line" data-remove aria-label="Remove item">×</button></div>
-          <div class="line-card-bottom"><div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div><span class="line-quantity" data-line-quantity>× 1</span><strong class="line-total" data-line-total>KES 0.00</strong></div>
+          <div class="line-card-bottom"><div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div><span class="line-quantity" data-line-quantity>× 1</span><strong class="line-total" data-line-total>KSh 0</strong></div>
           <label class="technician-field" data-technician-field hidden>Assigned technician {{ line.technician }}{{ line.technician.errors }}</label>
-          {% if can_discount %}<details class="discount-details"><summary>Apply line discount</summary><div class="discount-fields"><label>Discount (KES) {{ line.discount }}</label></div></details>{% endif %}
+          {% if can_discount %}<details class="discount-details"><summary>Discount</summary><div class="discount-fields"><label>Discount (KSh) {{ line.discount }}</label></div></details>{% endif %}
         </div>
       </div>
     {% endwith %}</template>
-    <p class="empty-register" id="cart-empty"><span aria-hidden="true">🛒</span><strong>Register is empty</strong><small>Select items from the catalog to start a transaction.</small></p>
+    <p class="empty-register" id="cart-empty"><span aria-hidden="true">＋</span><strong>No items yet</strong><small>Tap a catalog card to start this sale.</small></p>
 
     <div class="register-footer">
       {{ payments.management_form }}
       {% if payments.non_form_errors %}<div class="error" role="alert">{{ payments.non_form_errors }}</div>{% endif %}
-      <div class="payment-rows" id="payments">
+      <span class="payment-method-title">Payment</span>
+      <div class="payment-actions">
+        <button type="button" class="payment-option cash-option" data-add-payment="CASH"{% if not cash_session %} disabled title="Open a cash session before accepting cash payments."{% endif %}>Cash</button>
+        <button type="button" class="payment-option mpesa-option" data-add-payment="MPESA">M-PESA</button>
+        <button type="button" class="payment-option card-option" id="card-payment">Card<small>Soon</small></button>
+        <button type="button" class="payment-option split-option" id="split-payments" aria-pressed="false">Split</button>
+      </div>
+      <button type="button" id="stk-payment" hidden>M-PESA Express</button>
+      <label class="mpesa-phone-field" id="mpesa-phone-field" hidden>Customer phone (optional)
+        <input type="tel" id="mpesa-phone" inputmode="tel" autocomplete="tel" placeholder="07xx xxx xxx">
+        <small>The M-Pesa reference on the payment row is what gets saved.</small>
+      </label>
+      <div class="payment-rows" id="payments" hidden>
         {% for payment in payments %}
         <div class="payment-row" data-payment-row>
           <label class="payment-method">Method {{ payment.method }}{{ payment.method.errors }}</label>
-          <label class="payment-amount">Amount / cash tender (KES) {{ payment.amount }}{{ payment.amount.errors }}</label>
+          <label class="payment-amount">Amount (KSh) {{ payment.amount }}{{ payment.amount.errors }}</label>
           <label class="reference-field" data-reference-field>M-Pesa reference {{ payment.reference }}{{ payment.reference.errors }}</label>
           <button type="button" class="remove-line" data-remove aria-label="Remove payment">×</button><span class="native-delete">{{ payment.DELETE }}</span>
         </div>
@@ -127,37 +163,50 @@
       <template id="payment-template">{% with payment=payments.empty_form %}
         <div class="payment-row" data-payment-row>
           <label class="payment-method">Method {{ payment.method }}</label>
-          <label class="payment-amount">Amount / cash tender (KES) {{ payment.amount }}</label>
+          <label class="payment-amount">Amount (KSh) {{ payment.amount }}</label>
           <label class="reference-field" data-reference-field>M-Pesa reference {{ payment.reference }}</label>
           <button type="button" class="remove-line" data-remove aria-label="Remove payment">×</button><span class="native-delete">{{ payment.DELETE }}</span>
         </div>
       {% endwith %}</template>
-
-      <label class="promo-entry"><span class="visually-hidden">Promo / Student Code</span><input type="text" id="promo-code" placeholder="PROMO / STUDENT CODE" autocomplete="off"><button type="button" class="promo-button" id="apply-promo">Apply</button></label>
-      <div class="payment-actions">
-        <button type="button" class="payment-option mpesa-option" id="stk-payment">Pay via M-PESA Express (STK)</button>
-        <div class="payment-secondary"><button type="button" class="payment-option cash-option" data-add-payment="CASH"{% if not cash_session %} disabled title="Open a cash session before accepting cash payments."{% endif %}>Cash</button>
-        <button type="button" class="manual-mpesa-link" data-add-payment="MPESA">Manual M-Pesa</button>
-        <button type="button" class="manual-mpesa-link" id="fill-balance">Fill exact balance</button></div>
-      </div>
+      <button type="button" class="manual-mpesa-link" id="fill-balance">Fill exact balance</button>
+      <label class="promo-entry"><span class="visually-hidden">Promo code</span><input type="text" id="promo-code" placeholder="Promo code" autocomplete="off"><button type="button" class="promo-button" id="apply-promo">Apply</button></label>
       <p class="pos-notice" id="pos-notice" role="status" hidden></p>
       {% if not cash_session %}<a class="cash-session-notice" href="{% url 'payments:cash-session' %}">Open a cash session to accept cash payments.</a>{% endif %}
 
       <div class="register-summary">
-        <div><span>Subtotal</span><strong id="subtotal">KES 0.00</strong></div>
-        <div><span>VAT (16% Incl.)</span><strong id="vat">KES 0.00</strong></div>
-        <div class="balance-row"><span>Total Due</span><strong id="total">KES 0.00</strong></div>
-        <div class="payment-allocation"><span>Cash received</span><strong id="cash-received">KES 0.00</strong></div>
-        <div class="payment-allocation"><span>Change to return</span><strong id="cash-change">KES 0.00</strong></div>
-        <div class="payment-allocation"><span>M-Pesa awaiting verification</span><strong id="mpesa-pending">KES 0.00</strong></div>
-        <div class="payment-allocation balance-small"><span>Balance to collect</span><strong id="balance-due">KES 0.00</strong></div>
+        <div><span>Subtotal</span><strong id="subtotal">KSh 0</strong></div>
+        <div><span>Tax (VAT 16% incl.)</span><strong id="vat">KSh 0</strong></div>
+        <div class="balance-row"><span>Total</span><strong id="total">KSh 0</strong></div>
+        <div class="payment-allocation"><span>Cash received</span><strong id="cash-received">KSh 0</strong></div>
+        <div class="payment-allocation"><span>Change</span><strong id="cash-change">KSh 0</strong></div>
+        <div class="payment-allocation"><span>M-Pesa pending</span><strong id="mpesa-pending">KSh 0</strong></div>
+        <div class="payment-allocation balance-small"><span>Balance</span><strong id="balance-due">KSh 0</strong></div>
       </div>
-      <p class="payment-note">Catalog prices are treated as VAT-inclusive for this display. Manual M-Pesa references remain unverified until reconciled. Cash requires an open shift.</p>
-      <button class="submit checkout-submit" type="submit">Complete Sale <span aria-hidden="true">→</span></button>
+      <p class="payment-note">Prices are VAT-inclusive. Card payments are not connected. M-Pesa references stay unverified until reconciled.</p>
+      <button class="submit checkout-submit" type="submit">Complete Sale<small id="submit-total">KSh 0</small></button>
     </div>
   </aside>
 </form>
 <div class="register-backdrop" id="register-backdrop" hidden></div>
+
+<nav class="tabbar" aria-label="Primary">
+  <a class="is-active" href="{% url 'sales:checkout' %}" aria-current="page"><span>▣</span>POS</a>
+  <a href="{% url 'sales:payments' %}"><span>☰</span>Sales</a>
+  <a href="{% url 'sales:services' %}"><span>✧</span>Services</a>
+  <details class="mobile-more">
+    <summary><span>⋯</span>More</summary>
+    <div class="more-sheet">
+      <a href="{% url 'payments:cash-session' %}">Cash session</a>
+      <a href="{% url 'sales:refunds' %}">Refunds</a>
+      <a href="{% url 'commissions:dashboard' %}">Commissions</a>
+      <a href="{% url 'password_change' %}">Change password</a>
+      {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+        <a href="{% url 'reporting:dashboard' %}">Admin portal</a>
+      {% endif %}
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+    </div>
+  </details>
+</nav>
 
 {{ prices|json_script:"prices" }}
 <script src="{% static 'js/pos.js' %}" defer></script>

@@ -80,7 +80,9 @@ body.pos-body { min-height: 100vh; min-height: 100dvh; background: #fff7fa; colo
 .catalog-pane .catalog-card:disabled .add-icon { background: #e7e1e4; color: #8e8388; }
 .training-empty, .empty-state, .empty-register { color: var(--ink-500); }
 .pos-layout > .register-panel { position: sticky; top: 90px; display: flex; width: auto; height: calc(100dvh - 108px); min-height: 620px; max-height: calc(100dvh - 108px); flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: var(--shadow-card); transform: none; }
-.register-header { flex: 0 0 auto; padding: 17px 17px 13px; border-bottom: 1px solid var(--line); background: #fff; }
+.register-header { display: flex; flex: 0 0 auto; align-items: center; gap: 10px; padding: 17px 17px 13px; border-bottom: 1px solid var(--line); background: #fff; }
+.register-header h1 { margin: 0; flex: 1; }
+.register-close { display: none; }
 .register-title-icon { display: none; }
 .register-header h1 { color: var(--ink-900); font: 650 17px/1.25 var(--font-ui); }
 .clear-order { min-height: 40px; padding: 0 11px; border: 0; border-radius: 10px; background: var(--red-100); color: var(--red-600); font-size: 11px; font-weight: 750; cursor: pointer; }

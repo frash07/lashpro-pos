@@ -10,7 +10,16 @@ from django.views.decorators.http import require_GET
 @require_GET
 def service_worker(request):
     precache_urls = [
-        static("sales/checkout.css"),
+        static("css/tokens.css"),
+        static("css/components.css"),
+        static("css/legacy.css"),
+        static("css/pos.css"),
+        static("css/auth.css"),
+        static("css/admin-shell.css"),
+        static("css/receipt.css"),
+        static("js/pos.js"),
+        static("img/logo-lashpro.svg"),
+        static("img/product-placeholder.svg"),
         static("pwa/favicon-32.png"),
         static("pwa/favicon-48.png"),
         static("pwa/icon-180.png"),

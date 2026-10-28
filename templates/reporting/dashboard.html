@@ -1,40 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% load static %}
 
 {% block title %}Executive dashboard · LashPro KE{% endblock %}
 
 {% block head_extra %}
+  {{ block.super }}
   <link rel="stylesheet" href="{% static 'sales/reference-layout.css' %}">
   <link rel="stylesheet" href="{% static 'reporting/dashboard.css' %}">
 {% endblock %}
 
-{% block content %}
-  <div class="admin-page-shell">
-    <header class="admin-header executive-header">
-      <div class="brand-lockup">
-        <span class="brand-mark" aria-hidden="true">✦</span>
-        <div class="brand-copy">
-          <strong>LASHPRO <small>KE</small></strong>
-          <span>Nairobi • Premier Lash &amp; Academy</span>
-        </div>
-      </div>
-
-      <nav class="mode-toggle" aria-label="Workspace">
-        <a class="mode-link" href="{% url 'sales:checkout' %}">Salon POS</a>
-        <a class="mode-link is-active" href="{% url 'reporting:dashboard' %}" aria-current="page">Admin Portal</a>
-      </nav>
-
-      <div class="header-actions executive-header-actions">
-        <span class="online-status"><span class="status-dot" aria-hidden="true"></span>Online</span>
-        <button type="button" class="install-button" id="install-app">Install</button>
-        <div class="user-chip">
-          <span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:':1'|upper }}</span>
-          <span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></span>
-        </div>
-        <form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form>
-      </div>
-    </header>
-
+{% block admin_content %}
     <main class="page report-page executive-dashboard">
       <section class="report-hero executive-hero">
         <div class="executive-hero-copy">
@@ -266,5 +241,4 @@
 
       <p class="install-feedback" id="install-feedback" role="status" aria-live="polite" hidden></p>
     </main>
-  </div>
 {% endblock %}

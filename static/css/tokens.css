@@ -55,6 +55,25 @@
   --lp-btn-primary-bg: linear-gradient(135deg, var(--lp-pink-500), var(--lp-pink-700));
   --lp-btn-primary-text: var(--lp-neutral-0);
   --lp-btn-primary-hover: linear-gradient(135deg, var(--lp-pink-600), var(--lp-pink-800));
+
+  --pink-50: var(--lp-pink-50);
+  --pink-100: var(--lp-pink-100);
+  --pink-600: var(--lp-pink-600);
+  --pink-700: var(--lp-pink-700);
+  --ink-500: var(--lp-neutral-500);
+  --ink-700: var(--lp-neutral-700);
+  --ink-900: var(--lp-neutral-900);
+  --line: var(--lp-border-strong);
+  --green-100: var(--lp-success-soft);
+  --green-600: var(--lp-success);
+  --red-100: var(--lp-danger-soft);
+  --red-600: var(--lp-danger);
+  --amber-100: var(--lp-warning-soft);
+  --amber-600: var(--lp-warning);
+  --font-ui: var(--lp-font-ui);
+  --font-display: var(--lp-font-display);
+  --shadow-card: var(--lp-shadow-sm);
+  --bg-gradient: linear-gradient(180deg, #fff7fa, var(--lp-neutral-50));
 }
 
 html {

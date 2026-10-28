@@ -5,3 +5,36 @@
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'css/admin-shell.css' %}">
 {% endblock %}
+
+{% block body_class %}admin-body{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <a class="admin-brand" href="{% url 'reporting:dashboard' %}">
+      <img src="{% static 'img/logo-lashpro.svg' %}" alt="">
+      <span><strong>LashPro</strong><small>Admin</small></span>
+    </a>
+    <nav class="admin-nav" aria-label="Admin">
+      <a href="{% url 'reporting:dashboard' %}" aria-current="page">Dashboard</a>
+      <a href="{% url 'sales:payments' %}">Sales</a>
+      <a href="{% url 'inventory:receive' %}">Products</a>
+      <a href="{% url 'sales:services' %}">Services</a>
+      <a href="{% url 'sales:checkout' %}">Training</a>
+      <a href="{% url 'sales:services' %}">Bookings</a>
+      <a href="{% url 'sales:payments' %}">Customers</a>
+      <a href="{% url 'commissions:dashboard' %}">Staff</a>
+      <a href="{% url 'reporting:dashboard' %}">Reports</a>
+      <a href="{% url 'payments:cash-session' %}">Settings</a>
+    </nav>
+    <div class="admin-user">
+      <span aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span>
+      <div><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.role|default:"Staff" }}</small></div>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Out</button></form>
+    </div>
+  </aside>
+  <div class="admin-main">
+    {% block admin_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

@@ -1,16 +1,44 @@
 {% extends "base_auth.html" %}
+{% load static %}
 
 {% block title %}Staff login · LashPro{% endblock %}
 
 {% block content %}
-<main class="login login-page">
-  <a class="brand-lockup login-brand" href="{% url 'login' %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Salon &amp; Academy</span></span></a>
-  <span class="eyebrow login-eyebrow">TEAM ACCESS</span>
-  <h1>Welcome back</h1>
-  <p>Sign in to open your LashPro workspace.</p>
-  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
-  {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
-  <form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><label>Username {{ form.username }}</label><label>Password {{ form.password }}</label><button class="submit" type="submit">Sign in <span aria-hidden="true">→</span></button></form>
-  <p class="login-help"><a href="{% url 'password_reset' %}">Forgot your password?</a> · For account access help, contact your manager.</p>
+<main class="auth-split">
+  <section class="auth-hero" style="background-image:url('{% static "img/login-hero.jpg" %}')">
+    <div class="auth-hero-scrim">
+      <img class="auth-logo" src="{% static 'img/logo-lashpro.svg' %}" alt="">
+      <p class="auth-kicker">LashPro KE</p>
+      <h1>Welcome back</h1>
+      <p>Sign in to the salon floor and academy desk.</p>
+    </div>
+  </section>
+  <section class="auth-card">
+    <span class="eyebrow">Team access</span>
+    <h2>Sign in</h2>
+    {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
+    {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <label>Username {{ form.username }}</label>
+      <label class="password-field">Password {{ form.password }}
+        <button type="button" class="password-toggle" id="toggle-password" aria-label="Show password">Show</button>
+      </label>
+      <button class="submit btn-block" type="submit">Sign in</button>
+    </form>
+    <p class="login-help"><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+  </section>
 </main>
+<script>
+  document.getElementById("toggle-password")?.addEventListener("click", () => {
+    const input = document.querySelector("#id_password, input[name='password']");
+    const button = document.getElementById("toggle-password");
+    if (!input || !button) return;
+    const visible = input.type === "text";
+    input.type = visible ? "password" : "text";
+    button.textContent = visible ? "Show" : "Hide";
+    button.setAttribute("aria-label", visible ? "Show password" : "Hide password");
+  });
+</script>
 {% endblock %}

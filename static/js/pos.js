@@ -3,6 +3,7 @@
   const register = document.getElementById("register-panel");
   const backdrop = document.getElementById("register-backdrop");
   const registerToggle = document.getElementById("register-toggle");
+  const registerClose = document.getElementById("register-close");
 
   if (!checkoutForm || !register || !backdrop || !registerToggle) {
     return;
@@ -41,6 +42,12 @@
     registerToggle.setAttribute("aria-expanded", String(open));
     document.body.classList.toggle("register-open", open);
   }
+
+  if (registerClose) {
+    registerClose.addEventListener("click", () => setRegisterOpen(false));
+  }
+  registerToggle.addEventListener("click", () => setRegisterOpen(!register.classList.contains("is-open")));
+  backdrop.addEventListener("click", () => setRegisterOpen(false));
 
   const applyPromo = document.getElementById("apply-promo");
   const stkPayment = document.getElementById("stk-payment");
@@ -126,6 +133,12 @@
       if (lineMeta) lineMeta.textContent = meta;
       if (lineQuantity) lineQuantity.textContent = "× " + quantity;
       if (lineTotalEl) lineTotalEl.textContent = format(lineTotal);
+      const thumb = row.querySelector("[data-line-thumb]");
+      const cardImage = card?.querySelector("img");
+      if (thumb && cardImage) {
+        thumb.src = cardImage.getAttribute("src") || "";
+        thumb.hidden = !thumb.src;
+      }
 
       total += lineTotal;
       count += quantity;
@@ -174,6 +187,12 @@
     register.classList.toggle("has-items", count > 0);
     if (registerCount) registerCount.textContent = String(count);
     if (registerMobileTotal) registerMobileTotal.textContent = format(total);
+    const submitTotal = document.getElementById("submit-total");
+    if (submitTotal) submitTotal.textContent = format(total);
+    const paymentRows = document.getElementById("payments");
+    if (paymentRows && payments().length) paymentRows.hidden = false;
+    const phoneField = document.getElementById("mpesa-phone-field");
+    if (phoneField) phoneField.hidden = mpesa <= 0;
   }
 
   function addRow(containerId, templateId, prefix) {
@@ -373,7 +392,7 @@
   }
 
   const search = document.getElementById("catalog-search");
-  let activeCategory = "product";
+  let activeCategory = "all";
 
   function filterCatalog() {
     if (!search) return;
@@ -384,7 +403,8 @@
 
     const trainingEmpty = document.getElementById("training-empty");
     if (trainingEmpty) {
-      trainingEmpty.hidden = activeCategory !== "training" || !!query;
+      const anyTraining = document.querySelector("[data-catalog-card][data-category='training']");
+      trainingEmpty.hidden = activeCategory !== "training" || !!anyTraining || !!query;
     }
   }
 
@@ -444,6 +464,26 @@
       installPrompt = null;
       installButton.hidden = true;
     });
+  }
+
+  const splitPayments = document.getElementById("split-payments");
+  if (splitPayments) {
+    splitPayments.addEventListener("click", () => {
+      const paymentRows = document.getElementById("payments");
+      if (paymentRows) paymentRows.hidden = false;
+      splitPayments.setAttribute("aria-pressed", "true");
+    });
+  }
+
+  const clock = document.getElementById("pos-clock");
+  if (clock) {
+    const paintClock = () => {
+      const now = new Date();
+      clock.dateTime = now.toISOString();
+      clock.textContent = now.toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" });
+    };
+    paintClock();
+    setInterval(paintClock, 30000);
   }
 
   filterCatalog();
