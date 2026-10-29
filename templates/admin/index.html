@@ -1,51 +1,119 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
+
 {% block content %}
-<div class="module">
-  <table>
-    <caption>Inventory quick links</caption>
-    <tr><th scope="row"><a href="{% url 'admin:catalog_product_changelist' %}">Products and stock levels</a></th><td>View current stock and reorder levels</td></tr>
-    <tr><th scope="row"><a href="{% url 'inventory:receive' %}">Receive stock</a></th><td>Record stock received from a supplier</td></tr>
-    <tr><th scope="row"><a href="{% url 'admin:inventory_inventorymovement_changelist' %}">Inventory movement history</a></th><td>Review the stock ledger</td></tr>
-    <tr><th scope="row"><a href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}">Stock adjustment requests</a></th><td>Review adjustment approvals</td></tr>
-    <tr><th scope="row"><a href="{% url 'admin:inventory_serviceconsumable_changelist' %}">Service consumables</a></th><td>Manage products consumed by services</td></tr>
-  </table>
-</div>
-<div class="module">
-  <h2>Low-stock alert</h2>
-  {% if admin_low_stock_count %}
-    <p><strong>{{ admin_low_stock_count }}</strong> active product(s) are at or below their reorder level.</p>
-    <table>
-      <thead><tr><th>Product</th><th>On hand</th><th>Reorder level</th></tr></thead>
-      <tbody>
-      {% for product in admin_low_stock_products %}
-        <tr><th><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></th><td>{{ product.on_hand }}</td><td>{{ product.reorder_level }}</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    <p><a href="{% url 'admin:catalog_product_changelist' %}?stock_level=low">View low-stock products</a></p>
-  {% else %}
-    <p>No low-stock alerts for products with a configured reorder level.</p>
-  {% endif %}
-</div>
-<div id="content-main">
-{% if app_list %}
-  {% for app in app_list %}
-    <div class="app-{{ app.app_label }} module">
-      <table>
-        <caption><a href="{{ app.app_url }}" class="section">{{ app.name }}</a></caption>
-        {% for model in app.models %}
-          <tr class="model-{{ model.object_name|lower }}">
-            {% if model.admin_url %}<th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>{% else %}<th scope="row">{{ model.name }}</th>{% endif %}
-            {% if model.add_url %}<td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>{% else %}<td></td>{% endif %}
-            {% if model.admin_url %}<td><a href="{{ model.admin_url }}" class="changelink">{% if model.view_only %}{% translate 'View' %}{% else %}{% translate 'Change' %}{% endif %}</a></td>{% else %}<td></td>{% endif %}
-          </tr>
-        {% endfor %}
-      </table>
+<div class="admin-dashboard">
+  <header class="admin-dashboard-header">
+    <div class="admin-brand" aria-label="LashPro admin brand">
+      <span class="brand-mark" aria-hidden="true">✦</span>
+      <div class="brand-copy">
+        <strong>LashPro</strong>
+        <span>ADMIN PORTAL</span>
+      </div>
     </div>
-  {% endfor %}
-{% else %}
-  <p>{% translate "You don't have permission to view or edit anything." %}</p>
-{% endif %}
+
+    <nav class="admin-header-nav" aria-label="Admin quick links">
+      <a href="{% url 'reporting:dashboard' %}">Dashboard</a>
+      <a href="{% url 'sales:checkout' %}">Sales POS</a>
+      <a href="{% url 'admin:catalog_product_changelist' %}">Catalog</a>
+    </nav>
+
+    <div class="admin-header-tools">
+      <span class="status-pill"><i class="status-dot" aria-hidden="true"></i>System online</span>
+      <a class="btn btn-soft" href="{% url 'password_change' %}">Change password</a>
+    </div>
+  </header>
+
+  <section class="admin-hero" aria-label="Operations overview">
+    <div class="admin-hero-copy">
+      <span class="eyebrow">Operations overview</span>
+      <h1>Salon control room</h1>
+      <p>Monitor stock health, core operations, and daily business tools from one streamlined view.</p>
+    </div>
+    <div class="admin-hero-actions">
+      <a class="btn btn-primary" href="{% url 'admin:catalog_product_changelist' %}">Manage inventory</a>
+      <a class="btn btn-quiet" href="{% url 'reporting:dashboard' %}">Open reports</a>
+    </div>
+  </section>
+
+  <section class="admin-metrics" aria-label="Summary metrics">
+    <article class="metric-card">
+      <span class="metric-label">Low-stock alerts</span>
+      <strong class="metric-value">{{ admin_low_stock_count|default:0 }}</strong>
+      <small class="metric-caption">Products need review</small>
+    </article>
+    <article class="metric-card">
+      <span class="metric-label">Admin areas</span>
+      <strong class="metric-value">{{ app_list|length }}</strong>
+      <small class="metric-caption">Core departments available</small>
+    </article>
+    <article class="metric-card">
+      <span class="metric-label">Service mode</span>
+      <strong class="metric-value">Live</strong>
+      <small class="metric-caption">Sales and stock synced</small>
+    </article>
+    <article class="metric-card">
+      <span class="metric-label">Priority actions</span>
+      <strong class="metric-value">4</strong>
+      <small class="metric-caption">Tasks ready to review</small>
+    </article>
+  </section>
+
+  <section class="admin-tile-grid">
+    <article class="admin-quick-links module">
+      <div class="tile-heading">
+        <h2>Inventory quick links</h2>
+      </div>
+      <div class="link-list">
+        <a href="{% url 'admin:catalog_product_changelist' %}">Products and stock levels</a>
+        <a href="{% url 'inventory:receive' %}">Receive stock</a>
+        <a href="{% url 'admin:inventory_inventorymovement_changelist' %}">Inventory movement history</a>
+        <a href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}">Stock adjustment requests</a>
+        <a href="{% url 'admin:inventory_serviceconsumable_changelist' %}">Service consumables</a>
+      </div>
+    </article>
+
+    <article class="admin-alert-panel module">
+      <div class="tile-heading">
+        <h2>Low-stock alert</h2>
+      </div>
+
+      {% if admin_low_stock_count %}
+        <div class="alert-stack">
+          {% for product in admin_low_stock_products %}
+            <div class="alert-item">
+              <span class="alert-name"><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></span>
+              <span class="alert-meta">{{ product.on_hand }} on hand / {{ product.reorder_level }} target</span>
+            </div>
+          {% endfor %}
+        </div>
+        <a class="inline-link" href="{% url 'admin:catalog_product_changelist' %}?stock_level=low">View low-stock products</a>
+      {% else %}
+        <p class="empty-state">No low-stock alerts for products with a configured reorder level.</p>
+      {% endif %}
+    </article>
+
+    {% if app_list %}
+      {% for app in app_list %}
+        <article class="admin-app-tile module">
+          <div class="tile-heading">
+            <h2><a href="{{ app.app_url }}">{{ app.name }}</a></h2>
+            <span>{{ app.models|length }} tools</span>
+          </div>
+
+          <div class="app-mini-grid">
+            {% for model in app.models %}
+              <a class="mini-card" href="{% if model.admin_url %}{{ model.admin_url }}{% else %}{{ app.app_url }}{% endif %}">
+                <strong>{{ model.name }}</strong>
+                <small>{% if model.add_url %}Add{% else %}Open{% endif %}</small>
+              </a>
+            {% endfor %}
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      <p>{% translate "You don't have permission to view or edit anything." %}</p>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}
