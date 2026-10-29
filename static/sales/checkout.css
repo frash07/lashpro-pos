@@ -979,34 +979,53 @@ details.card > summary {
 
 .register-panel {
   position: sticky;
-  top: 14px;
+  top: 18px;
   display: flex;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 94px);
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   overflow: auto;
-  padding: 19px;
-  border-color: rgba(255, 156, 214, 0.2);
-  background: linear-gradient(145deg, rgba(33, 20, 28, 0.94), rgba(20, 15, 19, 0.98));
-  box-shadow: 0 12px 36px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.02);
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(255, 175, 223, 0.18);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(39, 23, 31, 0.92) 0%, rgba(20, 15, 19, 0.96) 100%);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(255, 143, 201, 0.08), 0 0 34px rgba(255, 95, 170, 0.08);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
 }
 
-.register-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.register-actions { display: flex; align-items: center; gap: 6px; }
-
-.register-actions .button-quiet[type="button"] {
-  min-height: 30px;
-  padding: 5px 8px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--muted);
-  font-size: 10px;
+.register-panel > * {
+  border-radius: 16px;
 }
 
-.register-actions .button-quiet[type="button"]:hover {
-  border-color: var(--border);
-  background: rgba(255,255,255,.035);
-  color: var(--text);
+.register-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 2px 4px;
+}
+
+.register-panel .cart-preview {
+  flex: 1 1 auto;
+  min-height: 120px;
+  padding: 12px 10px;
+  border: 1px solid rgba(255, 175, 223, 0.12);
+  border-radius: 16px;
+  background: rgba(26, 17, 24, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.register-panel .payment-box {
+  margin-top: 2px;
+  padding: 12px 10px 4px;
+  border: 1px solid rgba(255, 175, 223, 0.12);
+  border-radius: 16px;
+  background: rgba(26, 17, 24, 0.46);
+}
+
+.register-panel .financial-summary {
+  padding: 10px 4px 2px;
 }
 
 .register-header h2 {
@@ -1052,8 +1071,8 @@ details.card > summary {
   align-items: start;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 187, 223, 0.1);
+  padding: 10px 6px;
+  border-bottom: 1px solid rgba(255, 187, 223, 0.08);
   color: var(--muted-bright);
   font-size: 11px;
 }
