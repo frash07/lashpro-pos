@@ -1,16 +1,1201 @@
 {% extends "base.html" %}
 
-{% block title %}Staff login · LashPro{% endblock %}
+{% block title %}LashPro KE — Secure Studio Access{% endblock %}
+
+{% block body_class %}login-body{% endblock %}
+
+{% block head_extra %}
+<style>
+  :root {
+    color-scheme: dark;
+    --pink: #f17db6;
+    --pink-strong: #f34b9d;
+    --pink-deep: #bb397e;
+    --pink-soft: #54263f;
+    --pink-wash: rgba(241, 125, 182, 0.13);
+    --bg: #171016;
+    --bg-2: #201720;
+    --surface: #241b23;
+    --surface-2: #2b202a;
+    --surface-3: #332430;
+    --text: #fbf3f7;
+    --muted: #b9a6b2;
+    --subtle: #8f7a88;
+    --line: rgba(241, 125, 182, 0.17);
+    --line-strong: rgba(241, 125, 182, 0.33);
+    --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+    --green: #6dd6ad;
+    --radius: 24px;
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
+    --pink: #df4f95;
+    --pink-strong: #d93686;
+    --pink-deep: #a92f6b;
+    --pink-soft: #ffe1ef;
+    --pink-wash: rgba(217, 54, 134, 0.08);
+    --bg: #fff8fb;
+    --bg-2: #fff1f7;
+    --surface: #fffdfd;
+    --surface-2: #fff6fa;
+    --surface-3: #ffebf4;
+    --text: #30202a;
+    --muted: #7b6874;
+    --subtle: #a18b98;
+    --line: rgba(191, 60, 122, 0.15);
+    --line-strong: rgba(191, 60, 122, 0.28);
+    --shadow: 0 24px 65px rgba(126, 58, 91, 0.12);
+    --green: #238a69;
+  }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body.login-body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  a,
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--pink);
+    outline-offset: 3px;
+  }
+
+  .page-shell {
+    position: relative;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .ambient {
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 50%;
+    filter: blur(2px);
+  }
+
+  .ambient.one {
+    top: -390px;
+    left: -210px;
+    width: 680px;
+    height: 680px;
+    background: radial-gradient(circle, rgba(243, 75, 157, 0.19), rgba(243, 75, 157, 0) 68%);
+  }
+
+  .ambient.two {
+    right: -390px;
+    bottom: -460px;
+    width: 760px;
+    height: 760px;
+    background: radial-gradient(circle, rgba(187, 57, 126, 0.18), rgba(187, 57, 126, 0) 68%);
+  }
+
+  .topbar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    height: 82px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(22px, 5vw, 78px);
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 77%, transparent);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .brand-mark {
+    position: relative;
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #ffc4df, var(--pink-strong) 60%, #ad2e70);
+    box-shadow: 0 9px 28px rgba(232, 75, 151, 0.25);
+    color: #fff;
+  }
+
+  .brand-mark::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 11px;
+  }
+
+  .brand-mark svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .brand-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.065em;
+    line-height: 1;
+  }
+
+  .brand-name span {
+    margin-left: 5px;
+    padding: 4px 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--pink-wash);
+    color: var(--pink);
+    font: 700 9px 'DM Sans', sans-serif;
+    letter-spacing: 0.14em;
+    vertical-align: middle;
+  }
+
+  .brand-sub {
+    margin-top: 5px;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .secure-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .secure-label svg {
+    width: 15px;
+    height: 15px;
+    color: var(--green);
+  }
+
+  .theme-toggle {
+    display: grid;
+    place-items: center;
+    width: 39px;
+    height: 39px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: var(--surface-2);
+    color: var(--pink);
+    transition: 0.2s;
+  }
+
+  .theme-toggle:hover {
+    transform: translateY(-1px);
+    border-color: var(--line-strong);
+  }
+
+  .theme-toggle svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .main {
+    display: grid;
+    width: min(1160px, calc(100% - 48px));
+    flex: 1;
+    grid-template-columns: minmax(0, 1.1fr) minmax(400px, 0.9fr);
+    gap: clamp(50px, 8vw, 120px);
+    align-items: center;
+    margin: auto;
+    padding: 70px 0 78px;
+  }
+
+  .intro {
+    position: relative;
+    min-width: 0;
+    padding: 12px 0 18px;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--pink);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 27px;
+    height: 1px;
+    background: var(--pink);
+  }
+
+  h1 {
+    max-width: 620px;
+    margin: 22px 0 18px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(42px, 5.2vw, 68px);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.06;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--pink);
+  }
+
+  .intro-copy {
+    max-width: 440px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .feature-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 35px;
+  }
+
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.025em;
+  }
+
+  .feature-icon {
+    display: grid;
+    place-items: center;
+    width: 31px;
+    height: 31px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--pink-wash);
+    color: var(--pink);
+  }
+
+  .feature-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .visual-stage {
+    position: relative;
+    max-width: 480px;
+    height: 205px;
+    margin-top: 43px;
+    border: 1px solid var(--line);
+    border-radius: 23px;
+    background: linear-gradient(115deg, var(--surface) 0%, color-mix(in srgb, var(--surface-2) 83%, var(--pink) 17%) 100%);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .visual-stage::before,
+  .visual-stage::after {
+    content: "";
+    position: absolute;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    transform: rotate(-23deg);
+  }
+
+  .visual-stage::before {
+    top: 20px;
+    right: -72px;
+    width: 360px;
+    height: 170px;
+  }
+
+  .visual-stage::after {
+    top: 44px;
+    right: -28px;
+    width: 290px;
+    height: 125px;
+    border-color: var(--line);
+  }
+
+  .stage-glow {
+    position: absolute;
+    top: -85px;
+    right: 22px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(241, 125, 182, 0.2), rgba(241, 125, 182, 0) 68%);
+  }
+
+  .stage-content {
+    position: absolute;
+    top: 27px;
+    left: 25px;
+    z-index: 1;
+  }
+
+  .stage-kicker {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: var(--pink);
+    text-transform: uppercase;
+  }
+
+  .stage-title {
+    max-width: 210px;
+    margin-top: 11px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 24px;
+    line-height: 1.18;
+  }
+
+  .stage-note {
+    margin-top: 11px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  .stage-seal {
+    position: absolute;
+    top: 38px;
+    right: 39px;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 116px;
+    height: 116px;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--surface) 38%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .stage-seal::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 50%;
+  }
+
+  .seal-inner {
+    position: relative;
+    z-index: 1;
+    color: var(--pink);
+    text-align: center;
+  }
+
+  .seal-inner svg {
+    display: block;
+    width: 25px;
+    height: 25px;
+    margin: 0 auto 5px;
+  }
+
+  .seal-inner span {
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.17em;
+  }
+
+  .login-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    justify-self: end;
+  }
+
+  .login-card {
+    position: relative;
+    overflow: hidden;
+    padding: 37px 37px 30px;
+    border: 1px solid var(--line-strong);
+    border-radius: 26px;
+    background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 97%, var(--pink) 3%), var(--surface));
+    box-shadow: var(--shadow);
+  }
+
+  .login-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 11%;
+    right: 11%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    opacity: 0.8;
+  }
+
+  .card-header {
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .card-emblem {
+    display: grid;
+    place-items: center;
+    width: 49px;
+    height: 49px;
+    margin: 0 auto 17px;
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    background: var(--pink-wash);
+    color: var(--pink);
+  }
+
+  .card-emblem svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .card-kicker {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--pink);
+    text-transform: uppercase;
+  }
+
+  .card-header h2 {
+    margin: 9px 0 7px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 29px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+  }
+
+  .card-header p {
+    margin: 0;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .field {
+    margin-top: 18px;
+  }
+
+  .field label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+  }
+
+  .field label small {
+    color: var(--subtle);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap > svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 16px;
+    height: 16px;
+    color: var(--subtle);
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .field input {
+    width: 100%;
+    height: 48px;
+    padding: 0 44px 0 42px;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--bg-2);
+    color: var(--text);
+    font-size: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+
+  .field input::placeholder {
+    color: var(--subtle);
+  }
+
+  .field input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 4px var(--pink-wash);
+  }
+
+  .reveal {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--subtle);
+    transform: translateY(-50%);
+  }
+
+  .reveal:hover {
+    background: var(--pink-wash);
+    color: var(--pink);
+  }
+
+  .reveal svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .form-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 17px 0 22px;
+  }
+
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .remember input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--pink-strong);
+  }
+
+  .text-link {
+    color: var(--pink);
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .text-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .submit-btn {
+    display: flex;
+    width: 100%;
+    height: 49px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(105deg, var(--pink-strong), var(--pink) 58%, #f5a1ca);
+    box-shadow: 0 10px 24px rgba(217, 54, 134, 0.24);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    filter: saturate(1.08);
+    box-shadow: 0 14px 28px rgba(217, 54, 134, 0.3);
+  }
+
+  .submit-btn:active {
+    transform: translateY(0);
+  }
+
+  .submit-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .form-footnote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 19px;
+    color: var(--subtle);
+    font-size: 9px;
+  }
+
+  .form-footnote svg {
+    width: 13px;
+    height: 13px;
+    color: var(--green);
+  }
+
+  .card-divider {
+    height: 1px;
+    margin: 25px 0 18px;
+    background: var(--line);
+  }
+
+  .support-line {
+    text-align: center;
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .support-line a {
+    margin-left: 3px;
+    color: var(--pink);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .support-line a:hover {
+    text-decoration: underline;
+  }
+
+  .footer {
+    display: flex;
+    padding: 19px clamp(22px, 5vw, 78px);
+    border-top: 1px solid var(--line);
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: color-mix(in srgb, var(--surface) 50%, transparent);
+    color: var(--subtle);
+    font-size: 9px;
+    letter-spacing: 0.035em;
+  }
+
+  .footer-brand {
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .footer-right svg {
+    width: 13px;
+    height: 13px;
+    color: var(--pink);
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    z-index: 10;
+    max-width: min(92vw, 520px);
+    padding: 12px 17px;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--surface-3);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font-size: 11px;
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+    transform: translate(-50%, 18px);
+    transition: 0.25s;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .login-page-alert {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 143, 183, 0.28);
+    border-radius: 9px;
+    background: rgba(216, 27, 108, 0.14);
+    color: #ff9bc8;
+    font-size: 11px;
+  }
+
+  .login-page-alert.success {
+    border-color: rgba(143, 229, 179, 0.3);
+    background: rgba(90, 190, 138, 0.16);
+    color: #a7e3bd;
+  }
+
+  @media (max-width: 900px) {
+    .main {
+      grid-template-columns: 1fr minmax(360px, 0.95fr);
+      gap: 38px;
+      width: calc(100% - 54px);
+    }
+
+    h1 {
+      font-size: 48px;
+    }
+
+    .visual-stage {
+      height: 180px;
+    }
+
+    .stage-seal {
+      top: 38px;
+      right: 20px;
+      width: 94px;
+      height: 94px;
+    }
+
+    .login-card {
+      padding: 31px 27px 26px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .topbar {
+      height: 70px;
+      padding: 0 20px;
+    }
+
+    .secure-label {
+      display: none;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      width: min(460px, calc(100% - 34px));
+      padding: 43px 0 48px;
+      align-items: stretch;
+    }
+
+    .intro {
+      padding: 0;
+      text-align: center;
+    }
+
+    .eyebrow {
+      justify-content: center;
+    }
+
+    h1 {
+      margin: 17px auto 12px;
+      font-size: 43px;
+    }
+
+    .intro-copy {
+      max-width: 400px;
+      margin: auto;
+      font-size: 12px;
+    }
+
+    .feature-row {
+      justify-content: center;
+      gap: 12px 18px;
+      margin-top: 20px;
+    }
+
+    .feature {
+      font-size: 9px;
+    }
+
+    .feature-icon {
+      width: 27px;
+      height: 27px;
+    }
+
+    .visual-stage {
+      display: none;
+    }
+
+    .login-wrap {
+      max-width: none;
+    }
+
+    .login-card {
+      padding: 29px 25px 25px;
+    }
+
+    .card-header {
+      margin-bottom: 23px;
+    }
+
+    .card-header h2 {
+      font-size: 27px;
+    }
+
+    .footer {
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px 20px;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .brand-name {
+      font-size: 18px;
+    }
+
+    .brand-sub {
+      font-size: 8px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+    }
+
+    .main {
+      padding-top: 32px;
+    }
+
+    .intro h1 {
+      font-size: 37px;
+    }
+
+    .login-card {
+      padding: 25px 20px 22px;
+    }
+
+    .form-meta {
+      align-items: flex-start;
+    }
+
+    .field input {
+      height: 46px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      scroll-behavior: auto !important;
+      transition: none !important;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<main class="login login-page">
-  <a class="brand-lockup login-brand" href="{% url 'login' %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Salon &amp; Academy</span></span></a>
-  <span class="eyebrow login-eyebrow">TEAM ACCESS</span>
-  <h1>Welcome back</h1>
-  <p>Sign in to open your LashPro workspace.</p>
-  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
-  {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
-  <form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><label>Username {{ form.username }}</label><label>Password {{ form.password }}</label><button class="submit" type="submit">Sign in <span aria-hidden="true">→</span></button></form>
-  <p class="login-help"><a href="{% url 'password_reset' %}">Forgot your password?</a> · For account access help, contact your manager.</p>
-</main>
+<div class="page-shell">
+  <div class="ambient one"></div>
+  <div class="ambient two"></div>
+
+  <header class="topbar">
+    <a class="brand" href="{% url 'login' %}" aria-label="Lashpro KE home">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3.5 13.7 9l5.3 2-5.3 2L12 18.5 10.3 13 5 11l5.3-2L12 3.5Z"/>
+          <path d="m19 3 .7 2.3L22 6l-2.3.7L19 9l-.7-2.3L16 6l2.3-.7L19 3Z"/>
+          <path d="m5 16 .6 1.7L7.5 18l-1.9.6L5 20.5l-.6-1.9L2.5 18l1.9-.3L5 16Z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">LASHPRO <span>KE</span></div>
+        <div class="brand-sub">Nairobi · Premier Lash &amp; Academy</div>
+      </div>
+    </a>
+
+    <div class="top-actions">
+      <div class="secure-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        Protected studio access
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="intro" aria-labelledby="intro-title">
+      <div class="eyebrow">The Lashpro experience</div>
+      <h1 id="intro-title">Beautiful work.<br><em>Seamless business.</em></h1>
+      <p class="intro-copy">Your studio operations, thoughtfully brought together. Sign in to manage appointments, sales, inventory and the Lashpro Academy from one refined workspace.</p>
+
+      <div class="feature-row" aria-label="Platform features">
+        <div class="feature">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3h18v18H3z"/>
+              <path d="M8 8h8v8H8z"/>
+            </svg>
+          </span>
+          Salon POS
+        </div>
+        <div class="feature">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+            </svg>
+          </span>
+          Academy
+        </div>
+        <div class="feature">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"/>
+              <path d="m19 9-5 5-4-4-5 5"/>
+            </svg>
+          </span>
+          Studio insights
+        </div>
+      </div>
+
+      <div class="visual-stage" aria-hidden="true">
+        <div class="stage-glow"></div>
+        <div class="stage-content">
+          <div class="stage-kicker">Lashpro · Studio suite</div>
+          <div class="stage-title">Where artistry<br>meets intention.</div>
+          <div class="stage-note">SALON · RETAIL · EDUCATION</div>
+        </div>
+        <div class="stage-seal">
+          <div class="seal-inner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/>
+              <circle cx="12" cy="12" r="2.7"/>
+              <path d="M5.5 7.5 4 5m6-1.5L9.5 1m9 6.5L20 5"/>
+            </svg>
+            <span>EST. LASHPRO</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="login-wrap" aria-label="Administrator sign in">
+      <div class="login-card">
+        <div class="card-header">
+          <div class="card-emblem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2.8 14.1 9l6.1 3-6.1 2.8L12 21l-2.1-6.2L3.8 12l6.1-3L12 2.8Z"/>
+              <path d="m19 2 .7 2.3L22 5l-2.3.7L19 8l-.7-2.3L16 5l2.3-.7L19 2Z"/>
+            </svg>
+          </div>
+          <div class="card-kicker">Administrator portal</div>
+          <h2>Welcome back</h2>
+          <p>Sign in to continue to your studio.</p>
+        </div>
+
+        {% if form.errors %}
+          <p class="login-page-alert" role="alert">Username or password not recognised.</p>
+        {% endif %}
+        {% if messages %}
+          {% for message in messages %}
+            <p class="login-page-alert {% if message.tags %}{{ message.tags }}{% endif %}" role="status">{{ message }}</p>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" id="login-form" autocomplete="on">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next|default:'' }}">
+
+          <div class="field">
+            <label for="id_username">Username <small>Required</small></label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M5 21v-1a7 7 0 0 1 14 0v1"/>
+              </svg>
+              {{ form.username }}
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="id_password">Password <small>Required</small></label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              {{ form.password }}
+              <button class="reveal" id="reveal-password" type="button" aria-label="Show password" title="Show password">
+                <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-meta">
+            <label class="remember">
+              <input type="checkbox" id="remember" name="remember">
+              Remember this device
+            </label>
+            <a class="text-link" href="{% url 'password_reset' %}" id="forgot-link">Forgot password?</a>
+          </div>
+
+          <button class="submit-btn" type="submit">
+            <span>Sign in to dashboard</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14m-6-6 6 6-6 6"/>
+            </svg>
+          </button>
+
+          <div class="form-footnote">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+            Your session is protected with secure access.
+          </div>
+        </form>
+
+        <div class="card-divider"></div>
+        <div class="support-line">Need help accessing your account? <a href="mailto:operations@lashproke.com" id="support-link">Contact support</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© <span id="year">2026</span> <span class="footer-brand">Lashpro KE</span>. All rights reserved.</div>
+    <div class="footer-right">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+      Private studio workspace
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  const root = document.documentElement;
+  const themeButton = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const toast = document.getElementById('toast');
+  let toastTimer;
+
+  function setTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    const light = theme === 'light';
+    themeButton.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    themeButton.title = light ? 'Switch to dark theme' : 'Switch to light theme';
+    themeIcon.innerHTML = light
+      ? '<path d="M20.9 13A8.9 8.9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>'
+      : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>';
+    try {
+      localStorage.setItem('lashpro-login-theme', theme);
+    } catch (error) {
+      // no-op: localStorage may be blocked
+    }
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', light ? '#fff8fb' : '#171016');
+  }
+
+  let savedTheme = 'dark';
+  try {
+    savedTheme = localStorage.getItem('lashpro-login-theme') || 'dark';
+  } catch (error) {
+    savedTheme = 'dark';
+  }
+  setTheme(savedTheme);
+
+  themeButton.addEventListener('click', () => {
+    setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3400);
+  }
+
+  const password = document.getElementById('id_password');
+  const revealButton = document.getElementById('reveal-password');
+
+  if (revealButton && password) {
+    revealButton.addEventListener('click', () => {
+      const reveal = password.type === 'password';
+      password.type = reveal ? 'text' : 'password';
+      revealButton.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+      revealButton.title = reveal ? 'Hide password' : 'Show password';
+      document.getElementById('eye-icon').innerHTML = reveal
+        ? '<path d="M3 3 21 21M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a16 16 0 0 1-3.1 3.9M6.2 6.2C3.6 8 2 12 2 12s3.6 7 10 7a10 10 0 0 0 4-.8"/>'
+        : '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+    });
+  }
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const supportLink = document.getElementById('support-link');
+  if (supportLink) {
+    supportLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      showToast('Add your studio support email or contact URL here.');
+    });
+  }
+</script>
 {% endblock %}
