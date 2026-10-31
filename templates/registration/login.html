@@ -5,6 +5,9 @@
 {% block body_class %}login-body{% endblock %}
 
 {% block head_extra %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: dark;
@@ -1190,12 +1193,5 @@
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  const supportLink = document.getElementById('support-link');
-  if (supportLink) {
-    supportLink.addEventListener('click', (event) => {
-      event.preventDefault();
-      showToast('Add your studio support email or contact URL here.');
-    });
-  }
 </script>
 {% endblock %}
