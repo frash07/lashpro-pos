@@ -1,213 +1,471 @@
-{% extends "base_pos.html" %}{% load static %}
-{% block body_class %}pos-body{% endblock %}
-{% block title %}Salon POS · LashPro{% endblock %}
-
-{% block content %}
-<header class="pos-topbar">
-  <a class="pos-brand" href="{% url 'sales:checkout' %}">
-    <img src="{% static 'img/logo-lashpro.svg' %}" alt="">
-    <span><strong>LashPro</strong><small>Salon & Academy</small></span>
-  </a>
-  <nav class="pos-desktop-links" aria-label="Workspace">
-    <a href="{% url 'sales:checkout' %}" aria-current="page">POS</a>
-    <a href="{% url 'sales:payments' %}">Sales</a>
-    <a href="{% url 'sales:services' %}">Services</a>
-    {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}
-      <a href="{% url 'reporting:dashboard' %}">Admin</a>
-    {% endif %}
-  </nav>
-  <div class="pos-topbar-actions">
-    <span class="connection-badge"><i class="status-dot" aria-hidden="true"></i><span id="network-status">Online</span></span>
-    <button type="button" class="install-button" id="install-app" hidden>Install</button>
-    <button type="button" class="register-toggle" id="register-toggle" aria-controls="register-panel" aria-expanded="false"><span>Sale</span> <b id="register-count">0</b> <strong id="register-mobile-total">KSh 0</strong></button>
-    <time class="pos-clock" id="pos-clock" datetime="">--:--</time>
-    <div class="pos-user"><span class="avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.role|default:"Staff" }}</small></span></div>
-  </div>
-</header>
-
-<details class="desktop-more">
-  <summary>More</summary>
-  <div class="more-sheet">
-    <a href="{% url 'payments:cash-session' %}">Cash session</a>
-    <a href="{% url 'sales:refunds' %}">Refunds</a>
-    <a href="{% url 'commissions:dashboard' %}">Commissions</a>
-    <a href="{% url 'password_change' %}">Change password</a>
-    {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}
-      <a href="{% url 'reporting:dashboard' %}">Admin portal</a>
-    {% endif %}
-    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
-  </div>
-</details>
-
-<form method="post" id="checkout" class="pos-layout">
-  {% csrf_token %}{{ details.idempotency_key }}
-  <section class="catalog-pane" aria-label="Salon item catalog">
-    <div class="pos-toolbar">
-      <label class="catalog-search"><span aria-hidden="true">⌕</span><span class="visually-hidden">Search catalog</span><input type="search" id="catalog-search" placeholder="Search services, products, training" autocomplete="off"></label>
-      <div class="pos-context">
-        <a class="shift-badge {% if not cash_session %}shift-closed{% endif %}" href="{% url 'payments:cash-session' %}">Shift: {% if cash_session %}Open{% else %}Closed{% endif %}</a>
-        <span class="currency-badge">KSh</span>
-      </div>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171016">
+  <title>Lashpro KE — Luxury Salon Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><i data-lucide="sparkles"></i></div>
+      <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH & ACADEMY</div></div>
     </div>
-
-    <nav class="catalog-tabs" aria-label="Catalog categories">
-      <button type="button" class="catalog-filter pill is-active" data-category="all" aria-pressed="true">All</button>
-      <button type="button" class="catalog-filter pill" data-category="service" aria-pressed="false">Services</button>
-      <button type="button" class="catalog-filter pill" data-category="product" aria-pressed="false">Products</button>
-      <button type="button" class="catalog-filter pill" data-category="training" aria-pressed="false">Training</button>
+    <nav class="mode-switch" aria-label="Application mode">
+      <button id="nav-pos-btn" class="mode-btn active" type="button" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
+      <button id="nav-admin-btn" class="mode-btn" type="button" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
     </nav>
-
-    <div class="catalog-scroll">
-      {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
-      {% if lines.non_form_errors %}<div class="error catalog-error" role="alert">{{ lines.non_form_errors }}</div>{% endif %}
-      {% if payments.non_form_errors %}<div class="error catalog-error" role="alert">{{ payments.non_form_errors }}</div>{% endif %}
-      <div class="catalog-grid" id="catalog-grid">
-        <p class="training-empty" id="training-empty" hidden>Training courses are not set up in this POS catalog yet.</p>
-        {% for service in services %}
-        <button type="button" class="catalog-card service-card" data-catalog-card data-category="{% if service.kind == 'TRAINING' %}training{% else %}service{% endif %}" data-item-kind="service" data-item-id="{{ service.pk }}" data-item-name="{{ service.name }}" data-item-meta="{% if service.kind == 'TRAINING' %}Training{% else %}Lash service{% endif %}">
-          <span class="catalog-image">{% if service.image %}<img src="{{ service.image.url }}" alt="">{% else %}<img src="{% static 'img/product-placeholder.svg' %}" alt="">{% endif %}</span>
-          <span class="catalog-card-top"><span class="catalog-type">{% if service.kind == 'TRAINING' %}TRAINING{% else %}SERVICE{% endif %}</span></span>
-          <strong>{{ service.name }}</strong>
-          <span class="catalog-card-meta">{{ service.duration_minutes }} min</span>
-          <span class="catalog-card-bottom"><b>KSh {{ service.price|floatformat:0 }}</b><span class="add-icon" aria-hidden="true">＋</span></span>
-        </button>
-        {% endfor %}
-        {% for product in products %}
-        <button type="button" class="catalog-card product-card" data-catalog-card data-category="product" data-item-kind="product" data-item-id="{{ product.pk }}" data-item-name="{{ product.name }}" data-item-meta="Retail product" {% if product.on_hand <= 0 %}disabled{% endif %}>
-          <span class="catalog-image">{% if product.image %}<img src="{{ product.image.url }}" alt="">{% else %}<img src="{% static 'img/product-placeholder.svg' %}" alt="">{% endif %}</span>
-          <span class="catalog-card-top"><span class="catalog-type">PRODUCT</span></span>
-          <strong>{{ product.name }}</strong>
-          <span class="catalog-card-meta">{% if product.sku %}SKU {{ product.sku }}{% else %}&nbsp;{% endif %}</span>
-          <span class="catalog-card-bottom"><b>KSh {{ product.selling_price|floatformat:0 }}</b><span class="catalog-stock">{{ product.on_hand|floatformat:"-3" }}</span><span class="add-icon" aria-hidden="true">＋</span></span>
-        </button>
-        {% endfor %}
-        {% if not services and not products %}<p class="empty-state catalog-empty">No active services or products are available in the catalog.</p>{% endif %}
-      </div>
+    <div class="top-actions">
+      <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
+      <button class="icon-button" id="theme-toggle" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme" type="button"><i data-lucide="sun-moon"></i></button>
+      <button id="pwa-install-btn" class="icon-button hidden" onclick="installPWA()" aria-label="Install app" title="Install app" type="button"><i data-lucide="download"></i></button>
+      <div class="profile"><div class="avatar">LY</div><div class="profile-copy"><div class="profile-name">Lyn Wanjiru</div><div class="profile-role">FOUNDER & MASTER ARTIST</div></div></div>
     </div>
-  </section>
+  </header>
 
-  <aside class="register-panel" id="register-panel" aria-label="Current sale">
-    <div class="register-header">
-      <button type="button" class="register-close" id="register-close" aria-label="Close sale">×</button>
-      <h1>Current Sale</h1>
-      <button type="button" class="clear-order" id="clear-items">Clear All</button>
-    </div>
-    <div class="register-identity">
-      <label>Technician
-        <select id="default-technician"><option value="">Choose technician</option>{% for technician in technicians %}<option value="{{ technician.pk }}"{% if technician.pk == default_technician_id %} selected{% endif %}>{{ technician.get_full_name|default:technician.username }}</option>{% endfor %}</select>
-      </label>
-      <label>Client
-        {{ details.customer }}{{ details.customer.errors }}
-      </label>
-    </div>
-
-    {{ lines.management_form }}
-    <div class="register-items" id="items">
-      {% for line in lines %}
-      <div class="item-row{% if not line.product.value and not line.service.value and not line.errors %} is-empty{% endif %}" data-item-row data-has-errors="{% if line.errors %}true{% else %}false{% endif %}">
-        <div class="native-line-fields" aria-hidden="true">{{ line.product }}{{ line.service }}{{ line.DELETE }}</div>
-        <div class="line-card">
-          <img class="line-thumb" data-line-thumb alt="" hidden>
-          <div class="line-card-top"><div class="line-copy"><strong data-line-name>Choose an item</strong><small data-line-meta></small></div><button type="button" class="remove-line" data-remove aria-label="Remove item">×</button></div>
-          <div class="line-card-bottom">
-            <div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div>
-            <span class="line-quantity" data-line-quantity>× 1</span>
-            <strong class="line-total" data-line-total>KSh 0</strong>
+  <main class="main">
+    <section id="pos-mode-view" class="view">
+      <div class="pos-layout">
+        <div class="workspace">
+          <div class="page-heading">
+            <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
+            <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="clock" style="width:13px;height:13px;color:var(--pink)"></i> Shift <strong style="color:var(--text)">08:30</strong></div></div>
           </div>
-          <label class="technician-field" data-technician-field hidden>Assigned technician {{ line.technician }}{{ line.technician.errors }}</label>
-          {% if can_discount %}<details class="discount-details"><summary>Discount</summary><div class="discount-fields"><label>Discount (KSh) {{ line.discount }}{{ line.discount.errors }}</label></div></details>{% endif %}
-          <div class="row-errors" role="alert">{{ line.product.errors }}{{ line.service.errors }}{{ line.quantity.errors }}{% if line.non_field_errors %}{{ line.non_field_errors }}{% endif %}</div>
+          <div class="mini-metrics">
+            <div class="mini-metric"><div class="metric-icon"><i data-lucide="wallet"></i></div><div><div class="metric-title">Today's revenue</div><div class="metric-value">KES 142,500</div><div class="metric-note">↗ 18.4% vs yesterday</div></div></div>
+            <div class="mini-metric"><div class="metric-icon"><i data-lucide="calendar-check"></i></div><div><div class="metric-title">Appointments served</div><div class="metric-value">24 <span style="font-size:10px;color:var(--muted);font-weight:500">clients</span></div><div class="metric-note">6 more on the books</div></div></div>
+            <div class="mini-metric"><div class="metric-icon"><i data-lucide="gem"></i></div><div><div class="metric-title">Studio experience</div><div class="metric-value">Luxe tier</div><div class="metric-note">Premium service enabled</div></div></div>
+          </div>
+          <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><div class="search-wrap"><i data-lucide="search"></i><input id="catalog-search" type="search" oninput="filterCatalog()" placeholder="Search the collection..."></div></div>
+          <div class="category-tabs">
+            <button class="cat-tab active" data-category="all" type="button" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
+            <button class="cat-tab" data-category="service" type="button" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
+            <button class="cat-tab" data-category="academy" type="button" onclick="filterCategory('academy',this)"><i data-lucide="graduation-cap"></i> Academy</button>
+            <button class="cat-tab" data-category="product" type="button" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail & care</button>
+            <span class="result-count" id="result-count">12 items</span>
+          </div>
+          <div id="catalog-grid" class="catalog-grid"></div>
+        </div>
+        <aside class="checkout-panel">
+          <div class="checkout-head">
+            <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Draft order</span></div>
+            <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-id">ORDER · LP-0001</div></div></div>
+          </div>
+          <div class="client-fields">
+            <div class="field"><label for="staff-select">ARTIST / TRAINER</label><select id="staff-select"><option value="Stacy (Senior Lash Artist)">Stacy · Senior Artist</option><option value="Faith (Lash Specialist)">Faith · Specialist</option><option value="Lyn (Master / Owner)" selected>Lyn · Master Tech</option><option value="Amina (Junior Tech)">Amina · Junior Tech</option></select></div>
+            <div class="field"><label for="client-name">CLIENT / STUDENT</label><input id="client-name" type="text" placeholder="Walk-in client" value="Wanjiku Njuguna"></div>
+          </div>
+          <div id="cart-items-container" class="cart-items"></div>
+          <div class="checkout-bottom">
+            <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button class="btn-small" type="button" onclick="applyDiscount()">Apply</button></div>
+            <div class="financials">
+              <div class="financial-row"><span>Subtotal</span><span id="summary-subtotal">KES 0</span></div>
+              <div class="financial-row"><span>VAT (16% incl.)</span><span id="summary-tax">KES 0</span></div>
+              <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
+              <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
+            </div>
+            <button class="pay-primary" type="button" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="width:14px;margin-left:auto"></i></button>
+            <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card / PDQ</button></div>
+            <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="admin-mode-view" class="view hidden">
+      <div class="admin-hero">
+        <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div><h1 class="admin-title">The studio, <em style="color:var(--pink);font-weight:400">at a glance.</em></h1><div class="admin-subtitle">A considered view of revenue, inventory health, artist performance and academy momentum — all in one place.</div></div>
+        <div class="admin-hero-actions"><button class="button-secondary" type="button" onclick="exportReport()"><i data-lucide="file-down"></i> Export report</button><button class="button-primary" type="button" onclick="openAddStockModal()"><i data-lucide="plus"></i> Add inventory</button></div>
+      </div>
+      <div class="admin-kpis">
+        <div class="kpi-card"><div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div><div class="kpi-number">KES 142,500</div><div class="kpi-footer"><span class="up">↗ 18.4%</span><span>compared with yesterday</span></div></div>
+        <div class="kpi-card"><div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div><div class="kpi-number">KES 118,000</div><div class="kpi-footer"><span>83% of collected payments</span></div></div>
+        <div class="kpi-card"><div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="kpi-number">65% <span style="color:var(--subtle);font-size:14px;font-weight:500">/</span> 35%</div><div class="kpi-footer"><span>Top performer: Volume Hybrid Set</span></div></div>
+        <div class="kpi-card"><div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div><div class="kpi-number">14 <span style="color:var(--muted);font-size:12px;font-weight:500">active students</span></div><div class="kpi-footer"><span class="up">3 certified this week</span></div></div>
+      </div>
+      <div class="admin-content">
+        <div class="admin-content-head"><div><div class="admin-content-title">Studio management</div><div class="admin-content-subtitle">Operational detail, neatly brought together.</div></div><div class="soft-pill"><i data-lucide="refresh-cw" style="width:12px;height:12px;color:var(--pink)"></i> Live workspace</div></div>
+        <div class="admin-tabs">
+          <button id="tab-inventory-btn" class="admin-tab active" type="button" onclick="switchAdminTab('inventory')"><i data-lucide="boxes"></i> Inventory & stock</button>
+          <button id="tab-academy-btn" class="admin-tab" type="button" onclick="switchAdminTab('academy')"><i data-lucide="graduation-cap"></i> Academy hub</button>
+          <button id="tab-staff-btn" class="admin-tab" type="button" onclick="switchAdminTab('staff')"><i data-lucide="users"></i> Artist commissions</button>
+          <button id="tab-reconciliation-btn" class="admin-tab" type="button" onclick="switchAdminTab('reconciliation')"><i data-lucide="file-check-2"></i> M-PESA audit</button>
+        </div>
+        <div id="admin-sec-inventory" class="admin-section">
+          <div class="subhead"><div><h3>Retail & professional supplies</h3><p>Keep your most-loved essentials in stock.</p></div><button class="button-primary" type="button" onclick="openAddStockModal()"><i data-lucide="plus"></i> Restock item</button></div>
+          <div class="table-shell"><table><thead><tr><th>Product</th><th>Category</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody id="inventory-table-body"></tbody></table></div>
+        </div>
+        <div id="admin-sec-academy" class="admin-section hidden">
+          <div class="subhead"><div><h3>Student certifications & cohorts</h3><p>Build the next generation of exceptional lash artists.</p></div><button class="button-primary" type="button" onclick="enrollStudentPrompt()"><i data-lucide="user-plus"></i> Enrol student</button></div>
+          <div class="academy-grid">
+            <article class="course-card"><span class="course-level gold">Beginner masterclass</span><h4>Classic Lash Fundamentals</h4><p>Three days of careful technique, client safety and foundational artistry.</p><div class="course-foot"><span><strong>6 students</strong> enrolled</span><span class="next">Next · Nov 3</span></div><p style="color:var(--pink);font-weight:700;margin-top:12px">KES 25,000 <span style="font-weight:400;color:var(--muted)">/ student</span></p></article>
+            <article class="course-card"><span class="course-level">Advanced masterclass</span><h4>Mega Volume & Fan Artistry</h4><p>Advanced fan creation, texture, direction and retention principles.</p><div class="course-foot"><span><strong>5 students</strong> enrolled</span><span class="next">Next · Nov 8</span></div><p style="color:var(--pink);font-weight:700;margin-top:12px">KES 18,000 <span style="font-weight:400;color:var(--muted)">/ student</span></p></article>
+            <article class="course-card"><span class="course-level blue">Specialist course</span><h4>Lash Lift & Keratin Tint</h4><p>A focused one-day intensive in natural lash enhancement and finishing.</p><div class="course-foot"><span><strong>3 students</strong> enrolled</span><span class="next">Next · Oct 29</span></div><p style="color:var(--pink);font-weight:700;margin-top:12px">KES 12,000 <span style="font-weight:400;color:var(--muted)">/ student</span></p></article>
+          </div>
+        </div>
+        <div id="admin-sec-staff" class="admin-section hidden">
+          <div class="subhead"><div><h3>Artist service commissions</h3><p>Current commission rate: 30% on eligible services.</p></div><span class="soft-pill">Today's closeout</span></div>
+          <div class="commission-summary"><div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div><div class="summary-box"><span>Commission payable</span><strong style="color:var(--pink)">KES 22,050</strong></div><div class="summary-box"><span>Artists on shift</span><strong>3 active</strong></div></div>
+          <div class="table-shell"><table><thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead><tbody>
+            <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
+            <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
+            <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+          </tbody></table></div>
+        </div>
+        <div id="admin-sec-reconciliation" class="admin-section hidden">
+          <div class="subhead"><div><h3>M-PESA Express reconciliation</h3><p>Payment records generated in this demo appear at the top of this log.</p></div><span class="status-tag ok">Demo ledger</span></div>
+          <div class="table-shell"><table><thead><tr><th>Timestamp</th><th>Receipt reference</th><th>Client phone</th><th>Amount (KES)</th><th>Status</th></tr></thead><tbody id="mpesa-log-table"></tbody></table></div>
         </div>
       </div>
-      {% endfor %}
+      <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
+    </section>
+  </main>
+
+  <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon"><i data-lucide="smartphone"></i></div><div><h3 id="mpesa-title">M-PESA Express</h3><p>Safaricom Daraja · Checkout simulator</p></div></div><button class="modal-close" type="button" onclick="closeModal('mpesa-modal')" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="amount-box"><span>Total amount to charge</span><strong id="mpesa-modal-amount">KES 0</strong></div>
+    <div class="field-stack"><div><label for="mpesa-phone">CLIENT MOBILE NUMBER</label><div class="phone-input"><span class="phone-prefix">+254</span><input id="mpesa-phone" type="tel" value="712345678" maxlength="9" inputmode="numeric" placeholder="712345678"></div><div class="helper-text">A simulated prompt will be shown as though the client were confirming on their phone. This preview does not contact Safaricom.</div></div></div>
+    <div id="mpesa-status-box" class="sim-status hidden"><span class="spinner"></span><span>Simulating STK prompt · awaiting client confirmation…</span></div>
+    <button id="stk-trigger-btn" class="button-primary modal-action" type="button" onclick="processSTKPush()" style="width:100%;padding:14px"><i data-lucide="send"></i> Send STK prompt</button>
+  </div></div>
+
+  <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()">
+    <div class="receipt-success"><div class="success-circle"><i data-lucide="check-check" style="width:25px;height:25px"></i></div><h3 id="receipt-title">Payment confirmed</h3><p>Thank you for choosing Lashpro KE.</p>
+      <div id="printable-receipt" class="receipt-paper">
+        <div class="receipt-brand"><h4>LASHPRO KE</h4><p>Luxury salon studio</p></div>
+        <div class="receipt-meta">
+          <div><strong>Receipt:</strong> LP-0001</div>
+          <div><strong>Client:</strong> Wanjiku Njuguna</div>
+          <div><strong>Artist:</strong> Lyn Wanjiru</div>
+        </div>
+        <div class="receipt-lines">
+          <div class="receipt-line"><span>Hybrid lash set</span><span>1 × KES 6,500</span></div>
+          <div class="receipt-line"><span>Aftercare bundle</span><span>1 × KES 2,400</span></div>
+        </div>
+        <div class="receipt-total"><span>Total paid</span><span>KES 8,900</span></div>
+        <div class="receipt-thanks">Thank you for trusting the studio.</div>
+      </div>
+      <div class="receipt-actions"><button class="button-primary" type="button" onclick="window.print()"><i data-lucide="printer"></i> Print</button><button class="button-secondary" type="button" onclick="closeModal('receipt-modal')"><i data-lucide="x"></i> Close</button></div>
+      <button class="receipt-new" type="button" onclick="resetCheckoutState()">Start a new order</button>
     </div>
-    <template id="item-template">{% with line=lines.empty_form %}
-      <div class="item-row is-empty" data-item-row data-has-errors="false">
-        <div class="native-line-fields" aria-hidden="true">{{ line.product }}{{ line.service }}{{ line.DELETE }}</div>
-        <div class="line-card">
-          <img class="line-thumb" data-line-thumb alt="" hidden>
-          <div class="line-card-top"><div class="line-copy"><strong data-line-name>Choose an item</strong><small data-line-meta></small></div><button type="button" class="remove-line" data-remove aria-label="Remove item">×</button></div>
-          <div class="line-card-bottom"><div class="quantity-stepper"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><label class="quantity-field"><span class="visually-hidden">Quantity</span>{{ line.quantity }}</label><button type="button" data-qty-step="1" aria-label="Increase quantity">＋</button></div><span class="line-quantity" data-line-quantity>× 1</span><strong class="line-total" data-line-total>KSh 0</strong></div>
-          <label class="technician-field" data-technician-field hidden>Assigned technician {{ line.technician }}{{ line.technician.errors }}</label>
-          {% if can_discount %}<details class="discount-details"><summary>Discount</summary><div class="discount-fields"><label>Discount (KSh) {{ line.discount }}</label></div></details>{% endif %}
-        </div>
-      </div>
-    {% endwith %}</template>
-    <p class="empty-register" id="cart-empty"><span aria-hidden="true">＋</span><strong>No items yet</strong><small>Tap a catalog card to start this sale.</small></p>
+  </div></div>
 
-    <div class="register-footer">
-      {{ payments.management_form }}
-      {% if payments.non_form_errors %}<div class="error" role="alert">{{ payments.non_form_errors }}</div>{% endif %}
-      <span class="payment-method-title">Payment</span>
-      <div class="payment-actions">
-        <button type="button" class="payment-option cash-option" data-add-payment="CASH"{% if not cash_session %} disabled title="Open a cash session before accepting cash payments."{% endif %}>Cash</button>
-        <button type="button" class="payment-option mpesa-option" data-add-payment="MPESA">M-PESA</button>
-        <button type="button" class="payment-option card-option" id="card-payment">Card<small>Soon</small></button>
-        <button type="button" class="payment-option split-option" id="split-payments" aria-pressed="false">Split</button>
-      </div>
-      <button type="button" id="stk-payment" hidden>M-PESA Express</button>
-      <label class="mpesa-phone-field" id="mpesa-phone-field" hidden>Customer phone (optional)
-        <input type="tel" id="mpesa-phone" inputmode="tel" autocomplete="tel" placeholder="07xx xxx xxx">
-        <small>The M-Pesa reference on the payment row is what gets saved.</small>
-      </label>
-      <div class="payment-rows" id="payments" hidden>
-        {% for payment in payments %}
-        <div class="payment-row" data-payment-row>
-          <label class="payment-method">Method {{ payment.method }}{{ payment.method.errors }}</label>
-          <label class="payment-amount">Amount (KSh) {{ payment.amount }}{{ payment.amount.errors }}</label>
-          <label class="reference-field" data-reference-field>M-Pesa reference {{ payment.reference }}{{ payment.reference.errors }}</label>
-          <button type="button" class="remove-line" data-remove aria-label="Remove payment">×</button><span class="native-delete">{{ payment.DELETE }}</span>
-        </div>
-        {% endfor %}
-      </div>
-      <template id="payment-template">{% with payment=payments.empty_form %}
-        <div class="payment-row" data-payment-row>
-          <label class="payment-method">Method {{ payment.method }}</label>
-          <label class="payment-amount">Amount (KSh) {{ payment.amount }}</label>
-          <label class="reference-field" data-reference-field>M-Pesa reference {{ payment.reference }}</label>
-          <button type="button" class="remove-line" data-remove aria-label="Remove payment">×</button><span class="native-delete">{{ payment.DELETE }}</span>
-        </div>
-      {% endwith %}</template>
-      <button type="button" class="manual-mpesa-link" id="fill-balance">Fill exact balance</button>
-      <label class="promo-entry"><span class="visually-hidden">Promo code</span><input type="text" id="promo-code" placeholder="Promo code" autocomplete="off"><button type="button" class="promo-button" id="apply-promo">Apply</button></label>
-      <p class="pos-notice" id="pos-notice" role="status" hidden></p>
-      {% if not cash_session %}<a class="cash-session-notice" href="{% url 'payments:cash-session' %}">Open a cash session to accept cash payments.</a>{% endif %}
+  <script>
+    const catalogItems = [
+      {id: 1, name: 'Signature Hybrid Fill', desc: 'Soft volume + lift for effortless definition.', type: 'service', category: 'service', price: 6500, stock: '3 slots'},
+      {id: 2, name: 'Volume Renewal Set', desc: 'Premium refills with custom shaping and finish.', type: 'service', category: 'service', price: 7800, stock: '2 slots'},
+      {id: 3, name: 'Lash Lift + Tint', desc: 'Natural curl with warm tint finish.', type: 'service', category: 'service', price: 5400, stock: '4 slots'},
+      {id: 4, name: 'Brow Sculpt', desc: 'Precise shaping and arch definition.', type: 'service', category: 'service', price: 3200, stock: '5 slots'},
+      {id: 5, name: 'Classic Lash Fundamentals', desc: 'Student masterclass for beginner artists.', type: 'academy', category: 'academy', price: 25000, stock: '6 seats'},
+      {id: 6, name: 'Mega Volume Masterclass', desc: 'Advanced fan artistry and retention strategy.', type: 'academy', category: 'academy', price: 18000, stock: '5 seats'},
+      {id: 7, name: 'Lash Lift Intensive', desc: 'Specialist certificate course for lifting techniques.', type: 'academy', category: 'academy', price: 12000, stock: '3 seats'},
+      {id: 8, name: 'Retinol Lash Serum', desc: 'Nourish, condition and extend lash health.', type: 'product', category: 'product', price: 2600, stock: '18 units'},
+      {id: 9, name: 'Glue Remover Duo', desc: 'Gentle cleansing and residue removal.', type: 'product', category: 'product', price: 1800, stock: '14 units'},
+      {id: 10, name: 'Precision Tweezers', desc: 'Japanese steel set for detail work.', type: 'product', category: 'product', price: 3900, stock: '11 units'},
+      {id: 11, name: 'Aftercare Foam Kit', desc: 'Oil-free cleanse and hydration essentials.', type: 'product', category: 'product', price: 2200, stock: '9 units'},
+      {id: 12, name: 'Premium Lash Tray', desc: 'Hybrid curls for premium volume clients.', type: 'product', category: 'product', price: 4600, stock: '7 units'}
+    ];
 
-      <div class="register-summary">
-        <div><span>Subtotal</span><strong id="subtotal">KSh 0</strong></div>
-        <div><span>Tax (VAT 16% incl.)</span><strong id="vat">KSh 0</strong></div>
-        <div class="balance-row"><span>Total</span><strong id="total">KSh 0</strong></div>
-        <div class="payment-allocation"><span>Cash received</span><strong id="cash-received">KSh 0</strong></div>
-        <div class="payment-allocation"><span>Change</span><strong id="cash-change">KSh 0</strong></div>
-        <div class="payment-allocation"><span>M-Pesa pending</span><strong id="mpesa-pending">KSh 0</strong></div>
-        <div class="payment-allocation balance-small"><span>Balance</span><strong id="balance-due">KSh 0</strong></div>
-      </div>
-      <p class="payment-note">Prices are VAT-inclusive. Card payments are not connected. M-Pesa references stay unverified until reconciled.</p>
-      <button class="submit checkout-submit" type="submit">Complete Sale<small id="submit-total">KSh 0</small></button>
-    </div>
-  </aside>
-</form>
-<div class="register-backdrop" id="register-backdrop" hidden></div>
+    const cart = [];
+    let activeCategory = 'all';
+    let selectedTheme = 'dark';
+    let discountPercent = 0;
 
-<nav class="tabbar" aria-label="Primary">
-  <a class="is-active" href="{% url 'sales:checkout' %}" aria-current="page"><span>▣</span>POS</a>
-  <a href="{% url 'sales:payments' %}"><span>☰</span>Sales</a>
-  <a href="{% url 'sales:services' %}"><span>✧</span>Services</a>
-  <details class="mobile-more">
-    <summary><span>⋯</span>More</summary>
-    <div class="more-sheet">
-      <a href="{% url 'payments:cash-session' %}">Cash session</a>
-      <a href="{% url 'sales:refunds' %}">Refunds</a>
-      <a href="{% url 'commissions:dashboard' %}">Commissions</a>
-      <a href="{% url 'password_change' %}">Change password</a>
-      {% if request.user.is_superuser or request.user.role == "OWNER" or request.user.role == "MANAGER" %}
-        <a href="{% url 'reporting:dashboard' %}">Admin portal</a>
-      {% endif %}
-      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
-    </div>
-  </details>
-</nav>
+    function formatKES(value) {
+      return 'KES ' + Number(value).toLocaleString('en-KE');
+    }
 
-{{ prices|json_script:"prices" }}
-<script src="{% static 'js/pos.js' %}" defer></script>
-{% endblock %}
+    function renderCatalog() {
+      const grid = document.getElementById('catalog-grid');
+      const searchTerm = (document.getElementById('catalog-search') || {}).value || '';
+      const filtered = catalogItems.filter(item => {
+        const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.desc.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+
+      grid.innerHTML = filtered.length ? filtered.map(item => `
+        <article class="catalog-card" data-category="${item.category}" data-name="${item.name}">
+          <div class="card-top">
+            <div class="item-icon"><i data-lucide="${item.type === 'service' ? 'sparkles' : item.type === 'academy' ? 'graduation-cap' : 'package'}"></i></div>
+            <span class="type-tag ${item.type}">${item.type === 'academy' ? 'academy' : item.type === 'product' ? 'retail' : 'service'}</span>
+          </div>
+          <div>
+            <div class="item-name">${item.name}</div>
+            <p class="item-desc">${item.desc}</p>
+          </div>
+          <div class="card-bottom">
+            <div>
+              <div class="item-price">${formatKES(item.price)}</div>
+              <div class="item-stock">${item.stock}</div>
+            </div>
+            <button class="add-item" type="button" aria-label="Add ${item.name}" onclick="addToCart(${item.id})"><i data-lucide="plus"></i></button>
+          </div>
+        </article>
+      `).join('') : '<div class="no-results">No items match your search.</div>';
+
+      document.getElementById('result-count').textContent = `${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+
+    function addToCart(id) {
+      const item = catalogItems.find(entry => entry.id === id);
+      if (!item) return;
+      const existing = cart.find(entry => entry.id === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...item, quantity: 1 });
+      }
+      renderCart();
+    }
+
+    function updateQty(id, delta) {
+      const entry = cart.find(item => item.id === id);
+      if (!entry) return;
+      entry.quantity += delta;
+      if (entry.quantity <= 0) {
+        const index = cart.findIndex(item => item.id === id);
+        cart.splice(index, 1);
+      }
+      renderCart();
+    }
+
+    function removeFromCart(id) {
+      const index = cart.findIndex(item => item.id === id);
+      if (index >= 0) cart.splice(index, 1);
+      renderCart();
+    }
+
+    function priceAfterDiscount(price) {
+      return price * (1 - discountPercent / 100);
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items-container');
+      if (!cart.length) {
+        container.innerHTML = `
+          <div class="empty-cart">
+            <div class="empty-icon"><i data-lucide="shopping-bag"></i></div>
+            <div><strong>No items yet.</strong><br>Tap an item to build the client order.</div>
+          </div>
+        `;
+      } else {
+        const totals = cart.reduce((sum, item) => {
+          const discounted = priceAfterDiscount(item.price);
+          sum.subtotal += discounted * item.quantity;
+          return sum;
+        }, { subtotal: 0 });
+        const vat = totals.subtotal * 0.16;
+        const discountAmount = totals.subtotal * (discountPercent / 100);
+        const total = totals.subtotal + vat - discountAmount;
+
+        document.getElementById('summary-subtotal').textContent = formatKES(totals.subtotal);
+        document.getElementById('summary-tax').textContent = formatKES(vat);
+        const discountRow = document.getElementById('discount-row');
+        if (discountPercent > 0) {
+          discountRow.classList.remove('hidden');
+          document.getElementById('summary-discount').textContent = `−${formatKES(discountAmount)}`;
+        } else {
+          discountRow.classList.add('hidden');
+        }
+        document.getElementById('summary-total').textContent = formatKES(total);
+
+        container.innerHTML = cart.map(item => {
+          const discounted = priceAfterDiscount(item.price);
+          const lineTotal = discounted * item.quantity;
+          return `
+            <div class="cart-row">
+              <div class="cart-row-head">
+                <div>
+                  <div class="cart-item-name">${item.name}</div>
+                  <div class="cart-item-price">${formatKES(discounted)} each</div>
+                </div>
+                <button class="remove-item" type="button" aria-label="Remove ${item.name}" onclick="removeFromCart(${item.id})"><i data-lucide="x"></i></button>
+              </div>
+              <div class="cart-row-foot">
+                <div class="qty-control">
+                  <button type="button" aria-label="Decrease quantity" onclick="updateQty(${item.id}, -1)">−</button>
+                  <span>${item.quantity}</span>
+                  <button type="button" aria-label="Increase quantity" onclick="updateQty(${item.id}, 1)">+</button>
+                </div>
+                <div class="line-total">${formatKES(lineTotal)}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (window.lucide) lucide.createIcons();
+      updateOrderId();
+    }
+
+    function updateOrderId() {
+      document.getElementById('order-id').textContent = 'ORDER · LP-' + String(cart.length > 0 ? 1000 + cart.reduce((sum, item) => sum + item.quantity, 0) : 1).padStart(4, '0');
+    }
+
+    function filterCategory(category, btn) {
+      activeCategory = category;
+      document.querySelectorAll('.cat-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.category === category));
+      renderCatalog();
+    }
+
+    function filterCatalog() {
+      renderCatalog();
+    }
+
+    function toggleTheme() {
+      selectedTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', selectedTheme);
+      const themeLabel = document.querySelector('#theme-toggle i');
+      if (themeLabel) {
+        themeLabel.setAttribute('data-lucide', selectedTheme === 'dark' ? 'sun-moon' : 'moon-star');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function switchMode(mode) {
+      const posView = document.getElementById('pos-mode-view');
+      const adminView = document.getElementById('admin-mode-view');
+      const posBtn = document.getElementById('nav-pos-btn');
+      const adminBtn = document.getElementById('nav-admin-btn');
+      const isPos = mode === 'pos';
+      posView.classList.toggle('hidden', !isPos);
+      adminView.classList.toggle('hidden', isPos);
+      posBtn.classList.toggle('active', isPos);
+      adminBtn.classList.toggle('active', !isPos);
+    }
+
+    function switchAdminTab(tab) {
+      document.querySelectorAll('.admin-tab').forEach(btn => btn.classList.toggle('active', btn.id === `tab-${tab}-btn`));
+      document.querySelectorAll('.admin-section').forEach(section => section.classList.toggle('hidden', !section.id.endsWith(tab) && section.id !== 'admin-sec-' + tab));
+      document.querySelectorAll('.admin-section').forEach(section => {
+        if (section.id === 'admin-sec-' + tab) section.classList.remove('hidden');
+      });
+    }
+
+    function applyDiscount() {
+      const code = (document.getElementById('discount-code') || {}).value || '';
+      const normalized = code.trim().toLowerCase();
+      discountPercent = normalized === 'student10' || normalized === 'LASH10' ? 10 : normalized === 'vip25' ? 25 : 0;
+      renderCart();
+    }
+
+    function triggerCheckout(type) {
+      const total = Number((document.getElementById('summary-total') || {}).textContent.replace(/[^\d.]/g, '')) || 0;
+      const amount = document.getElementById('mpesa-modal-amount');
+      if (amount) amount.textContent = formatKES(total || 0);
+      if (type === 'mpesa') {
+        document.getElementById('mpesa-modal').classList.remove('hidden');
+      } else if (type === 'cash' || type === 'card') {
+        document.getElementById('receipt-modal').classList.remove('hidden');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function processSTKPush() {
+      const statusBox = document.getElementById('mpesa-status-box');
+      if (statusBox) {
+        statusBox.classList.remove('hidden');
+      }
+      setTimeout(() => {
+        document.getElementById('mpesa-modal').classList.add('hidden');
+        document.getElementById('receipt-modal').classList.remove('hidden');
+      }, 1200);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function backdropClose(event, id) {
+      if (event.target.id === id) closeModal(id);
+    }
+
+    function installPWA() {
+      // Demo placeholder for installation flow.
+      alert('PWA install flow is available for supported browsers.');
+    }
+
+    function exportReport() {
+      alert('Exporting the studio summary as CSV.');
+    }
+
+    function openAddStockModal() {
+      alert('Inventory update modal ready for implementation.');
+    }
+
+    function enrollStudentPrompt() {
+      alert('Student enrollment flow ready for implementation.');
+    }
+
+    function resetCheckoutState() {
+      cart.length = 0;
+      discountPercent = 0;
+      document.getElementById('discount-code').value = '';
+      renderCatalog();
+      renderCart();
+      closeModal('receipt-modal');
+    }
+
+    function seedInventory() {
+      const inventory = [
+        { product: 'Lash Serum', category: 'Retina care', stock: '18 units', price: 'KES 2,600', status: 'Healthy' },
+        { product: 'Precision Tweezers', category: 'Tools', stock: '11 units', price: 'KES 3,900', status: 'Healthy' },
+        { product: 'Aftercare Foam Kit', category: 'Care', stock: '9 units', price: 'KES 2,200', status: 'Low' },
+        { product: 'Premium Lash Tray', category: 'Volume', stock: '7 units', price: 'KES 4,600', status: 'Low' },
+        { product: 'Glue Remover Duo', category: 'Care', stock: '14 units', price: 'KES 1,800', status: 'Healthy' }
+      ];
+      const body = document.getElementById('inventory-table-body');
+      if (!body) return;
+      body.innerHTML = inventory.map(item => `
+        <tr>
+          <td><div class="table-product"><div class="table-product-icon"><i data-lucide="package"></i></div><span>${item.product}</span></div></td>
+          <td>${item.category}</td>
+          <td>${item.stock}</td>
+          <td>${item.price}</td>
+          <td><span class="status-tag ${item.status === 'Low' ? 'low' : 'ok'}">${item.status === 'Low' ? 'Low stock' : 'Healthy'}</span></td>
+          <td><button class="restock-btn" type="button">Restock</button></td>
+        </tr>
+      `).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function seedMpesaLog() {
+      const log = [
+        { time: '08:42', ref: 'LP-0001', phone: '*********', amount: 'KES 8,900', status: 'Verified' },
+        { time: '08:15', ref: 'LP-0000', phone: '*********', amount: 'KES 6,500', status: 'Verified' },
+        { time: '07:54', ref: 'LP-0999', phone: '*********', amount: 'KES 3,200', status: 'Pending' }
+      ];
+      const table = document.getElementById('mpesa-log-table');
+      if (!table) return;
+      table.innerHTML = log.map(item => `
+        <tr>
+          <td>${item.time}</td>
+          <td><span class="audit-ref">${item.ref}</span></td>
+          <td>${item.phone}</td>
+          <td>${item.amount}</td>
+          <td><span class="status-tag ${item.status === 'Pending' ? 'low' : 'ok'}">${item.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCatalog();
+      renderCart();
+      seedInventory();
+      seedMpesaLog();
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
