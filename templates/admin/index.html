@@ -1,51 +1,251 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
 {% block content %}
-<div class="module">
-  <table>
-    <caption>Inventory quick links</caption>
-    <tr><th scope="row"><a href="{% url 'admin:catalog_product_changelist' %}">Products and stock levels</a></th><td>View current stock and reorder levels</td></tr>
-    <tr><th scope="row"><a href="{% url 'inventory:receive' %}">Receive stock</a></th><td>Record stock received from a supplier</td></tr>
-    <tr><th scope="row"><a href="{% url 'admin:inventory_inventorymovement_changelist' %}">Inventory movement history</a></th><td>Review the stock ledger</td></tr>
-    <tr><th scope="row"><a href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}">Stock adjustment requests</a></th><td>Review adjustment approvals</td></tr>
-    <tr><th scope="row"><a href="{% url 'admin:inventory_serviceconsumable_changelist' %}">Service consumables</a></th><td>Manage products consumed by services</td></tr>
-  </table>
-</div>
-<div class="module">
-  <h2>Low-stock alert</h2>
-  {% if admin_low_stock_count %}
-    <p><strong>{{ admin_low_stock_count }}</strong> active product(s) are at or below their reorder level.</p>
-    <table>
-      <thead><tr><th>Product</th><th>On hand</th><th>Reorder level</th></tr></thead>
-      <tbody>
-      {% for product in admin_low_stock_products %}
-        <tr><th><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></th><td>{{ product.on_hand }}</td><td>{{ product.reorder_level }}</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    <p><a href="{% url 'admin:catalog_product_changelist' %}?stock_level=low">View low-stock products</a></p>
-  {% else %}
-    <p>No low-stock alerts for products with a configured reorder level.</p>
-  {% endif %}
-</div>
-<div id="content-main">
-{% if app_list %}
-  {% for app in app_list %}
-    <div class="app-{{ app.app_label }} module">
-      <table>
-        <caption><a href="{{ app.app_url }}" class="section">{{ app.name }}</a></caption>
-        {% for model in app.models %}
-          <tr class="model-{{ model.object_name|lower }}">
-            {% if model.admin_url %}<th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>{% else %}<th scope="row">{{ model.name }}</th>{% endif %}
-            {% if model.add_url %}<td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>{% else %}<td></td>{% endif %}
-            {% if model.admin_url %}<td><a href="{{ model.admin_url }}" class="changelink">{% if model.view_only %}{% translate 'View' %}{% else %}{% translate 'Change' %}{% endif %}</a></td>{% else %}<td></td>{% endif %}
-          </tr>
-        {% endfor %}
-      </table>
+<div class="lashpro-dashboard">
+  <div class="admin-hero">
+    <div class="admin-hero-copy">
+      <div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div>
+      <h1 class="admin-title">The studio, <em>at a glance.</em></h1>
+      <div class="admin-subtitle">A considered view of revenue, inventory health, artist performance and academy momentum — all in one place.</div>
     </div>
-  {% endfor %}
-{% else %}
-  <p>{% translate "You don't have permission to view or edit anything." %}</p>
-{% endif %}
+    <div class="admin-hero-actions">
+      <a class="button-secondary" href="{% url 'admin:catalog_product_changelist' %}"><i data-lucide="file-down"></i> Stock overview</a>
+      <a class="button-primary" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Receive stock</a>
+    </div>
+  </div>
+
+  <div class="admin-kpis">
+    <div class="kpi-card">
+      <div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div>
+      <div class="kpi-number">KES 142,500</div>
+      <div class="kpi-footer"><span class="up">↗ 18.4%</span><span>compared with yesterday</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div>
+      <div class="kpi-number">KES 118,000</div>
+      <div class="kpi-footer"><span>83% of collected payments</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div>
+      <div class="kpi-number">65% <span style="color:var(--muted);font-size:14px;font-weight:500">/</span> 35%</div>
+      <div class="kpi-footer"><span>Top performer: Volume Hybrid Set</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div>
+      <div class="kpi-number">14 <span style="color:var(--muted);font-size:12px;font-weight:500">active students</span></div>
+      <div class="kpi-footer"><span class="up">3 certified this week</span></div>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <div class="admin-content-head">
+      <div>
+        <div class="admin-content-title">Studio management</div>
+        <div class="admin-content-subtitle">Operational detail, neatly brought together.</div>
+      </div>
+      <div class="soft-pill"><i data-lucide="refresh-cw" style="width:12px;height:12px;color:var(--pink)"></i> Live workspace</div>
+    </div>
+
+    <div class="admin-tabs" aria-label="Management sections">
+      <button type="button" class="admin-tab active" data-tab="inventory"><i data-lucide="boxes"></i> Inventory & stock</button>
+      <button type="button" class="admin-tab" data-tab="academy"><i data-lucide="graduation-cap"></i> Academy hub</button>
+      <button type="button" class="admin-tab" data-tab="staff"><i data-lucide="users"></i> Artist commissions</button>
+      <button type="button" class="admin-tab" data-tab="reconciliation"><i data-lucide="file-check-2"></i> M-PESA audit</button>
+    </div>
+
+    <div class="admin-section" data-panel="inventory">
+      <div class="subhead">
+        <div>
+          <h3>Retail & professional supplies</h3>
+          <p>Keep your most-loved essentials in stock.</p>
+        </div>
+        <a class="button-primary" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Restock item</a>
+      </div>
+
+      <div class="quick-links-grid">
+        <a href="{% url 'admin:catalog_product_changelist' %}"><span>Products and stock levels</span><small>View current stock and reorder levels</small></a>
+        <a href="{% url 'inventory:receive' %}"><span>Receive stock</span><small>Record stock received from suppliers</small></a>
+        <a href="{% url 'admin:inventory_inventorymovement_changelist' %}"><span>Inventory movement history</span><small>Review the stock ledger</small></a>
+        <a href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}"><span>Stock adjustment requests</span><small>Review adjustment approvals</small></a>
+        <a href="{% url 'admin:inventory_serviceconsumable_changelist' %}"><span>Service consumables</span><small>Manage products consumed by services</small></a>
+      </div>
+
+      {% if admin_low_stock_count %}
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>On hand</th>
+                <th>Reorder level</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in admin_low_stock_products %}
+                <tr>
+                  <td><strong><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></strong></td>
+                  <td>{{ product.on_hand }}</td>
+                  <td>{{ product.reorder_level }}</td>
+                  <td><a class="mini-link" href="{% url 'admin:catalog_product_change' product.pk %}">Open</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">No low-stock alerts for products with a configured reorder level.</div>
+      {% endif %}
+    </div>
+
+    <div class="admin-section hidden" data-panel="academy">
+      <div class="subhead">
+        <div>
+          <h3>Student certifications & cohorts</h3>
+          <p>Build the next generation of exceptional lash artists.</p>
+        </div>
+        <a class="button-primary" href="{% url 'admin:catalog_product_changelist' %}"><i data-lucide="user-plus"></i> Course list</a>
+      </div>
+
+      <div class="academy-grid">
+        <article class="course-card">
+          <span class="course-level gold">Beginner masterclass</span>
+          <h4>Classic Lash Fundamentals</h4>
+          <p>Three days of careful technique, client safety and foundational artistry.</p>
+          <div class="course-foot"><span><strong>6 students</strong> enrolled</span><span class="next">Next · Nov 3</span></div>
+          <p class="course-price">KES 25,000 <span>/ student</span></p>
+        </article>
+        <article class="course-card">
+          <span class="course-level">Advanced masterclass</span>
+          <h4>Mega Volume & Fan Artistry</h4>
+          <p>Advanced fan creation, texture, direction and retention principles.</p>
+          <div class="course-foot"><span><strong>5 students</strong> enrolled</span><span class="next">Next · Nov 8</span></div>
+          <p class="course-price">KES 18,000 <span>/ student</span></p>
+        </article>
+        <article class="course-card">
+          <span class="course-level blue">Specialist course</span>
+          <h4>Lash Lift & Keratin Tint</h4>
+          <p>A focused one-day intensive in natural lash enhancement and finishing.</p>
+          <div class="course-foot"><span><strong>3 students</strong> enrolled</span><span class="next">Next · Oct 29</span></div>
+          <p class="course-price">KES 12,000 <span>/ student</span></p>
+        </article>
+      </div>
+    </div>
+
+    <div class="admin-section hidden" data-panel="staff">
+      <div class="subhead">
+        <div>
+          <h3>Artist service commissions</h3>
+          <p>Current commission rate: 30% on eligible services.</p>
+        </div>
+        <a class="soft-pill" href="{% url 'admin:commissions_commission_changelist' %}">Today's closeout</a>
+      </div>
+
+      <div class="commission-summary">
+        <div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div>
+        <div class="summary-box"><span>Commission payable</span><strong style="color:var(--pink)">KES 22,050</strong></div>
+        <div class="summary-box"><span>Artists on shift</span><strong>3 active</strong></div>
+      </div>
+
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Artist</th>
+              <th>Role</th>
+              <th>Services today</th>
+              <th>Gross revenue</th>
+              <th>Commission (KES)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
+            <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
+            <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-section hidden" data-panel="reconciliation">
+      <div class="subhead">
+        <div>
+          <h3>M-PESA Express reconciliation</h3>
+          <p>Payment records are visible here and linked through the audit workspace.</p>
+        </div>
+        <span class="status-tag ok">Demo ledger</span>
+      </div>
+
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Receipt reference</th>
+              <th>Client phone</th>
+              <th>Amount (KES)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>10:42 AM</td><td><span class="audit-ref">QX892KL0P1</span></td><td>+254 712***678</td><td><strong>KES 6,000</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
+            <tr><td>09:15 AM</td><td><span class="audit-ref">QX891MM9X4</span></td><td>+254 722***102</td><td><strong>KES 25,000</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
+            <tr><td>08:50 AM</td><td><span class="audit-ref">QX890PP3L9</span></td><td>+254 701***992</td><td><strong>KES 4,500</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% if app_list %}
+    <div class="system-links-panel">
+      <div class="system-links-header">
+        <div>
+          <div class="admin-content-title">Admin links</div>
+          <div class="admin-content-subtitle">All key studio management links are available here.</div>
+        </div>
+      </div>
+      <div class="system-link-grid">
+        {% for app in app_list %}
+          <div class="system-link-group">
+            <h4><a href="{{ app.app_url }}">{{ app.name }}</a></h4>
+            <ul>
+              {% for model in app.models %}
+                <li>
+                  {% if model.admin_url %}
+                    <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                  {% else %}
+                    <span>{{ model.name }}</span>
+                  {% endif %}
+                  {% if model.add_url %}
+                    <a class="inline-add" href="{{ model.add_url }}">Add</a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabButtons = document.querySelectorAll('.admin-tab');
+    const sectionPanels = document.querySelectorAll('.admin-section');
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.tab;
+        tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+        sectionPanels.forEach((panel) => {
+          panel.classList.toggle('hidden', panel.dataset.panel !== target);
+        });
+      });
+    });
+  });
+</script>
 {% endblock %}
