@@ -114,6 +114,10 @@ def checkout(request):
         if technician.first_name.strip().casefold() == "lyn" or technician.username.casefold() == "lyn"), None)
     if request.user.role == User.Role.TECHNICIAN:
         default_technician_id = request.user.pk
+    technician_payload = [
+        {"id": technician.pk, "name": technician.get_full_name() or technician.username}
+        for technician in technicians
+    ]
     return render(request, "sales/checkout.html", {
         "details": details, "lines": lines, "payments": payments_formset,
         "prices": prices, "products": products, "services": services,
@@ -123,6 +127,7 @@ def checkout(request):
             User.Role.OWNER, User.Role.MANAGER,
         },
         "technicians": technicians, "default_technician_id": default_technician_id,
+        "technicians_json": json.dumps(technician_payload),
     })
 
 
