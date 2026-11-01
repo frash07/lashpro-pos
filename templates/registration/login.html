@@ -1,44 +1,218 @@
 {% extends "base_auth.html" %}
 {% load static %}
 
-{% block title %}Staff login · LashPro{% endblock %}
+{% block title %}Lashpro KE — Secure Studio Access{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
 
 {% block content %}
-<main class="auth-split">
-  <section class="auth-hero" style="background-image:url('{% static "img/login-hero.jpg" %}')">
-    <div class="auth-hero-scrim">
-      <img class="auth-logo" src="{% static 'img/logo-lashpro.svg' %}" alt="">
-      <p class="auth-kicker">LashPro KE</p>
-      <h1>Welcome back</h1>
-      <p>Sign in to the salon floor and academy desk.</p>
+<div class="page-shell">
+  <div class="ambient one"></div>
+  <div class="ambient two"></div>
+
+  <header class="topbar">
+    <a class="brand" href="{% url 'login' %}" aria-label="Lashpro KE home">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.7 9l5.3 2-5.3 2L12 18.5 10.3 13 5 11l5.3-2L12 3.5Z"/><path d="m19 3 .7 2.3L22 6l-2.3.7L19 9l-.7-2.3L16 6l2.3-.7L19 3Z"/><path d="m5 16 .6 1.7L7.5 18l-1.9.6L5 20.5l-.6-1.9L2.5 18l1.9-.3L5 16Z"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">LASHPRO <span>KE</span></div>
+        <div class="brand-sub">Nairobi · Premier Lash & Academy</div>
+      </div>
+    </a>
+    <div class="top-actions">
+      <div class="secure-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg>
+        Protected studio access
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+      </button>
     </div>
-  </section>
-  <section class="auth-card">
-    <span class="eyebrow">Team access</span>
-    <h2>Sign in</h2>
-    {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}{% endif %}
-    {% if form.errors %}<p class="message error" role="alert">Username or password not recognised.</p>{% endif %}
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{{ next }}">
-      <label>Username {{ form.username }}</label>
-      <label class="password-field">Password {{ form.password }}
-        <button type="button" class="password-toggle" id="toggle-password" aria-label="Show password">Show</button>
-      </label>
-      <button class="submit btn-block" type="submit">Sign in</button>
-    </form>
-    <p class="login-help"><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
-  </section>
-</main>
+  </header>
+
+  <main class="main">
+    <section class="intro" aria-labelledby="intro-title">
+      <div class="eyebrow">The Lashpro experience</div>
+      <h1 id="intro-title">Beautiful work.<br><em>Seamless business.</em></h1>
+      <p class="intro-copy">Your studio operations, thoughtfully brought together. Sign in to manage appointments, sales, inventory and the Lashpro Academy from one refined workspace.</p>
+      <div class="feature-row" aria-label="Platform features">
+        <div class="feature">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 8h8v8H8z"/></svg>
+          </span>
+          Salon POS
+        </div>
+        <div class="feature">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+          </span>
+          Academy
+        </div>
+        <div class="feature">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-5 5"/></svg>
+          </span>
+          Studio insights
+        </div>
+      </div>
+      <div class="visual-stage" aria-hidden="true">
+        <div class="stage-glow"></div>
+        <div class="stage-content">
+          <div class="stage-kicker">Lashpro · Studio suite</div>
+          <div class="stage-title">Where artistry<br>meets intention.</div>
+          <div class="stage-note">SALON · RETAIL · EDUCATION</div>
+        </div>
+        <div class="stage-seal">
+          <div class="seal-inner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/><path d="M5.5 7.5 4 5m6-1.5L9.5 1m9 6.5L20 5"/></svg>
+            <span>EST. LASHPRO</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="login-wrap" aria-label="Administrator sign in">
+      <div class="login-card">
+        <div class="card-header">
+          <div class="card-emblem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 14.1 9l6.1 3-6.1 2.8L12 21l-2.1-6.2L3.8 12l6.1-3L12 2.8Z"/><path d="m19 2 .7 2.3L22 5l-2.3.7L19 8l-.7-2.3L16 5l2.3-.7L19 2Z"/></svg>
+          </div>
+          <div class="card-kicker">Administrator portal</div>
+          <h2>Welcome back</h2>
+          <p>Sign in to continue to your studio.</p>
+        </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <p class="message {{ message.tags }}" role="status">{{ message }}</p>
+          {% endfor %}
+        {% endif %}
+        {% if form.errors %}
+          <p class="message error" role="alert">Username or password not recognised.</p>
+        {% endif %}
+
+        <form method="post" id="login-form" autocomplete="on">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+
+          <div class="field">
+            <label for="id_username">Username <small>Required</small></label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/></svg>
+              {{ form.username }}
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="id_password">Password <small>Required</small></label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              {{ form.password }}
+              <button class="reveal" id="reveal-password" type="button" aria-label="Show password" title="Show password">
+                <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-meta">
+            <label class="remember">
+              <input type="checkbox" id="remember" name="remember"> Remember this device
+            </label>
+            <a class="text-link" href="{% url 'password_reset' %}">Forgot password?</a>
+          </div>
+
+          <button class="submit-btn" type="submit">
+            <span>Sign in to dashboard</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </button>
+
+          <div class="form-footnote">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg>
+            Your session is protected with secure access.
+          </div>
+        </form>
+
+        <div class="card-divider"></div>
+        <div class="support-line">Need help accessing your account? <a href="mailto:support@lashpro.ke">Contact support</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© <span id="year">2026</span> <span class="footer-brand">Lashpro KE</span>. All rights reserved.</div>
+    <div class="footer-right">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      Private studio workspace
+    </div>
+  </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-  document.getElementById("toggle-password")?.addEventListener("click", () => {
-    const input = document.querySelector("#id_password, input[name='password']");
-    const button = document.getElementById("toggle-password");
-    if (!input || !button) return;
-    const visible = input.type === "text";
-    input.type = visible ? "password" : "text";
-    button.textContent = visible ? "Show" : "Hide";
-    button.setAttribute("aria-label", visible ? "Show password" : "Hide password");
-  });
+  (function () {
+    const root = document.documentElement;
+    const themeButton = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    function setTheme(theme) {
+      root.setAttribute('data-theme', theme);
+      const light = theme === 'light';
+      if (themeButton) {
+        themeButton.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+        themeButton.title = light ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+      if (themeIcon) {
+        themeIcon.innerHTML = light
+          ? '<path d="M20.9 13A8.9 8.9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>'
+          : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>';
+      }
+      try { localStorage.setItem('lashpro-login-theme', theme); } catch (e) {}
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', light ? '#fff8fb' : '#171016');
+    }
+
+    let savedTheme = 'dark';
+    try { savedTheme = localStorage.getItem('lashpro-login-theme') || 'dark'; } catch (e) {}
+    setTheme(savedTheme);
+
+    themeButton?.addEventListener('click', () => {
+      setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+
+    const password = document.querySelector('#id_password, input[name="password"]');
+    const revealButton = document.getElementById('reveal-password');
+    if (password && revealButton) {
+      // Ensure Django-rendered input has expected attributes
+      password.placeholder = password.placeholder || 'Enter your password';
+      password.autocomplete = 'current-password';
+      password.required = true;
+
+      revealButton.addEventListener('click', () => {
+        const reveal = password.type === 'password';
+        password.type = reveal ? 'text' : 'password';
+        revealButton.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+        revealButton.title = reveal ? 'Hide password' : 'Show password';
+        const eye = document.getElementById('eye-icon');
+        if (eye) {
+          eye.innerHTML = reveal
+            ? '<path d="M3 3 21 21M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a16 16 0 0 1-3.1 3.9M6.2 6.2C3.6 8 2 12 2 12s3.6 7 10 7a10 10 0 0 0 4-.8"/>'
+            : '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+        }
+      });
+    }
+
+    const username = document.querySelector('#id_username, input[name="username"]');
+    if (username) {
+      username.placeholder = username.placeholder || 'Enter your username';
+      username.autocomplete = 'username';
+      username.required = true;
+      username.autofocus = true;
+    }
+
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+  })();
 </script>
 {% endblock %}
