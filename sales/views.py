@@ -1,3 +1,4 @@
+import json
 import uuid
 from io import BytesIO
 
@@ -80,6 +81,30 @@ def checkout(request):
         "products": {str(x.pk): str(x.selling_price) for x in products},
         "services": {str(x.pk): str(x.price) for x in services},
     }
+    catalog_items = []
+    for product in products:
+        catalog_items.append({
+            "id": f"product-{product.pk}",
+            "name": product.name,
+            "price": float(product.selling_price),
+            "type": "product",
+            "desc": product.pos_description or product.name,
+            "icon": "package",
+            "stock": float(product.on_hand),
+            "sku": product.sku,
+        })
+    for service in services:
+        catalog_items.append({
+            "id": f"service-{service.pk}",
+            "name": service.name,
+            "price": float(service.price),
+            "type": "service",
+            "desc": f"{service.duration_minutes} minute session",
+            "icon": "sparkles",
+            "duration_minutes": service.duration_minutes,
+            "commission_eligible": service.commission_eligible,
+            "commission_rate": float(service.commission_rate),
+        })
     from payments.models import CashSession
     cash_session = CashSession.objects.filter(cashier=request.user, status=CashSession.Status.OPEN).first()
     technicians = list(User.objects.filter(
@@ -92,6 +117,7 @@ def checkout(request):
     return render(request, "sales/checkout.html", {
         "details": details, "lines": lines, "payments": payments_formset,
         "prices": prices, "products": products, "services": services,
+        "catalog_items": catalog_items, "catalog_data_json": json.dumps(catalog_items),
         "cash_session": cash_session,
         "can_discount": request.user.is_superuser or request.user.role in {
             User.Role.OWNER, User.Role.MANAGER,
