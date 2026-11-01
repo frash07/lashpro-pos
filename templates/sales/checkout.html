@@ -13,129 +13,146 @@
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark"><i data-lucide="sparkles"></i></div>
-      <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</div></div>
-    </div>
-    <nav class="mode-switch" aria-label="Application mode">
-      <button id="nav-pos-btn" class="mode-btn active" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
-      <button id="nav-admin-btn" class="mode-btn" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
-    </nav>
-    <div class="top-actions">
-      <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
-      <button class="icon-button" id="theme-toggle" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
-      <button id="pwa-install-btn" class="icon-button hidden" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
-      <div class="profile"><div class="avatar">LY</div><div class="profile-copy"><div class="profile-name">Lyn Wanjiru</div><div class="profile-role">FOUNDER &amp; MASTER ARTIST</div></div></div>
-    </div>
-  </header>
+  <form id="pos-form" method="post" novalidate>
+    {% csrf_token %}
+    {{ details.idempotency_key }}
+    <div style="display:none;">{{ details.customer }}</div>
+    {{ lines.management_form }}
+    {{ payments.management_form }}
+    <input type="hidden" name="items-TOTAL_FORMS" id="id_items-TOTAL_FORMS" value="0">
+    <input type="hidden" name="items-INITIAL_FORMS" id="id_items-INITIAL_FORMS" value="0">
+    <input type="hidden" name="items-MIN_NUM_FORMS" id="id_items-MIN_NUM_FORMS" value="0">
+    <input type="hidden" name="items-MAX_NUM_FORMS" id="id_items-MAX_NUM_FORMS" value="20">
+    <input type="hidden" name="payments-TOTAL_FORMS" id="id_payments-TOTAL_FORMS" value="0">
+    <input type="hidden" name="payments-INITIAL_FORMS" id="id_payments-INITIAL_FORMS" value="0">
+    <input type="hidden" name="payments-MIN_NUM_FORMS" id="id_payments-MIN_NUM_FORMS" value="0">
+    <input type="hidden" name="payments-MAX_NUM_FORMS" id="id_payments-MAX_NUM_FORMS" value="10">
 
-  <main class="main">
-    <section id="pos-mode-view" class="view">
-      <div class="pos-layout">
-        <div class="workspace">
-          <div class="page-heading">
-            <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
-            <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="clock-3"></i> Session live</div></div>
-          </div>
-          <div class="mini-metrics">
-            <div class="mini-metric"><div class="metric-icon"><i data-lucide="wallet"></i></div><div><div class="metric-title">Today's revenue</div><div class="metric-value">KES 142,500</div><div class="metric-note">Across 24 transactions</div></div></div>
-            <div class="mini-metric"><div class="metric-icon"><i data-lucide="calendar-check"></i></div><div><div class="metric-title">Appointments served</div><div class="metric-value">24 <span style="font-size:11px;opacity:.7">today</span></div><div class="metric-note">+4 from yesterday</div></div></div>
-            <div class="mini-metric"><div class="metric-icon"><i data-lucide="gem"></i></div><div><div class="metric-title">Studio experience</div><div class="metric-value">Luxe tier</div><div class="metric-note">Personalised service</div></div></div>
-          </div>
-          <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><div class="toolbar-actions"><div class="search-wrap"><i data-lucide="search"></i><input id="catalog-search" type="text" placeholder="Search catalog" oninput="filterCatalog()"></div></div></div>
-          <div class="category-tabs">
-            <button class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
-            <button class="cat-tab" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
-            <button class="cat-tab" data-category="academy" onclick="filterCategory('academy',this)"><i data-lucide="graduation-cap"></i> Academy</button>
-            <button class="cat-tab" data-category="product" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail &amp; care</button>
-            <span class="result-count" id="result-count">12 items</span>
-          </div>
-          <div id="catalog-grid" class="catalog-grid"></div>
-        </div>
-        <aside class="checkout-panel">
-          <div class="checkout-head">
-            <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Active</span></div>
-            <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New sale</div></div></div>
-          </div>
-          <div class="client-fields">
-            <div class="field"><label for="staff-select">ARTIST / TRAINER</label><select id="staff-select"><option value="Stacy (Senior Lash Artist)">Stacy · Senior Artist</option><option value="Faith (Lash Specialist)">Faith · Lash Specialist</option><option value="Lyn (Master Tech)">Lyn · Master Tech</option></select></div>
-            <div class="field"><label for="client-name">CLIENT / STUDENT</label><input id="client-name" type="text" placeholder="Walk-in client" value="Wanjiku Njuguna"></div>
-          </div>
-          <div id="cart-items-container" class="cart-items"></div>
-          <div class="checkout-bottom">
-            <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button class="btn-small" onclick="applyDiscount()">Apply</button></div>
-            <div class="financials">
-              <div class="financial-row"><span>Subtotal</span><span id="summary-subtotal">KES 0</span></div>
-              <div class="financial-row"><span>VAT (16% incl.)</span><span id="summary-tax">KES 0</span></div>
-              <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
-              <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><i data-lucide="sparkles"></i></div>
+        <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</div></div>
+      </div>
+      <nav class="mode-switch" aria-label="Application mode">
+        <button id="nav-pos-btn" class="mode-btn active" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
+        <button id="nav-admin-btn" class="mode-btn" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
+      </nav>
+      <div class="top-actions">
+        <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
+        <button class="icon-button" id="theme-toggle" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
+        <button id="pwa-install-btn" class="icon-button hidden" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
+        <div class="profile"><div class="avatar">LY</div><div class="profile-copy"><div class="profile-name">Lyn Wanjiru</div><div class="profile-role">FOUNDER &amp; MASTER ARTIST</div></div></div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section id="pos-mode-view" class="view">
+        <div class="pos-layout">
+          <div class="workspace">
+            <div class="page-heading">
+              <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
+              <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="clock-3"></i> Session live</div></div>
             </div>
-            <button class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="width:14px;margin-left:8px"></i></button>
-            <div class="pay-secondary"><button onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
-            <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
+            <div class="mini-metrics">
+              <div class="mini-metric"><div class="metric-icon"><i data-lucide="wallet"></i></div><div><div class="metric-title">Today's revenue</div><div class="metric-value">KES 142,500</div><div class="metric-note">Across 24 transactions</div></div></div>
+              <div class="mini-metric"><div class="metric-icon"><i data-lucide="calendar-check"></i></div><div><div class="metric-title">Appointments served</div><div class="metric-value">24 <span style="font-size:11px;opacity:.7">today</span></div><div class="metric-note">+4 from yesterday</div></div></div>
+              <div class="mini-metric"><div class="metric-icon"><i data-lucide="gem"></i></div><div><div class="metric-title">Studio experience</div><div class="metric-value">Luxe tier</div><div class="metric-note">Personalised service</div></div></div>
+            </div>
+            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><div class="toolbar-actions"><div class="search-wrap"><i data-lucide="search"></i><input id="catalog-search" type="text" placeholder="Search catalog" oninput="filterCatalog()"></div></div></div>
+            <div class="category-tabs">
+              <button class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
+              <button class="cat-tab" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
+              <button class="cat-tab" data-category="academy" onclick="filterCategory('academy',this)"><i data-lucide="graduation-cap"></i> Academy</button>
+              <button class="cat-tab" data-category="product" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail &amp; care</button>
+              <span class="result-count" id="result-count">12 items</span>
+            </div>
+            <div id="catalog-grid" class="catalog-grid"></div>
           </div>
-        </aside>
-      </div>
-    </section>
+          <aside class="checkout-panel">
+            <div class="checkout-head">
+              <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Active</span></div>
+              <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New sale</div></div></div>
+            </div>
+            <div class="client-fields">
+              <div class="field"><label for="staff-select">ARTIST / TRAINER</label><select id="staff-select"><option value="Stacy (Senior Lash Artist)">Stacy · Senior Artist</option><option value="Faith (Lash Specialist)">Faith · Lash Specialist</option><option value="Lyn (Master Tech)">Lyn · Master Tech</option></select></div>
+              <div class="field"><label for="client-name">CLIENT / STUDENT</label><input id="client-name" type="text" placeholder="Walk-in client" value="Wanjiku Njuguna"></div>
+            </div>
+            <div id="cart-items-container" class="cart-items"></div>
+            <div class="checkout-bottom">
+              <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button class="btn-small" onclick="applyDiscount()">Apply</button></div>
+              <div class="financials">
+                <div class="financial-row"><span>Subtotal</span><span id="summary-subtotal">KES 0</span></div>
+                <div class="financial-row"><span>VAT (16% incl.)</span><span id="summary-tax">KES 0</span></div>
+                <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
+                <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
+              </div>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="width:14px;margin-left:8px"></i></button>
+              <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
+              <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
+            </div>
+          </aside>
+        </div>
+      </section>
 
-    <section id="admin-mode-view" class="view hidden">
-      <div class="admin-hero">
-        <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div><h1 class="admin-title">The studio, <em style="color:var(--pink);font-style:normal">beautifully managed.</em></h1><p>Operational detail, neatly brought together for the team.</p></div>
-        <div class="admin-hero-actions"><button class="button-secondary" onclick="exportReport()"><i data-lucide="file-down"></i> Export report</button><button class="button-primary" onclick="openModal('stock-modal')"><i data-lucide="plus"></i> Add stock</button></div>
-      </div>
-      <div class="admin-kpis">
-        <div class="kpi-card"><div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div><div class="kpi-number">KES 142,500</div><div class="kpi-delta positive">+12.4% vs. last week</div></div>
-        <div class="kpi-card"><div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div><div class="kpi-number">KES 118,000</div><div class="kpi-delta positive">+8.2% settlement rate</div></div>
-        <div class="kpi-card"><div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="kpi-number">65% <span style="font-size:12px;opacity:.7">service</span></div><div class="kpi-delta neutral">Retail remains healthy</div></div>
-        <div class="kpi-card"><div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div><div class="kpi-number">14 <span style="font-size:12px;opacity:.7">students</span></div><div class="kpi-delta neutral">2 new cohorts planned</div></div>
-      </div>
-      <div class="admin-content">
-        <div class="admin-content-head"><div><div class="admin-content-title">Studio management</div><div class="admin-content-subtitle">Operational detail, neatly brought together.</div></div><div class="soft-pill">Closed to public</div></div>
-        <div class="admin-tabs">
-          <button id="tab-inventory-btn" class="admin-tab active" onclick="switchAdminTab('inventory')"><i data-lucide="boxes"></i> Inventory &amp; stock</button>
-          <button id="tab-academy-btn" class="admin-tab" onclick="switchAdminTab('academy')"><i data-lucide="graduation-cap"></i> Academy hub</button>
-          <button id="tab-staff-btn" class="admin-tab" onclick="switchAdminTab('staff')"><i data-lucide="users"></i> Artist commissions</button>
-          <button id="tab-reconciliation-btn" class="admin-tab" onclick="switchAdminTab('reconciliation')"><i data-lucide="file-check-2"></i> M-PESA audit</button>
+      <section id="admin-mode-view" class="view hidden">
+        <div class="admin-hero">
+          <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div><h1 class="admin-title">The studio, <em style="color:var(--pink);font-style:normal">beautifully managed.</em></h1><p>Operational detail, neatly brought together for the team.</p></div>
+          <div class="admin-hero-actions"><button type="button" class="button-secondary" onclick="exportReport()"><i data-lucide="file-down"></i> Export report</button><button type="button" class="button-primary" onclick="openModal('stock-modal')"><i data-lucide="plus"></i> Add stock</button></div>
         </div>
-        <div id="admin-sec-inventory" class="admin-section">
-          <div class="subhead"><div><h3>Retail &amp; professional supplies</h3><p>Keep your most-loved essentials in stock.</p></div><button class="button-primary" onclick="openAddStockModal()"><i data-lucide="package-plus"></i> Add new item</button></div>
-          <div class="table-shell"><table><thead><tr><th>Product</th><th>Category</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody id="inventory-table-body"></tbody></table></div>
+        <div class="admin-kpis">
+          <div class="kpi-card"><div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div><div class="kpi-number">KES 142,500</div><div class="kpi-delta positive">+12.4% vs. last week</div></div>
+          <div class="kpi-card"><div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div><div class="kpi-number">KES 118,000</div><div class="kpi-delta positive">+8.2% settlement rate</div></div>
+          <div class="kpi-card"><div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="kpi-number">65% <span style="font-size:12px;opacity:.7">service</span></div><div class="kpi-delta neutral">Retail remains healthy</div></div>
+          <div class="kpi-card"><div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div><div class="kpi-number">14 <span style="font-size:12px;opacity:.7">students</span></div><div class="kpi-delta neutral">2 new cohorts planned</div></div>
         </div>
-        <div id="admin-sec-academy" class="admin-section hidden">
-          <div class="subhead"><div><h3>Student certifications &amp; cohorts</h3><p>Build the next generation of exceptional lash artists.</p></div><button class="button-primary" onclick="enrollStudentPrompt()"><i data-lucide="user-plus"></i> Enrol student</button></div>
-          <div class="academy-grid">
-            <article class="course-card"><span class="course-level gold">Beginner masterclass</span><h4>Classic Lash Fundamentals</h4><p>Three days of careful technique, client safety and foundational artistry.</p><div class="course-meta"><span>12 seats</span><span>Next intake: 14 Nov</span></div></article>
-            <article class="course-card"><span class="course-level">Advanced masterclass</span><h4>Mega Volume &amp; Fan Artistry</h4><p>Advanced fan creation, texture, direction and retention principles.</p><div class="course-meta"><span>8 seats</span><span>Next intake: 21 Nov</span></div></article>
-            <article class="course-card"><span class="course-level blue">Specialist course</span><h4>Lash Lift &amp; Keratin Tint</h4><p>A focused one-day intensive in natural lash enhancement and finishing care.</p><div class="course-meta"><span>6 seats</span><span>Next intake: 30 Nov</span></div></article>
+        <div class="admin-content">
+          <div class="admin-content-head"><div><div class="admin-content-title">Studio management</div><div class="admin-content-subtitle">Operational detail, neatly brought together.</div></div><div class="soft-pill">Closed to public</div></div>
+          <div class="admin-tabs">
+            <button type="button" id="tab-inventory-btn" class="admin-tab active" onclick="switchAdminTab('inventory')"><i data-lucide="boxes"></i> Inventory &amp; stock</button>
+            <button type="button" id="tab-academy-btn" class="admin-tab" onclick="switchAdminTab('academy')"><i data-lucide="graduation-cap"></i> Academy hub</button>
+            <button type="button" id="tab-staff-btn" class="admin-tab" onclick="switchAdminTab('staff')"><i data-lucide="users"></i> Artist commissions</button>
+            <button type="button" id="tab-reconciliation-btn" class="admin-tab" onclick="switchAdminTab('reconciliation')"><i data-lucide="file-check-2"></i> M-PESA audit</button>
+          </div>
+          <div id="admin-sec-inventory" class="admin-section">
+            <div class="subhead"><div><h3>Retail &amp; professional supplies</h3><p>Keep your most-loved essentials in stock.</p></div><button type="button" class="button-primary" onclick="openAddStockModal()"><i data-lucide="package-plus"></i> Add new item</button></div>
+            <div class="table-shell"><table><thead><tr><th>Product</th><th>Category</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody id="inventory-table-body"></tbody></table></div>
+          </div>
+          <div id="admin-sec-academy" class="admin-section hidden">
+            <div class="subhead"><div><h3>Student certifications &amp; cohorts</h3><p>Build the next generation of exceptional lash artists.</p></div><button type="button" class="button-primary" onclick="enrollStudentPrompt()"><i data-lucide="user-plus"></i> Enrol student</button></div>
+            <div class="academy-grid">
+              <article class="course-card"><span class="course-level gold">Beginner masterclass</span><h4>Classic Lash Fundamentals</h4><p>Three days of careful technique, client safety and foundational artistry.</p><div class="course-meta"><span>12 seats</span><span>Next intake: 14 Nov</span></div></article>
+              <article class="course-card"><span class="course-level">Advanced masterclass</span><h4>Mega Volume &amp; Fan Artistry</h4><p>Advanced fan creation, texture, direction and retention principles.</p><div class="course-meta"><span>8 seats</span><span>Next intake: 21 Nov</span></div></article>
+              <article class="course-card"><span class="course-level blue">Specialist course</span><h4>Lash Lift &amp; Keratin Tint</h4><p>A focused one-day intensive in natural lash enhancement and finishing care.</p><div class="course-meta"><span>6 seats</span><span>Next intake: 30 Nov</span></div></article>
+            </div>
+          </div>
+          <div id="admin-sec-staff" class="admin-section hidden">
+            <div class="subhead"><div><h3>Artist service commissions</h3><p>Current commission rate: 30% on eligible services.</p></div><span class="soft-pill">Today's closeout</span></div>
+            <div class="commission-summary"><div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div><div class="summary-box"><span>Commission payable</span><strong>KES 22,050</strong></div><div class="summary-box"><span>Average per artist</span><strong>KES 7,350</strong></div></div>
+            <div class="table-shell"><table><thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead><tbody>
+              <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
+              <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
+              <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+            </tbody></table></div>
+          </div>
+          <div id="admin-sec-reconciliation" class="admin-section hidden">
+            <div class="subhead"><div><h3>M-PESA Express reconciliation</h3><p>Payment records generated in this demo appear at the top of this log.</p></div><span class="status-tag ok">Demo ledger</span></div>
+            <div class="table-shell"><table><thead><tr><th>Timestamp</th><th>Receipt reference</th><th>Client phone</th><th>Amount (KES)</th><th>Status</th></tr></thead><tbody id="mpesa-log-table"></tbody></table></div>
           </div>
         </div>
-        <div id="admin-sec-staff" class="admin-section hidden">
-          <div class="subhead"><div><h3>Artist service commissions</h3><p>Current commission rate: 30% on eligible services.</p></div><span class="soft-pill">Today's closeout</span></div>
-          <div class="commission-summary"><div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div><div class="summary-box"><span>Commission payable</span><strong>KES 22,050</strong></div><div class="summary-box"><span>Average per artist</span><strong>KES 7,350</strong></div></div>
-          <div class="table-shell"><table><thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead><tbody>
-            <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
-            <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
-            <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
-          </tbody></table></div>
-        </div>
-        <div id="admin-sec-reconciliation" class="admin-section hidden">
-          <div class="subhead"><div><h3>M-PESA Express reconciliation</h3><p>Payment records generated in this demo appear at the top of this log.</p></div><span class="status-tag ok">Demo ledger</span></div>
-          <div class="table-shell"><table><thead><tr><th>Timestamp</th><th>Receipt reference</th><th>Client phone</th><th>Amount (KES)</th><th>Status</th></tr></thead><tbody id="mpesa-log-table"></tbody></table></div>
-        </div>
-      </div>
-      <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
-    </section>
-  </main>
+        <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
+      </section>
+    </main>
 
-  <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon"><i data-lucide="smartphone"></i></div><div><h3 id="mpesa-title">M-PESA Express</h3><p>Safaricom Daraja · Cheque-free checkout</p></div></div><button class="icon-button small" onclick="closeModal('mpesa-modal')"><i data-lucide="x"></i></button></div><div class="amount-box"><span>Total amount to charge</span><strong id="mpesa-modal-amount">KES 0</strong></div><div class="field-stack"><div><label for="mpesa-phone">CLIENT MOBILE NUMBER</label><div class="phone-input"><span class="phone-prefix">+254</span><input id="mpesa-phone" type="tel" value="712345678"></div></div><div><label for="mpesa-name">REFERENCE NAME</label><input id="mpesa-name" type="text" value="Wanjiku Njuguna"></div></div><div id="mpesa-status-box" class="sim-status hidden"><span class="spinner"></span><span>Simulating STK prompt · awaiting client confirmation…</span></div><button id="stk-trigger-btn" class="button-primary modal-action" onclick="processSTKPush()" style="width:100%;padding:14px"><i data-lucide="send"></i> Send STK prompt</button></div></div>
+    <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon"><i data-lucide="smartphone"></i></div><div><h3 id="mpesa-title">M-PESA Express</h3><p>Safaricom Daraja · Cheque-free checkout</p></div></div><button type="button" class="icon-button small" onclick="closeModal('mpesa-modal')"><i data-lucide="x"></i></button></div><div class="amount-box"><span>Total amount to charge</span><strong id="mpesa-modal-amount">KES 0</strong></div><div class="field-stack"><div><label for="mpesa-phone">CLIENT MOBILE NUMBER</label><div class="phone-input"><span class="phone-prefix">+254</span><input id="mpesa-phone" type="tel" value="712345678"></div></div><div><label for="mpesa-name">REFERENCE NAME</label><input id="mpesa-name" type="text" value="Wanjiku Njuguna"></div></div><div id="mpesa-status-box" class="sim-status hidden"><span class="spinner"></span><span>Simulating STK prompt · awaiting client confirmation…</span></div><button id="stk-trigger-btn" class="button-primary modal-action" onclick="processSTKPush()" style="width:100%;padding:14px"><i data-lucide="send"></i> Send STK prompt</button></div></div>
 
-  <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon"><i data-lucide="check-check"></i></div><div><h3 id="receipt-title">Payment complete</h3><p>Transaction recorded successfully</p></div></div><button class="icon-button small" onclick="closeModal('receipt-modal')"><i data-lucide="x"></i></button></div><div class="receipt-success"><div class="success-circle"><i data-lucide="check-check" style="width:25px;height:25px"></i></div><h3>Receipt ready</h3><p>Thank you for choosing Lashpro KE.</p></div><div id="printable-receipt" class="receipt-paper"><div class="receipt-brand"><h4>LASHPRO KE</h4><p>Kilimani, Nairobi · +254 700 000 000</p><p id="rcpt-date" style="margin-top:5px"></p></div><div class="receipt-meta"><div>Receipt ref: <strong id="rcpt-ref">LP-0001</strong></div><div>Client: <strong id="rcpt-client"></strong></div><div>Artist: <strong id="rcpt-artist"></strong></div></div><div id="rcpt-items" class="receipt-lines"></div><div class="receipt-total"><span>TOTAL PAID</span><span id="rcpt-total"></span></div><div style="text-align:right;font-size:8px;color:#766472;margin-top:5px">Paid via: <span id="rcpt-method">M-PESA Express</span></div><div class="receipt-thanks">Thank you for choosing Lashpro KE.<br>Stay glamorous.</div></div><div class="receipt-actions"><button class="button-secondary" onclick="printReceipt()"><i data-lucide="printer"></i> Print receipt</button><button class="button-primary" onclick="sendSMSReceipt()"><i data-lucide="message-circle"></i> Send SMS</button></div><button class="receipt-new" onclick="closeModal('receipt-modal');clearCart()">Start a new sale</button></div></div>
+    <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon"><i data-lucide="check-check"></i></div><div><h3 id="receipt-title">Payment complete</h3><p>Transaction recorded successfully</p></div></div><button type="button" class="icon-button small" onclick="closeModal('receipt-modal')"><i data-lucide="x"></i></button></div><div class="receipt-success"><div class="success-circle"><i data-lucide="check-check" style="width:25px;height:25px"></i></div><h3>Receipt ready</h3><p>Thank you for choosing Lashpro KE.</p></div><div id="printable-receipt" class="receipt-paper"><div class="receipt-brand"><h4>LASHPRO KE</h4><p>Kilimani, Nairobi · +254 700 000 000</p><p id="rcpt-date" style="margin-top:5px"></p></div><div class="receipt-meta"><div>Receipt ref: <strong id="rcpt-ref">LP-0001</strong></div><div>Client: <strong id="rcpt-client"></strong></div><div>Artist: <strong id="rcpt-artist"></strong></div></div><div id="rcpt-items" class="receipt-lines"></div><div class="receipt-total"><span>TOTAL PAID</span><span id="rcpt-total"></span></div><div style="text-align:right;font-size:8px;color:#766472;margin-top:5px">Paid via: <span id="rcpt-method">M-PESA Express</span></div><div class="receipt-thanks">Thank you for choosing Lashpro KE.<br>Stay glamorous.</div></div><div class="receipt-actions"><button type="button" class="button-secondary" onclick="printReceipt()"><i data-lucide="printer"></i> Print receipt</button><button type="button" class="button-primary" onclick="sendSMSReceipt()"><i data-lucide="message-circle"></i> Send SMS</button></div><button type="button" class="receipt-new" onclick="closeModal('receipt-modal');clearCart()">Start a new sale</button></div></div>
 
-  <div id="stock-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stock-title" onclick="backdropClose(event,'stock-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon pink"><i data-lucide="package-plus"></i></div><div><h3 id="stock-title">Add to the collection</h3><p>Introduce a new retail item</p></div></div><button class="icon-button small" onclick="closeModal('stock-modal')"><i data-lucide="x"></i></button></div><div class="modal-form-grid"><div class="span-two"><label class="tiny-label" for="stock-name" style="display:block;margin-bottom:7px">PRODUCT NAME</label><input id="stock-name" class="modal-input" type="text" placeholder="e.g. Lashpro Repair Serum"></div><div><label class="tiny-label" for="stock-qty">QUANTITY</label><input id="stock-qty" class="modal-input" type="number" min="1" step="1" value="10"></div><div><label class="tiny-label" for="stock-price">UNIT PRICE (KES)</label><input id="stock-price" class="modal-input" type="number" min="0" step="100" value="2000"></div></div><button class="button-primary modal-action" onclick="saveNewStock()" style="width:100%;padding:13px"><i data-lucide="check"></i> Save to inventory</button></div></div>
+    <div id="stock-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stock-title" onclick="backdropClose(event,'stock-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header"><div class="modal-heading-wrap"><div class="modal-icon pink"><i data-lucide="package-plus"></i></div><div><h3 id="stock-title">Add to the collection</h3><p>Introduce a new retail item</p></div></div><button type="button" class="icon-button small" onclick="closeModal('stock-modal')"><i data-lucide="x"></i></button></div><div class="modal-form-grid"><div class="span-two"><label class="tiny-label" for="stock-name" style="display:block;margin-bottom:7px">PRODUCT NAME</label><input id="stock-name" class="modal-input" type="text" placeholder="e.g. Lashpro Repair Serum"></div><div><label class="tiny-label" for="stock-qty">QUANTITY</label><input id="stock-qty" class="modal-input" type="number" min="1" step="1" value="10"></div><div><label class="tiny-label" for="stock-price">UNIT PRICE (KES)</label><input id="stock-price" class="modal-input" type="number" min="0" step="100" value="2000"></div></div><button type="button" class="button-primary modal-action" onclick="saveNewStock()" style="width:100%;padding:13px"><i data-lucide="check"></i> Save to inventory</button></div></div>
+  </form>
 
   <script>
     const catalogData = {{ catalog_data_json|safe }};
+    const defaultTechnicianId = "{{ default_technician_id|default_if_none:'' }}";
     let cart=[], appliedDiscount=0, activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
     let mpesaLogs=[
       {time:'10:42 AM',ref:'QX892KL0P1',phone:'+254 712***678',amount:6000,status:'SUCCESS'},
@@ -148,6 +165,53 @@
     function refreshIcons(){if(window.lucide&&typeof lucide.createIcons==='function')lucide.createIcons();}
     function setToday(){const d=new Date();document.getElementById('today-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
     window.addEventListener('DOMContentLoaded',()=>{setToday();renderCatalog();renderCart();renderInventoryTable();renderMpesaAuditTable();setupPWA();updateOnlineStatus();refreshIcons();});
+
+    function addSyncField(form, name, value) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value ?? '';
+      input.dataset.cartSync = '1';
+      form.appendChild(input);
+    }
+
+    function normalizeItemId(item) {
+      return String(item?.id ?? '').replace(/^(product|service)-/, '');
+    }
+
+    function syncCartToFormset(method) {
+      const form = document.getElementById('pos-form');
+      if (!form) return;
+      form.querySelectorAll('[data-cart-sync]').forEach((el) => el.remove());
+
+      const validItems = cart.filter((item) => item && Number(item.qty || 0) > 0);
+      document.getElementById('id_items-TOTAL_FORMS').value = String(validItems.length);
+
+      validItems.forEach((item, index) => {
+        const normalizedId = normalizeItemId(item);
+        const isService = item.type === 'service';
+        const productId = isService ? '' : normalizedId;
+        const serviceId = isService ? normalizedId : '';
+        const technicianId = isService ? (defaultTechnicianId || document.getElementById('staff-select')?.value || '') : '';
+
+        addSyncField(form, `items-${index}-product`, productId);
+        addSyncField(form, `items-${index}-service`, serviceId);
+        addSyncField(form, `items-${index}-technician`, technicianId);
+        addSyncField(form, `items-${index}-quantity`, String(item.qty || 1));
+        addSyncField(form, `items-${index}-discount`, '0.00');
+        addSyncField(form, `items-${index}-discount_reason`, '');
+        addSyncField(form, `items-${index}-DELETE`, '');
+      });
+
+      const paymentMethod = String(method || 'CASH').toUpperCase();
+      const total = getCartTotal();
+      const reference = paymentMethod === 'MPESA' ? (document.getElementById('mpesa-phone')?.value || '').replace(/\D/g, '') : '';
+      document.getElementById('id_payments-TOTAL_FORMS').value = '1';
+      addSyncField(form, 'payments-0-method', paymentMethod);
+      addSyncField(form, 'payments-0-amount', Number(total).toFixed(2));
+      addSyncField(form, 'payments-0-reference', reference);
+      addSyncField(form, 'payments-0-DELETE', '');
+    }
 
     function renderCatalog(){
       const grid=document.getElementById('catalog-grid');if(!grid)return;
@@ -167,7 +231,7 @@
     function renderCart(){
       const container=document.getElementById('cart-items-container');
       if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span style="font-size:10px;color:var(--muted)">Add a service or retail item to begin.</span></div>';updateFinancials(0);return;}
-      container.innerHTML=cart.map(item=>`<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">${escapeHtml(item.name)}</div><div class="cart-item-price">${currency(item.price)}</div></div><button class="remove-item" onclick="removeFromCart('${item.id}')"><i data-lucide="x"></i></button></div><div class="qty-control"><button onclick="updateQty('${item.id}',-1)">−</button><span>${item.qty}</span><button onclick="updateQty('${item.id}',1)">+</button></div></div>`).join('');
+      container.innerHTML=cart.map(item=>`<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">${escapeHtml(item.name)}</div><div class="cart-item-price">${currency(item.price)}</div></div><button type="button" class="remove-item" onclick="removeFromCart('${item.id}')"><i data-lucide="x"></i></button></div><div class="qty-control"><button type="button" onclick="updateQty('${item.id}',-1)">−</button><span>${item.qty}</span><button type="button" onclick="updateQty('${item.id}',1)">+</button></div></div>`).join('');
       updateFinancials(cart.reduce((sum,item)=>sum+item.price*item.qty,0));refreshIcons();
     }
     function updateFinancials(subtotal){const discountAmount=subtotal*appliedDiscount,finalTotal=Math.max(0,subtotal-discountAmount),taxAmount=finalTotal*.16;document.getElementById('summary-subtotal').textContent=currency(subtotal);document.getElementById('summary-tax').textContent=currency(taxAmount);document.getElementById('summary-total').textContent=currency(finalTotal+taxAmount);const discountRow=document.getElementById('discount-row');const summaryDiscount=document.getElementById('summary-discount');if(appliedDiscount>0){discountRow.classList.remove('hidden');summaryDiscount.textContent='−'+currency(subtotal*appliedDiscount);}else{discountRow.classList.add('hidden');summaryDiscount.textContent='−'+currency(0);} }
@@ -178,7 +242,13 @@
     function switchAdminTab(tabName){['inventory','academy','staff','reconciliation'].forEach(name=>{document.getElementById(`admin-sec-${name}`).classList.toggle('hidden',name!==tabName);document.getElementById(`tab-${name}-btn`).classList.toggle('active',name===tabName);});}
 
     function getCartTotal(){return Math.max(0,cart.reduce((sum,item)=>sum+item.price*item.qty,0)*(1-appliedDiscount));}
-    function triggerCheckout(method){if(!cart.length){alert('Your order is empty. Add at least one item before checkout.');return;}currentPaymentMethod=method;if(method==='mpesa'){document.getElementById('mpesa-modal-amount').textContent=currency(getCartTotal());openModal('mpesa-modal');}else{alert(`${method==='cash'?'Cash':'Card'} checkout is a demo action for the UI shell. Connect the real backend flow to complete the sale.`);}}
+    function triggerCheckout(method){
+      if(!cart.length){alert('Your order is empty. Add at least one item before checkout.');return;}
+      currentPaymentMethod=method;
+      if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
+      syncCartToFormset(method);
+      document.getElementById('pos-form').submit();
+    }
     function processSTKPush(){const phone=document.getElementById('mpesa-phone').value.replace(/\D/g,'');if(phone.length!==9){alert('Enter a valid 9-digit Safaricom mobile number.');return;}const ref=`LP-${String(++orderSequence).padStart(4,'0')}`;const client=document.getElementById('client-name').value.trim()||'Walk-in client';const artist=document.getElementById('staff-select').value;document.getElementById('mpesa-status-box').classList.remove('hidden');setTimeout(()=>{document.getElementById('mpesa-status-box').classList.add('hidden');closeModal('mpesa-modal');completeCheckoutSuccess(ref,client,artist);},1400);}
     function completeCheckoutSuccess(refCode,client,artist){const total=getCartTotal();document.getElementById('rcpt-ref').textContent=refCode;document.getElementById('rcpt-client').textContent=client;document.getElementById('rcpt-artist').textContent=artist;document.getElementById('rcpt-total').textContent=currency(total);document.getElementById('rcpt-method').textContent=currentPaymentMethod==='mpesa'?'M-PESA Express':currentPaymentMethod==='cash'?'Cash':'Card';document.getElementById('rcpt-date').textContent=new Date().toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
       const lines=cart.map(item=>`<div class="receipt-line"><span>${escapeHtml(item.name)} x${item.qty}</span><span>${currency(item.price*item.qty)}</span></div>`).join('');
@@ -190,7 +260,7 @@
     function backdropClose(event,id){if(event.target.id===id)closeModal(id);}
     document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(el=>closeModal(el.id));});
 
-    function renderInventoryTable(){const tbody=document.getElementById('inventory-table-body');const products=catalogData.filter(item=>item.type==='product');tbody.innerHTML=products.map(p=>`<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>Retail</td><td>${Number(p.stock||0)} units</td><td>${currency(p.price)}</td><td>${Number(p.stock||0)<=0?'<span class="status-tag danger">Low</span>':'<span class="status-tag ok">Active</span>'}</td><td><button class="table-action" onclick="quickAddStock('${p.id}')">+10</button></td></tr>`).join('');}
+    function renderInventoryTable(){const tbody=document.getElementById('inventory-table-body');const products=catalogData.filter(item=>item.type==='product');tbody.innerHTML=products.map(p=>`<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>Retail</td><td>${Number(p.stock||0)} units</td><td>${currency(p.price)}</td><td>${Number(p.stock||0)<=0?'<span class="status-tag danger">Low</span>':'<span class="status-tag ok">Active</span>'}</td><td><button type="button" class="table-action" onclick="quickAddStock('${p.id}')">+10</button></td></tr>`).join('');}
     function renderMpesaAuditTable(){const tbody=document.getElementById('mpesa-log-table');tbody.innerHTML=mpesaLogs.map(log=>`<tr><td>${escapeHtml(log.time)}</td><td><span class="audit-ref">${escapeHtml(log.ref)}</span></td><td>${escapeHtml(log.phone)}</td><td>${currency(log.amount)}</td><td><span class="status-tag ok">${escapeHtml(log.status)}</span></td></tr>`).join('');}
     function openAddStockModal(){document.getElementById('stock-name').value='';document.getElementById('stock-qty').value='10';document.getElementById('stock-price').value='2000';openModal('stock-modal');}
     function saveNewStock(){const name=document.getElementById('stock-name').value.trim(),qty=Number.parseInt(document.getElementById('stock-qty').value,10),price=Number.parseFloat(document.getElementById('stock-price').value);if(!name){alert('Enter a product name.');return;}const newItem={id:`stock-${Date.now()}`,name,price, type:'product',desc:'New retail item added from admin',stock:qty,icon:'package'};catalogData.push(newItem);renderInventoryTable();renderCatalog();closeModal('stock-modal');alert(`${name} saved to the catalog.`);} 
