@@ -19,14 +19,6 @@
     <div style="display:none;">{{ details.customer }}</div>
     {{ lines.management_form }}
     {{ payments.management_form }}
-    <input type="hidden" name="items-TOTAL_FORMS" id="id_items-TOTAL_FORMS" value="0">
-    <input type="hidden" name="items-INITIAL_FORMS" id="id_items-INITIAL_FORMS" value="0">
-    <input type="hidden" name="items-MIN_NUM_FORMS" id="id_items-MIN_NUM_FORMS" value="0">
-    <input type="hidden" name="items-MAX_NUM_FORMS" id="id_items-MAX_NUM_FORMS" value="20">
-    <input type="hidden" name="payments-TOTAL_FORMS" id="id_payments-TOTAL_FORMS" value="0">
-    <input type="hidden" name="payments-INITIAL_FORMS" id="id_payments-INITIAL_FORMS" value="0">
-    <input type="hidden" name="payments-MIN_NUM_FORMS" id="id_payments-MIN_NUM_FORMS" value="0">
-    <input type="hidden" name="payments-MAX_NUM_FORMS" id="id_payments-MAX_NUM_FORMS" value="10">
 
     <header class="topbar">
       <div class="brand">
@@ -221,11 +213,14 @@
       const paymentMethod = String(method || 'CASH').toUpperCase();
       const total = getCartTotal();
       const reference = paymentMethod === 'MPESA' ? (document.getElementById('mpesa-phone')?.value || '').replace(/\D/g, '') : '';
-      document.getElementById('id_payments-TOTAL_FORMS').value = '1';
-      addSyncField(form, 'payments-0-method', paymentMethod);
-      addSyncField(form, 'payments-0-amount', Number(total).toFixed(2));
-      addSyncField(form, 'payments-0-reference', reference);
-      addSyncField(form, 'payments-0-DELETE', '');
+      const paymentRows = [{ method: paymentMethod, amount: Number(total).toFixed(2), reference }];
+      document.getElementById('id_payments-TOTAL_FORMS').value = String(paymentRows.length);
+      paymentRows.forEach((row, index) => {
+        addSyncField(form, `payments-${index}-method`, row.method);
+        addSyncField(form, `payments-${index}-amount`, row.amount);
+        addSyncField(form, `payments-${index}-reference`, row.reference);
+        addSyncField(form, `payments-${index}-DELETE`, '');
+      });
     }
 
     function renderCatalog(){
