@@ -47,6 +47,7 @@ def _build_admin_suite_context(user):
     from payments.models import PaymentTransaction
 
     is_manager = user.is_superuser or getattr(user, "role", None) in {User.Role.OWNER, User.Role.MANAGER}
+    can_access_admin_suite = user.is_superuser or (user.is_staff and getattr(user, "role", None) in {User.Role.OWNER, User.Role.MANAGER})
     pending_count = 0
     if is_manager:
         pending_count = PaymentTransaction.objects.filter(
@@ -55,6 +56,7 @@ def _build_admin_suite_context(user):
         ).count()
     return {
         "is_manager": is_manager,
+        "can_access_admin_suite": can_access_admin_suite,
         "pending_reconciliation_count": pending_count,
     }
 
