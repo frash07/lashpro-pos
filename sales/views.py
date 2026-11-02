@@ -23,6 +23,24 @@ def check_role(user):
         raise PermissionDenied
 
 
+def _build_admin_suite_context(user):
+    """Role gate and server-side summary for the Admin Suite panel on the checkout page."""
+    from payments.models import PaymentTransaction
+
+    is_manager = user.is_superuser or getattr(user, "role", None) in {User.Role.OWNER, User.Role.MANAGER}
+    pending_count = 0
+    if is_manager:
+        # Count every UNVERIFIED M-Pesa transaction, not just the recent rows shown in a table.
+        pending_count = PaymentTransaction.objects.filter(
+            method=PaymentTransaction.Method.MPESA,
+            status=PaymentTransaction.Status.UNVERIFIED,
+        ).count()
+    return {
+        "is_manager": is_manager,
+        "pending_reconciliation_count": pending_count,
+    }
+
+
 @login_required(login_url="login")
 def checkout(request):
     check_role(request.user)
@@ -119,6 +137,7 @@ def checkout(request):
         for technician in technicians
     ]
     return render(request, "sales/checkout.html", {
+        "admin_suite": _build_admin_suite_context(request.user),
         "details": details, "lines": lines, "payments": payments_formset,
         "prices": prices, "products": products, "services": services,
         "catalog_items": catalog_items, "catalog_data_json": json.dumps(catalog_items),

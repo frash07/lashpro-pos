@@ -34,8 +34,10 @@
         <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</div></div>
       </div>
       <nav class="mode-switch" aria-label="Application mode">
-        <button id="nav-pos-btn" class="mode-btn active" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
-        <button id="nav-admin-btn" class="mode-btn" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
+        <button id="nav-pos-btn" class="mode-btn active" type="button" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
+        {% if admin_suite.is_manager %}
+        <button id="nav-admin-btn" class="mode-btn" type="button" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
+        {% endif %}
       </nav>
       <div class="top-actions">
         <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
@@ -105,6 +107,18 @@
           <div class="kpi-card"><div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="kpi-number">65% <span style="font-size:12px;opacity:.7">service</span></div><div class="kpi-delta neutral">Retail remains healthy</div></div>
           <div class="kpi-card"><div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div><div class="kpi-number">14 <span style="font-size:12px;opacity:.7">students</span></div><div class="kpi-delta neutral">2 new cohorts planned</div></div>
         </div>
+        <div class="admin-hero-actions" style="flex-wrap:wrap;gap:8px;margin:16px 0">
+          <a class="button-secondary" href="{% url 'reporting:dashboard' %}" style="text-decoration:none"><i data-lucide="file-down"></i> Full reports</a>
+          <a class="button-secondary" href="{% url 'sales:refunds' %}" style="text-decoration:none"><i data-lucide="undo-2"></i> Refunds</a>
+          <a class="button-secondary" href="{% url 'payments:cash-session' %}" style="text-decoration:none"><i data-lucide="wallet"></i> Cash session</a>
+          <a class="button-secondary" href="{% url 'sales:services' %}" style="text-decoration:none"><i data-lucide="list-checks"></i> Service queue</a>
+          <a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a>
+        </div>
+        {% if admin_suite.is_manager and admin_suite.pending_reconciliation_count %}
+        <p class="admin-content-subtitle" style="margin-top:8px">
+          <a href="{% url 'payments:reconciliation' %}">{{ admin_suite.pending_reconciliation_count }} M-Pesa payment{{ admin_suite.pending_reconciliation_count|pluralize }} awaiting review</a>
+        </p>
+        {% endif %}
         <div class="admin-content">
           <div class="admin-content-head"><div><div class="admin-content-title">Studio management</div><div class="admin-content-subtitle">Operational detail, neatly brought together.</div></div><div class="soft-pill">Closed to public</div></div>
           <div class="admin-tabs">
@@ -151,6 +165,7 @@
   </form>
 
   <script>
+    const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
     const catalogData = {{ catalog_data_json|safe }};
     const defaultTechnicianId = "{{ default_technician_id|default_if_none:'' }}";
     let cart=[], appliedDiscount=0, activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
@@ -237,8 +252,20 @@
     function updateFinancials(subtotal){const discountAmount=subtotal*appliedDiscount,finalTotal=Math.max(0,subtotal-discountAmount),taxAmount=finalTotal*.16;document.getElementById('summary-subtotal').textContent=currency(subtotal);document.getElementById('summary-tax').textContent=currency(taxAmount);document.getElementById('summary-total').textContent=currency(finalTotal+taxAmount);const discountRow=document.getElementById('discount-row');const summaryDiscount=document.getElementById('summary-discount');if(appliedDiscount>0){discountRow.classList.remove('hidden');summaryDiscount.textContent='−'+currency(subtotal*appliedDiscount);}else{discountRow.classList.add('hidden');summaryDiscount.textContent='−'+currency(0);} }
     function applyDiscount(){const code=document.getElementById('discount-code').value.trim().toUpperCase();if(code==='STUDENT10'||code==='LASHPRO10')appliedDiscount=.1;else if(code==='VIP20')appliedDiscount=.2;else{appliedDiscount=0;alert('Invalid discount code. Try STUDENT10, LASHPRO10 or VIP20.');}renderCart();}
 
-    function switchMode(mode){currentMode=mode;document.getElementById('pos-mode-view').classList.toggle('hidden',mode!='pos');document.getElementById('admin-mode-view').classList.toggle('hidden',mode!='admin');document.getElementById('nav-pos-btn').classList.toggle('active',mode==='pos');document.getElementById('nav-admin-btn').classList.toggle('active',mode==='admin');}
-    function toggleMobileMode(){switchMode(currentMode==='pos'?'admin':'pos');}
+    function switchMode(mode){
+      if(mode==='admin' && !(adminSuite && adminSuite.is_manager)){mode='pos';}
+      currentMode=mode;
+      document.getElementById('pos-mode-view').classList.toggle('hidden',mode!=='pos');
+      const adminView=document.getElementById('admin-mode-view');
+      if(adminView) adminView.classList.toggle('hidden',mode!=='admin');
+      document.getElementById('nav-pos-btn').classList.toggle('active',mode==='pos');
+      const adminBtn=document.getElementById('nav-admin-btn');
+      if(adminBtn) adminBtn.classList.toggle('active',mode==='admin');
+    }
+    function toggleMobileMode(){
+      if(!(adminSuite && adminSuite.is_manager)){switchMode('pos');return;}
+      switchMode(currentMode==='pos'?'admin':'pos');
+    }
     function switchAdminTab(tabName){['inventory','academy','staff','reconciliation'].forEach(name=>{document.getElementById(`admin-sec-${name}`).classList.toggle('hidden',name!==tabName);document.getElementById(`tab-${name}-btn`).classList.toggle('active',name===tabName);});}
 
     function getCartTotal(){return Math.max(0,cart.reduce((sum,item)=>sum+item.price*item.qty,0)*(1-appliedDiscount));}

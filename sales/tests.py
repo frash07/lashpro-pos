@@ -293,6 +293,42 @@ class CheckoutFlowTests(TestCase):
                 SalePayment.objects.filter(pk=allocation.pk).update(amount=Decimal("1.00"))
 
 
+class AdminSuiteGateTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.cashier = User.objects.create_user(username="gate-cashier", password="x", role=User.Role.CASHIER)
+        cls.manager = User.objects.create_user(username="gate-manager", password="x", role=User.Role.MANAGER)
+
+    def _create_unverified_mpesa(self, count):
+        for index in range(count):
+            PaymentTransaction.objects.create(
+                method=PaymentTransaction.Method.MPESA,
+                status=PaymentTransaction.Status.UNVERIFIED,
+                amount=Decimal("100.00"),
+                reference=f"GATE{index:06d}",
+            )
+
+    def test_cashier_does_not_see_admin_suite_switch(self):
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("sales:checkout"))
+        self.assertFalse(response.context["admin_suite"]["is_manager"])
+        self.assertNotContains(response, 'id="nav-admin-btn"')
+
+    def test_manager_sees_admin_suite_switch_and_deep_links(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("sales:checkout"))
+        self.assertTrue(response.context["admin_suite"]["is_manager"])
+        self.assertContains(response, 'id="nav-admin-btn"')
+        for name in ("sales:refunds", "payments:cash-session", "sales:services", "inventory:receive", "reporting:dashboard"):
+            self.assertContains(response, reverse(name))
+
+    def test_pending_count_includes_all_unverified_mpesa_not_just_recent_rows(self):
+        self._create_unverified_mpesa(20)
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("sales:checkout"))
+        self.assertEqual(response.context["admin_suite"]["pending_reconciliation_count"], 20)
+
+
 class ConcurrentStockCheckoutTests(TransactionTestCase):
     reset_sequences = True
 
