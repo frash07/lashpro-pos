@@ -356,6 +356,8 @@ def receipt_pdf(request, token):
     y -= 4
     pdf.line(left, y, right, y)
     y -= 17
+    write(f"Net amount: KSh {sale.net_amount:,.2f}")
+    write(f"VAT included (16%): KSh {sale.vat_amount:,.2f}")
     write(f"Sale total: KSh {sale.total_amount:,.2f}", bold=True, size=11, gap=17)
     if sale.refunded_amount:
         write(f"Refunds issued: KSh {sale.refunded_amount:,.2f}")

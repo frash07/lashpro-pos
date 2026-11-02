@@ -75,9 +75,10 @@
             <div class="checkout-bottom">
               <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button type="button" class="btn-small" onclick="applyDiscount()">Apply</button></div>
               <div class="financials">
-                <div class="financial-row"><span>Subtotal</span><span id="summary-subtotal">KES 0</span></div>
-                <div class="financial-row"><span>VAT (16% incl.)</span><span id="summary-tax">KES 0</span></div>
+                <div id="gross-row" class="financial-row hidden"><span>Items (VAT incl.)</span><span id="summary-gross">KES 0</span></div>
                 <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
+                <div class="financial-row"><span>Net subtotal</span><span id="summary-subtotal">KES 0</span></div>
+                <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
                 <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
               </div>
               <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
@@ -158,15 +159,41 @@
 
   <script>
     const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
+    const canDiscount = {{ can_discount|yesno:"true,false" }};
     const catalogData = {{ catalog_data_json|safe }};
     const defaultTechnicianId = "{{ default_technician_id|default_if_none:'' }}";
-    let cart=[], appliedDiscount=0, activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
+    let cart=[], appliedDiscount=0, appliedCode='', activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
     let mpesaLogs=[
       {time:'10:42 AM',ref:'QX892KL0P1',phone:'+254 712***678',amount:6000,status:'SUCCESS'},
       {time:'09:15 AM',ref:'QX891MM9X4',phone:'+254 722***102',amount:25000,status:'SUCCESS'},
       {time:'08:50 AM',ref:'QX890PP3L9',phone:'+254 701***992',amount:4500,status:'SUCCESS'}
     ];
-    const currency=n=>'KES '+Number(n||0).toLocaleString('en-KE',{maximumFractionDigits:0});
+    const currency=n=>{const v=Number(n||0),hasCents=Math.round(v*100)%100!==0;return 'KES '+v.toLocaleString('en-KE',{minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2});};
+    // Catalog prices are VAT-inclusive (gross). All money maths is done in integer cents so the
+    // amount shown, the amount posted as payment and the backend SaleLine totals always agree.
+    const VAT_RATE_PERCENT=16;
+    const toCents=n=>Math.round((Number(n)||0)*100);
+    const centsToAmount=c=>(c/100).toFixed(2);
+    function validCartItems(){return cart.filter(item=>item&&Number(item.qty||0)>0);}
+    function lineSubtotalCents(item){return toCents(item.price)*Number(item.qty);}
+    function computeTotals(){
+      const grossBeforeDiscount=validCartItems().reduce((sum,item)=>sum+lineSubtotalCents(item),0);
+      const discount=Math.min(grossBeforeDiscount,Math.round(grossBeforeDiscount*appliedDiscount));
+      const amountDue=grossBeforeDiscount-discount;
+      const vat=Math.round(amountDue*VAT_RATE_PERCENT/(100+VAT_RATE_PERCENT));
+      return {grossBeforeDiscount,discount,vat,net:amountDue-vat,amountDue};
+    }
+    // Split an order-level discount across lines (whole cents, summing exactly to the discount)
+    // because the backend stores and validates discounts per sale line.
+    function allocateDiscountCents(lineCents,totalDiscount){
+      const subtotal=lineCents.reduce((a,b)=>a+b,0);
+      if(!subtotal||totalDiscount<=0)return lineCents.map(()=>0);
+      const exact=lineCents.map(c=>c*totalDiscount/subtotal);
+      const allocated=exact.map(Math.floor);
+      let remainder=totalDiscount-allocated.reduce((a,b)=>a+b,0);
+      exact.map((value,i)=>({i,frac:value-allocated[i]})).sort((a,b)=>b.frac-a.frac).forEach(({i})=>{if(remainder>0&&allocated[i]<lineCents[i]){allocated[i]++;remainder--;}});
+      return allocated;
+    }
     const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const typeLabel=type=>({service:'Service',academy:'Academy',product:'Retail'}[type]||type);
     function refreshIcons(){if(window.lucide&&typeof lucide.createIcons==='function')lucide.createIcons();}
@@ -191,8 +218,13 @@
       if (!form) return;
       form.querySelectorAll('[data-cart-sync]').forEach((el) => el.remove());
 
-      const validItems = cart.filter((item) => item && Number(item.qty || 0) > 0);
+      const validItems = validCartItems();
       document.getElementById('id_items-TOTAL_FORMS').value = String(validItems.length);
+
+      // The same figures that are displayed are what gets posted: per-line discounts for the
+      // backend's SaleLine.line_total(), and amountDue (VAT-inclusive, no VAT added) as payment.
+      const totals = computeTotals();
+      const lineDiscounts = allocateDiscountCents(validItems.map(lineSubtotalCents), totals.discount);
 
       validItems.forEach((item, index) => {
         const normalizedId = normalizeItemId(item);
@@ -205,15 +237,14 @@
         addSyncField(form, `items-${index}-service`, serviceId);
         addSyncField(form, `items-${index}-technician`, technicianId);
         addSyncField(form, `items-${index}-quantity`, String(item.qty || 1));
-        addSyncField(form, `items-${index}-discount`, '0.00');
-        addSyncField(form, `items-${index}-discount_reason`, '');
+        addSyncField(form, `items-${index}-discount`, centsToAmount(lineDiscounts[index]));
+        addSyncField(form, `items-${index}-discount_reason`, lineDiscounts[index] > 0 ? `Promo code ${appliedCode}` : '');
         addSyncField(form, `items-${index}-DELETE`, '');
       });
 
       const paymentMethod = String(method || 'CASH').toUpperCase();
-      const total = getCartTotal();
       const reference = paymentMethod === 'MPESA' ? (document.getElementById('mpesa-phone')?.value || '').replace(/\D/g, '') : '';
-      const paymentRows = [{ method: paymentMethod, amount: Number(total).toFixed(2), reference }];
+      const paymentRows = [{ method: paymentMethod, amount: centsToAmount(totals.amountDue), reference }];
       document.getElementById('id_payments-TOTAL_FORMS').value = String(paymentRows.length);
       paymentRows.forEach((row, index) => {
         addSyncField(form, `payments-${index}-method`, row.method);
@@ -238,15 +269,32 @@
     function addToCart(id){const item=catalogData.find(x=>x.id===id);if(!item)return;const existing=cart.find(x=>x.id===id);if(existing)existing.qty++;else cart.push({...item,qty:1});renderCart();}
     function removeFromCart(id){cart=cart.filter(x=>x.id!==id);renderCart();}
     function updateQty(id,delta){const item=cart.find(x=>x.id===id);if(!item)return;item.qty+=delta;if(item.qty<=0)cart=cart.filter(x=>x.id!==id);renderCart();}
-    function clearCart(){cart=[];appliedDiscount=0;document.getElementById('discount-code').value='';renderCart();}
+    function clearCart(){cart=[];appliedDiscount=0;appliedCode='';document.getElementById('discount-code').value='';renderCart();}
     function renderCart(){
       const container=document.getElementById('cart-items-container');
-      if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials(0);refreshIcons();return;}
+      if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
       container.innerHTML=cart.map(item=>`<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">${escapeHtml(item.name)}</div><div class="cart-item-price">${currency(item.price)}</div></div><button type="button" class="row-action" onclick="removeFromCart('${item.id}')">Remove</button></div><div class="qty-row"><button type="button" class="qty-btn" onclick="updateQty('${item.id}',-1)" aria-label="Decrease quantity">−</button><span>${item.qty}</span><button type="button" class="qty-btn" onclick="updateQty('${item.id}',1)" aria-label="Increase quantity">+</button><strong>${currency(item.price*item.qty)}</strong></div></div>`).join('');
-      updateFinancials(cart.reduce((sum,item)=>sum+item.price*item.qty,0));refreshIcons();
+      updateFinancials();refreshIcons();
     }
-    function updateFinancials(subtotal){const discountAmount=subtotal*appliedDiscount,finalTotal=Math.max(0,subtotal-discountAmount),taxAmount=finalTotal*.16;document.getElementById('summary-subtotal').textContent=currency(subtotal);document.getElementById('summary-tax').textContent=currency(taxAmount);document.getElementById('summary-discount').textContent='−'+currency(discountAmount);document.getElementById('summary-total').textContent=currency(finalTotal+taxAmount);document.getElementById('discount-row').classList.toggle('hidden',discountAmount<=0);}
-    function applyDiscount(){const code=document.getElementById('discount-code').value.trim().toUpperCase();if(code==='STUDENT10'||code==='LASHPRO10')appliedDiscount=.1;else if(code==='VIP20')appliedDiscount=.2;else {appliedDiscount=0;alert('Discount code not recognised.');}renderCart();}
+    function updateFinancials(){
+      const t=computeTotals(),kes=c=>currency(c/100),set=(id,text)=>{document.getElementById(id).textContent=text;};
+      set('summary-gross',kes(t.grossBeforeDiscount));
+      set('summary-discount','−'+kes(t.discount));
+      set('summary-subtotal',kes(t.net));
+      set('summary-tax',kes(t.vat));
+      set('summary-total',kes(t.amountDue));
+      document.getElementById('gross-row').classList.toggle('hidden',t.discount<=0);
+      document.getElementById('discount-row').classList.toggle('hidden',t.discount<=0);
+    }
+    function applyDiscount(){
+      const code=document.getElementById('discount-code').value.trim().toUpperCase();
+      let rate=0;
+      if(code==='STUDENT10'||code==='LASHPRO10')rate=.1;else if(code==='VIP20')rate=.2;
+      if(!rate){appliedDiscount=0;appliedCode='';alert('Discount code not recognised.');}
+      else if(!canDiscount){appliedDiscount=0;appliedCode='';alert('Discounts need manager approval. Ask an owner or manager to apply this code.');}
+      else{appliedDiscount=rate;appliedCode=code;}
+      renderCart();
+    }
 
     function switchMode(mode){
       if(mode==='admin' && !(adminSuite && adminSuite.is_manager)){mode='pos';}
@@ -264,7 +312,7 @@
     }
     function switchAdminTab(tabName){['inventory','academy','staff','reconciliation'].forEach(name=>{document.getElementById(`admin-sec-${name}`).classList.toggle('hidden',name!==tabName);document.getElementById(`tab-${name}-btn`).classList.toggle('active',name===tabName);});}
 
-    function getCartTotal(){return Math.max(0,cart.reduce((sum,item)=>sum+item.price*item.qty,0)*(1-appliedDiscount));}
+    function getCartTotal(){return computeTotals().amountDue/100;}
     function triggerCheckout(method){
       if(!cart.length){alert('Your order is empty. Add at least one item before checkout.');return;}
       currentPaymentMethod=method;

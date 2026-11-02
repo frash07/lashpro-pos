@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 import secrets
 import uuid
 
@@ -12,6 +12,19 @@ from catalog.models import Product, Service
 from customers.models import Customer
 
 ZERO = Decimal("0.00")
+CENT = Decimal("0.01")
+
+# Catalog prices and SaleLine.line_total() are VAT-inclusive (gross). The
+# customer pays the gross amount; VAT is extracted from it, never added on top.
+VAT_RATE_PERCENT = Decimal("16")
+
+
+def vat_included_in(gross):
+    """Return the VAT contained in a VAT-inclusive amount: gross * 16 / 116."""
+    gross = Decimal(gross)
+    return (gross * VAT_RATE_PERCENT / (Decimal("100") + VAT_RATE_PERCENT)).quantize(
+        CENT, rounding=ROUND_HALF_UP
+    )
 
 
 def generate_receipt_number():
@@ -60,6 +73,16 @@ class Sale(models.Model):
             (line.line_total() for line in self.lines.all()),
             ZERO,
         )
+
+    @property
+    def vat_amount(self):
+        """VAT included in the sale total (total_amount is the gross amount due)."""
+        return vat_included_in(self.total_amount)
+
+    @property
+    def net_amount(self):
+        """Sale total excluding the VAT that is already included in it."""
+        return self.total_amount - self.vat_amount
 
     @property
     def paid_amount(self):

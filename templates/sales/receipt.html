@@ -48,6 +48,8 @@
     </div>
 
     <section class="receipt-totals" aria-label="Sale totals">
+      <div><span>Net amount</span><strong>KSh {{ sale.net_amount|floatformat:"2g" }}</strong></div>
+      <div><span>VAT included (16%)</span><strong>KSh {{ sale.vat_amount|floatformat:"2g" }}</strong></div>
       <div><span>Sale total</span><strong>KSh {{ sale.total_amount|floatformat:"2g" }}</strong></div>
       {% if sale.refunded_amount %}<div><span>Refunds issued</span><strong>KSh {{ sale.refunded_amount|floatformat:"2g" }}</strong></div><div><span>Net sale total</span><strong>KSh {{ sale.net_total|floatformat:"2g" }}</strong></div>{% endif %}
       <div><span>Confirmed paid</span><strong>KSh {{ sale.paid_amount|floatformat:"2g" }}</strong></div>

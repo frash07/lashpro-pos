@@ -149,3 +149,70 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "Refunds issued: KSh 2500.00")
         self.assertContains(response, "Net sale total: KSh 0.00")
         self.assertContains(response, "Refund issued")
+
+
+class VatInclusiveTotalsTests(TestCase):
+    """Catalog prices are VAT-inclusive: VAT is extracted from the total, never added on top."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.cashier = User.objects.create_user(username="vat-cashier", password="pass", role=User.Role.CASHIER)
+        cls.manager = User.objects.create_user(username="vat-manager", password="pass", role=User.Role.MANAGER)
+        cls.tech = User.objects.create_user(username="vat-tech", password="pass", role=User.Role.TECHNICIAN)
+        for user in (cls.cashier, cls.manager):
+            CashSession.objects.create(cashier=user, opened_by=user)
+        cls.service = Service.objects.create(name="Gross Priced Set", duration_minutes=90, price=Decimal("11600.00"))
+
+    def test_vat_is_extracted_from_the_gross_total(self):
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"service_id": self.service.pk, "technician_id": self.tech.pk}],
+            payments=[{"method": "CASH", "amount": "11600.00"}],
+        )
+        self.assertEqual(sale.total_amount, Decimal("11600.00"))
+        self.assertEqual(sale.vat_amount, Decimal("1600.00"))
+        self.assertEqual(sale.net_amount, Decimal("10000.00"))
+        self.assertEqual(sale.balance_due, Decimal("0.00"))
+
+    def test_vat_rounds_to_cents_and_net_plus_vat_equals_total(self):
+        service = Service.objects.create(name="Odd Priced Set", duration_minutes=30, price=Decimal("100.00"))
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"service_id": service.pk, "technician_id": self.tech.pk}],
+            payments=[{"method": "CASH", "amount": "100.00"}],
+        )
+        self.assertEqual(sale.vat_amount, Decimal("13.79"))
+        self.assertEqual(sale.net_amount, Decimal("86.21"))
+        self.assertEqual(sale.net_amount + sale.vat_amount, sale.total_amount)
+
+    def test_discounted_checkout_payment_matches_backend_total(self):
+        # What checkout.html posts for a 10% promo: a per-line discount and a payment equal to
+        # the discounted VAT-inclusive total, with no VAT added on top.
+        self.client.force_login(self.manager)
+        response = self.client.post(reverse("sales:checkout"), {
+            "idempotency_key": "22222222-2222-4222-8222-222222222222",
+            "items-TOTAL_FORMS": "1", "items-INITIAL_FORMS": "0", "items-MIN_NUM_FORMS": "0", "items-MAX_NUM_FORMS": "20",
+            "items-0-product": "", "items-0-service": str(self.service.pk), "items-0-technician": str(self.tech.pk),
+            "items-0-quantity": "1", "items-0-discount": "1160.00", "items-0-discount_reason": "Promo code STUDENT10",
+            "payments-TOTAL_FORMS": "1", "payments-INITIAL_FORMS": "0", "payments-MIN_NUM_FORMS": "0", "payments-MAX_NUM_FORMS": "10",
+            "payments-0-method": "CASH", "payments-0-amount": "10440.00", "payments-0-reference": "",
+        })
+        sale = Sale.objects.get()
+        self.assertRedirects(response, reverse("sales:receipt", args=[sale.receipt_token]))
+        self.assertEqual(sale.total_amount, Decimal("10440.00"))
+        self.assertEqual(sale.paid_amount, Decimal("10440.00"))
+        self.assertEqual(sale.balance_due, Decimal("0.00"))
+        self.assertEqual(sale.vat_amount, Decimal("1440.00"))
+        self.assertEqual(sale.net_amount, Decimal("9000.00"))
+
+    def test_receipt_and_pdf_show_net_and_included_vat(self):
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"service_id": self.service.pk, "technician_id": self.tech.pk}],
+            payments=[{"method": "CASH", "amount": "11600.00"}],
+        )
+        response = self.client.get(reverse("sales:receipt", args=[sale.receipt_token]))
+        self.assertContains(response, "VAT included (16%)")
+        self.assertContains(response, "KSh 1,600.00")
+        self.assertContains(response, "KSh 10,000.00")
+        self.assertEqual(self.client.get(reverse("sales:receipt_pdf", args=[sale.receipt_token])).status_code, 200)
