@@ -90,7 +90,7 @@
                 <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
                 <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
               </div>
-              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Record M-Pesa payment</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
               <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
               <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
             </div>
@@ -225,7 +225,7 @@
       return String(item?.id ?? '').replace(/^(product|service)-/, '');
     }
 
-    function syncCartToFormset(method) {
+    function syncCartToFormset(method, mpesaReference = '') {
       const form = document.getElementById('pos-form');
       if (!form) return;
       form.querySelectorAll('[data-cart-sync]').forEach((el) => el.remove());
@@ -255,7 +255,7 @@
       });
 
       const paymentMethod = String(method || 'CASH').toUpperCase();
-      const reference = paymentMethod === 'MPESA' ? (document.getElementById('mpesa-phone')?.value || '').replace(/\D/g, '') : '';
+      const reference = paymentMethod === 'MPESA' ? String(mpesaReference || '').trim().toUpperCase() : '';
       const paymentRows = [{ method: paymentMethod, amount: centsToAmount(totals.amountDue), reference }];
       document.getElementById('id_payments-TOTAL_FORMS').value = String(paymentRows.length);
       paymentRows.forEach((row, index) => {
@@ -349,11 +349,16 @@
         return;
       }
       if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
+      if(method==='mpesa'){openModal('mpesa-modal');document.getElementById('mpesa-reference').focus();return;}
       syncCartToFormset(method);
       document.getElementById('pos-form').submit();
     }
-    function processSTKPush(){const phone=document.getElementById('mpesa-phone').value.replace(/\D/g,'');if(phone.length!==9){alert('Enter a valid 9-digit Safaricom mobile number.');return;}const ref=`LASH-${Date.now().toString().slice(-6)}`;alert(`M-PESA prompt sent to ${phone}. Reference: ${ref}`);closeModal('mpesa-modal');completeCheckoutSuccess(ref,'Wanjiku Njuguna','Stacy');}
-    function completeCheckoutSuccess(refCode,client,artist){const total=getCartTotal();document.getElementById('rcpt-ref').textContent=refCode;document.getElementById('rcpt-client').textContent=client;document.getElementById('rcpt-total').textContent=currency(total);const lines=cart.map(item=>`<div class="receipt-line"><span>${escapeHtml(item.name)} x${item.qty}</span><span>${currency(item.price*item.qty)}</span></div>`).join('');document.getElementById('rcpt-items').innerHTML=lines;openModal('receipt-modal');}
+    function submitMpesaReference(){
+      const reference=document.getElementById('mpesa-reference').value.trim().toUpperCase();
+      if(!reference){alert('Enter the M-Pesa transaction code before recording this payment.');return;}
+      syncCartToFormset('mpesa',reference);
+      document.getElementById('pos-form').submit();
+    }
     function openModal(id){document.getElementById(id).classList.remove('hidden');document.body.style.overflow='hidden';}
     function closeModal(id){document.getElementById(id).classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
     function backdropClose(event,id){if(event.target.id===id)closeModal(id);}
