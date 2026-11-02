@@ -28,3 +28,9 @@
   .admin-group-links { padding-left: 54px; }
   .admin-navigation-note { display: none; }
 }
+
+.mode-switch .mode-btn { text-decoration: none; }
+.admin-nav-group summary::after { content: "+"; display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 15px; line-height: 1; }
+.admin-nav-group[open] summary::after { content: "−"; color: var(--pink); border-color: var(--line-strong); }
+.admin-nav-group summary:focus-visible { outline: 2px solid var(--pink); outline-offset: -3px; }
+.admin-nav-group summary:hover .admin-group-copy strong { color: var(--pink); }
