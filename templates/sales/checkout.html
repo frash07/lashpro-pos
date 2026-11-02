@@ -26,8 +26,8 @@
       </div>
       <nav class="mode-switch" aria-label="Application mode">
         <button id="nav-pos-btn" class="mode-btn active" type="button" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
-        {% if admin_suite.is_manager %}
-        <button id="nav-admin-btn" class="mode-btn" type="button" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
+        {% if admin_suite.can_access_admin_suite %}
+        <a id="nav-admin-btn" class="mode-btn" href="{% url 'admin_suite' %}" style="text-decoration:none"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></a>
         {% endif %}
       </nav>
       <div class="top-actions">
