@@ -51,7 +51,7 @@
       <div><span>Net amount</span><strong>KSh {{ sale.net_amount|floatformat:"2g" }}</strong></div>
       <div><span>VAT included (16%)</span><strong>KSh {{ sale.vat_amount|floatformat:"2g" }}</strong></div>
       <div><span>Sale total</span><strong>KSh {{ sale.total_amount|floatformat:"2g" }}</strong></div>
-      {% if sale.refunded_amount %}<div><span>Refunds issued</span><strong>KSh {{ sale.refunded_amount|floatformat:"2g" }}</strong></div><div><span>Net sale total</span><strong>KSh {{ sale.net_total|floatformat:"2g" }}</strong></div>{% endif %}
+      {% if sale.refunded_amount %}<div><span>Refunds issued: KSh {{ sale.refunded_amount|floatformat:2 }}</span></div><div><span>Net sale total: KSh {{ sale.net_total|floatformat:2 }}</span></div>{% endif %}
       <div><span>Confirmed paid</span><strong>KSh {{ sale.paid_amount|floatformat:"2g" }}</strong></div>
       {% if sale.unverified_amount %}<div class="receipt-pending"><span>M-PESA pending verification</span><strong>KSh {{ sale.unverified_amount|floatformat:"2g" }}</strong></div>{% endif %}
       <div><span>Net paid after refunds</span><strong>KSh {{ sale.net_paid_amount|floatformat:"2g" }}</strong></div>
