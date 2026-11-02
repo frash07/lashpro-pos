@@ -41,6 +41,87 @@ def _build_admin_suite_context(user):
     }
 
 
+def _build_checkout_initial_cart(lines):
+    """Rehydrate the cart from submitted formset data when checkout validation fails."""
+    cart = []
+    for form in lines.forms:
+        prefix = form.prefix
+        if (form.data or {}).get(f"{prefix}-DELETE") == "on":
+            continue
+
+        product_id = (form.data.get(f"{prefix}-product") or "").strip()
+        service_id = (form.data.get(f"{prefix}-service") or "").strip()
+        if not product_id and not service_id:
+            continue
+
+        try:
+            quantity = int(form.data.get(f"{prefix}-quantity") or "1")
+        except (TypeError, ValueError):
+            quantity = 1
+        if quantity <= 0:
+            continue
+
+        discount = form.data.get(f"{prefix}-discount") or "0.00"
+        discount_reason = form.data.get(f"{prefix}-discount_reason") or ""
+
+        item = {
+            "qty": quantity,
+            "discount": discount,
+            "discount_reason": discount_reason,
+        }
+        if product_id:
+            product = Product.objects.filter(pk=product_id, active=True).first()
+            if not product:
+                continue
+            item.update({
+                "id": f"product-{product.pk}",
+                "type": "product",
+                "name": product.name,
+                "price": float(product.selling_price),
+                "product_id": product.pk,
+            })
+        else:
+            service = Service.objects.filter(pk=service_id, active=True).first()
+            if not service:
+                continue
+            item.update({
+                "id": f"service-{service.pk}",
+                "type": "service",
+                "name": service.name,
+                "price": float(service.price),
+                "service_id": service.pk,
+            })
+
+        technician_id = (form.data.get(f"{prefix}-technician") or "").strip()
+        if technician_id:
+            try:
+                item["technician_id"] = int(technician_id)
+            except (TypeError, ValueError):
+                pass
+        cart.append(item)
+    return cart
+
+
+def _build_checkout_initial_payments(payments):
+    """Rehydrate submitted payment rows so validation failures keep the same payment state."""
+    rows = []
+    for form in payments.forms:
+        prefix = form.prefix
+        if (form.data or {}).get(f"{prefix}-DELETE") == "on":
+            continue
+
+        method = (form.data.get(f"{prefix}-method") or "").strip()
+        amount = form.data.get(f"{prefix}-amount") or ""
+        reference = (form.data.get(f"{prefix}-reference") or "").strip()
+        if method or amount or reference:
+            rows.append({
+                "method": method,
+                "amount": amount,
+                "reference": reference,
+            })
+    return rows
+
+
 @login_required(login_url="login")
 def checkout(request):
     check_role(request.user)
@@ -48,6 +129,8 @@ def checkout(request):
         details = CheckoutDetailsForm(request.POST)
         lines = LineFormSet(request.POST, prefix="items")
         payments_formset = PaymentFormSet(request.POST, prefix="payments")
+        initial_cart = _build_checkout_initial_cart(lines)
+        initial_payments = _build_checkout_initial_payments(payments_formset)
         valid_details = details.is_valid()
         valid_lines = lines.is_valid()
         valid_payments = payments_formset.is_valid()
@@ -81,10 +164,13 @@ def checkout(request):
                 messages.success(request, f"Sale #{sale.pk} completed.")
                 return redirect("sales:receipt", token=sale.receipt_token)
     else:
+        initial_cart = []
+        initial_payments = []
         default_customer = Customer.objects.filter(name__iexact="Wanjiku Njuguna").first()
         details = CheckoutDetailsForm(initial={"idempotency_key": uuid.uuid4(), "customer": default_customer.pk if default_customer else None})
         lines = LineFormSet(prefix="items")
         payments_formset = PaymentFormSet(prefix="payments")
+
     products = list(Product.objects.filter(active=True).order_by("name"))
     sample_descriptions = {
         "lashpro retention bond (10ml)": "Maximum Strength 1-Sec Lash Glue",
@@ -141,6 +227,8 @@ def checkout(request):
         "details": details, "lines": lines, "payments": payments_formset,
         "prices": prices, "products": products, "services": services,
         "catalog_items": catalog_items, "catalog_data_json": json.dumps(catalog_items),
+        "initial_cart": initial_cart,
+        "initial_payments": initial_payments,
         "cash_session": cash_session,
         "can_discount": request.user.is_superuser or request.user.role in {
             User.Role.OWNER, User.Role.MANAGER,
