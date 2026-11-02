@@ -100,42 +100,48 @@ self.addEventListener("fetch", (event) => {
 
 @staff_member_required
 def admin_suite(request):
-
     groups = [
         {
             "name": "People & Access",
+            "description": "User accounts, roles, permissions and sign-in security.",
+            "icon": "users",
             "items": [
                 ("User Accounts", "/admin/accounts/user/"),
-                ("Roles & Permissions", "/admin/auth/"),
-                ("Audit Trail", "/admin/audit/auditevent/"),
+                ("Groups & Permissions", "/admin/auth/"),
                 ("Access Attempts", "/admin/axes/accessattempt/"),
                 ("Failed Login Records", "/admin/axes/accessfailurelog/"),
                 ("Login Activity", "/admin/axes/accesslog/"),
             ],
         },
         {
-            "name": "Catalog",
+            "name": "Audit & Compliance",
+            "description": "Review the application's recorded audit events.",
+            "icon": "shield-check",
+            "items": [
+                ("Audit Events", "/admin/audit/auditevent/"),
+            ],
+        },
+        {
+            "name": "Studio Catalogue",
+            "description": "Maintain the retail product and service catalogue.",
+            "icon": "package",
             "items": [
                 ("Products", "/admin/catalog/product/"),
                 ("Services", "/admin/catalog/service/"),
             ],
         },
         {
-            "name": "Customers",
+            "name": "Clients",
+            "description": "Manage customer records and client details.",
+            "icon": "contact-round",
             "items": [
                 ("Customer Directory", "/admin/customers/customer/"),
             ],
         },
         {
-            "name": "Sales",
-            "items": [
-                ("Sales Records", "/admin/sales/sale/"),
-                ("Sale Line Items", "/admin/sales/saleline/"),
-                ("Refund Records", "/admin/sales/salerefund/"),
-            ],
-        },
-        {
-            "name": "Inventory",
+            "name": "Inventory & Stock",
+            "description": "Inspect stock movements, consumables and adjustment requests.",
+            "icon": "boxes",
             "items": [
                 ("Inventory Movements", "/admin/inventory/inventorymovement/"),
                 ("Service Consumables", "/admin/inventory/serviceconsumable/"),
@@ -143,23 +149,37 @@ def admin_suite(request):
             ],
         },
         {
-            "name": "Payments & Cash",
+            "name": "Artist Commissions",
+            "description": "Review commission ledger entries and payout records.",
+            "icon": "hand-coins",
             "items": [
-                ("Cash Sessions", "/admin/payments/cashsession/"),
-                ("Cash Session Movements", "/admin/payments/cashsessionmovement/"),
-                ("Payment Transactions", "/admin/payments/paymenttransaction/"),
-                ("Sale Payments", "/admin/payments/salepayment/"),
-                ("Payment Reconciliation", "/admin/payments/paymentreconciliation/"),
-                ("Payout Reconciliation", "/admin/payments/payoutreconciliation/"),
-                ("Refund Payouts", "/admin/payments/refundpayout/"),
+                ("Commission Ledger Entries", "/admin/commissions/commissionledgerentry/"),
+                ("Commission Payout Requests", "/admin/commissions/commissionpayoutrequest/"),
+                ("Commission Payout Records", "/admin/commissions/commissionpayoutrecord/"),
             ],
         },
         {
-            "name": "Artist Commissions",
+            "name": "Payments & Cash Control",
+            "description": "Manage cash sessions, payment records and reconciliations.",
+            "icon": "wallet-cards",
             "items": [
-                ("Commission Ledger", "/admin/commissions/commissionledgerentry/"),
-                ("Payout Requests", "/admin/commissions/commissionpayoutrequest/"),
-                ("Payout Records", "/admin/commissions/commissionpayoutrecord/"),
+                ("Cash Sessions", "/admin/payments/cashsession/"),
+                ("Cash Session Movements", "/admin/payments/cashsessionmovement/"),
+                ("Payment Reconciliation", "/admin/payments/paymentreconciliation/"),
+                ("Payment Transactions", "/admin/payments/paymenttransaction/"),
+                ("Payout Reconciliation", "/admin/payments/payoutreconciliation/"),
+                ("Refund Payouts", "/admin/payments/refundpayout/"),
+                ("Sale Payments", "/admin/payments/salepayment/"),
+            ],
+        },
+        {
+            "name": "Sales & Refunds",
+            "description": "Open sale records, line items and refund records.",
+            "icon": "receipt-text",
+            "items": [
+                ("Sales Records", "/admin/sales/sale/"),
+                ("Sale Line Items", "/admin/sales/saleline/"),
+                ("Refund Records", "/admin/sales/salerefund/"),
             ],
         },
     ]
@@ -167,6 +187,8 @@ def admin_suite(request):
     groups = [
         {
             "name": group["name"],
+            "description": group["description"],
+            "icon": group["icon"],
             "items": [
                 {"label": label, "url": url}
                 for label, url in group["items"]
@@ -175,8 +197,4 @@ def admin_suite(request):
         for group in groups
     ]
 
-    return render(
-        request,
-        "admin_suite/index.html",
-        {"groups": groups}
-    )
+    return render(request, "admin_suite/index.html", {"groups": groups})
