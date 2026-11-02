@@ -16,7 +16,6 @@
   <form id="pos-form" method="post" novalidate>
     {% csrf_token %}
     {{ details.idempotency_key }}
-    <div style="display:none;">{{ details.customer }}</div>
     {{ lines.management_form }}
     {{ payments.management_form }}
 
@@ -78,7 +77,7 @@
                 </select>
                 <span id="staff-select-help" class="field-hint">Default for services you add next</span>
               </div>
-              <div class="field"><label for="client-name">CLIENT / STUDENT</label><input id="client-name" type="text" placeholder="Walk-in client" value="Wanjiku Njuguna"></div>
+              <div class="field"><label for="id_customer">CLIENT / STUDENT</label>{{ details.customer }}</div>
             </div>
             <div id="cart-items-container" class="cart-items"></div>
             <div class="checkout-bottom">
@@ -90,7 +89,7 @@
                 <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
                 <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
               </div>
-              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Record M-Pesa payment</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
               <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
               <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
             </div>
@@ -159,7 +158,7 @@
       </section>
     </main>
 
-    <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="mpesa-title">M-PESA Express</h3><button type="button" class="icon-button" onclick="closeModal('mpesa-modal')" aria-label="Close">×</button></div><div class="modal-body"><label class="field-block"><span>Client phone</span><input id="mpesa-phone" type="tel" inputmode="numeric" placeholder="0712 345678" value="0712345678"></label></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('mpesa-modal')">Cancel</button><button type="button" class="button-primary" onclick="processSTKPush()">Send payment prompt</button></div></div></div>
+    <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="mpesa-title">Record M-Pesa payment</h3><button type="button" class="icon-button" onclick="closeModal('mpesa-modal')" aria-label="Close">×</button></div><div class="modal-body"><p>Enter the M-Pesa transaction code from the customer's completed payment. This will be recorded as unverified until reconciled.</p><label class="field-block"><span>M-Pesa transaction code</span><input id="mpesa-reference" type="text" maxlength="50" autocomplete="off" placeholder="e.g. QX123ABC45"></label></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('mpesa-modal')">Cancel</button><button type="button" class="button-primary" onclick="submitMpesaReference()">Record payment</button></div></div></div>
 
     <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="receipt-title">Payment receipt</h3><button type="button" class="icon-button" onclick="closeModal('receipt-modal')" aria-label="Close">×</button></div><div class="modal-body receipt-body"><div class="receipt-meta"><span id="rcpt-ref">REF-0001</span><span id="rcpt-client">Wanjiku Njuguna</span></div><div id="rcpt-items" class="receipt-items"></div><div class="receipt-total"><span>Total</span><strong id="rcpt-total">KES 0</strong></div></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="printReceipt()">Print</button><button type="button" class="button-primary" onclick="closeModal('receipt-modal')">Done</button></div></div></div>
 
@@ -225,7 +224,7 @@
       return String(item?.id ?? '').replace(/^(product|service)-/, '');
     }
 
-    function syncCartToFormset(method) {
+    function syncCartToFormset(method, mpesaReference = '') {
       const form = document.getElementById('pos-form');
       if (!form) return;
       form.querySelectorAll('[data-cart-sync]').forEach((el) => el.remove());
@@ -255,7 +254,7 @@
       });
 
       const paymentMethod = String(method || 'CASH').toUpperCase();
-      const reference = paymentMethod === 'MPESA' ? (document.getElementById('mpesa-phone')?.value || '').replace(/\D/g, '') : '';
+      const reference = paymentMethod === 'MPESA' ? String(mpesaReference || '').trim().toUpperCase() : '';
       const paymentRows = [{ method: paymentMethod, amount: centsToAmount(totals.amountDue), reference }];
       document.getElementById('id_payments-TOTAL_FORMS').value = String(paymentRows.length);
       paymentRows.forEach((row, index) => {
@@ -349,11 +348,16 @@
         return;
       }
       if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
+      if(method==='mpesa'){openModal('mpesa-modal');document.getElementById('mpesa-reference').focus();return;}
       syncCartToFormset(method);
       document.getElementById('pos-form').submit();
     }
-    function processSTKPush(){const phone=document.getElementById('mpesa-phone').value.replace(/\D/g,'');if(phone.length!==9){alert('Enter a valid 9-digit Safaricom mobile number.');return;}const ref=`LASH-${Date.now().toString().slice(-6)}`;alert(`M-PESA prompt sent to ${phone}. Reference: ${ref}`);closeModal('mpesa-modal');completeCheckoutSuccess(ref,'Wanjiku Njuguna','Stacy');}
-    function completeCheckoutSuccess(refCode,client,artist){const total=getCartTotal();document.getElementById('rcpt-ref').textContent=refCode;document.getElementById('rcpt-client').textContent=client;document.getElementById('rcpt-total').textContent=currency(total);const lines=cart.map(item=>`<div class="receipt-line"><span>${escapeHtml(item.name)} x${item.qty}</span><span>${currency(item.price*item.qty)}</span></div>`).join('');document.getElementById('rcpt-items').innerHTML=lines;openModal('receipt-modal');}
+    function submitMpesaReference(){
+      const reference=document.getElementById('mpesa-reference').value.trim().toUpperCase();
+      if(!reference){alert('Enter the M-Pesa transaction code before recording this payment.');return;}
+      syncCartToFormset('mpesa',reference);
+      document.getElementById('pos-form').submit();
+    }
     function openModal(id){document.getElementById(id).classList.remove('hidden');document.body.style.overflow='hidden';}
     function closeModal(id){document.getElementById(id).classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
     function backdropClose(event,id){if(event.target.id===id)closeModal(id);}

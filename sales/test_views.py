@@ -36,6 +36,15 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "Classic Set")
         self.assertContains(response, "Lash Glue")
 
+    def test_redesigned_checkout_uses_real_customer_and_manual_mpesa_fields(self):
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("sales:checkout"))
+        self.assertContains(response, 'name="customer"')
+        self.assertContains(response, 'id="mpesa-reference"')
+        self.assertContains(response, "recorded as unverified")
+        self.assertNotContains(response, 'id="client-name"')
+        self.assertNotContains(response, "processSTKPush")
+
     def test_technician_dropdown_uses_real_user_ids(self):
         other = User.objects.create_user(username="tech-two", password="pass", first_name="Faith", role=User.Role.TECHNICIAN)
         User.objects.create_user(username="tech-gone", password="pass", role=User.Role.TECHNICIAN, is_active=False)
