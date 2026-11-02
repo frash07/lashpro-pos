@@ -36,6 +36,44 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "Classic Set")
         self.assertContains(response, "Lash Glue")
 
+    def test_technician_dropdown_uses_real_user_ids(self):
+        other = User.objects.create_user(username="tech-two", password="pass", first_name="Faith", role=User.Role.TECHNICIAN)
+        User.objects.create_user(username="tech-gone", password="pass", role=User.Role.TECHNICIAN, is_active=False)
+        self.client.force_login(self.cashier)
+        html = self.client.get(reverse("sales:checkout")).content.decode()
+        select = html.split('id="staff-select"', 1)[1].split("</select>", 1)[0]
+        self.assertIn(f'value="{self.tech.pk}"', select)
+        self.assertIn(f'value="{other.pk}"', select)
+        self.assertIn(">Faith<", select)
+        self.assertNotIn("tech-gone", select)
+        for hardcoded in ("Stacy (Senior Lash Artist)", "Faith (Lash Specialist)", "Lyn (Master Tech)"):
+            self.assertNotIn(hardcoded, html)
+
+    def test_each_service_line_keeps_its_own_technician(self):
+        other = User.objects.create_user(username="tech-two", password="pass", role=User.Role.TECHNICIAN)
+        self.client.force_login(self.cashier)
+        data = self.data(amount="5000")
+        data.update({"items-TOTAL_FORMS": "2", "items-1-product": "", "items-1-service": str(self.service.pk),
+            "items-1-technician": str(other.pk), "items-1-quantity": "1", "items-1-discount": "0.00"})
+        response = self.client.post(reverse("sales:checkout"), data)
+        sale = Sale.objects.get()
+        self.assertRedirects(response, reverse("sales:receipt", args=[sale.receipt_token]))
+        self.assertEqual({line.technician_id for line in sale.lines.all()}, {self.tech.pk, other.pk})
+
+    def test_technician_display_string_is_rejected(self):
+        self.client.force_login(self.cashier)
+        data = self.data()
+        data["items-0-technician"] = "Stacy (Senior Lash Artist)"
+        self.client.post(reverse("sales:checkout"), data)
+        self.assertFalse(Sale.objects.exists())
+
+    def test_product_line_with_technician_is_rejected(self):
+        self.client.force_login(self.cashier)
+        data = self.data(amount="800")
+        data.update({"items-0-service": "", "items-0-product": str(self.product.pk), "items-0-technician": str(self.tech.pk)})
+        self.client.post(reverse("sales:checkout"), data)
+        self.assertFalse(Sale.objects.exists())
+
     def test_technician_is_denied(self):
         self.client.force_login(self.tech)
         self.assertEqual(self.client.get(reverse("sales:checkout")).status_code, 403)

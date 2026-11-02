@@ -1,0 +1,381 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171016">
+  <title>Lashpro KE — Luxury Salon Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+</head>
+<body>
+  <form id="pos-form" method="post" novalidate>
+    {% csrf_token %}
+    {{ details.idempotency_key }}
+    <div style="display:none;">{{ details.customer }}</div>
+    {{ lines.management_form }}
+    {{ payments.management_form }}
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><i data-lucide="sparkles"></i></div>
+        <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</div></div>
+      </div>
+      <nav class="mode-switch" aria-label="Application mode">
+        <button id="nav-pos-btn" class="mode-btn active" type="button" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
+        {% if admin_suite.is_manager %}
+        <button id="nav-admin-btn" class="mode-btn" type="button" onclick="switchMode('admin')"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></button>
+        {% endif %}
+      </nav>
+      <div class="top-actions">
+        <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
+        <button class="icon-button" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
+        <button id="pwa-install-btn" class="icon-button hidden" type="button" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
+        <div class="profile"><div class="avatar">LY</div><div class="profile-copy"><div class="profile-name">Lyn Wanjiru</div><div class="profile-role">FOUNDER &amp; MASTER ARTIST</div></div></div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section id="pos-mode-view" class="view">
+        <div class="pos-layout">
+          <div class="workspace">
+            <div class="page-heading">
+              <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
+              <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="sparkles"></i> VIP studio</div></div>
+            </div>
+            <div class="mini-metrics">
+              <div class="mini-metric"><div class="metric-icon"><i data-lucide="wallet"></i></div><div><div class="metric-title">Today's revenue</div><div class="metric-value">KES 142,500</div><div class="metric-caption">+8.6% vs yesterday</div></div></div>
+              <div class="mini-metric"><div class="metric-icon"><i data-lucide="calendar-check"></i></div><div><div class="metric-title">Appointments served</div><div class="metric-value">24 <span class="metric-badge success">On-time</span></div><div class="metric-caption">6 walk-ins today</div></div></div>
+              <div class="mini-metric"><div class="metric-icon"><i data-lucide="gem"></i></div><div><div class="metric-title">Studio experience</div><div class="metric-value">Luxe tier</div><div class="metric-caption">Retention score 96%</div></div></div>
+            </div>
+            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><span aria-hidden="true">⌕</span><input type="search" id="catalog-search" placeholder="Search lash sets, adhesive, services…" autocomplete="off"></label></div>
+            <div class="category-tabs">
+              <button type="button" class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
+              <button type="button" class="cat-tab" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
+              <button type="button" class="cat-tab" data-category="academy" onclick="filterCategory('academy',this)"><i data-lucide="graduation-cap"></i> Academy</button>
+              <button type="button" class="cat-tab" data-category="product" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail &amp; care</button>
+              <span class="result-count" id="result-count">12 items</span>
+            </div>
+            <div id="catalog-grid" class="catalog-grid"></div>
+          </div>
+          <aside class="checkout-panel">
+            <div class="checkout-head">
+              <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Ready to close</span></div>
+              <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New transaction</div></div></div>
+            </div>
+            <div class="client-fields">
+              <div class="field"><label for="staff-select">ARTIST / TRAINER</label>
+                {# Real technician primary keys from the backend queryset (active users with the TECHNICIAN role). This is the default for newly added services; each service line keeps its own technician. #}
+                <select id="staff-select" aria-describedby="staff-select-help">
+                  <option value="">Choose technician</option>
+                  {% for technician in technicians %}
+                  <option value="{{ technician.pk }}"{% if technician.pk == default_technician_id %} selected{% endif %}>{{ technician.get_full_name|default:technician.username }}</option>
+                  {% endfor %}
+                </select>
+                <span id="staff-select-help" class="field-hint">Default for services you add next</span>
+              </div>
+              <div class="field"><label for="client-name">CLIENT / STUDENT</label><input id="client-name" type="text" placeholder="Walk-in client" value="Wanjiku Njuguna"></div>
+            </div>
+            <div id="cart-items-container" class="cart-items"></div>
+            <div class="checkout-bottom">
+              <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button type="button" class="btn-small" onclick="applyDiscount()">Apply</button></div>
+              <div class="financials">
+                <div id="gross-row" class="financial-row hidden"><span>Items (VAT incl.)</span><span id="summary-gross">KES 0</span></div>
+                <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
+                <div class="financial-row"><span>Net subtotal</span><span id="summary-subtotal">KES 0</span></div>
+                <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
+                <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
+              </div>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Pay with M-PESA Express</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
+              <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
+              <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="admin-mode-view" class="view hidden">
+        <div class="admin-hero">
+          <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div><h1 class="admin-title">The studio, <em style="color:var(--pink)">beautifully managed.</em></h1><p>Track sales, stock, and learner progress from a single overview.</p></div>
+          <div class="admin-hero-actions"><button type="button" class="button-secondary" onclick="exportReport()"><i data-lucide="file-down"></i> Export report</button><button type="button" class="button-secondary" onclick="printReceipt()"><i data-lucide="printer"></i> Print</button></div>
+        </div>
+        <div class="admin-kpis">
+          <div class="kpi-card"><div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div><div class="kpi-number">KES 142,500</div><div class="kpi-subtext">+8.6% vs yesterday</div></div>
+          <div class="kpi-card"><div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div><div class="kpi-number">KES 118,000</div><div class="kpi-subtext">19 successful tops-ups</div></div>
+          <div class="kpi-card"><div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="kpi-number">65% / 35%</div><div class="kpi-subtext">Healthy cross-sell</div></div>
+          <div class="kpi-card"><div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div><div class="kpi-number">14</div><div class="kpi-subtext">3 confirmation reminders</div></div>
+        </div>
+        <div class="admin-hero-actions" style="flex-wrap:wrap;gap:8px;margin:16px 0">
+          <a class="button-secondary" href="{% url 'reporting:dashboard' %}" style="text-decoration:none"><i data-lucide="file-down"></i> Full reports</a>
+          <a class="button-secondary" href="{% url 'sales:refunds' %}" style="text-decoration:none"><i data-lucide="undo-2"></i> Refunds</a>
+          <a class="button-secondary" href="{% url 'payments:cash-session' %}" style="text-decoration:none"><i data-lucide="wallet"></i> Cash session</a>
+          <a class="button-secondary" href="{% url 'sales:services' %}" style="text-decoration:none"><i data-lucide="list-checks"></i> Service queue</a>
+          <a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a>
+        </div>
+        {% if admin_suite.is_manager and admin_suite.pending_reconciliation_count %}
+        <p class="admin-content-subtitle" style="margin-top:8px">
+          <a href="{% url 'payments:reconciliation' %}">{{ admin_suite.pending_reconciliation_count }} M-Pesa payment{{ admin_suite.pending_reconciliation_count|pluralize }} awaiting review</a>
+        </p>
+        {% endif %}
+        <div class="admin-content">
+          <div class="admin-content-head"><div><div class="admin-content-title">Studio management</div><div class="admin-content-subtitle">Operational detail, neatly brought together.</div></div></div>
+          <div class="admin-tabs">
+            <button type="button" id="tab-inventory-btn" class="admin-tab active" onclick="switchAdminTab('inventory')"><i data-lucide="boxes"></i> Inventory &amp; stock</button>
+            <button type="button" id="tab-academy-btn" class="admin-tab" onclick="switchAdminTab('academy')"><i data-lucide="graduation-cap"></i> Academy hub</button>
+            <button type="button" id="tab-staff-btn" class="admin-tab" onclick="switchAdminTab('staff')"><i data-lucide="users"></i> Artist commissions</button>
+            <button type="button" id="tab-reconciliation-btn" class="admin-tab" onclick="switchAdminTab('reconciliation')"><i data-lucide="file-check-2"></i> M-PESA audit</button>
+          </div>
+          <div id="admin-sec-inventory" class="admin-section">
+            <div class="subhead"><div><h3>Retail &amp; professional supplies</h3><p>Keep your most-loved essentials in stock.</p></div><button type="button" class="button-primary" onclick="openAddStockModal()"><i data-lucide="plus"></i> Add stock</button></div>
+            <div class="table-shell"><table><thead><tr><th>Product</th><th>Category</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody id="inventory-table-body"></tbody></table></div>
+          </div>
+          <div id="admin-sec-academy" class="admin-section hidden">
+            <div class="subhead"><div><h3>Student certifications &amp; cohorts</h3><p>Build the next generation of exceptional lash artists.</p></div><button type="button" class="button-primary" onclick="enrollStudentPrompt()"><i data-lucide="user-plus"></i> Enrol student</button></div>
+            <div class="academy-grid">
+              <article class="course-card"><span class="course-level gold">Beginner masterclass</span><h4>Classic Lash Fundamentals</h4><p>Three days of careful technique, client safety and foundational retention.</p></article>
+              <article class="course-card"><span class="course-level">Advanced masterclass</span><h4>Mega Volume &amp; Fan Artistry</h4><p>Advanced fan creation, texture, direction and professional finishing.</p></article>
+              <article class="course-card"><span class="course-level blue">Specialist course</span><h4>Lash Lift &amp; Keratin Tint</h4><p>A focused one-day intensive in natural lash enhancement and finish.</p></article>
+            </div>
+          </div>
+          <div id="admin-sec-staff" class="admin-section hidden">
+            <div class="subhead"><div><h3>Artist service commissions</h3><p>Current commission rate: 30% on eligible services.</p></div><span class="soft-pill">Today's closeout</span></div>
+            <div class="commission-summary"><div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div><div class="summary-box"><span>Commission payable</span><strong>KES 22,050</strong></div><div class="summary-box"><span>Pending payouts</span><strong>3 artists</strong></div></div>
+            <div class="table-shell"><table><thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead><tbody>
+              <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
+              <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
+              <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+            </tbody></table></div>
+          </div>
+          <div id="admin-sec-reconciliation" class="admin-section hidden">
+            <div class="subhead"><div><h3>M-PESA Express reconciliation</h3><p>Payment records generated in this demo appear at the top of this log.</p></div><span class="status-tag ok">Demo ledger</span></div>
+            <div class="table-shell"><table><thead><tr><th>Timestamp</th><th>Receipt reference</th><th>Client phone</th><th>Amount (KES)</th><th>Status</th></tr></thead><tbody id="mpesa-log-table"></tbody></table></div>
+          </div>
+        </div>
+        <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
+      </section>
+    </main>
+
+    <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="mpesa-title">M-PESA Express</h3><button type="button" class="icon-button" onclick="closeModal('mpesa-modal')" aria-label="Close">×</button></div><div class="modal-body"><label class="field-block"><span>Client phone</span><input id="mpesa-phone" type="tel" inputmode="numeric" placeholder="0712 345678" value="0712345678"></label></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('mpesa-modal')">Cancel</button><button type="button" class="button-primary" onclick="processSTKPush()">Send payment prompt</button></div></div></div>
+
+    <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="receipt-title">Payment receipt</h3><button type="button" class="icon-button" onclick="closeModal('receipt-modal')" aria-label="Close">×</button></div><div class="modal-body receipt-body"><div class="receipt-meta"><span id="rcpt-ref">REF-0001</span><span id="rcpt-client">Wanjiku Njuguna</span></div><div id="rcpt-items" class="receipt-items"></div><div class="receipt-total"><span>Total</span><strong id="rcpt-total">KES 0</strong></div></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="printReceipt()">Print</button><button type="button" class="button-primary" onclick="closeModal('receipt-modal')">Done</button></div></div></div>
+
+    <div id="stock-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stock-title" onclick="backdropClose(event,'stock-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="stock-title">Add stock</h3><button type="button" class="icon-button" onclick="closeModal('stock-modal')" aria-label="Close">×</button></div><div class="modal-body"><label class="field-block"><span>Product</span><input id="stock-name" type="text" placeholder="e.g. Lash Glue"></label><label class="field-block"><span>Quantity</span><input id="stock-qty" type="number" min="1" value="10"></label><label class="field-block"><span>Unit price (KES)</span><input id="stock-price" type="number" min="0" step="0.01" value="2000"></label></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('stock-modal')">Cancel</button><button type="button" class="button-primary" onclick="saveNewStock()">Save stock</button></div></div></div>
+  </form>
+
+  <script>
+    const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
+    const canDiscount = {{ can_discount|yesno:"true,false" }};
+    const catalogData = {{ catalog_data_json|safe }};
+    // Technician choices come from the rendered #staff-select options, whose values are real user primary
+    // keys. Each service line in the cart keeps its own technicianId; products never carry one.
+    const technicianOptions = Array.from(document.querySelectorAll('#staff-select option')).filter(o => o.value).map(o => ({ id: o.value, name: o.textContent.trim() }));
+    let lineSeq=0;
+    let cart=[],appliedDiscount=0, appliedCode='', activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
+    let mpesaLogs=[
+      {time:'10:42 AM',ref:'QX892KL0P1',phone:'+254 712***678',amount:6000,status:'SUCCESS'},
+      {time:'09:15 AM',ref:'QX891MM9X4',phone:'+254 722***102',amount:25000,status:'SUCCESS'},
+      {time:'08:50 AM',ref:'QX890PP3L9',phone:'+254 701***992',amount:4500,status:'SUCCESS'}
+    ];
+    const currency=n=>{const v=Number(n||0),hasCents=Math.round(v*100)%100!==0;return 'KES '+v.toLocaleString('en-KE',{minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2});};
+    // Catalog prices are VAT-inclusive (gross). All money maths is done in integer cents so the
+    // amount shown, the amount posted as payment and the backend SaleLine totals always agree.
+    const VAT_RATE_PERCENT=16;
+    const toCents=n=>Math.round((Number(n)||0)*100);
+    const centsToAmount=c=>(c/100).toFixed(2);
+    function validCartItems(){return cart.filter(item=>item&&Number(item.qty||0)>0);}
+    function lineSubtotalCents(item){return toCents(item.price)*Number(item.qty);}
+    function computeTotals(){
+      const grossBeforeDiscount=validCartItems().reduce((sum,item)=>sum+lineSubtotalCents(item),0);
+      const discount=Math.min(grossBeforeDiscount,Math.round(grossBeforeDiscount*appliedDiscount));
+      const amountDue=grossBeforeDiscount-discount;
+      const vat=Math.round(amountDue*VAT_RATE_PERCENT/(100+VAT_RATE_PERCENT));
+      return {grossBeforeDiscount,discount,vat,net:amountDue-vat,amountDue};
+    }
+    // Split an order-level discount across lines (whole cents, summing exactly to the discount)
+    // because the backend stores and validates discounts per sale line.
+    function allocateDiscountCents(lineCents,totalDiscount){
+      const subtotal=lineCents.reduce((a,b)=>a+b,0);
+      if(!subtotal||totalDiscount<=0)return lineCents.map(()=>0);
+      const exact=lineCents.map(c=>c*totalDiscount/subtotal);
+      const allocated=exact.map(Math.floor);
+      let remainder=totalDiscount-allocated.reduce((a,b)=>a+b,0);
+      exact.map((value,i)=>({i,frac:value-allocated[i]})).sort((a,b)=>b.frac-a.frac).forEach(({i})=>{if(remainder>0&&allocated[i]<lineCents[i]){allocated[i]++;remainder--;}});
+      return allocated;
+    }
+    const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const typeLabel=type=>({service:'Service',academy:'Academy',product:'Retail'}[type]||type);
+    function refreshIcons(){if(window.lucide&&typeof lucide.createIcons==='function')lucide.createIcons();}
+    function setToday(){const d=new Date();document.getElementById('today-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+    window.addEventListener('DOMContentLoaded',()=>{setToday();renderCatalog();renderCart();renderInventoryTable();renderMpesaAuditTable();setupPWA();updateOnlineStatus();refreshIcons();});
+
+    function addSyncField(form, name, value) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value ?? '';
+      input.dataset.cartSync = '1';
+      form.appendChild(input);
+    }
+
+    function normalizeItemId(item) {
+      return String(item?.id ?? '').replace(/^(product|service)-/, '');
+    }
+
+    function syncCartToFormset(method) {
+      const form = document.getElementById('pos-form');
+      if (!form) return;
+      form.querySelectorAll('[data-cart-sync]').forEach((el) => el.remove());
+
+      const validItems = validCartItems();
+      document.getElementById('id_items-TOTAL_FORMS').value = String(validItems.length);
+
+      // The same figures that are displayed are what gets posted: per-line discounts for the
+      // backend's SaleLine.line_total(), and amountDue (VAT-inclusive, no VAT added) as payment.
+      const totals = computeTotals();
+      const lineDiscounts = allocateDiscountCents(validItems.map(lineSubtotalCents), totals.discount);
+
+      validItems.forEach((item, index) => {
+        const normalizedId = normalizeItemId(item);
+        const isService = item.type === 'service';
+        const productId = isService ? '' : normalizedId;
+        const serviceId = isService ? normalizedId : '';
+        const technicianId = isService ? (item.technicianId || '') : '';
+
+        addSyncField(form, `items-${index}-product`, productId);
+        addSyncField(form, `items-${index}-service`, serviceId);
+        addSyncField(form, `items-${index}-technician`, technicianId);
+        addSyncField(form, `items-${index}-quantity`, String(item.qty || 1));
+        addSyncField(form, `items-${index}-discount`, centsToAmount(lineDiscounts[index]));
+        addSyncField(form, `items-${index}-discount_reason`, lineDiscounts[index] > 0 ? `Promo code ${appliedCode}` : '');
+        addSyncField(form, `items-${index}-DELETE`, '');
+      });
+
+      const paymentMethod = String(method || 'CASH').toUpperCase();
+      const reference = paymentMethod === 'MPESA' ? (document.getElementById('mpesa-phone')?.value || '').replace(/\D/g, '') : '';
+      const paymentRows = [{ method: paymentMethod, amount: centsToAmount(totals.amountDue), reference }];
+      document.getElementById('id_payments-TOTAL_FORMS').value = String(paymentRows.length);
+      paymentRows.forEach((row, index) => {
+        addSyncField(form, `payments-${index}-method`, row.method);
+        addSyncField(form, `payments-${index}-amount`, row.amount);
+        addSyncField(form, `payments-${index}-reference`, row.reference);
+        addSyncField(form, `payments-${index}-DELETE`, '');
+      });
+    }
+
+    function renderCatalog(){
+      const grid=document.getElementById('catalog-grid');if(!grid)return;
+      const search=document.getElementById('catalog-search');
+      const query=(search?search.value:'').trim().toLowerCase();
+      const filtered=catalogData.filter(item=>(activeCategory==='all'||item.type===activeCategory)&&(item.name.toLowerCase().includes(query)||item.desc.toLowerCase().includes(query)));
+      document.getElementById('result-count').textContent=`${filtered.length} ${filtered.length===1?'item':'items'}`;
+      if(!filtered.length){grid.innerHTML='<div class="no-results">No items match your search. Try another name or category.</div>';return;}
+      grid.innerHTML=filtered.map(item=>`<article class="catalog-card" role="button" tabindex="0" aria-label="Add ${escapeHtml(item.name)} to order" onclick="addToCart('${item.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();addToCart('${item.id}');}"><div class="card-image"><span>${escapeHtml(item.icon || '✦')}</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">${escapeHtml(typeLabel(item.type))}</span><span class="card-price">KES ${Number(item.price||0).toLocaleString('en-KE')}</span></div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.desc)}</p></div></article>`).join('');
+      refreshIcons();
+    }
+    function filterCategory(category,button){activeCategory=category;document.querySelectorAll('.cat-tab').forEach(el=>el.classList.toggle('active',el.dataset.category===category));renderCatalog();}
+    function filterCatalog(){renderCatalog();}
+    function defaultTechnicianId(){const el=document.getElementById('staff-select');return el?el.value:'';}
+    function technicianOptionsHtml(selected){return '<option value="">Choose technician</option>'+technicianOptions.map(t=>`<option value="${escapeHtml(t.id)}"${String(t.id)===String(selected)?' selected':''}>${escapeHtml(t.name)}</option>`).join('');}
+    // Services are merged only when the technician matches, so one checkout can hold the same service
+    // for different artists. Lines are addressed by lineId because catalog ids can repeat.
+    function addToCart(id){
+      const item=catalogData.find(x=>x.id===id);if(!item)return;
+      const isService=item.type==='service';
+      const technicianId=isService?defaultTechnicianId():'';
+      const existing=cart.find(x=>x.id===id&&(!isService||x.technicianId===technicianId));
+      if(existing)existing.qty++;else cart.push({...item,lineId:++lineSeq,technicianId,qty:1});
+      renderCart();
+    }
+    function removeFromCart(lineId){cart=cart.filter(x=>x.lineId!==lineId);renderCart();}
+    function updateQty(lineId,delta){const item=cart.find(x=>x.lineId===lineId);if(!item)return;item.qty+=delta;if(item.qty<=0)cart=cart.filter(x=>x.lineId!==lineId);renderCart();}
+    function setLineTechnician(lineId,select){const item=cart.find(x=>x.lineId===lineId);if(!item||item.type!=='service')return;item.technicianId=select.value;select.classList.toggle('needs-tech',!select.value);}
+    function clearCart(){cart=[];appliedDiscount=0;appliedCode='';document.getElementById('discount-code').value='';renderCart();}
+    function renderCart(){
+      const container=document.getElementById('cart-items-container');
+      if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
+      container.innerHTML=cart.map(item=>{
+        const techPicker=item.type==='service'?`<div class="cart-tech field"><label>ARTIST</label><select class="cart-tech-select${item.technicianId?'':' needs-tech'}" aria-label="Technician for ${escapeHtml(item.name)}" onchange="setLineTechnician(${item.lineId},this)">${technicianOptionsHtml(item.technicianId)}</select></div>`:'';
+        return `<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">${escapeHtml(item.name)}</div><div class="cart-item-price">${currency(item.price)}</div></div><button type="button" class="row-action" onclick="removeFromCart(${item.lineId})">Remove</button></div>${techPicker}<div class="qty-row"><button type="button" class="qty-btn" onclick="updateQty(${item.lineId},-1)" aria-label="Decrease quantity">−</button><span>${item.qty}</span><button type="button" class="qty-btn" onclick="updateQty(${item.lineId},1)" aria-label="Increase quantity">+</button><strong>${currency(item.price*item.qty)}</strong></div></div>`;
+      }).join('');
+      updateFinancials();refreshIcons();
+    }
+    function updateFinancials(){
+      const t=computeTotals(),kes=c=>currency(c/100),set=(id,text)=>{document.getElementById(id).textContent=text;};
+      set('summary-gross',kes(t.grossBeforeDiscount));
+      set('summary-discount','−'+kes(t.discount));
+      set('summary-subtotal',kes(t.net));
+      set('summary-tax',kes(t.vat));
+      set('summary-total',kes(t.amountDue));
+      document.getElementById('gross-row').classList.toggle('hidden',t.discount<=0);
+      document.getElementById('discount-row').classList.toggle('hidden',t.discount<=0);
+    }
+    function applyDiscount(){
+      const code=document.getElementById('discount-code').value.trim().toUpperCase();
+      let rate=0;
+      if(code==='STUDENT10'||code==='LASHPRO10')rate=.1;else if(code==='VIP20')rate=.2;
+      if(!rate){appliedDiscount=0;appliedCode='';alert('Discount code not recognised.');}
+      else if(!canDiscount){appliedDiscount=0;appliedCode='';alert('Discounts need manager approval. Ask an owner or manager to apply this code.');}
+      else{appliedDiscount=rate;appliedCode=code;}
+      renderCart();
+    }
+
+    function switchMode(mode){
+      if(mode==='admin' && !(adminSuite && adminSuite.is_manager)){mode='pos';}
+      currentMode=mode;
+      document.getElementById('pos-mode-view').classList.toggle('hidden',mode!=='pos');
+      const adminView=document.getElementById('admin-mode-view');
+      if(adminView) adminView.classList.toggle('hidden',mode!=='admin');
+      document.getElementById('nav-pos-btn').classList.toggle('active',mode==='pos');
+      const adminBtn=document.getElementById('nav-admin-btn');
+      if(adminBtn) adminBtn.classList.toggle('active',mode==='admin');
+    }
+    function toggleMobileMode(){
+      if(!(adminSuite && adminSuite.is_manager)){switchMode('pos');return;}
+      switchMode(currentMode==='pos'?'admin':'pos');
+    }
+    function switchAdminTab(tabName){['inventory','academy','staff','reconciliation'].forEach(name=>{document.getElementById(`admin-sec-${name}`).classList.toggle('hidden',name!==tabName);document.getElementById(`tab-${name}-btn`).classList.toggle('active',name===tabName);});}
+
+    function getCartTotal(){return computeTotals().amountDue/100;}
+    function triggerCheckout(method){
+      if(!cart.length){alert('Your order is empty. Add at least one item before checkout.');return;}
+      currentPaymentMethod=method;
+      if(validCartItems().some(i=>i.type==='service'&&!i.technicianId)){
+        alert('Assign a technician to every service before checkout.');
+        const missing=document.querySelector('.cart-tech-select.needs-tech');if(missing)missing.focus();
+        return;
+      }
+      if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
+      syncCartToFormset(method);
+      document.getElementById('pos-form').submit();
+    }
+    function processSTKPush(){const phone=document.getElementById('mpesa-phone').value.replace(/\D/g,'');if(phone.length!==9){alert('Enter a valid 9-digit Safaricom mobile number.');return;}const ref=`LASH-${Date.now().toString().slice(-6)}`;alert(`M-PESA prompt sent to ${phone}. Reference: ${ref}`);closeModal('mpesa-modal');completeCheckoutSuccess(ref,'Wanjiku Njuguna','Stacy');}
+    function completeCheckoutSuccess(refCode,client,artist){const total=getCartTotal();document.getElementById('rcpt-ref').textContent=refCode;document.getElementById('rcpt-client').textContent=client;document.getElementById('rcpt-total').textContent=currency(total);const lines=cart.map(item=>`<div class="receipt-line"><span>${escapeHtml(item.name)} x${item.qty}</span><span>${currency(item.price*item.qty)}</span></div>`).join('');document.getElementById('rcpt-items').innerHTML=lines;openModal('receipt-modal');}
+    function openModal(id){document.getElementById(id).classList.remove('hidden');document.body.style.overflow='hidden';}
+    function closeModal(id){document.getElementById(id).classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
+    function backdropClose(event,id){if(event.target.id===id)closeModal(id);}
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(el=>closeModal(el.id));});
+
+    function renderInventoryTable(){const tbody=document.getElementById('inventory-table-body');const products=catalogData.filter(item=>item.type==='product');tbody.innerHTML=products.map(p=>`<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>${escapeHtml(typeLabel(p.type))}</td><td>${p.stock ?? 0}</td><td>${currency(p.price)}</td><td><span class="status-tag ok">In stock</span></td><td><button type="button" class="button-secondary" onclick="quickAddStock('${p.id}')">Add 10</button></td></tr>`).join('');}
+    function renderMpesaAuditTable(){const tbody=document.getElementById('mpesa-log-table');tbody.innerHTML=mpesaLogs.map(log=>`<tr><td>${escapeHtml(log.time)}</td><td><span class="audit-ref">${escapeHtml(log.ref)}</span></td><td>${escapeHtml(log.phone)}</td><td>${currency(log.amount)}</td><td><span class="status-tag ok">${escapeHtml(log.status)}</span></td></tr>`).join('');}
+    function openAddStockModal(){document.getElementById('stock-name').value='';document.getElementById('stock-qty').value='10';document.getElementById('stock-price').value='2000';openModal('stock-modal');}
+    function saveNewStock(){const name=document.getElementById('stock-name').value.trim(),qty=Number.parseInt(document.getElementById('stock-qty').value,10),price=Number.parseFloat(document.getElementById('stock-price').value);if(!name||!Number.isFinite(qty)||qty<=0||!Number.isFinite(price)||price<0){alert('Please enter a valid product name, quantity and unit price.');return;}const item={id:`product-${Date.now()}`,type:'product',name,desc:'Added from stock modal',price,stock:qty};catalogData.push(item);renderInventoryTable();renderCatalog();closeModal('stock-modal');alert(`${name} added to stock.`);}
+    function quickAddStock(id){const item=catalogData.find(x=>x.id===id);if(item){item.stock=(Number(item.stock||0))+10;renderInventoryTable();renderCatalog();alert(`10 units added to ${item.name}.`);}}
+    function enrollStudentPrompt(){const name=prompt('Enter student full name:');if(name&&name.trim())alert(`Student “${name.trim()}” marked for enrolment in the next cohort. This preview does not persist data.`);}
+    function exportReport(){const rows=[['Product','Category','Stock','Unit price (KES)'],...catalogData.filter(x=>x.type==='product').map(x=>[x.name,'Retail',x.stock,x.price])];const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='lashpro-stock-report.csv';a.click();URL.revokeObjectURL(url);}
+    function printReceipt(){window.print();}
+    function sendSMSReceipt(){alert('SMS delivery is a UI simulation. Connect your SMS provider before using this in production.');}
+
+    function toggleTheme(){const root=document.documentElement,theme=root.dataset.theme==='dark'?'light':'dark';root.dataset.theme=theme;document.querySelector('meta[name="theme-color"]').setAttribute('content',theme==='dark'?'#171016':'#f7f3f5');try{localStorage.setItem('lashpro-theme',theme);}catch(e){}} 
+    (function restoreTheme(){try{const saved=localStorage.getItem('lashpro-theme');if(saved==='light'||saved==='dark'){document.documentElement.dataset.theme=saved;}}catch(e){}})();
+    function setupPWA(){window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('pwa-install-btn').classList.remove('hidden');});window.addEventListener('appinstalled',()=>{document.getElementById('pwa-install-btn').classList.add('hidden');});}
+    async function installPWA(){if(!deferredPrompt){alert('To install this preview, use your browser menu and choose “Install app” or “Add to Home Screen” when available.');return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('pwa-install-btn').classList.add('hidden');}
+    function updateOnlineStatus(){const badge=document.getElementById('connection-status');if(navigator.onLine){badge.innerHTML='<span class="status-dot"></span><span>Online</span>';badge.style.borderColor='rgba(122, 220, 183, 0.28)';badge.style.color='var(--green)';}else{badge.innerHTML='<span class="status-dot"></span><span>Offline</span>';badge.style.borderColor='rgba(255,160,170,0.28)';badge.style.color='var(--danger)';}}
+    window.addEventListener('online',updateOnlineStatus);window.addEventListener('offline',updateOnlineStatus);
+    window.addEventListener('DOMContentLoaded',()=>{const theme=document.documentElement.dataset.theme;document.getElementById('theme-toggle').innerHTML=`<i data-lucide="${theme==='dark'?'sun':'moon'}"></i>`;refreshIcons();});
+  </script>
+</body>
+</html>
