@@ -214,10 +214,7 @@ def checkout(request):
     technicians = list(User.objects.filter(
         role=User.Role.TECHNICIAN, is_active=True
     ).order_by("first_name", "username"))
-    default_technician_id = next((technician.pk for technician in technicians
-        if technician.first_name.strip().casefold() == "lyn" or technician.username.casefold() == "lyn"), None)
-    if request.user.role == User.Role.TECHNICIAN:
-        default_technician_id = request.user.pk
+    default_technician_id = request.user.pk if getattr(request.user, "role", None) == User.Role.TECHNICIAN else None
     technician_payload = [
         {"id": technician.pk, "name": technician.get_full_name() or technician.username}
         for technician in technicians
