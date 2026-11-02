@@ -6,11 +6,16 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 from django.views.generic import RedirectView
 
-from core.views import service_worker
+from core.views import service_worker, admin_suite
 from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
 urlpatterns = [
     path("sw.js", service_worker, name="service_worker"),
+
+    # LashPro Admin Suite
+    path("admin-suite/", admin_suite, name="admin_suite"),
+
+    # Django Administration
     path("admin/", admin.site.urls),
     path("accounts/login/", auth_views.LoginView.as_view(
         template_name="registration/login.html",

@@ -5,6 +5,8 @@ from django.http import HttpResponse
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.http import require_GET
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render
 
 
 @require_GET
@@ -95,3 +97,86 @@ self.addEventListener("fetch", (event) => {
     response["Service-Worker-Allowed"] = "/"
     response["X-Content-Type-Options"] = "nosniff"
     return response
+
+@staff_member_required
+def admin_suite(request):
+
+    groups = [
+        {
+            "name": "People & Access",
+            "items": [
+                ("User Accounts", "/admin/accounts/user/"),
+                ("Roles & Permissions", "/admin/auth/"),
+                ("Audit Trail", "/admin/audit/auditevent/"),
+                ("Access Attempts", "/admin/axes/accessattempt/"),
+                ("Failed Login Records", "/admin/axes/accessfailurelog/"),
+                ("Login Activity", "/admin/axes/accesslog/"),
+            ],
+        },
+        {
+            "name": "Catalog",
+            "items": [
+                ("Products", "/admin/catalog/product/"),
+                ("Services", "/admin/catalog/service/"),
+            ],
+        },
+        {
+            "name": "Customers",
+            "items": [
+                ("Customer Directory", "/admin/customers/customer/"),
+            ],
+        },
+        {
+            "name": "Sales",
+            "items": [
+                ("Sales Records", "/admin/sales/sale/"),
+                ("Sale Line Items", "/admin/sales/saleline/"),
+                ("Refund Records", "/admin/sales/salerefund/"),
+            ],
+        },
+        {
+            "name": "Inventory",
+            "items": [
+                ("Inventory Movements", "/admin/inventory/inventorymovement/"),
+                ("Service Consumables", "/admin/inventory/serviceconsumable/"),
+                ("Stock Adjustment Requests", "/admin/inventory/stockadjustmentrequest/"),
+            ],
+        },
+        {
+            "name": "Payments & Cash",
+            "items": [
+                ("Cash Sessions", "/admin/payments/cashsession/"),
+                ("Cash Session Movements", "/admin/payments/cashsessionmovement/"),
+                ("Payment Transactions", "/admin/payments/paymenttransaction/"),
+                ("Sale Payments", "/admin/payments/salepayment/"),
+                ("Payment Reconciliation", "/admin/payments/paymentreconciliation/"),
+                ("Payout Reconciliation", "/admin/payments/payoutreconciliation/"),
+                ("Refund Payouts", "/admin/payments/refundpayout/"),
+            ],
+        },
+        {
+            "name": "Artist Commissions",
+            "items": [
+                ("Commission Ledger", "/admin/commissions/commissionledgerentry/"),
+                ("Payout Requests", "/admin/commissions/commissionpayoutrequest/"),
+                ("Payout Records", "/admin/commissions/commissionpayoutrecord/"),
+            ],
+        },
+    ]
+
+    groups = [
+        {
+            "name": group["name"],
+            "items": [
+                {"label": label, "url": url}
+                for label, url in group["items"]
+            ],
+        }
+        for group in groups
+    ]
+
+    return render(
+        request,
+        "admin_suite/index.html",
+        {"groups": groups}
+    )
