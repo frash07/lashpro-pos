@@ -1,0 +1,141 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Customers · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-ledger.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/customer-directory.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar commission-topbar customer-topbar">
+    <a class="brand commission-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:customers_customer_changelist' %}" aria-current="page">
+        <i data-lucide="users"></i><span>Customers</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}">
+        <i data-lucide="wallet"></i><span>Commissions</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="customer-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">STAFF WORKSPACE</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main commission-main customer-main">
+    <section class="view">
+      <div class="page-heading commission-heading customer-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Client relationships</div>
+          <h1>Customer directory <em>built around every visit.</em></h1>
+          <p>Keep client contact details, useful notes and purchase history in one place.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="contact-round"></i> Client register</div>
+        </div>
+      </div>
+
+      <div class="commission-kpis customer-kpis" aria-label="Customer directory summary">
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Customers in view</span><span class="commission-kpi-icon"><i data-lucide="users"></i></span></div>
+          <strong>{{ customer_summary.customer_count|default:0 }}</strong>
+          <small>Matching customer records</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Contact numbers</span><span class="commission-kpi-icon green"><i data-lucide="phone"></i></span></div>
+          <strong>{{ customer_summary.with_phone|default:0 }}</strong>
+          <small>Customers with a phone number</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Purchase history</span><span class="commission-kpi-icon"><i data-lucide="shopping-bag"></i></span></div>
+          <strong>{{ customer_summary.with_sales|default:0 }}</strong>
+          <small>Customers linked to sales</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Client notes</span><span class="commission-kpi-icon amber"><i data-lucide="notebook-pen"></i></span></div>
+          <strong>{{ customer_summary.with_notes|default:0 }}</strong>
+          <small>Records with saved notes</small>
+        </article>
+      </div>
+
+      <div class="commission-ledger-panel customer-directory-panel">
+        <div class="commission-panel-heading">
+          <div>
+            <div class="section-title">Client records</div>
+            <div class="section-caption">Search names, phone numbers or notes. Open a customer to update their details.</div>
+          </div>
+          <span class="customer-directory-tag"><i data-lucide="shield-check"></i> Customer workspace</span>
+        </div>
+        {{ block.super }}
+      </div>
+      <footer class="commission-footer">
+        <span class="commission-footer-brand">LASHPRO KE</span>
+        <span>Customer details support service follow-up and accurate sales records.</span>
+      </footer>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("customer-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
