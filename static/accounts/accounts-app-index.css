@@ -1,0 +1,33 @@
+/* Checkout-aligned layout for the Django Accounts app landing page. */
+html,body{min-height:100%;background:var(--bg)!important;color:var(--text)!important;font-family:'DM Sans',system-ui,sans-serif!important}
+body{margin:0!important}
+#container{min-width:0!important;width:100%!important;background:var(--bg)!important}
+#header,#nav-sidebar,.breadcrumbs,#toggle-nav-sidebar{display:none!important}
+#content{margin:0!important;padding:0!important;max-width:none!important}
+#content-main{float:none!important;width:100%!important;margin:0!important}
+#content-related{display:none!important}
+.accounts-app-topbar{z-index:30}
+.accounts-app-brand{color:var(--text)!important;text-decoration:none!important}
+.accounts-app-main{max-width:1600px}
+.accounts-app-heading{align-items:flex-end}
+.accounts-app-heading h1{font-family:'Playfair Display',Georgia,serif!important;font-size:31px!important;font-weight:500!important;line-height:1.1!important;letter-spacing:-.025em!important;margin:8px 0 7px!important;color:var(--text)!important}
+.accounts-app-heading h1 em{color:var(--pink);font-weight:400}
+.accounts-app-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 17px}
+.accounts-app-summary-card{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
+.accounts-app-summary-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
+.accounts-app-summary-icon svg{width:17px;height:17px}
+.accounts-app-summary-card strong{display:block;font-size:17px;line-height:1.1;color:var(--text)}
+.accounts-app-summary-card small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+.accounts-app-summary-note{color:var(--muted);font-size:10px}
+.accounts-app-content{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}
+.accounts-app-content #content-main>.module{overflow:hidden;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface)!important;box-shadow:none!important}
+.accounts-app-content #content-main>.module h2{padding:13px 16px!important;background:var(--surface-2)!important;border-bottom:1px solid var(--line)!important;color:var(--text)!important;font-size:12px!important}
+.accounts-app-content #content-main>.module table{width:100%;border-collapse:collapse}
+.accounts-app-content #content-main>.module th,.accounts-app-content #content-main>.module td{padding:14px 16px!important;border-bottom:1px solid var(--line)!important;background:transparent!important;color:var(--muted)!important;font-size:11px!important}
+.accounts-app-content #content-main>.module tr:last-child th,.accounts-app-content #content-main>.module tr:last-child td{border-bottom:0!important}
+.accounts-app-content #content-main>.module td a{color:var(--pink)!important;font-weight:700!important;text-decoration:none!important}
+.accounts-app-content #content-main>.module td a:hover{text-decoration:underline!important}
+.accounts-app-content #content-main>.module tr:hover th,.accounts-app-content #content-main>.module tr:hover td{background:var(--pink-wash)!important}
+.accounts-app-content #content-main>.module .addlink{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:920px){.accounts-app-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.accounts-app-topbar .brand{min-width:0;flex:1}.accounts-app-topbar .mode-switch{order:3;width:100%;justify-content:center;flex-wrap:wrap}.accounts-app-topbar .mode-btn{flex:1;justify-content:center}.accounts-app-topbar .top-actions{min-width:0}.accounts-app-topbar .profile-copy{display:none}.accounts-app-content{padding:14px}}
+@media(max-width:600px){.accounts-app-topbar{padding:12px}.accounts-app-topbar .brand-mark{height:39px;width:39px}.accounts-app-topbar .brand-name{font-size:18px}.accounts-app-topbar .brand-sub{font-size:9px}.accounts-app-topbar .status-pill{display:none}.accounts-app-main{padding:15px 12px 24px}.accounts-app-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.accounts-app-heading h1{font-size:25px!important}.accounts-app-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.accounts-app-summary{align-items:flex-start;flex-direction:column}.accounts-app-summary-note{line-height:1.5}.accounts-app-content{padding:10px;border-radius:14px}.accounts-app-content #content-main>.module th,.accounts-app-content #content-main>.module td{padding:12px 10px!important}}
