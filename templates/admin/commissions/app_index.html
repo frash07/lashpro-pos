@@ -93,30 +93,26 @@
           </span>
           <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
         </a>
-        <a class="commissions-hub-card" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}">
-          <span class="commissions-hub-icon"><i data-lucide="book-open-check"></i></span>
-          <span class="commissions-hub-copy">
-            <strong>Commission ledger</strong>
-            <small>Inspect immutable earning and reversal entries for a complete audit trail.</small>
-          </span>
-          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
-        </a>
-        <a class="commissions-hub-card" href="{% url 'admin:commissions_commissionpayoutrequest_changelist' %}">
-          <span class="commissions-hub-icon"><i data-lucide="file-clock"></i></span>
-          <span class="commissions-hub-copy">
-            <strong>Payout requests</strong>
-            <small>Review requested payouts, their status and approval history.</small>
-          </span>
-          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
-        </a>
-        <a class="commissions-hub-card" href="{% url 'admin:commissions_commissionpayoutrecord_changelist' %}">
-          <span class="commissions-hub-icon"><i data-lucide="receipt-text"></i></span>
-          <span class="commissions-hub-copy">
-            <strong>Payout records</strong>
-            <small>Review issued payments, references and verification status.</small>
-          </span>
-          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
-        </a>
+        {% for model in app.models %}
+          {% if model.admin_url %}
+            <a class="commissions-hub-card" href="{{ model.admin_url }}">
+              <span class="commissions-hub-icon">
+                {% if model.object_name == "CommissionLedgerEntry" %}<i data-lucide="book-open-check"></i>
+                {% elif model.object_name == "CommissionPayoutRequest" %}<i data-lucide="file-clock"></i>
+                {% else %}<i data-lucide="receipt-text"></i>{% endif %}
+              </span>
+              <span class="commissions-hub-copy">
+                <strong>{{ model.name }}</strong>
+                <small>
+                  {% if model.object_name == "CommissionLedgerEntry" %}Inspect immutable earning and reversal entries for a complete audit trail.
+                  {% elif model.object_name == "CommissionPayoutRequest" %}Review requested payouts, their status and approval history.
+                  {% else %}Review issued payments, references and verification status.{% endif %}
+                </small>
+              </span>
+              <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
+            </a>
+          {% endif %}
+        {% endfor %}
       </div>
 
       <div class="commissions-hub-section">
