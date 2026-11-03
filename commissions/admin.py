@@ -1,13 +1,31 @@
 from django.contrib import admin
+from django.db.models import Count, Q, Sum
+
 from .models import CommissionLedgerEntry, CommissionPayoutRecord, CommissionPayoutRequest
 
 
 @admin.register(CommissionLedgerEntry)
 class CommissionLedgerEntryAdmin(admin.ModelAdmin):
+    change_list_template = "admin/commissions/commissionledgerentry/change_list.html"
     list_display = ("created_at", "entry_type", "technician", "sale_line", "base_amount", "rate_snapshot", "amount")
     list_filter = ("entry_type", "created_at")
     search_fields = ("technician__username", "sale_line__description")
     readonly_fields = tuple(field.name for field in CommissionLedgerEntry._meta.fields)
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        if hasattr(response, "context_data") and response.context_data:
+            changelist = response.context_data.get("cl")
+            if changelist is not None:
+                totals = changelist.queryset.aggregate(
+                    entry_count=Count("pk"),
+                    earned=Sum("amount", filter=Q(entry_type=CommissionLedgerEntry.Type.EARNED)),
+                    reversals=Sum("amount", filter=Q(entry_type=CommissionLedgerEntry.Type.REVERSAL)),
+                    net=Sum("amount"),
+                )
+                response.context_data["commission_summary"] = totals
+        return response
+
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionledgerentry")
     def has_delete_permission(self, request, obj=None): return False
