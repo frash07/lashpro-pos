@@ -2,9 +2,11 @@ import os
 from unittest.mock import patch
 
 from django.contrib import admin
+from django.contrib.auth.models import Permission
 from django.core.management import call_command, CommandError
 from django.db import connection
 from django.test import TestCase
+from django.urls import reverse
 
 from accounts.management.commands.seed_synthetic_data import SYNTHETIC_SALE_KEY
 from accounts.models import User
@@ -19,6 +21,112 @@ from sales.models import Sale
 class UserAdminTests(TestCase):
     def test_custom_user_model_is_registered_for_staff_provisioning(self):
         self.assertTrue(admin.site.is_registered(User))
+
+
+class PeopleAccessAdminIntegrationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = User.objects.create_superuser(
+            username="people-access-owner",
+            email="people-access-owner@example.test",
+            password="test-password",
+            role=User.Role.OWNER,
+        )
+        cls.manager = User.objects.create_user(
+            username="people-access-manager",
+            password="test-password",
+            role=User.Role.MANAGER,
+            is_staff=True,
+        )
+        cls.cashier = User.objects.create_user(
+            username="people-access-cashier",
+            password="test-password",
+            role=User.Role.CASHIER,
+            is_staff=True,
+        )
+        view_permissions = Permission.objects.filter(
+            content_type__app_label__in=("accounts", "auth", "axes"),
+            codename__in=(
+                "view_user",
+                "view_group",
+                "view_accessattempt",
+                "view_accessfailurelog",
+                "view_accesslog",
+            ),
+        )
+        cls.manager.user_permissions.add(*view_permissions)
+
+    def test_user_admin_exposes_lashpro_role_on_add_and_change_forms(self):
+        model_admin = admin.site._registry[User]
+        self.assertIn("role", model_admin.list_display)
+        self.assertIn("role", model_admin.list_filter)
+
+        add_fields = {
+            field
+            for _title, options in model_admin.add_fieldsets
+            for field in options["fields"]
+        }
+        change_fields = {
+            field
+            for _title, options in model_admin.fieldsets
+            for field in options["fields"]
+        }
+        self.assertIn("role", add_fields)
+        self.assertIn("role", change_fields)
+
+        self.client.force_login(self.owner)
+        add_response = self.client.get(reverse("admin:accounts_user_add"))
+        self.assertEqual(add_response.status_code, 200)
+        self.assertContains(add_response, 'name="role"')
+
+        staff_user = User.objects.create_user(
+            username="people-access-role-edit",
+            password="test-password",
+            role=User.Role.TECHNICIAN,
+        )
+        change_response = self.client.get(
+            reverse("admin:accounts_user_change", args=[staff_user.pk])
+        )
+        self.assertEqual(change_response.status_code, 200)
+        self.assertContains(change_response, 'name="role"')
+
+    def test_manager_can_review_people_and_security_records_with_explicit_view_permissions(self):
+        self.client.force_login(self.manager)
+        changelists = (
+            "accounts_user_changelist",
+            "auth_group_changelist",
+            "axes_accessattempt_changelist",
+            "axes_accessfailurelog_changelist",
+            "axes_accesslog_changelist",
+        )
+        for url_name in changelists:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(f"admin:{url_name}"))
+                self.assertEqual(response.status_code, 200)
+
+        # View permission allows review, but does not grant user/group write access.
+        self.assertEqual(
+            self.client.get(reverse("admin:accounts_user_add")).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.get(reverse("admin:auth_group_add")).status_code,
+            403,
+        )
+
+    def test_cashier_without_people_access_permissions_is_denied(self):
+        self.client.force_login(self.cashier)
+        changelists = (
+            "accounts_user_changelist",
+            "auth_group_changelist",
+            "axes_accessattempt_changelist",
+            "axes_accessfailurelog_changelist",
+            "axes_accesslog_changelist",
+        )
+        for url_name in changelists:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(f"admin:{url_name}"))
+                self.assertEqual(response.status_code, 403)
 
 
 class SyntheticSeedCommandTests(TestCase):
