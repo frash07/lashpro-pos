@@ -103,26 +103,19 @@ def admin_suite(request):
     groups = [
         {
             "name": "People & Access",
-            "description": "User accounts, roles, permissions and sign-in security.",
+            "description": "User accounts, roles, audit events and sign-in security.",
             "icon": "users",
             "items": [
                 ("User Accounts", "/admin/accounts/user/"),
-                ("Groups & Permissions", "/admin/auth/"),
+                ("Roles & Permissions", "/admin/auth/"),
+                ("Audit Events", "/admin/audit/auditevent/"),
                 ("Access Attempts", "/admin/axes/accessattempt/"),
                 ("Failed Login Records", "/admin/axes/accessfailurelog/"),
                 ("Login Activity", "/admin/axes/accesslog/"),
             ],
         },
         {
-            "name": "Audit & Compliance",
-            "description": "Review the application's recorded audit events.",
-            "icon": "shield-check",
-            "items": [
-                ("Audit Events", "/admin/audit/auditevent/"),
-            ],
-        },
-        {
-            "name": "Studio Catalogue",
+            "name": "Catalog",
             "description": "Maintain the retail product and service catalogue.",
             "icon": "package",
             "items": [
@@ -131,7 +124,7 @@ def admin_suite(request):
             ],
         },
         {
-            "name": "Clients",
+            "name": "Customers",
             "description": "Manage customer records and client details.",
             "icon": "contact-round",
             "items": [
@@ -139,9 +132,19 @@ def admin_suite(request):
             ],
         },
         {
-            "name": "Inventory & Stock",
+            "name": "Sales",
+            "description": "Open sale records, line items and refund records.",
+            "icon": "receipt-text",
+            "items": [
+                ("Sales Records", "/admin/sales/sale/"),
+                ("Sale Line Items", "/admin/sales/saleline/"),
+                ("Refund Records", "/admin/sales/salerefund/"),
+            ],
+        },
+        {
+            "name": "Inventory",
             "description": "Inspect stock movements, consumables and adjustment requests.",
-            "icon": "boxes",
+            "icon": "warehouse",
             "items": [
                 ("Inventory Movements", "/admin/inventory/inventorymovement/"),
                 ("Service Consumables", "/admin/inventory/serviceconsumable/"),
@@ -149,19 +152,9 @@ def admin_suite(request):
             ],
         },
         {
-            "name": "Artist Commissions",
-            "description": "Review commission ledger entries and payout records.",
-            "icon": "hand-coins",
-            "items": [
-                ("Commission Ledger Entries", "/admin/commissions/commissionledgerentry/"),
-                ("Commission Payout Requests", "/admin/commissions/commissionpayoutrequest/"),
-                ("Commission Payout Records", "/admin/commissions/commissionpayoutrecord/"),
-            ],
-        },
-        {
-            "name": "Payments & Cash Control",
+            "name": "Payments & Cash",
             "description": "Manage cash sessions, payment records and reconciliations.",
-            "icon": "wallet-cards",
+            "icon": "wallet",
             "items": [
                 ("Cash Sessions", "/admin/payments/cashsession/"),
                 ("Cash Session Movements", "/admin/payments/cashsessionmovement/"),
@@ -173,13 +166,13 @@ def admin_suite(request):
             ],
         },
         {
-            "name": "Sales & Refunds",
-            "description": "Open sale records, line items and refund records.",
-            "icon": "receipt-text",
+            "name": "Artist Commissions",
+            "description": "Review commission ledger entries and payout records.",
+            "icon": "badge-dollar-sign",
             "items": [
-                ("Sales Records", "/admin/sales/sale/"),
-                ("Sale Line Items", "/admin/sales/saleline/"),
-                ("Refund Records", "/admin/sales/salerefund/"),
+                ("Commission Ledger Entries", "/admin/commissions/commissionledgerentry/"),
+                ("Commission Payout Records", "/admin/commissions/commissionpayoutrecord/"),
+                ("Commission Payout Requests", "/admin/commissions/commissionpayoutrequest/"),
             ],
         },
     ]
