@@ -1,12 +1,334 @@
-{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171016">
+  <title>Cash session · LashPro KE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/cash-session.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand cash-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
 
-{% block title %}Cash session · LashPro{% endblock %}
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'payments:cash-session' %}" aria-current="page">
+        <i data-lucide="wallet"></i><span>Cash session</span>
+      </a>
+      <a class="mode-btn cash-nav-link" href="{% url 'sales:refunds' %}">
+        <i data-lucide="receipt-text"></i><span>Refunds</span>
+      </a>
+    </nav>
 
-{% block content %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">Back to checkout</a><a href="{% url 'sales:refunds' %}">Refunds</a></header><main class="page"><h1>Cash session</h1><p>Count and reconcile the drawer for {{ request.user.get_full_name|default:request.user.username }}.</p>{% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
-{% if session and session.status == "OPEN" %}<section class="card"><h2>Open session</h2><p>Opened {{ session.opened_at|date:"d M Y H:i" }} · Opening float KSh {{ session.opening_float|floatformat:2 }}</p><p>Expected cash now <strong>KSh {{ session.expected_now|floatformat:2 }}</strong></p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><label>{{ close_form.counted_cash.label }} {{ close_form.counted_cash }}</label><label>{{ close_form.reason.label }} {{ close_form.reason }}</label><button>Close and reconcile drawer</button></form></section>
-{% if is_manager %}<section class="card"><h2>Record a cash expense or movement</h2><form method="post">{% csrf_token %}<input type="hidden" name="action" value="movement"><label>{{ movement_form.movement_type.label }} {{ movement_form.movement_type }}</label><label>{{ movement_form.amount.label }} {{ movement_form.amount }}</label><label>{{ movement_form.reason.label }} {{ movement_form.reason }}</label><button>Record movement</button></form></section>{% endif %}
-{% elif session and session.status == "PENDING_APPROVAL" %}<section class="card"><h2>Closeout awaiting review</h2><p>Expected KSh {{ session.expected_cash|floatformat:2 }} · Counted KSh {{ session.counted_cash|floatformat:2 }} · Variance KSh {{ session.variance|floatformat:2 }}</p><p>{{ session.close_reason }}</p></section>
-{% else %}<section class="card"><h2>Open a drawer session</h2><p>Cash sales, refunds, and payouts are linked to this session.</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="open"><label>{{ open_form.opening_float.label }} {{ open_form.opening_float }}</label><button>Open cash session</button></form></section>{% endif %}
-{% if is_manager %}<section><h2>Cash variances awaiting approval</h2>{% for pending in pending_sessions %}<article class="card"><h3>{{ pending.cashier.get_full_name|default:pending.cashier.username }} · {{ pending.opened_at|date:"d M Y H:i" }}</h3><p>Expected KSh {{ pending.expected_cash|floatformat:2 }} · Counted KSh {{ pending.counted_cash|floatformat:2 }} · Variance KSh {{ pending.variance|floatformat:2 }}</p><p>Cashier's note: {{ pending.close_reason }}</p><form method="post">{% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="session_id" value="{{ pending.pk }}"><label>Manager review<textarea name="reason" required maxlength="500"></textarea></label><button>Approve closeout</button></form></article>{% empty %}<p>No cash variances are awaiting review.</p>{% endfor %}</section>{% endif %}</main>
-{% endblock %}
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">STAFF WORKSPACE</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main cash-main">
+    <section class="view">
+      <div class="page-heading cash-page-heading">
+        <div>
+          <div class="eyebrow">Cash management</div>
+          <h1>Keep the drawer <em>in balance.</em></h1>
+          <p>Count, reconcile and track cash movements for {{ request.user.get_full_name|default:request.user.username }}.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span id="cash-current-date"></span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Drawer controls</div>
+        </div>
+      </div>
+
+      {% if messages %}
+        <div class="cash-messages" aria-live="polite">
+          {% for message in messages %}
+            <div class="cash-alert {{ message.tags }}">
+              {% if message.tags == "success" %}<i data-lucide="check-circle-2"></i>
+              {% elif message.tags == "error" or message.tags == "warning" %}<i data-lucide="alert-circle"></i>
+              {% else %}<i data-lucide="info"></i>{% endif %}
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if session and session.status == "OPEN" %}
+        <div class="cash-metrics">
+          <article class="cash-metric">
+            <div class="cash-metric-top"><span class="cash-metric-icon"><i data-lucide="wallet"></i></span> Opening float</div>
+            <strong class="cash-metric-value">KSh {{ session.opening_float|floatformat:2 }}</strong>
+            <span class="cash-metric-note">Starting balance recorded when the drawer was opened</span>
+          </article>
+          <article class="cash-metric">
+            <div class="cash-metric-top"><span class="cash-metric-icon"><i data-lucide="banknote"></i></span> Expected cash</div>
+            <strong class="cash-metric-value">KSh {{ session.expected_now|floatformat:2 }}</strong>
+            <span class="cash-metric-note">Calculated from the opening float and recorded movements</span>
+          </article>
+          <article class="cash-metric">
+            <div class="cash-metric-top"><span class="cash-metric-icon"><i data-lucide="clock-3"></i></span> Session opened</div>
+            <strong class="cash-metric-value">{{ session.opened_at|date:"H:i" }}</strong>
+            <span class="cash-metric-note">{{ session.opened_at|date:"d M Y" }}</span>
+          </article>
+        </div>
+
+        <div class="cash-layout">
+          <section class="cash-card">
+            <div class="cash-card-head">
+              <div>
+                <div class="eyebrow">Drawer control</div>
+                <h2>Open cash session</h2>
+                <p>Count the physical drawer and submit the closing balance for reconciliation.</p>
+              </div>
+              <span class="status-tag ok cash-status">Session open</span>
+            </div>
+
+            <div class="cash-amount-panel">
+              <div>
+                <span class="cash-amount-label">Expected cash in drawer</span>
+                <strong class="cash-amount-value">KSh {{ session.expected_now|floatformat:2 }}</strong>
+              </div>
+              <div class="cash-amount-aside">
+                Opening float
+                <strong>KSh {{ session.opening_float|floatformat:2 }}</strong>
+                Opened {{ session.opened_at|date:"d M, H:i" }}
+              </div>
+            </div>
+
+            <form method="post" class="cash-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="close">
+              <div class="cash-form-grid">
+                <div class="field cash-field">
+                  {{ close_form.counted_cash.label_tag }}
+                  {{ close_form.counted_cash }}
+                </div>
+                <div class="field cash-field">
+                  {{ close_form.reason.label_tag }}
+                  {{ close_form.reason }}
+                </div>
+              </div>
+              <button class="button-primary" type="submit"><i data-lucide="clipboard-check"></i> Close and reconcile drawer</button>
+            </form>
+            <p class="cash-help-note"><i data-lucide="info"></i><span>Enter the physical cash count. Any difference from the expected balance will be recorded for review.</span></p>
+          </section>
+
+          {% if is_manager %}
+            <section class="cash-card">
+              <div class="cash-card-head">
+                <div>
+                  <div class="eyebrow">Cash controls</div>
+                  <h2>Record a movement</h2>
+                  <p>Record a drawer expense or an authorised cash adjustment with its reason.</p>
+                </div>
+                <span class="cash-metric-icon"><i data-lucide="arrow-left-right"></i></span>
+              </div>
+
+              <form method="post" class="cash-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="movement">
+                <div class="field cash-field">
+                  {{ movement_form.movement_type.label_tag }}
+                  {{ movement_form.movement_type }}
+                </div>
+                <div class="field cash-field">
+                  {{ movement_form.amount.label_tag }}
+                  {{ movement_form.amount }}
+                </div>
+                <div class="field cash-field">
+                  {{ movement_form.reason.label_tag }}
+                  {{ movement_form.reason }}
+                </div>
+                <button class="button-primary" type="submit"><i data-lucide="plus-circle"></i> Record cash movement</button>
+              </form>
+            </section>
+          {% else %}
+            <aside class="cash-aside-card">
+              <div class="cash-aside-title">
+                <span class="cash-metric-icon"><i data-lucide="shield-check"></i></span>
+                <h3>Before you close</h3>
+              </div>
+              <p class="cash-aside-copy">A reliable closeout starts with a careful count of the physical cash in the drawer.</p>
+              <ul class="cash-aside-list">
+                <li><span class="cash-step-number">1</span><span>Count notes and coins separately before entering the total.</span></li>
+                <li><span class="cash-step-number">2</span><span>Include a clear explanation whenever the count differs from the expected amount.</span></li>
+                <li><span class="cash-step-number">3</span><span>Submit the closeout for manager review when a variance needs approval.</span></li>
+              </ul>
+            </aside>
+          {% endif %}
+        </div>
+
+      {% elif session and session.status == "PENDING_APPROVAL" %}
+        <div class="cash-layout">
+          <section class="cash-card">
+            <div class="cash-card-head">
+              <div>
+                <div class="eyebrow">Closeout status</div>
+                <h2>Awaiting manager review</h2>
+                <p>Your counted drawer balance has been submitted and is awaiting approval.</p>
+              </div>
+              <span class="status-tag cash-status pending">Pending review</span>
+            </div>
+            <div class="cash-review-amounts">
+              <div class="cash-review-amount"><span>Expected cash</span><strong>KSh {{ session.expected_cash|floatformat:2 }}</strong></div>
+              <div class="cash-review-amount"><span>Counted cash</span><strong>KSh {{ session.counted_cash|floatformat:2 }}</strong></div>
+              <div class="cash-review-amount variance"><span>Variance</span><strong>KSh {{ session.variance|floatformat:2 }}</strong></div>
+            </div>
+            {% if session.close_reason %}
+              <p class="cash-review-note">{{ session.close_reason }}</p>
+            {% endif %}
+          </section>
+
+          <aside class="cash-aside-card">
+            <div class="cash-aside-title">
+              <span class="cash-metric-icon"><i data-lucide="file-check-2"></i></span>
+              <h3>What happens next</h3>
+            </div>
+            <p class="cash-aside-copy">A manager reviews the cash count and the explanation provided before approving the drawer closeout.</p>
+            <ul class="cash-aside-list">
+              <li><span class="cash-step-number">1</span><span>The expected and counted cash amounts remain available for review.</span></li>
+              <li><span class="cash-step-number">2</span><span>The manager records a review note with the approval decision.</span></li>
+            </ul>
+          </aside>
+        </div>
+
+      {% else %}
+        <div class="cash-layout">
+          <section class="cash-card">
+            <div class="cash-card-head">
+              <div>
+                <div class="eyebrow">Start your shift</div>
+                <h2>Open a drawer session</h2>
+                <p>Record the starting float before processing cash sales, refunds or payouts.</p>
+              </div>
+              <span class="status-tag cash-status">No active session</span>
+            </div>
+
+            <form method="post" class="cash-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="open">
+              <div class="field cash-field">
+                {{ open_form.opening_float.label_tag }}
+                {{ open_form.opening_float }}
+              </div>
+              <button class="button-primary" type="submit"><i data-lucide="unlock"></i> Open cash session</button>
+            </form>
+            <p class="cash-help-note"><i data-lucide="info"></i><span>Cash sales, refunds and payouts are linked to the active drawer session so the balance can be reconciled at closeout.</span></p>
+          </section>
+
+          <aside class="cash-aside-card">
+            <div class="cash-aside-title">
+              <span class="cash-metric-icon"><i data-lucide="list-checks"></i></span>
+              <h3>Drawer workflow</h3>
+            </div>
+            <p class="cash-aside-copy">Use one cash session for each cashier's drawer period.</p>
+            <ul class="cash-aside-list">
+              <li><span class="cash-step-number">1</span><span>Enter the physical opening float.</span></li>
+              <li><span class="cash-step-number">2</span><span>Record authorised cash movements against the open session.</span></li>
+              <li><span class="cash-step-number">3</span><span>Count the drawer and submit the closeout for reconciliation.</span></li>
+            </ul>
+          </aside>
+        </div>
+      {% endif %}
+
+      {% if is_manager %}
+        <section class="cash-review-section">
+          <div class="cash-section-heading">
+            <div>
+              <div class="eyebrow">Manager review</div>
+              <h2>Cash variances awaiting approval</h2>
+              <p>Review the drawer totals and cashier notes before approving each closeout.</p>
+            </div>
+            <span class="soft-pill"><i data-lucide="clipboard-list"></i> Approval queue</span>
+          </div>
+
+          <div class="cash-review-grid">
+            {% for pending in pending_sessions %}
+              <article class="cash-review-card">
+                <h3>{{ pending.cashier.get_full_name|default:pending.cashier.username }}</h3>
+                <p class="cash-review-meta">Opened {{ pending.opened_at|date:"d M Y · H:i" }}</p>
+                <div class="cash-review-amounts">
+                  <div class="cash-review-amount"><span>Expected</span><strong>KSh {{ pending.expected_cash|floatformat:2 }}</strong></div>
+                  <div class="cash-review-amount"><span>Counted</span><strong>KSh {{ pending.counted_cash|floatformat:2 }}</strong></div>
+                  <div class="cash-review-amount variance"><span>Variance</span><strong>KSh {{ pending.variance|floatformat:2 }}</strong></div>
+                </div>
+                {% if pending.close_reason %}
+                  <p class="cash-review-note">Cashier's note: {{ pending.close_reason }}</p>
+                {% endif %}
+                <form method="post" class="cash-review-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="approve">
+                  <input type="hidden" name="session_id" value="{{ pending.pk }}">
+                  <div class="field cash-field">
+                    <label for="review-reason-{{ pending.pk }}">Manager review</label>
+                    <textarea id="review-reason-{{ pending.pk }}" name="reason" required maxlength="500"></textarea>
+                  </div>
+                  <button class="button-primary" type="submit"><i data-lucide="check-check"></i> Approve closeout</button>
+                </form>
+              </article>
+            {% empty %}
+              <div class="cash-empty-state">
+                <span class="cash-metric-icon"><i data-lucide="check-circle-2"></i></span>
+                <span>No cash variances are awaiting review.</span>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    </section>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const root = document.documentElement;
+      const theme = root.dataset.theme === "dark" ? "light" : "dark";
+      root.dataset.theme = theme;
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+      if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+      try { localStorage.setItem("lashpro-theme", theme); } catch (error) {}
+      if (window.lucide && typeof window.lucide.createIcons === "function") window.lucide.createIcons();
+    }
+
+    (function restoreTheme() {
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+      } catch (error) {}
+    })();
+
+    window.addEventListener("DOMContentLoaded", function () {
+      const date = document.getElementById("cash-current-date");
+      if (date) {
+        date.textContent = new Date().toLocaleDateString("en-GB", {
+          weekday: "long", day: "numeric", month: "long", year: "numeric"
+        });
+      }
+      if (window.lucide && typeof window.lucide.createIcons === "function") window.lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
