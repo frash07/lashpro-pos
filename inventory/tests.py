@@ -2,15 +2,17 @@ from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from threading import Barrier
 
+from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import close_old_connections, connection
 from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
 
 from accounts.models import User
 from audit.models import AuditEvent
-from catalog.models import Product
+from catalog.models import Product, Service
 from sales.services import checkout_sale
-from .models import InventoryMovement, StockAdjustmentRequest
+from .models import InventoryMovement, ServiceConsumable, StockAdjustmentRequest
 from .services import receive_stock, request_stock_adjustment, review_stock_adjustment
 
 
@@ -133,9 +135,6 @@ class InventoryAdminIntegrationTests(TestCase):
             on_hand=Decimal("2.000"),
             reorder_level=Decimal("1.000"),
         )
-        from catalog.models import Service
-        from .models import ServiceConsumable
-
         cls.service = Service.objects.create(
             name="Admin Classic Set",
             duration_minutes=90,
