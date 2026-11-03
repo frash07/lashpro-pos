@@ -44,7 +44,7 @@
       <a class="mode-btn" href="{% url 'sales:checkout' %}">
         <i data-lucide="shopping-bag"></i><span>Salon POS</span>
       </a>
-      <a class="mode-btn active" href="{% url 'admin:catalog_product_changelist' %}" aria-current="page">
+      <a class="mode-btn active" href="{% url 'admin:app_list' app_label='catalog' %}" aria-current="page">
         <i data-lucide="grid-2x2"></i><span>Catalog</span>
       </a>
       <a class="mode-btn" href="{% url 'admin:catalog_product_changelist' %}">
