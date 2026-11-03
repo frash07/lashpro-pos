@@ -1,0 +1,126 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Commission Payout Requests · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-ledger.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-payouts.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-payout-requests.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar commission-topbar">
+    <a class="brand commission-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}"><i data-lucide="shopping-bag"></i><span>Salon POS</span></a>
+      <a class="mode-btn" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}"><i data-lucide="wallet"></i><span>Commission ledger</span></a>
+      <a class="mode-btn active" href="{% url 'admin:commissions_commissionpayoutrequest_changelist' %}" aria-current="page"><i data-lucide="file-clock"></i><span>Payout requests</span></a>
+      <a class="mode-btn" href="{% url 'admin:commissions_commissionpayoutrecord_changelist' %}"><i data-lucide="receipt-text"></i><span>Payouts</span></a>
+    </nav>
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="commission-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">STAFF WORKSPACE</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main commission-main">
+    <section class="view">
+      <div class="page-heading commission-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Finance</div>
+          <h1>Commission requests <em>every request. Clearly accounted for.</em></h1>
+          <p>Track technician requests from submission through approval, issuance or rejection.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <a class="soft-pill payout-review-link" href="{% url 'commissions:dashboard' %}"><i data-lucide="clipboard-check"></i> Open review dashboard</a>
+        </div>
+      </div>
+
+      <div class="commission-kpis payout-request-kpis" aria-label="Filtered payout request summary">
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Awaiting approval</span><span class="commission-kpi-icon amber"><i data-lucide="hourglass"></i></span></div>
+          <strong>{{ payout_request_summary.awaiting_count|default:0 }}</strong>
+          <small>KES {{ payout_request_summary.awaiting_amount|default_if_none:"0.00"|floatformat:2 }} requested</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Issued requests</span><span class="commission-kpi-icon green"><i data-lucide="badge-check"></i></span></div>
+          <strong>{{ payout_request_summary.issued_count|default:0 }}</strong>
+          <small>KES {{ payout_request_summary.issued_amount|default_if_none:"0.00"|floatformat:2 }} paid out</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Rejected requests</span><span class="commission-kpi-icon"><i data-lucide="ban"></i></span></div>
+          <strong>{{ payout_request_summary.rejected_count|default:0 }}</strong>
+          <small>KES {{ payout_request_summary.rejected_amount|default_if_none:"0.00"|floatformat:2 }} declined</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Total requests</span><span class="commission-kpi-icon"><i data-lucide="files"></i></span></div>
+          <strong>{{ payout_request_summary.request_count|default:0 }}</strong>
+          <small>Requests in this view</small>
+        </article>
+      </div>
+
+      <div class="commission-ledger-panel payout-request-panel">
+        <div class="commission-panel-heading">
+          <div>
+            <div class="section-title">Payout request register</div>
+            <div class="section-caption">Search by technician, reference or reason. Filter by status, method and request date.</div>
+          </div>
+          <span class="commission-immutable"><i data-lucide="lock-keyhole"></i> Read-only request history</span>
+        </div>
+        <div class="payout-note"><i data-lucide="info"></i><span> Approval and rejection are handled in the Commission Dashboard. Issuing a request creates a separate immutable payout record; this register does not modify requests.</span></div>
+        {{ block.super }}
+      </div>
+      <footer class="commission-footer">
+        <span class="commission-footer-brand">LASHPRO KE</span>
+        <span>Request history is read-only here. Approval decisions remain in the Commission Dashboard.</span>
+      </footer>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("commission-theme-toggle");
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) { applyTheme("dark"); }
+      if (button) button.addEventListener("click", function () {
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        applyTheme(next);
+        try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+      });
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
