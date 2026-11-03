@@ -9,12 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
-  <link rel="stylesheet" href="{% static 'catalog/product-admin.css' %}">
+  <link rel="stylesheet" href="{% static 'catalog/catalog-admin.css' %}">
 {% endblock %}
 
 {% block content %}
-  <header class="topbar product-admin-topbar">
-    <a class="brand product-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+  <header class="topbar catalog-admin-topbar">
+    <a class="brand catalog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
       <span class="brand-mark"><i data-lucide="sparkles"></i></span>
       <span>
         <span class="brand-name">LASHPRO <span>KE</span></span>
@@ -36,7 +36,7 @@
 
     <div class="top-actions">
       <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
-      <button class="icon-button" id="service-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+      <button class="icon-button" id="catalog-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
         <i data-lucide="sun-moon"></i>
       </button>
       <div class="profile">
@@ -49,9 +49,9 @@
     </div>
   </header>
 
-  <main class="main product-admin-main">
+  <main class="main catalog-admin-main">
     <section class="view">
-      <div class="page-heading product-admin-heading">
+      <div class="page-heading catalog-admin-heading">
         <div>
           <div class="eyebrow">Catalog management</div>
           <h1>Services <em>that make every visit beautiful.</em></h1>
@@ -63,15 +63,15 @@
         </div>
       </div>
 
-      <div class="product-admin-summary">
-        <div class="product-admin-summary-card">
-          <span class="product-admin-summary-icon"><i data-lucide="list-checks"></i></span>
+      <div class="catalog-admin-summary">
+        <div class="catalog-admin-summary-card">
+          <span class="catalog-admin-summary-icon"><i data-lucide="list-checks"></i></span>
           <span><strong>{{ cl.result_count }}</strong><small>Services in this view</small></span>
         </div>
-        <div class="product-admin-summary-note">Search and filter treatments to maintain accurate pricing, durations and commission settings.</div>
+        <div class="catalog-admin-summary-note">Search and filter treatments to maintain accurate pricing, durations and commission settings.</div>
       </div>
 
-      <div class="product-admin-content">
+      <div class="catalog-admin-content">
         {{ block.super }}
       </div>
     </section>
@@ -84,7 +84,7 @@
   <script>
     (function () {
       const root = document.documentElement;
-      const button = document.getElementById("service-admin-theme-toggle");
+      const button = document.getElementById("catalog-admin-theme-toggle");
 
       function applyTheme(theme) {
         root.dataset.theme = theme;
