@@ -1,0 +1,156 @@
+{% extends "admin/app_index.html" %}
+{% load static %}
+
+{% block title %}Inventory · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/inventory-app-index.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar inventory-hub-topbar">
+    <a class="brand inventory-hub-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:app_list' app_label='inventory' %}" aria-current="page">
+        <i data-lucide="boxes"></i><span>Inventory</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:catalog_product_changelist' %}">
+        <i data-lucide="package"></i><span>Products</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:app_list' app_label='catalog' %}">
+        <i data-lucide="grid-2x2"></i><span>Catalog</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="inventory-hub-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main inventory-hub-main">
+    <section class="view">
+      <div class="page-heading inventory-hub-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Stock control</div>
+          <h1>Inventory <em>under control.</em></h1>
+          <p>Keep stock movement traceable, adjustments accountable and treatment usage consistent.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="boxes"></i> Inventory workspace</div>
+        </div>
+      </div>
+
+      <div class="inventory-hub-summary">
+        <div class="inventory-hub-summary-card">
+          <span class="inventory-hub-summary-icon"><i data-lucide="layers-3"></i></span>
+          <span><strong>{{ app.models|length }}</strong><small>Inventory tools available</small></span>
+        </div>
+        <div class="inventory-hub-summary-note">Review the stock ledger, route proposed changes through approval, and maintain service-to-product usage rules.</div>
+      </div>
+
+      <div class="inventory-hub-grid" aria-label="Inventory management tools">
+        {% for model in app.models %}
+          {% if model.admin_url %}
+            <a class="inventory-hub-card" href="{{ model.admin_url }}">
+              <span class="inventory-hub-icon">
+                {% if model.object_name == "InventoryMovement" %}
+                  <i data-lucide="arrow-left-right"></i>
+                {% elif model.object_name == "StockAdjustmentRequest" %}
+                  <i data-lucide="clipboard-list"></i>
+                {% elif model.object_name == "ServiceConsumable" %}
+                  <i data-lucide="flask-conical"></i>
+                {% else %}
+                  <i data-lucide="boxes"></i>
+                {% endif %}
+              </span>
+              <span class="inventory-hub-copy">
+                <strong>{{ model.name }}</strong>
+                <small>
+                  {% if model.object_name == "InventoryMovement" %}
+                    Inspect the stock movement ledger, including sales, receipts, returns, service use and approved adjustments.
+                  {% elif model.object_name == "StockAdjustmentRequest" %}
+                    Review proposed stock changes and approve or reject requests with an auditable decision.
+                  {% elif model.object_name == "ServiceConsumable" %}
+                    Define the products and quantities consumed when each salon service is completed.
+                  {% else %}
+                    Open this inventory register and its permission-aware administration tools.
+                  {% endif %}
+                </small>
+              </span>
+              <i class="inventory-hub-arrow" data-lucide="arrow-up-right"></i>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="inventory-hub-section">
+        <h2>Inventory administration</h2>
+        <p>Native Django administration tools, available actions and access controls.</p>
+      </div>
+      <div class="inventory-hub-content">
+        {{ block.super }}
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("inventory-hub-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}

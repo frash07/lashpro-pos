@@ -1,0 +1,47 @@
+/* Checkout-aligned landing page for the Django Inventory app. */
+html,body{min-height:100%;background:var(--bg)!important;color:var(--text)!important;font-family:'DM Sans',system-ui,sans-serif!important}
+body{margin:0!important}
+#container{min-width:0!important;width:100%!important;background:var(--bg)!important}
+#header,#nav-sidebar,.breadcrumbs,#toggle-nav-sidebar{display:none!important}
+#content{margin:0!important;padding:0!important;max-width:none!important}
+#content-main{float:none!important;width:100%!important;margin:0!important}
+#content-related{display:none!important}
+.inventory-hub-topbar{z-index:30}
+.inventory-hub-brand{color:var(--text)!important;text-decoration:none!important}
+.inventory-hub-main{max-width:1600px}
+.inventory-hub-heading{align-items:flex-end}
+.inventory-hub-heading h1{font-family:'Playfair Display',Georgia,serif!important;font-size:31px!important;font-weight:500!important;line-height:1.1!important;letter-spacing:-.025em!important;margin:8px 0 7px!important;color:var(--text)!important}
+.inventory-hub-heading h1 em{color:var(--pink);font-weight:400}
+.inventory-hub-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 17px}
+.inventory-hub-summary-card{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
+.inventory-hub-summary-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
+.inventory-hub-summary-icon svg{width:17px;height:17px}
+.inventory-hub-summary-card strong{display:block;font-size:17px;line-height:1.1;color:var(--text)}
+.inventory-hub-summary-card small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+.inventory-hub-summary-note{max-width:580px;color:var(--muted);font-size:10px;line-height:1.55;text-align:right}
+.inventory-hub-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 23px}
+.inventory-hub-card{display:flex;align-items:flex-start;gap:13px;min-width:0;min-height:138px;padding:17px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,var(--surface),var(--surface-2));color:var(--text);text-decoration:none;transition:border-color .18s,transform .18s,box-shadow .18s}
+.inventory-hub-card:hover{border-color:var(--pink);transform:translateY(-2px);box-shadow:var(--shadow)}
+.inventory-hub-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:var(--pink-wash);color:var(--pink)}
+.inventory-hub-icon svg{width:20px;height:20px}
+.inventory-hub-copy{min-width:0;flex:1;padding-top:2px}
+.inventory-hub-copy strong{display:block;color:var(--text);font-size:13px;line-height:1.4}
+.inventory-hub-copy small{display:block;margin-top:6px;color:var(--muted);font-size:10px;line-height:1.55}
+.inventory-hub-arrow{flex:0 0 16px;margin-top:4px;color:var(--subtle);width:16px;height:16px}
+.inventory-hub-section{margin:0 0 13px}
+.inventory-hub-section h2{margin:0;color:var(--text);font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:500}
+.inventory-hub-section p{margin:5px 0 0;color:var(--muted);font-size:10px}
+.inventory-hub-content{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}
+.inventory-hub-content #content-main>.module{overflow:hidden;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface)!important;box-shadow:none!important}
+.inventory-hub-content #content-main>.module h2{padding:13px 16px!important;background:var(--surface-2)!important;border-bottom:1px solid var(--line)!important;color:var(--text)!important;font-size:12px!important}
+.inventory-hub-content #content-main>.module table{width:100%;border-collapse:collapse}
+.inventory-hub-content #content-main>.module th,.inventory-hub-content #content-main>.module td{padding:14px 16px!important;border-bottom:1px solid var(--line)!important;background:transparent!important;color:var(--muted)!important;font-size:11px!important}
+.inventory-hub-content #content-main>.module tr:last-child th,.inventory-hub-content #content-main>.module tr:last-child td{border-bottom:0!important}
+.inventory-hub-content #content-main>.module td a{color:var(--pink)!important;font-weight:700!important;text-decoration:none!important}
+.inventory-hub-content #content-main>.module td a:hover{text-decoration:underline!important}
+.inventory-hub-content #content-main>.module tr:hover th,.inventory-hub-content #content-main>.module tr:hover td{background:var(--pink-wash)!important}
+.inventory-hub-content #content-main>.module .addlink{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:1050px){.inventory-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:920px){.inventory-hub-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.inventory-hub-topbar .brand{min-width:0;flex:1}.inventory-hub-topbar .mode-switch{order:3;width:100%;justify-content:center;flex-wrap:wrap}.inventory-hub-topbar .mode-btn{flex:1;justify-content:center}.inventory-hub-topbar .top-actions{min-width:0}.inventory-hub-topbar .profile-copy{display:none}.inventory-hub-content{padding:14px}}
+@media(max-width:620px){.inventory-hub-grid{grid-template-columns:1fr;gap:10px}.inventory-hub-card{min-height:0;padding:14px}.inventory-hub-summary{align-items:flex-start;flex-direction:column}.inventory-hub-summary-note{max-width:none;text-align:left;line-height:1.5}}
+@media(max-width:600px){.inventory-hub-topbar{padding:12px}.inventory-hub-topbar .brand-mark{height:39px;width:39px}.inventory-hub-topbar .brand-name{font-size:18px}.inventory-hub-topbar .brand-sub{font-size:9px}.inventory-hub-topbar .status-pill{display:none}.inventory-hub-main{padding:15px 12px 24px}.inventory-hub-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.inventory-hub-heading h1{font-size:25px!important}.inventory-hub-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.inventory-hub-content{padding:10px;border-radius:14px}.inventory-hub-content #content-main>.module th,.inventory-hub-content #content-main>.module td{padding:12px 10px!important}}
