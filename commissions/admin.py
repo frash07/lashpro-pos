@@ -39,15 +39,31 @@ class CommissionPayoutRequestAdmin(admin.ModelAdmin):
     readonly_fields = tuple(field.name for field in CommissionPayoutRequest._meta.fields)
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionpayoutrequest")
-    def has_delete_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request): return False
 
 
 @admin.register(CommissionPayoutRecord)
 class CommissionPayoutRecordAdmin(admin.ModelAdmin):
+    change_list_template = "admin/commissions/commissionpayoutrecord/change_list.html"
     list_display = ("issued_at", "technician", "amount", "method", "reference", "verification_status", "issued_by")
     list_filter = ("method", "issued_at")
     search_fields = ("technician__username", "reference")
     readonly_fields = tuple(field.name for field in CommissionPayoutRecord._meta.fields) + ("verification_status",)
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        if hasattr(response, "context_data") and response.context_data:
+            changelist = response.context_data.get("cl")
+            if changelist is not None:
+                totals = changelist.queryset.aggregate(
+                    record_count=Count("pk"),
+                    total_issued=Sum("amount"),
+                    cash_total=Sum("amount", filter=Q(method=CommissionPayoutRecord.Method.CASH)),
+                    mpesa_total=Sum("amount", filter=Q(method=CommissionPayoutRecord.Method.MPESA)),
+                )
+                response.context_data["payout_summary"] = totals
+        return response
+
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionpayoutrecord")
-    def has_delete_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request): return False
