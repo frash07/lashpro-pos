@@ -38,7 +38,8 @@ class CustomerAdmin(admin.ModelAdmin):
                 count,
             )
         return format_html(
-            '<span class="customer-sales-count no-sales">No completed sales</span>'
+            '<span class="customer-sales-count no-sales">{}</span>',
+            "No completed sales",
         )
 
     @admin.display(description="Client notes")
