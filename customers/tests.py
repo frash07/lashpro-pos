@@ -26,6 +26,22 @@ class CustomerAdminIntegrationTests(TestCase):
         response = self.client.get(reverse("admin:customers_customer_changelist"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.customer.name)
+        self.assertContains(response, "Customer directory")
+        self.assertContains(response, "Purchase history")
+
+    def test_customer_directory_summary_counts_filtered_records(self):
+        Customer.objects.create(name="Walk-in Client")
+        response = self.client.get(reverse("admin:customers_customer_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["customer_summary"],
+            {
+                "customer_count": 2,
+                "with_phone": 1,
+                "with_sales": 0,
+                "with_notes": 1,
+            },
+        )
 
     def test_customer_admin_add_page_is_available(self):
         response = self.client.get(reverse("admin:customers_customer_add"))
@@ -64,3 +80,4 @@ class CustomerAdminIntegrationTests(TestCase):
         response = self.client.get(reverse("admin:customers_customer_changelist"))
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("admin:login"), response.url)
+    
