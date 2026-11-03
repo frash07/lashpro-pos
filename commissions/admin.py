@@ -68,7 +68,7 @@ class CommissionPayoutRequestAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionpayoutrequest")
-    def has_delete_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
 
 
 @admin.register(CommissionPayoutRecord)
@@ -106,4 +106,4 @@ class CommissionPayoutRecordAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionpayoutrecord")
-    def has_delete_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
