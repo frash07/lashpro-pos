@@ -51,9 +51,12 @@ class PaymentsCashAdminIntegrationTests(TestCase):
             duration_minutes=60,
             price=Decimal("1500.00"),
         )
-        cls.sale = Sale.objects.create(cashier=cls.cashier, status=Sale.Status.COMPLETED)
+        # The database guard permits sale-line inserts only while the sale is draft.
+        cls.sale = Sale.objects.create(cashier=cls.cashier)
         cls.sale_line = SaleLine.from_service(sale=cls.sale, service=cls.service)
         cls.sale_line.save()
+        cls.sale.status = Sale.Status.COMPLETED
+        cls.sale.save(update_fields=("status",))
 
         cls.payment = PaymentTransaction.objects.create(
             amount=Decimal("1500.00"),
