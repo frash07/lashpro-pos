@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db.models import Count, Q, Sum
+from django.utils.html import format_html
 
 from .models import CommissionLedgerEntry, CommissionPayoutRecord, CommissionPayoutRequest
 
@@ -39,15 +40,42 @@ class CommissionPayoutRequestAdmin(admin.ModelAdmin):
     readonly_fields = tuple(field.name for field in CommissionPayoutRequest._meta.fields)
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionpayoutrequest")
-    def has_delete_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request): return False
 
 
 @admin.register(CommissionPayoutRecord)
 class CommissionPayoutRecordAdmin(admin.ModelAdmin):
-    list_display = ("issued_at", "technician", "amount", "method", "reference", "verification_status", "issued_by")
+    change_list_template = "admin/commissions/commissionpayoutrecord/change_list.html"
+    list_display = ("issued_at", "technician", "amount", "method", "reference", "verification_badge", "issued_by")
     list_filter = ("method", "issued_at")
     search_fields = ("technician__username", "reference")
     readonly_fields = tuple(field.name for field in CommissionPayoutRecord._meta.fields) + ("verification_status",)
+
+    @admin.display(description="Verification")
+    def verification_badge(self, obj):
+        status = obj.verification_status
+        if status == "CONFIRMED":
+            css_class, label = "payout-status payout-status-confirmed", "Confirmed"
+        elif status == "REJECTED":
+            css_class, label = "payout-status payout-status-rejected", "Rejected"
+        else:
+            css_class, label = "payout-status payout-status-pending", "Unverified"
+        return format_html('<span class="{}">{}</span>', css_class, label)
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        if hasattr(response, "context_data") and response.context_data:
+            changelist = response.context_data.get("cl")
+            if changelist is not None:
+                totals = changelist.queryset.aggregate(
+                    record_count=Count("pk"),
+                    total_issued=Sum("amount"),
+                    cash_total=Sum("amount", filter=Q(method=CommissionPayoutRecord.Method.CASH)),
+                    mpesa_total=Sum("amount", filter=Q(method=CommissionPayoutRecord.Method.MPESA)),
+                )
+                response.context_data["payout_summary"] = totals
+        return response
+
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionpayoutrecord")
-    def has_delete_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request): return False

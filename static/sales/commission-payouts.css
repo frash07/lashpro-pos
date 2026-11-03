@@ -1,0 +1,15 @@
+/* Payout history refinements layered on the shared LashPro checkout theme. */
+.payout-kpis .commission-kpi{min-height:126px}
+.payout-panel .commission-panel-heading{margin-bottom:13px}
+.payout-note{display:flex;align-items:flex-start;gap:9px;margin:0 0 15px;padding:11px 13px;border:1px solid rgba(231,177,104,.25);border-radius:11px;background:rgba(231,177,104,.08);color:var(--muted);font-size:10px;line-height:1.55}
+.payout-note svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px;color:var(--amber)}
+.payout-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid transparent;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.015em}
+.payout-status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.payout-status-confirmed{color:var(--green);background:rgba(109,214,173,.10);border-color:rgba(109,214,173,.2)}
+.payout-status-pending{color:var(--amber);background:rgba(231,177,104,.10);border-color:rgba(231,177,104,.2)}
+.payout-status-rejected{color:#e17d86;background:rgba(225,125,134,.10);border-color:rgba(225,125,134,.2)}
+#result_list td.field-amount{font-weight:700;color:var(--text)!important;font-variant-numeric:tabular-nums}
+#result_list td.field-method{font-weight:700;color:var(--pink)!important}
+#result_list td.field-reference{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px!important;letter-spacing:.025em}
+#result_list td.field-verification_badge{min-width:120px}
+@media(max-width:600px){.payout-note{font-size:9px}.payout-kpis .commission-kpi{min-height:112px}}
