@@ -1,0 +1,27 @@
+/* Customer directory refinements layered on the shared LashPro checkout theme. */
+.customer-main{max-width:1600px}
+.customer-heading h1 em{color:var(--pink);font-weight:400}
+.customer-kpis .commission-kpi{min-height:126px}
+.customer-directory-panel .commission-panel-heading{margin-bottom:14px}
+.customer-directory-tag{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:9px;white-space:nowrap}
+.customer-directory-tag svg{width:13px;height:13px;color:var(--green)}
+#changelist{display:block}
+#changelist .changelist-form-container{width:100%;min-width:0}
+#changelist-search{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 13px!important}
+#changelist-search label,#changelist-search img{display:none}
+#changelist-search input[type="text"],#changelist-search input[type="search"]{width:min(100%,430px)}
+#changelist .object-tools{float:none!important;display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px!important;padding:0!important}
+#changelist .object-tools li{margin:0!important}
+#changelist .results{overflow-x:auto;border:1px solid var(--line);border-radius:13px}
+#result_list{width:100%!important;min-width:680px}
+#result_list thead th:first-child{min-width:180px}
+#result_list td.field-name{color:var(--text)!important;font-weight:700}
+#result_list td.field-phone_display{font-variant-numeric:tabular-nums}
+#result_list td.field-sales_count{min-width:105px}
+.customer-sales-count{display:inline-flex;align-items:center;justify-content:center;min-height:25px;padding:5px 9px;border:1px solid transparent;border-radius:999px;font-size:9px;font-weight:700}
+.customer-sales-count.has-sales{color:var(--green);background:rgba(109,214,173,.10);border-color:rgba(109,214,173,.2)}
+.customer-sales-count.no-sales{color:var(--subtle);background:var(--surface-2);border-color:var(--line)}
+#result_list td.field-notes_preview{max-width:390px;white-space:normal;line-height:1.5;color:var(--muted)!important}
+#result_list td.field-notes_preview span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:920px){.customer-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.customer-topbar .brand{min-width:0;flex:1}.customer-topbar .mode-switch{order:3;width:100%;justify-content:center}.customer-topbar .mode-btn{flex:1;justify-content:center}.customer-topbar .top-actions{min-width:0}.customer-topbar .profile-copy{display:none}}
+@media(max-width:600px){.customer-topbar{padding:12px}.customer-topbar .brand-mark{height:39px;width:39px}.customer-topbar .brand-name{font-size:18px}.customer-topbar .brand-sub{font-size:9px}.customer-topbar .status-pill{display:none}.customer-main{padding:15px 12px 24px}.customer-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.customer-heading h1{font-size:25px!important}.customer-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.customer-kpis{gap:8px}.customer-kpis .commission-kpi{padding:12px;min-height:112px}.customer-kpis .commission-kpi strong{font-size:17px;margin:10px 0 4px}.customer-directory-panel{padding:10px;border-radius:14px}.customer-directory-panel .commission-panel-heading{align-items:flex-start;flex-direction:column}.customer-directory-tag{align-self:flex-start}#changelist-search input[type="text"],#changelist-search input[type="search"]{width:100%}#changelist .object-tools{justify-content:flex-start}}
