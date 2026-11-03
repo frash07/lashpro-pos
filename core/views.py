@@ -100,6 +100,18 @@ self.addEventListener("fetch", (event) => {
 
 @staff_member_required
 def admin_suite(request):
+    from django.core.exceptions import PermissionDenied
+    from accounts.models import User
+
+    if not (
+        request.user.is_superuser
+        or (
+            request.user.is_staff
+            and getattr(request.user, "role", None) in {User.Role.OWNER, User.Role.MANAGER}
+        )
+    ):
+        raise PermissionDenied
+
     groups = [
         {
             "name": "People & Access",
