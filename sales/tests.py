@@ -297,7 +297,7 @@ class AdminSuiteGateTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.cashier = User.objects.create_user(username="gate-cashier", password="x", role=User.Role.CASHIER)
-        cls.manager = User.objects.create_user(username="gate-manager", password="x", role=User.Role.MANAGER)
+        cls.manager = User.objects.create_user(username="gate-manager", password="x", role=User.Role.MANAGER, is_staff=True)
 
     def _create_unverified_mpesa(self, count):
         for index in range(count):
@@ -319,6 +319,7 @@ class AdminSuiteGateTests(TestCase):
         response = self.client.get(reverse("sales:checkout"))
         self.assertTrue(response.context["admin_suite"]["is_manager"])
         self.assertContains(response, 'id="nav-admin-btn"')
+        self.assertContains(response, 'href="/admin-suite/"')
         for name in ("sales:refunds", "payments:cash-session", "sales:services", "inventory:receive", "reporting:dashboard"):
             self.assertContains(response, reverse(name))
 
