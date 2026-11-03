@@ -428,8 +428,11 @@ class SalesAdminIntegrationTests(TestCase):
         cashier_line_permission = Permission.objects.get(codename="change_saleline")
         cls.cashier.user_permissions.add(cashier_line_permission)
 
-    def _create_sale(self, *, include_product=False):
-        items = [{"service_id": self.service.pk}]
+    def _create_sale(self, *, include_product=False, technician=None):
+        service_item = {"service_id": self.service.pk}
+        if technician is not None:
+            service_item["technician_id"] = technician.pk
+        items = [service_item]
         if include_product:
             items.append({"product_id": self.product.pk})
         return checkout_sale(cashier=self.cashier, items=items)
@@ -484,10 +487,8 @@ class SalesAdminIntegrationTests(TestCase):
         )
 
     def test_manager_admin_action_completes_service_and_accrues_commission(self):
-        sale = self._create_sale()
+        sale = self._create_sale(technician=self.technician)
         line = sale.lines.get(service=self.service)
-        line.technician = self.technician
-        line.save(update_fields=("technician",))
         self.client.force_login(self.manager)
 
         response = self.client.post(
