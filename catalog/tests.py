@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.contrib import admin
 from django.test import TestCase
 from django.urls import reverse
 
@@ -62,8 +63,7 @@ class CatalogAdminIntegrationTests(TestCase):
         url = reverse("admin:catalog_product_change", args=[self.product.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        readonly_fields = response.context["inline_admin_formsets"]
-        product_admin = __import__("django.contrib.admin", fromlist=["site"]).site._registry[Product]
+        product_admin = admin.site._registry[Product]
         self.assertIn("on_hand", product_admin.get_readonly_fields(None, self.product))
         self.assertIn("sku", product_admin.get_readonly_fields(None, self.product))
 
