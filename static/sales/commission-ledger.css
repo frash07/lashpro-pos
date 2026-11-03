@@ -1,0 +1,69 @@
+/* Checkout-aligned presentation for the immutable commission ledger. */
+html,body{min-height:100%;background:var(--bg)!important;color:var(--text)!important;font-family:'DM Sans',system-ui,sans-serif!important}
+body{margin:0!important}
+#container{min-width:0!important;width:100%!important;background:var(--bg)!important}
+#header,#nav-sidebar,.breadcrumbs,#toggle-nav-sidebar{display:none!important}
+#content{margin:0!important;padding:0!important;max-width:none!important}
+#content-main{float:none!important;width:100%!important;margin:0!important}
+#content-related{display:none!important}
+.commission-topbar{z-index:30}
+.commission-brand{color:var(--text)!important;text-decoration:none!important}
+.commission-main{max-width:1600px}
+.commission-heading{align-items:flex-end}
+.commission-heading h1{font-family:'Playfair Display',Georgia,serif!important;font-size:31px!important;font-weight:500!important;line-height:1.1!important;letter-spacing:-.025em!important;margin:8px 0 7px!important;color:var(--text)!important}
+.commission-heading h1 em{color:var(--pink);font-weight:400}
+.commission-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 17px}
+.commission-kpi{min-width:0;padding:16px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,var(--surface),var(--surface-2));box-shadow:var(--shadow)}
+.commission-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px}
+.commission-kpi-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
+.commission-kpi-icon svg{width:17px;height:17px}
+.commission-kpi-icon.green{background:rgba(109,214,173,.11);color:var(--green)}
+.commission-kpi-icon.amber{background:rgba(231,177,104,.12);color:var(--amber)}
+.commission-kpi strong{display:block;margin:13px 0 5px;color:var(--text);font-size:clamp(17px,2vw,23px);font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.commission-kpi small{color:var(--subtle);font-size:9px}
+.commission-ledger-panel{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}
+.commission-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
+.commission-panel-heading .section-title{font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:500;color:var(--text)}
+.commission-panel-heading .section-caption{margin-top:5px;color:var(--muted);font-size:10px}
+.commission-immutable{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:9px;white-space:nowrap}
+.commission-immutable svg{width:13px;height:13px;color:var(--green)}
+#changelist{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+#changelist .changelist-form-container{order:1;flex:1 1 720px;min-width:0}
+#changelist-filter{order:2;float:none!important;position:static!important;width:220px;flex:0 0 220px;margin:0!important;padding:14px!important;border:1px solid var(--line)!important;border-radius:14px;background:var(--surface-2)!important;color:var(--text)!important}
+#changelist-filter h2{margin:0 0 12px!important;padding:0!important;background:none!important;color:var(--text)!important;font-size:12px!important;font-weight:700!important}
+#changelist-filter h3{margin:15px 0 7px!important;color:var(--pink)!important;font-size:9px!important;letter-spacing:.1em;text-transform:uppercase}
+#changelist-filter ul{margin:0!important;padding:0!important}
+#changelist-filter li{padding:4px 0!important;font-size:10px}
+#changelist-filter a{color:var(--muted)!important;text-decoration:none!important}
+#changelist-filter a:hover,#changelist-filter li.selected a{color:var(--pink)!important}
+#changelist-form .actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:11px 12px!important;margin:0 0 12px!important;border:1px solid var(--line)!important;border-radius:12px;background:var(--surface-2)!important;color:var(--muted)!important}
+#changelist-form .actions label{color:var(--muted)!important;font-size:10px}
+#changelist-form .actions select,#changelist-search input[type="text"],#changelist-search input[type="search"]{min-height:39px;padding:9px 11px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:var(--bg)!important;color:var(--text)!important;font-family:'DM Sans',system-ui,sans-serif!important;font-size:10px!important}
+#changelist-form .actions button,#changelist-search input[type="submit"],.object-tools a{min-height:38px;padding:9px 13px!important;border:1px solid var(--line-strong)!important;border-radius:10px!important;background:var(--pink-wash)!important;color:var(--pink)!important;font-family:'DM Sans',system-ui,sans-serif!important;font-size:10px!important;font-weight:700!important;text-decoration:none!important}
+#changelist-search{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 13px!important}
+#changelist-search label,#changelist-search img{display:none}
+#changelist-search input[type="text"],#changelist-search input[type="search"]{width:min(100%,340px)}
+#changelist .object-tools{float:none!important;display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px!important;padding:0!important}
+#changelist .object-tools li{margin:0!important}
+#changelist .results{overflow-x:auto;border:1px solid var(--line);border-radius:13px}
+#result_list{width:100%!important;border:0!important;border-collapse:separate!important;border-spacing:0!important;background:var(--surface)!important}
+#result_list thead th{padding:13px 12px!important;background:var(--surface-2)!important;border-bottom:1px solid var(--line)!important;color:var(--subtle)!important;font-size:9px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+#result_list thead th a{color:var(--subtle)!important}
+#result_list tbody th,#result_list tbody td{padding:14px 12px!important;border-bottom:1px solid var(--line)!important;background:transparent!important;color:var(--muted)!important;font-size:10px!important;vertical-align:middle!important;white-space:nowrap}
+#result_list tbody tr:last-child th,#result_list tbody tr:last-child td{border-bottom:0!important}
+#result_list tbody tr:hover th,#result_list tbody tr:hover td{background:var(--pink-wash)!important}
+#result_list tbody th a,#result_list tbody td a{color:var(--pink)!important;font-weight:700;text-decoration:none!important}
+#result_list tbody th a:hover,#result_list tbody td a:hover{text-decoration:underline!important}
+#result_list input[type="checkbox"],#changelist-form input[type="checkbox"]{accent-color:var(--pink)}
+.paginator{padding:13px 2px!important;color:var(--muted)!important;font-size:10px!important}
+.paginator a{display:inline-block;margin:0 3px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;color:var(--pink)!important;text-decoration:none}
+#changelist .filtered{border:0!important}
+#changelist .filtered .results{margin-right:0!important}
+#changelist .filtered #changelist-filter{margin-left:0!important}
+#changelist .help,#changelist .quiet{color:var(--subtle)!important}
+#changelist .actions .action-counter{font-size:9px;color:var(--subtle)}
+.commission-footer{display:flex;justify-content:space-between;gap:12px;padding:16px 2px;color:var(--subtle);font-size:9px}
+.commission-footer-brand{color:var(--pink);font-weight:700;letter-spacing:.12em}
+@media(max-width:1100px){.commission-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#changelist{display:block}#changelist-filter{width:auto;margin-top:15px!important}.commission-ledger-panel{padding:14px}}
+@media(max-width:920px){.commission-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.commission-topbar .brand{min-width:0;flex:1}.commission-topbar .mode-switch{order:3;width:100%;justify-content:center}.commission-topbar .mode-btn{flex:1;justify-content:center}.commission-topbar .top-actions{min-width:0}.commission-topbar .profile-copy{display:none}}
+@media(max-width:600px){.commission-topbar{padding:12px}.commission-topbar .brand-mark{height:39px;width:39px}.commission-topbar .brand-name{font-size:18px}.commission-topbar .brand-sub{font-size:9px}.commission-topbar .status-pill{display:none}.commission-main{padding:15px 12px 24px}.commission-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.commission-heading h1{font-size:25px!important}.commission-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.commission-kpis{gap:8px}.commission-kpi{padding:12px}.commission-kpi strong{font-size:17px;margin:10px 0 4px}.commission-ledger-panel{padding:10px;border-radius:14px}.commission-panel-heading{align-items:flex-start;flex-direction:column}.commission-immutable{align-self:flex-start}#changelist-form .actions{align-items:flex-start}#changelist-search input[type="text"],#changelist-search input[type="search"]{width:100%}#changelist .object-tools{justify-content:flex-start}.commission-footer{align-items:flex-start;flex-direction:column;gap:5px}}
