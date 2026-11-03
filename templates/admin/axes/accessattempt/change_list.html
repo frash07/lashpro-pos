@@ -1,0 +1,140 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Access attempts · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/axes-accesslog.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar accesslog-admin-topbar">
+    <a class="brand accesslog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span class="brand-lockup">
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin_suite' %}" aria-current="page">
+        <i data-lucide="layout-dashboard"></i><span>Admin Suite</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill accesslog-security-status"><span class="status-dot"></span><span>Security workspace</span></div>
+      <button class="icon-button" id="accessattempt-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main accesslog-admin-main">
+    <section class="view">
+      <div class="page-heading accesslog-admin-heading">
+        <div class="accesslog-heading-copy">
+          <div class="eyebrow">Security &amp; access</div>
+          <h1>Access attempts <em>and request history.</em></h1>
+          <p>Inspect authentication attempts and the request details captured by Axes to help investigate unusual sign-in activity.</p>
+        </div>
+        <div class="heading-actions accesslog-heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="activity"></i><span>Authentication monitoring</span></div>
+        </div>
+      </div>
+
+      <nav class="accesslog-security-nav" aria-label="Security activity">
+        <a class="accesslog-security-tab" href="{% url 'admin:axes_accesslog_changelist' %}">
+          <i data-lucide="clipboard-list"></i><span>Access logs</span>
+        </a>
+        <a class="accesslog-security-tab" href="{% url 'admin:axes_accessfailurelog_changelist' %}">
+          <i data-lucide="shield-alert"></i><span>Failed logins</span>
+        </a>
+        <a class="accesslog-security-tab active" href="{% url 'admin:axes_accessattempt_changelist' %}" aria-current="page">
+          <i data-lucide="activity"></i><span>Access attempts</span>
+        </a>
+      </nav>
+
+      <section class="accesslog-admin-summary" aria-label="Access attempt overview">
+        <article class="accesslog-admin-summary-card">
+          <span class="accesslog-admin-summary-icon"><i data-lucide="activity"></i></span>
+          <span class="accesslog-admin-summary-copy">
+            <strong>{{ cl.result_count }}</strong>
+            <small>Attempts matching this view</small>
+          </span>
+        </article>
+        <article class="accesslog-admin-summary-context">
+          <span class="accesslog-admin-summary-icon accesslog-context-icon"><i data-lucide="fingerprint"></i></span>
+          <span>
+            <strong>Authentication attempt history</strong>
+            <small>Use search and filters to narrow the activity and inspect the request context for individual attempts.</small>
+          </span>
+        </article>
+      </section>
+
+      <section class="accesslog-admin-content" aria-label="Access attempt records">
+        <div class="accesslog-content-heading">
+          <div>
+            <div class="eyebrow">Activity register</div>
+            <h2>Recorded attempts</h2>
+            <p>Search, filter and review authentication attempt records.</p>
+          </div>
+          <span class="accesslog-record-count">{{ cl.result_count }} <span>in this view</span></span>
+        </div>
+        {{ block.super }}
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("accessattempt-admin-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
