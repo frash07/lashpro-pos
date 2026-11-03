@@ -1,7 +1,7 @@
 {% extends "admin/change_list.html" %}
 {% load static %}
 
-{% block title %}Login activity · LashPro KE{% endblock %}
+{% block title %}Access logs · LashPro KE{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -16,7 +16,7 @@
   <header class="topbar accesslog-admin-topbar">
     <a class="brand accesslog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
       <span class="brand-mark"><i data-lucide="sparkles"></i></span>
-      <span>
+      <span class="brand-lockup">
         <span class="brand-name">LASHPRO <span>KE</span></span>
         <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
       </span>
@@ -26,16 +26,13 @@
       <a class="mode-btn" href="{% url 'sales:checkout' %}">
         <i data-lucide="shopping-bag"></i><span>Salon POS</span>
       </a>
-      <a class="mode-btn" href="{% url 'admin_suite' %}">
+      <a class="mode-btn active" href="{% url 'admin_suite' %}" aria-current="page">
         <i data-lucide="layout-dashboard"></i><span>Admin Suite</span>
-      </a>
-      <a class="mode-btn active" href="{% url 'admin:axes_accesslog_changelist' %}" aria-current="page">
-        <i data-lucide="shield-check"></i><span>Login activity</span>
       </a>
     </nav>
 
     <div class="top-actions">
-      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <div class="status-pill accesslog-security-status"><span class="status-dot"></span><span>Security workspace</span></div>
       <button class="icon-button" id="accesslog-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
         <i data-lucide="sun-moon"></i>
       </button>
@@ -52,28 +49,57 @@
   <main class="main accesslog-admin-main">
     <section class="view">
       <div class="page-heading accesslog-admin-heading">
-        <div>
+        <div class="accesslog-heading-copy">
           <div class="eyebrow">Security &amp; access</div>
-          <h1>Login activity <em>with a clear audit trail.</em></h1>
-          <p>Review recorded sign-ins and the request details associated with each event.</p>
+          <h1>Access logs <em>and sign-in history.</em></h1>
+          <p>Review recorded account sign-ins, timestamps and the request details associated with each event.</p>
         </div>
-        <div class="heading-actions">
+        <div class="heading-actions accesslog-heading-actions">
           <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
-          <div class="soft-pill"><i data-lucide="shield-check"></i> Security monitoring</div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i><span>Authentication records</span></div>
         </div>
       </div>
 
-      <div class="accesslog-admin-summary">
-        <div class="accesslog-admin-summary-card">
-          <span class="accesslog-admin-summary-icon"><i data-lucide="activity"></i></span>
-          <span><strong>{{ cl.result_count }}</strong><small>Login records in this view</small></span>
-        </div>
-        <div class="accesslog-admin-summary-note">Search and filter the activity below to review account access and investigate unusual sign-ins.</div>
-      </div>
+      <nav class="accesslog-security-nav" aria-label="Security activity">
+        <a class="accesslog-security-tab active" href="{% url 'admin:axes_accesslog_changelist' %}" aria-current="page">
+          <i data-lucide="clipboard-list"></i><span>Access logs</span>
+        </a>
+        <a class="accesslog-security-tab" href="{% url 'admin:axes_accessfailurelog_changelist' %}">
+          <i data-lucide="shield-alert"></i><span>Failed logins</span>
+        </a>
+        <a class="accesslog-security-tab" href="{% url 'admin:axes_accessattempt_changelist' %}">
+          <i data-lucide="activity"></i><span>Access attempts</span>
+        </a>
+      </nav>
 
-      <div class="accesslog-admin-content">
+      <section class="accesslog-admin-summary" aria-label="Access log overview">
+        <article class="accesslog-admin-summary-card">
+          <span class="accesslog-admin-summary-icon"><i data-lucide="list-checks"></i></span>
+          <span class="accesslog-admin-summary-copy">
+            <strong>{{ cl.result_count }}</strong>
+            <small>Records matching this view</small>
+          </span>
+        </article>
+        <article class="accesslog-admin-summary-context">
+          <span class="accesslog-admin-summary-icon accesslog-context-icon"><i data-lucide="fingerprint"></i></span>
+          <span>
+            <strong>Authentication history</strong>
+            <small>Use search and filters to narrow the activity and inspect individual records.</small>
+          </span>
+        </article>
+      </section>
+
+      <section class="accesslog-admin-content" aria-label="Access log records">
+        <div class="accesslog-content-heading">
+          <div>
+            <div class="eyebrow">Activity register</div>
+            <h2>Sign-in records</h2>
+            <p>Search, filter and review the recorded access history.</p>
+          </div>
+          <span class="accesslog-record-count">{{ cl.result_count }} <span>in this view</span></span>
+        </div>
         {{ block.super }}
-      </div>
+      </section>
     </section>
   </main>
 {% endblock %}
