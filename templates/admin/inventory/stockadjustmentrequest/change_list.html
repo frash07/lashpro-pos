@@ -1,0 +1,115 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Stock adjustment requests · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/inventory-movements.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/stock-adjustment-requests.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar inventory-admin-topbar stock-adjustment-admin-topbar">
+    <a class="brand inventory-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin_suite' %}">
+        <i data-lucide="layout-dashboard"></i><span>Admin Suite</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}" aria-current="page">
+        <i data-lucide="clipboard-check"></i><span>Inventory</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="stock-adjustment-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main inventory-admin-main stock-adjustment-admin-main">
+    <section class="view">
+      <div class="page-heading inventory-admin-heading stock-adjustment-admin-heading">
+        <div>
+          <div class="eyebrow">Inventory · Approval control</div>
+          <h1>Stock adjustment requests <em>review every change.</em></h1>
+          <p>Check the reason and quantity before approving or rejecting a requested stock correction.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Dual-control approval</div>
+        </div>
+      </div>
+
+      <div class="inventory-admin-summary stock-adjustment-admin-summary">
+        <div class="inventory-admin-summary-card">
+          <span class="inventory-admin-summary-icon"><i data-lucide="clipboard-list"></i></span>
+          <span><strong>{{ cl.result_count }}</strong><small>Requests in this view</small></span>
+        </div>
+        <div class="inventory-admin-summary-note">Use the status filter to isolate pending reviews. Approval updates on-hand stock and creates an inventory movement; rejection records the decision without changing stock. The requester cannot approve their own request.</div>
+      </div>
+
+      <div class="inventory-admin-content stock-adjustment-admin-content">
+        {{ block.super }}
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("stock-adjustment-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}

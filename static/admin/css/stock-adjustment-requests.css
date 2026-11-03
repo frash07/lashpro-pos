@@ -1,0 +1,27 @@
+/* Stock-adjustment approval queue refinements on the shared checkout-aligned inventory theme. */
+.stock-adjustment-admin-main{max-width:1600px}
+.stock-adjustment-admin-heading h1{max-width:900px}
+.stock-adjustment-admin-heading h1 em{display:inline;color:var(--pink);font-weight:400}
+.stock-adjustment-admin-summary{align-items:center}
+.stock-adjustment-admin-summary .inventory-admin-summary-note{max-width:850px;line-height:1.6}
+.stock-adjustment-admin-content #result_list{min-width:920px}
+.stock-adjustment-admin-content #result_list .field-created_at{white-space:nowrap;font-variant-numeric:tabular-nums}
+.stock-adjustment-admin-content #result_list .field-quantity_delta{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;color:var(--text)!important}
+.stock-adjustment-admin-content #result_list .field-status{white-space:nowrap;font-weight:700}
+.stock-adjustment-admin-content #result_list .field-status a{display:inline-block;padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-size:9px;line-height:1.2}
+.stock-adjustment-admin-content #result_list .field-product a{font-weight:700}
+.stock-adjustment-admin-content #result_list .field-requested_by,
+.stock-adjustment-admin-content #result_list .field-reviewed_by{white-space:nowrap}
+.stock-adjustment-admin-content #result_list tbody tr:hover .field-quantity_delta{color:var(--pink)!important}
+.stock-adjustment-admin-content #changelist-filter{max-height:calc(100vh - 150px);overflow-y:auto}
+.stock-adjustment-admin-content #changelist-filter h3:first-of-type{margin-top:0!important}
+.stock-adjustment-admin-content #changelist-form .actions{border-left:3px solid var(--pink)!important}
+.stock-adjustment-admin-content #changelist-form .actions button{cursor:pointer}
+.stock-adjustment-admin-content .object-tools a.addlink{background:linear-gradient(110deg,var(--pink-strong),var(--pink))!important;color:#fff!important}
+@media(max-width:1050px){.stock-adjustment-admin-content #changelist-filter{max-height:none}}
+@media(max-width:600px){
+  .stock-adjustment-admin-heading h1{max-width:100%}
+  .stock-adjustment-admin-summary .inventory-admin-summary-note{font-size:10px}
+  .stock-adjustment-admin-content #result_list{min-width:820px}
+  .stock-adjustment-admin-content #changelist-form .actions{align-items:flex-start}
+}
