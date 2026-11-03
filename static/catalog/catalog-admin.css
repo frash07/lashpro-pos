@@ -1,4 +1,4 @@
-/* Checkout-aligned presentation for the Django product changelist. */
+/* Shared checkout-aligned presentation for all Django catalog changelists. */
 html,body{min-height:100%;background:var(--bg)!important;color:var(--text)!important;font-family:'DM Sans',system-ui,sans-serif!important}
 body{margin:0!important}
 #container{min-width:0!important;width:100%!important;background:var(--bg)!important}
@@ -6,20 +6,20 @@ body{margin:0!important}
 #content{margin:0!important;padding:0!important;max-width:none!important}
 #content-main{float:none!important;width:100%!important;margin:0!important}
 #content-related{display:none!important}
-.product-admin-topbar{z-index:30}
-.product-admin-brand{color:var(--text)!important;text-decoration:none!important}
-.product-admin-main{max-width:1600px}
-.product-admin-heading{align-items:flex-end}
-.product-admin-heading h1{font-family:'Playfair Display',Georgia,serif!important;font-size:31px!important;font-weight:500!important;line-height:1.1!important;letter-spacing:-.025em!important;margin:8px 0 7px!important;color:var(--text)!important}
-.product-admin-heading h1 em{color:var(--pink);font-weight:400}
-.product-admin-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 17px}
-.product-admin-summary-card{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
-.product-admin-summary-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
-.product-admin-summary-icon svg{width:17px;height:17px}
-.product-admin-summary-card strong{display:block;font-size:17px;line-height:1.1;color:var(--text)}
-.product-admin-summary-card small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
-.product-admin-summary-note{color:var(--muted);font-size:10px}
-.product-admin-content{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}
+.catalog-admin-topbar{z-index:30}
+.catalog-admin-brand{color:var(--text)!important;text-decoration:none!important}
+.catalog-admin-main{max-width:1600px}
+.catalog-admin-heading{align-items:flex-end}
+.catalog-admin-heading h1{font-family:'Playfair Display',Georgia,serif!important;font-size:31px!important;font-weight:500!important;line-height:1.1!important;letter-spacing:-.025em!important;margin:8px 0 7px!important;color:var(--text)!important}
+.catalog-admin-heading h1 em{color:var(--pink);font-weight:400}
+.catalog-admin-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 17px}
+.catalog-admin-summary-card{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
+.catalog-admin-summary-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
+.catalog-admin-summary-icon svg{width:17px;height:17px}
+.catalog-admin-summary-card strong{display:block;font-size:17px;line-height:1.1;color:var(--text)}
+.catalog-admin-summary-card small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+.catalog-admin-summary-note{color:var(--muted);font-size:10px}
+.catalog-admin-content{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}
 #changelist{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
 #changelist .changelist-form-container{order:1;flex:1 1 720px;min-width:0}
 #changelist-filter{order:2;float:none!important;position:static!important;width:220px;flex:0 0 220px;margin:0!important;padding:14px!important;border:1px solid var(--line)!important;border-radius:14px;background:var(--surface-2)!important;color:var(--text)!important}
@@ -64,6 +64,6 @@ body{margin:0!important}
 #changelist .xfull{width:100%}
 #changelist .help,#changelist .quiet{color:var(--subtle)!important}
 #changelist .actions .action-counter{font-size:9px;color:var(--subtle)}
-@media(max-width:1050px){#changelist{display:block}#changelist-filter{width:auto;margin-top:15px!important}.product-admin-content{padding:14px}}
-@media(max-width:920px){.product-admin-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.product-admin-topbar .brand{min-width:0;flex:1}.product-admin-topbar .mode-switch{order:3;width:100%;justify-content:center}.product-admin-topbar .mode-btn{flex:1;justify-content:center}.product-admin-topbar .top-actions{min-width:0}.product-admin-topbar .profile-copy{display:none}}
-@media(max-width:600px){.product-admin-topbar{padding:12px}.product-admin-topbar .brand-mark{height:39px;width:39px}.product-admin-topbar .brand-name{font-size:18px}.product-admin-topbar .brand-sub{font-size:9px}.product-admin-topbar .status-pill{display:none}.product-admin-main{padding:15px 12px 24px}.product-admin-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.product-admin-heading h1{font-size:25px!important}.product-admin-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.product-admin-summary{align-items:flex-start;flex-direction:column}.product-admin-summary-note{line-height:1.5}.product-admin-content{padding:10px;border-radius:14px}#changelist-form .actions{align-items:flex-start}#changelist-search input[type="text"],#changelist-search input[type="search"]{width:100%}#changelist .object-tools{justify-content:flex-start}}
+@media(max-width:1050px){#changelist{display:block}#changelist-filter{width:auto;margin-top:15px!important}.catalog-admin-content{padding:14px}}
+@media(max-width:920px){.catalog-admin-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.catalog-admin-topbar .brand{min-width:0;flex:1}.catalog-admin-topbar .mode-switch{order:3;width:100%;justify-content:center}.catalog-admin-topbar .mode-btn{flex:1;justify-content:center}.catalog-admin-topbar .top-actions{min-width:0}.catalog-admin-topbar .profile-copy{display:none}}
+@media(max-width:600px){.catalog-admin-topbar{padding:12px}.catalog-admin-topbar .brand-mark{height:39px;width:39px}.catalog-admin-topbar .brand-name{font-size:18px}.catalog-admin-topbar .brand-sub{font-size:9px}.catalog-admin-topbar .status-pill{display:none}.catalog-admin-main{padding:15px 12px 24px}.catalog-admin-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.catalog-admin-heading h1{font-size:25px!important}.catalog-admin-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.catalog-admin-summary{align-items:flex-start;flex-direction:column}.catalog-admin-summary-note{line-height:1.5}.catalog-admin-content{padding:10px;border-radius:14px}#changelist-form .actions{align-items:flex-start}#changelist-search input[type="text"],#changelist-search input[type="search"]{width:100%}#changelist .object-tools{justify-content:flex-start}}

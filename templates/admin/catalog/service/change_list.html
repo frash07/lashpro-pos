@@ -1,0 +1,114 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Services · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'catalog/catalog-admin.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar catalog-admin-topbar">
+    <a class="brand catalog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:catalog_product_changelist' %}">
+        <i data-lucide="package"></i><span>Products</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:catalog_service_changelist' %}" aria-current="page">
+        <i data-lucide="sparkles"></i><span>Services</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="catalog-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">STAFF WORKSPACE</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main catalog-admin-main">
+    <section class="view">
+      <div class="page-heading catalog-admin-heading">
+        <div>
+          <div class="eyebrow">Catalog management</div>
+          <h1>Services <em>that make every visit beautiful.</em></h1>
+          <p>Manage your lash treatments, service pricing, session durations and artist commissions.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="sparkles"></i> Studio services</div>
+        </div>
+      </div>
+
+      <div class="catalog-admin-summary">
+        <div class="catalog-admin-summary-card">
+          <span class="catalog-admin-summary-icon"><i data-lucide="list-checks"></i></span>
+          <span><strong>{{ cl.result_count }}</strong><small>Services in this view</small></span>
+        </div>
+        <div class="catalog-admin-summary-note">Search and filter treatments to maintain accurate pricing, durations and commission settings.</div>
+      </div>
+
+      <div class="catalog-admin-content">
+        {{ block.super }}
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("catalog-admin-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
