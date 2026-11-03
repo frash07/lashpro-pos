@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from accounts.models import User
 from customers.models import Customer
+from sales.models import Sale
 
 
 class CustomerAdminIntegrationTests(TestCase):
@@ -26,6 +27,34 @@ class CustomerAdminIntegrationTests(TestCase):
         response = self.client.get(reverse("admin:customers_customer_changelist"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.customer.name)
+        self.assertContains(response, "Customer directory")
+        self.assertContains(response, "Purchase history")
+
+    def test_customer_directory_summary_counts_only_completed_sales(self):
+        Customer.objects.create(name="Walk-in Client")
+        Sale.objects.create(
+            customer=self.customer,
+            cashier=self.admin_user,
+            status=Sale.Status.COMPLETED,
+        )
+        Sale.objects.create(
+            customer=self.customer,
+            cashier=self.admin_user,
+            status=Sale.Status.DRAFT,
+        )
+        response = self.client.get(reverse("admin:customers_customer_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["customer_summary"],
+            {
+                "customer_count": 2,
+                "with_phone": 1,
+                "with_sales": 1,
+                "with_notes": 1,
+            },
+        )
+        self.assertContains(response, "No completed sales")
+        self.assertContains(response, 'class="customer-sales-count has-sales">1</span>')
 
     def test_customer_admin_add_page_is_available(self):
         response = self.client.get(reverse("admin:customers_customer_add"))
