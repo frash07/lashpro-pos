@@ -29,7 +29,7 @@ class CommissionLedgerEntryAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return request.user.is_superuser or request.user.has_perm("commissions.view_commissionledgerentry")
-    def has_delete_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
 
 
 @admin.register(CommissionPayoutRequest)
@@ -98,8 +98,8 @@ class CommissionPayoutRecordAdmin(admin.ModelAdmin):
                 totals = changelist.queryset.aggregate(
                     record_count=Count("pk"),
                     total_issued=Sum("amount"),
-                    cash_total=Sum("amount", filter=Q(method=CommissionPayoutRecord.Method.CASH)),
-                    mpesa_total=Sum("amount", filter=Q(method=CommissionPayoutRecord.Method.MPESA)),
+                    cash_total=Sum("amount", filter=Q(method=CommissionPayoutRequest.Method.CASH)),
+                    mpesa_total=Sum("amount", filter=Q(method=CommissionPayoutRequest.Method.MPESA)),
                 )
                 response.context_data["payout_summary"] = totals
         return response
