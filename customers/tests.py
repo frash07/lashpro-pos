@@ -54,6 +54,7 @@ class CustomerAdminIntegrationTests(TestCase):
             },
         )
         self.assertContains(response, "No completed sales")
+        self.assertContains(response, 'class="customer-sales-count has-sales">1</span>')
 
     def test_customer_admin_add_page_is_available(self):
         response = self.client.get(reverse("admin:customers_customer_add"))
