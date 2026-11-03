@@ -3,6 +3,8 @@ from decimal import Decimal
 from threading import Barrier
 import uuid
 
+from django.contrib import admin
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, close_old_connections, connection, transaction
 from django.urls import reverse
@@ -13,7 +15,8 @@ from audit.models import AuditEvent
 from catalog.models import Product, Service
 from customers.models import Customer
 from payments.models import CashSession, PaymentTransaction, SalePayment
-from .models import Sale, SaleLine
+from commissions.models import CommissionLedgerEntry
+from .models import Sale, SaleLine, SaleRefund
 from .services import checkout_sale, record_sale_payment
 
 
@@ -377,3 +380,175 @@ class ConcurrentStockCheckoutTests(TransactionTestCase):
         )
         with self.assertRaises(ValidationError):
             checkout_sale(cashier=technician, items=[{"service_id": service.pk}])
+
+
+
+class SalesAdminIntegrationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user(
+            username="sales-admin-manager",
+            password="test-password",
+            role=User.Role.MANAGER,
+            is_staff=True,
+        )
+        cls.cashier = User.objects.create_user(
+            username="sales-admin-cashier",
+            password="test-password",
+            role=User.Role.CASHIER,
+            is_staff=True,
+        )
+        cls.technician = User.objects.create_user(
+            username="sales-admin-technician",
+            password="test-password",
+            role=User.Role.TECHNICIAN,
+        )
+        cls.service = Service.objects.create(
+            name="Admin Test Lash Set",
+            duration_minutes=60,
+            price=Decimal("1500.00"),
+            commission_eligible=True,
+            commission_rate=Decimal("0.4000"),
+        )
+        cls.product = Product.objects.create(
+            sku="ADMIN-SALES-001",
+            name="Admin Test Adhesive",
+            cost_price=Decimal("100.00"),
+            selling_price=Decimal("250.00"),
+            on_hand=Decimal("5.000"),
+        )
+        manager_permissions = Permission.objects.filter(
+            codename__in=(
+                "view_sale", "change_sale",
+                "view_saleline", "change_saleline",
+                "view_salerefund",
+            )
+        )
+        cls.manager.user_permissions.add(*manager_permissions)
+        cashier_line_permission = Permission.objects.get(codename="change_saleline")
+        cls.cashier.user_permissions.add(cashier_line_permission)
+
+    def _create_sale(self, *, include_product=False):
+        items = [{"service_id": self.service.pk}]
+        if include_product:
+            items.append({"product_id": self.product.pk})
+        return checkout_sale(cashier=self.cashier, items=items)
+
+    def test_sale_admin_is_read_only_and_disallows_add_and_delete(self):
+        sale = self._create_sale()
+        self.client.force_login(self.manager)
+
+        response = self.client.get(reverse("admin:sales_sale_changelist"))
+        self.assertEqual(response.status_code, 200)
+        detail = self.client.get(reverse("admin:sales_sale_change", args=[sale.pk]))
+        self.assertEqual(detail.status_code, 200)
+
+        sale_admin = admin.site._registry[Sale]
+        self.assertEqual(
+            set(sale_admin.readonly_fields),
+            {field.name for field in Sale._meta.fields},
+        )
+        self.assertFalse(sale_admin.has_add_permission(detail.wsgi_request))
+        self.assertFalse(sale_admin.has_delete_permission(detail.wsgi_request, sale))
+        self.assertEqual(
+            self.client.get(reverse("admin:sales_sale_add")).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.get(reverse("admin:sales_sale_delete", args=[sale.pk])).status_code,
+            403,
+        )
+
+    def test_sale_line_admin_lists_service_lines_and_limits_changes_to_managers(self):
+        sale = self._create_sale(include_product=True)
+        service_line = sale.lines.get(service=self.service)
+        product_line = sale.lines.get(product=self.product)
+        self.client.force_login(self.manager)
+
+        response = self.client.get(reverse("admin:sales_saleline_changelist"))
+        self.assertEqual(response.status_code, 200)
+        listed_ids = {line.pk for line in response.context["cl"].result_list}
+        self.assertIn(service_line.pk, listed_ids)
+        self.assertNotIn(product_line.pk, listed_ids)
+
+        line_admin = admin.site._registry[SaleLine]
+        self.assertTrue(line_admin.has_change_permission(response.wsgi_request, service_line))
+
+        self.client.force_login(self.cashier)
+        cashier_response = self.client.get(
+            reverse("admin:sales_saleline_change", args=[service_line.pk])
+        )
+        self.assertEqual(cashier_response.status_code, 200)
+        self.assertFalse(
+            line_admin.has_change_permission(cashier_response.wsgi_request, service_line)
+        )
+
+    def test_manager_admin_action_completes_service_and_accrues_commission(self):
+        sale = self._create_sale()
+        line = sale.lines.get(service=self.service)
+        line.technician = self.technician
+        line.save(update_fields=("technician",))
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse("admin:sales_saleline_changelist"),
+            {
+                "action": "complete_services",
+                "_selected_action": [str(line.pk)],
+                "index": "0",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+        line.refresh_from_db()
+        self.assertIsNotNone(line.service_completed_at)
+        self.assertEqual(line.completed_by, self.manager)
+        self.assertTrue(
+            CommissionLedgerEntry.objects.filter(
+                sale_line=line,
+                entry_type=CommissionLedgerEntry.Type.EARNED,
+                technician=self.technician,
+            ).exists()
+        )
+        self.assertTrue(
+            AuditEvent.objects.filter(
+                object_type="sale_line",
+                object_id=str(line.pk),
+            ).exists()
+        )
+
+    def test_refund_admin_is_read_only_and_preserves_refund_records(self):
+        sale = self._create_sale()
+        refund = SaleRefund.objects.create(
+            sale=sale,
+            amount=Decimal("100.00"),
+            method=SaleRefund.Method.CASH,
+            reason="Admin integration test refund request.",
+            requested_by=self.cashier,
+        )
+        self.client.force_login(self.manager)
+
+        response = self.client.get(reverse("admin:sales_salerefund_changelist"))
+        self.assertEqual(response.status_code, 200)
+        detail = self.client.get(
+            reverse("admin:sales_salerefund_change", args=[refund.pk])
+        )
+        self.assertEqual(detail.status_code, 200)
+
+        refund_admin = admin.site._registry[SaleRefund]
+        self.assertEqual(
+            set(refund_admin.readonly_fields),
+            {field.name for field in SaleRefund._meta.fields},
+        )
+        self.assertFalse(refund_admin.has_add_permission(detail.wsgi_request))
+        self.assertFalse(refund_admin.has_delete_permission(detail.wsgi_request, refund))
+        self.assertEqual(
+            self.client.get(reverse("admin:sales_salerefund_add")).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.get(
+                reverse("admin:sales_salerefund_delete", args=[refund.pk])
+            ).status_code,
+            403,
+        )
