@@ -3,6 +3,7 @@ from decimal import Decimal
 from threading import Barrier
 
 from django.contrib import admin
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import close_old_connections, connection
 from django.test import TestCase, TransactionTestCase
@@ -263,3 +264,43 @@ class InventoryAdminIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Admin Classic Set")
         self.assertContains(response, "Admin Glue")
+
+
+    def test_cashier_with_admin_change_permission_cannot_approve_adjustment(self):
+        cashier_staff = User.objects.create_user(
+            username="inventory-cashier-admin",
+            password="test-password",
+            role=User.Role.CASHIER,
+            is_staff=True,
+        )
+        change_permission = Permission.objects.get(
+            content_type__app_label="inventory",
+            codename="change_stockadjustmentrequest",
+        )
+        cashier_staff.user_permissions.add(change_permission)
+
+        adjustment = request_stock_adjustment(
+            product=self.product,
+            quantity_delta="3.000",
+            reason="Cashier must not approve",
+            requested_by=self.requester,
+        )
+        self.client.force_login(cashier_staff)
+        response = self.client.post(
+            reverse("admin:inventory_stockadjustmentrequest_changelist"),
+            {
+                "action": "approve_adjustments",
+                "_selected_action": [str(adjustment.pk)],
+                "index": "0",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+        adjustment.refresh_from_db()
+        self.product.refresh_from_db()
+        self.assertEqual(adjustment.status, StockAdjustmentRequest.Status.PENDING)
+        self.assertIsNone(adjustment.reviewed_by)
+        self.assertEqual(self.product.on_hand, Decimal("2.000"))
+        self.assertFalse(
+            InventoryMovement.objects.filter(source_adjustment=adjustment).exists()
+        )
