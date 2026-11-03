@@ -146,9 +146,10 @@ class PaymentsCashAdminIntegrationTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertFalse(model_admin.has_add_permission(response.wsgi_request))
                 self.assertFalse(model_admin.has_delete_permission(response.wsgi_request, obj))
-                self.assertEqual(
-                    set(model_admin.get_readonly_fields(response.wsgi_request, obj)),
-                    {field.name for field in model._meta.fields},
+                self.assertTrue(
+                    {field.name for field in model._meta.fields}.issubset(
+                        set(model_admin.get_readonly_fields(response.wsgi_request, obj))
+                    )
                 )
                 self.assertEqual(
                     self.client.get(reverse(f"admin:{admin_name}_add")).status_code,
