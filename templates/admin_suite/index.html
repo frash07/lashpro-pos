@@ -36,23 +36,20 @@
   </header>
 
   <main class="main admin-suite-page">
-    <section class="admin-hero">
-      <div class="admin-hero-copy">
-        <div class="executive-tag"><i data-lucide="shield-check"></i> Studio administration</div>
-        <h1 class="admin-title">The studio, <em style="color:var(--pink)">beautifully managed.</em></h1>
-        <p class="admin-subtitle">Choose a management area to open its existing Django Admin records, forms, filters and actions.</p>
-      </div>
-      <div class="admin-hero-actions">
-        <a class="button-secondary" href="{% url 'sales:checkout' %}"><i data-lucide="arrow-left"></i> Return to Salon POS</a>
-        <a class="button-primary" href="{% url 'reporting:dashboard' %}"><i data-lucide="chart-no-axes-combined"></i> Full reports</a>
-      </div>
+    <section class="admin-flow-intro" aria-labelledby="admin-dashboard-title">
+      <div class="executive-tag"><i data-lucide="layout-dashboard"></i> Central administration</div>
+      <h1 class="admin-title" id="admin-dashboard-title">Admin Suite Dashboard</h1>
+      <p class="admin-subtitle">Central administration landing page</p>
+      <a class="admin-report-link" href="{% url 'reporting:dashboard' %}"><i data-lucide="chart-no-axes-combined"></i> Open full reports</a>
     </section>
 
-    <section class="admin-content admin-navigation-content" aria-labelledby="admin-navigation-title">
+    <div class="admin-flow-arrow" aria-hidden="true"><i data-lucide="arrow-down"></i></div>
+
+    <section class="admin-content admin-navigation-content" aria-labelledby="admin-categories-title">
       <div class="admin-content-head">
         <div>
-          <div class="admin-content-title" id="admin-navigation-title">Management areas</div>
-          <div class="admin-content-subtitle">Eight categories · 25 existing Django Admin destinations</div>
+          <div class="admin-content-title" id="admin-categories-title">Administration Categories</div>
+          <div class="admin-content-subtitle">Select a category to reveal its existing management pages.</div>
         </div>
         <span class="admin-navigation-note"><i data-lucide="lock-keyhole"></i> Staff access</span>
       </div>
@@ -61,31 +58,36 @@
         <details class="admin-nav-group">
           <summary>
             <span class="admin-group-icon"><i data-lucide="{{ group.icon }}"></i></span>
-            <span class="admin-group-copy">
-              <strong>{{ group.name }}</strong>
-              <small>{{ group.description }}</small>
-            </span>
-            <span class="admin-group-count">{{ group.items|length }} link{{ group.items|length|pluralize }}</span>
+            <span class="admin-group-copy"><strong>{{ group.name }}</strong></span>
           </summary>
-          <nav class="admin-group-links" aria-label="{{ group.name }}">
-            {% for item in group.items %}
-            <a href="{{ item.url }}">
-              <span>{{ item.label }}</span>
-              <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-            </a>
-            {% endfor %}
-          </nav>
+          <div class="admin-group-panel">
+            <p class="admin-group-description">{{ group.description }}</p>
+            <nav class="admin-group-links" aria-label="{{ group.name }} model pages">
+              {% for item in group.items %}
+              <a href="{{ item.url }}">
+                <span>{{ item.label }}</span>
+                <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+              </a>
+              {% endfor %}
+            </nav>
+          </div>
         </details>
         {% endfor %}
       </div>
     </section>
 
+    <div class="admin-flow-arrow admin-flow-arrow-end" aria-hidden="true"><i data-lucide="arrow-down"></i></div>
+
+    <section class="admin-model-pages" aria-labelledby="admin-model-pages-title">
+      <h2 id="admin-model-pages-title">Existing Django Admin Model Pages</h2>
+      <p>Each destination opens its original Django Admin page, retaining the established forms, permissions, filters and actions.</p>
+    </section>
+
     <footer class="admin-footer">
       <span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span>
-      <span>Management links open the original Django Admin screens.</span>
+      <span><a href="{% url 'sales:checkout' %}">Return to Salon POS</a></span>
     </footer>
   </main>
-
   <script>
     function toggleTheme() {
       const root = document.documentElement;
