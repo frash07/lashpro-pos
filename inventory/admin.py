@@ -1,7 +1,8 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+
 from .models import InventoryMovement, ServiceConsumable, StockAdjustmentRequest
-from .services import review_stock_adjustment
+from .services import request_stock_adjustment, review_stock_adjustment
 
 
 @admin.register(InventoryMovement)
@@ -26,10 +27,29 @@ class StockAdjustmentRequestAdmin(admin.ModelAdmin):
     readonly_fields = ("requested_by", "status", "reviewed_by", "review_reason", "created_at", "reviewed_at")
     actions = ("approve_adjustments", "reject_adjustments")
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return tuple(field.name for field in obj._meta.fields)
+        return self.readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        # Keep the approval history; requests must not be erased from the admin.
+        return False
+
     def save_model(self, request, obj, form, change):
-        if not change and not obj.requested_by_id:
-            obj.requested_by = request.user
-        super().save_model(request, obj, form, change)
+        if change:
+            super().save_model(request, obj, form, change)
+            return
+
+        # Route admin-created requests through the domain service so validation
+        # and the corresponding audit event cannot be bypassed.
+        created = request_stock_adjustment(
+            product=obj.product,
+            quantity_delta=obj.quantity_delta,
+            reason=obj.reason,
+            requested_by=request.user,
+        )
+        obj.__dict__.update(created.__dict__)
 
     @admin.action(description="Approve selected stock adjustments")
     def approve_adjustments(self, request, queryset):
