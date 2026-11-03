@@ -1,0 +1,166 @@
+{% extends "admin/app_index.html" %}
+{% load static %}
+
+{% block title %}Commissions · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'catalog/catalog-admin.css' %}">
+  <style>
+    .commissions-hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 18px}
+    .commissions-hub-card{display:flex;align-items:center;gap:14px;min-width:0;padding:17px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,var(--surface),var(--surface-2));color:var(--text);text-decoration:none;transition:border-color .18s,transform .18s,box-shadow .18s}
+    .commissions-hub-card:hover{border-color:var(--pink);transform:translateY(-2px);box-shadow:var(--shadow)}
+    .commissions-hub-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:var(--pink-wash);color:var(--pink)}
+    .commissions-hub-icon svg{width:20px;height:20px}
+    .commissions-hub-copy{min-width:0;flex:1}
+    .commissions-hub-copy strong{display:block;color:var(--text);font-size:13px}
+    .commissions-hub-copy small{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.5}
+    .commissions-hub-arrow{color:var(--subtle)}
+    .commissions-hub-section{margin:0 0 13px}
+    .commissions-hub-section h2{margin:0;color:var(--text);font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:500}
+    .commissions-hub-section p{margin:5px 0 0;color:var(--muted);font-size:10px}
+    .commissions-hub-list{padding:17px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow)}
+    .commissions-hub-list .module{border:0!important;background:transparent!important}
+    .commissions-hub-list table{width:100%}
+    @media(max-width:620px){.commissions-hub-grid{grid-template-columns:1fr}.commissions-hub-card{padding:14px}}
+  </style>
+{% endblock %}
+
+{% block content %}
+  <header class="topbar catalog-admin-topbar">
+    <a class="brand catalog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:app_list' app_label='commissions' %}" aria-current="page">
+        <i data-lucide="wallet"></i><span>Commissions</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:app_list' app_label='catalog' %}">
+        <i data-lucide="grid-2x2"></i><span>Catalog</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:accounts_user_changelist' %}">
+        <i data-lucide="users"></i><span>Accounts</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="commissions-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main catalog-admin-main">
+    <section class="view">
+      <div class="page-heading catalog-admin-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Finance</div>
+          <h1>Commissions <em>with every detail accounted for.</em></h1>
+          <p>Review technician earnings, payout requests and issued commission payments.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="wallet"></i> Commission workspace</div>
+        </div>
+      </div>
+
+      <div class="commissions-hub-grid" aria-label="Commission workspace shortcuts">
+        <a class="commissions-hub-card" href="{% url 'commissions:dashboard' %}">
+          <span class="commissions-hub-icon"><i data-lucide="chart-no-axes-combined"></i></span>
+          <span class="commissions-hub-copy">
+            <strong>Commission dashboard</strong>
+            <small>View balances, earned commissions, payout activity and technician summaries.</small>
+          </span>
+          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
+        </a>
+        <a class="commissions-hub-card" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}">
+          <span class="commissions-hub-icon"><i data-lucide="book-open-check"></i></span>
+          <span class="commissions-hub-copy">
+            <strong>Commission ledger</strong>
+            <small>Inspect immutable earning and reversal entries for a complete audit trail.</small>
+          </span>
+          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
+        </a>
+        <a class="commissions-hub-card" href="{% url 'admin:commissions_commissionpayoutrequest_changelist' %}">
+          <span class="commissions-hub-icon"><i data-lucide="file-clock"></i></span>
+          <span class="commissions-hub-copy">
+            <strong>Payout requests</strong>
+            <small>Review requested payouts, their status and approval history.</small>
+          </span>
+          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
+        </a>
+        <a class="commissions-hub-card" href="{% url 'admin:commissions_commissionpayoutrecord_changelist' %}">
+          <span class="commissions-hub-icon"><i data-lucide="receipt-text"></i></span>
+          <span class="commissions-hub-copy">
+            <strong>Payout records</strong>
+            <small>Review issued payments, references and verification status.</small>
+          </span>
+          <i class="commissions-hub-arrow" data-lucide="arrow-up-right"></i>
+        </a>
+      </div>
+
+      <div class="commissions-hub-section">
+        <h2>Commission administration</h2>
+        <p>Native Django administration tools and permission-aware records.</p>
+      </div>
+      <div class="commissions-hub-list">
+        {{ block.super }}
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("commissions-admin-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
