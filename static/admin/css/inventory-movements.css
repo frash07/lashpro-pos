@@ -1,0 +1,66 @@
+/* Checkout-aligned presentation for the immutable inventory movement ledger. */
+html,body{min-height:100%;background:var(--bg)!important;color:var(--text)!important;font-family:'DM Sans',system-ui,sans-serif!important}
+body{margin:0!important}
+#container{min-width:0!important;width:100%!important;background:var(--bg)!important}
+#header,#nav-sidebar,.breadcrumbs,#toggle-nav-sidebar{display:none!important}
+#content{margin:0!important;padding:0!important;max-width:none!important}
+#content-main{float:none!important;width:100%!important;margin:0!important}
+#content-related{display:none!important}
+.inventory-admin-topbar{z-index:30}
+.inventory-admin-brand{color:var(--text)!important;text-decoration:none!important}
+.inventory-admin-main{max-width:1600px}
+.inventory-admin-heading{align-items:flex-end}
+.inventory-admin-heading h1{font-family:'Playfair Display',Georgia,serif!important;font-size:31px!important;font-weight:500!important;line-height:1.1!important;letter-spacing:-.025em!important;margin:8px 0 7px!important;color:var(--text)!important}
+.inventory-admin-heading h1 em{color:var(--pink);font-weight:400}
+.inventory-admin-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 17px}
+.inventory-admin-summary-card{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
+.inventory-admin-summary-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
+.inventory-admin-summary-icon svg{width:17px;height:17px}
+.inventory-admin-summary-card strong{display:block;font-size:17px;line-height:1.1;color:var(--text)}
+.inventory-admin-summary-card small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+.inventory-admin-summary-note{color:var(--muted);font-size:10px;line-height:1.5}
+.inventory-admin-content{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}
+#changelist{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+#changelist .changelist-form-container{order:1;flex:1 1 720px;min-width:0}
+#changelist-filter{order:2;float:none!important;position:static!important;width:220px;flex:0 0 220px;margin:0!important;padding:14px!important;border:1px solid var(--line)!important;border-radius:14px;background:var(--surface-2)!important;color:var(--text)!important}
+#changelist-filter h2{margin:0 0 12px!important;padding:0!important;background:none!important;color:var(--text)!important;font-size:12px!important;font-weight:700!important}
+#changelist-filter h3{margin:15px 0 7px!important;color:var(--pink)!important;font-size:9px!important;letter-spacing:.1em;text-transform:uppercase}
+#changelist-filter ul{margin:0!important;padding:0!important}
+#changelist-filter li{padding:4px 0!important;font-size:10px}
+#changelist-filter a{color:var(--muted)!important;text-decoration:none!important}
+#changelist-filter a:hover,#changelist-filter li.selected a{color:var(--pink)!important}
+#changelist-form .actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:11px 12px!important;margin:0 0 12px!important;border:1px solid var(--line)!important;border-radius:12px;background:var(--surface-2)!important;color:var(--muted)!important}
+#changelist-form .actions label{color:var(--muted)!important;font-size:10px}
+#changelist-form .actions select,#changelist-form .actions button,#changelist-search input[type="text"],#changelist-search input[type="search"],#changelist-search input[type="submit"],.paginator a,.paginator span,.object-tools a,.submit-row input,.submit-row button,#changelist .button,#changelist button,#changelist input[type="submit"]{font-family:'DM Sans',system-ui,sans-serif!important}
+#changelist-form .actions select,#changelist-search input[type="text"],#changelist-search input[type="search"]{min-height:37px;padding:8px 10px!important;border:1px solid var(--line)!important;border-radius:9px!important;background:var(--bg)!important;color:var(--text)!important;font-size:10px!important}
+#changelist-form .actions button,#changelist-search input[type="submit"],.object-tools a{min-height:36px;padding:9px 13px!important;border:1px solid var(--line-strong)!important;border-radius:9px!important;background:var(--pink-wash)!important;color:var(--pink)!important;font-size:10px!important;font-weight:700!important;text-decoration:none!important}
+#changelist-search{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 13px!important}
+#changelist-search label,#changelist-search img{display:none}
+#changelist-search input[type="text"],#changelist-search input[type="search"]{width:min(100%,320px)}
+#changelist .object-tools{float:none!important;display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px!important;padding:0!important}
+#changelist .object-tools li{margin:0!important}
+#changelist .object-tools a.addlink{background:linear-gradient(110deg,var(--pink-strong),var(--pink))!important;color:#fff!important;border:0!important;border-radius:10px!important;padding:11px 15px!important}
+#changelist .results{overflow-x:auto;border:1px solid var(--line);border-radius:13px}
+#result_list{width:100%!important;min-width:860px;border:0!important;border-collapse:separate!important;border-spacing:0!important;background:var(--surface)!important}
+#result_list thead th{padding:12px 11px!important;background:var(--surface-2)!important;border-bottom:1px solid var(--line)!important;color:var(--subtle)!important;font-size:9px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+#result_list thead th a{color:var(--subtle)!important}
+#result_list tbody th,#result_list tbody td{padding:13px 11px!important;border-bottom:1px solid var(--line)!important;background:transparent!important;color:var(--muted)!important;font-size:10px!important;vertical-align:middle!important}
+#result_list tbody tr:last-child th,#result_list tbody tr:last-child td{border-bottom:0!important}
+#result_list tbody tr:hover th,#result_list tbody tr:hover td{background:var(--pink-wash)!important}
+#result_list tbody th a,#result_list tbody td a{color:var(--pink)!important;font-weight:700;text-decoration:none!important}
+#result_list tbody th a:hover,#result_list tbody td a:hover{text-decoration:underline!important}
+#result_list .action-checkbox{width:34px}
+#result_list input[type="checkbox"],#changelist-form input[type="checkbox"]{accent-color:var(--pink)}
+#changelist-form input[type="text"],#changelist-form input[type="search"],#changelist-form select,#changelist-form textarea{background:var(--bg)!important;color:var(--text)!important;border:1px solid var(--line)!important;border-radius:9px!important}
+#changelist-form input:focus,#changelist-form select:focus{outline:2px solid var(--pink)!important;outline-offset:2px}
+.paginator{padding:12px 2px!important;color:var(--muted)!important;font-size:10px!important}
+.paginator a{display:inline-block;margin:0 3px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;color:var(--pink)!important;text-decoration:none}
+#changelist .filtered{border:0!important}
+#changelist .filtered .results{margin-right:0!important}
+#changelist .filtered #changelist-filter{margin-left:0!important}
+#changelist .xfull{width:100%}
+#changelist .help,#changelist .quiet{color:var(--subtle)!important}
+#changelist .actions .action-counter{font-size:9px;color:var(--subtle)}
+@media(max-width:1050px){#changelist{display:block}#changelist-filter{width:auto;margin-top:15px!important}.inventory-admin-content{padding:14px}}
+@media(max-width:920px){.inventory-admin-topbar{height:auto;min-height:76px;flex-wrap:wrap;padding:13px 17px;gap:12px}.inventory-admin-topbar .brand{min-width:0;flex:1}.inventory-admin-topbar .mode-switch{order:3;width:100%;justify-content:center;flex-wrap:wrap}.inventory-admin-topbar .mode-btn{flex:1;justify-content:center}.inventory-admin-topbar .top-actions{min-width:0}.inventory-admin-topbar .profile-copy{display:none}}
+@media(max-width:600px){.inventory-admin-topbar{padding:12px}.inventory-admin-topbar .brand-mark{height:39px;width:39px}.inventory-admin-topbar .brand-name{font-size:18px}.inventory-admin-topbar .brand-sub{font-size:9px}.inventory-admin-topbar .status-pill{display:none}.inventory-admin-main{padding:15px 12px 24px}.inventory-admin-heading{align-items:flex-start;flex-direction:column;margin:7px 0 16px}.inventory-admin-heading h1{font-size:25px!important}.inventory-admin-heading .heading-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.inventory-admin-summary{align-items:flex-start;flex-direction:column}.inventory-admin-summary-note{line-height:1.5}.inventory-admin-content{padding:10px;border-radius:14px}#changelist-form .actions{align-items:flex-start}#changelist-search input[type="text"],#changelist-search input[type="search"]{width:100%}#changelist .object-tools{justify-content:flex-start}}
