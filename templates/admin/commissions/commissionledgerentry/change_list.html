@@ -1,0 +1,143 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Commission Ledger · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-ledger.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar commission-topbar">
+    <a class="brand commission-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}" aria-current="page">
+        <i data-lucide="wallet"></i><span>Commissions</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:commissions_commissionpayoutrequest_changelist' %}">
+        <i data-lucide="file-clock"></i><span>Payout requests</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:commissions_commissionpayoutrecord_changelist' %}">
+        <i data-lucide="receipt-text"></i><span>Payments</span>
+      </a>
+    </nav>
+
+    <div class="top-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="commission-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">STAFF WORKSPACE</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main commission-main">
+    <section class="view">
+      <div class="page-heading commission-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Finance</div>
+          <h1>Commission ledger <em>with every detail accounted for.</em></h1>
+          <p>Track artist earnings and reversals with a clear, immutable audit trail.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Verified ledger</div>
+        </div>
+      </div>
+
+      <div class="commission-kpis" aria-label="Filtered commission ledger summary">
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Commission earned</span><span class="commission-kpi-icon"><i data-lucide="trending-up"></i></span></div>
+          <strong>KES {{ commission_summary.earned|default_if_none:"0.00"|floatformat:2 }}</strong>
+          <small>Earned entries in this view</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Reversals</span><span class="commission-kpi-icon amber"><i data-lucide="undo-2"></i></span></div>
+          <strong>KES {{ commission_summary.reversals|default_if_none:"0.00"|floatformat:2 }}</strong>
+          <small>Refund-related adjustments</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Net commissions</span><span class="commission-kpi-icon green"><i data-lucide="wallet"></i></span></div>
+          <strong>KES {{ commission_summary.net|default_if_none:"0.00"|floatformat:2 }}</strong>
+          <small>Earned less reversals</small>
+        </article>
+        <article class="commission-kpi">
+          <div class="commission-kpi-top"><span>Ledger entries</span><span class="commission-kpi-icon"><i data-lucide="book-open-check"></i></span></div>
+          <strong>{{ commission_summary.entry_count|default:0 }}</strong>
+          <small>Records in this view</small>
+        </article>
+      </div>
+
+      <div class="commission-ledger-panel">
+        <div class="commission-panel-heading">
+          <div>
+            <div class="section-title">Ledger activity</div>
+            <div class="section-caption">Search, filter and inspect every commission entry.</div>
+          </div>
+          <span class="commission-immutable"><i data-lucide="lock-keyhole"></i> Immutable records</span>
+        </div>
+        {{ block.super }}
+      </div>
+      <footer class="commission-footer">
+        <span class="commission-footer-brand">LASHPRO KE</span>
+        <span>Commission records are read-only and retained for financial audit.</span>
+      </footer>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("commission-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
