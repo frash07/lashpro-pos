@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils.html import format_html
 from django.utils.text import Truncator
 
@@ -17,7 +17,13 @@ class CustomerAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        return queryset.annotate(_sales_count=Count("sales", distinct=True))
+        return queryset.annotate(
+            _sales_count=Count(
+                "sales",
+                filter=Q(sales__status="COMPLETED"),
+                distinct=True,
+            )
+        )
 
     @admin.display(description="Phone", ordering="phone")
     def phone_display(self, obj):
@@ -32,7 +38,7 @@ class CustomerAdmin(admin.ModelAdmin):
                 count,
             )
         return format_html(
-            '<span class="customer-sales-count no-sales">No sales yet</span>'
+            '<span class="customer-sales-count no-sales">No completed sales</span>'
         )
 
     @admin.display(description="Client notes")
@@ -51,7 +57,9 @@ class CustomerAdmin(admin.ModelAdmin):
                 response.context_data["customer_summary"] = {
                     "customer_count": queryset.values("pk").distinct().count(),
                     "with_phone": queryset.filter(phone__gt="").values("pk").distinct().count(),
-                    "with_sales": queryset.filter(sales__isnull=False).values("pk").distinct().count(),
+                    "with_sales": queryset.filter(
+                        sales__status="COMPLETED"
+                    ).values("pk").distinct().count(),
                     "with_notes": queryset.filter(notes__gt="").values("pk").distinct().count(),
                 }
         return response
