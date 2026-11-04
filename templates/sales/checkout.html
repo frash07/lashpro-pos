@@ -21,6 +21,14 @@
       This tab retains the original cart and checkout key. Only retry the original checkout if no sale is listed.
       <p><button id="retry-pending-checkout" type="button" hidden>Retry original checkout</button></p>
     </div>
+    <div id="checkout-status-known-failure" class="checkout-status-unknown" role="alert" hidden>
+      The server confirmed that the previous checkout was not recorded. Review any error messages, correct the order, and submit again. Your original checkout key is retained.
+    </div>
+    {% if messages %}
+      <div class="checkout-status-unknown" role="alert">
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
     {{ lines.management_form }}
     {{ payments.management_form }}
 
@@ -144,6 +152,7 @@
   <script>
     const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
     const canDiscount = {{ can_discount|yesno:"true,false" }};
+    const CHECKOUT_STATUS_KNOWN_FAILURE = {{ checkout_status_known_failure|yesno:"true,false" }};
     const catalogData = {{ catalog_data_json|safe }};
     // Technician choices come from the rendered #staff-select options, whose values are real user primary
     // keys. Each service line in the cart keeps its own technicianId; products never carry one.
@@ -152,6 +161,7 @@
     let lineSeq=0;
     let cart=[],appliedDiscount=0, appliedCode='', activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
     let pendingCheckout = null;
+    let restoredCheckoutAfterKnownFailure = false;
     let checkoutSubmitting = false;
 
     (function restorePendingCheckout() {
@@ -168,7 +178,8 @@
         );
         if (!restoredCart.length) return;
 
-        pendingCheckout = saved;
+        pendingCheckout = CHECKOUT_STATUS_KNOWN_FAILURE ? null : saved;
+        restoredCheckoutAfterKnownFailure = CHECKOUT_STATUS_KNOWN_FAILURE;
         cart = restoredCart.map(item => ({ ...item, qty: Math.max(1, Number(item.qty) || 1) }));
         lineSeq = cart.reduce((max, item) => Math.max(max, Number(item.lineId) || 0), 0);
         appliedDiscount = [0, 0.1, 0.2].includes(Number(saved.appliedDiscount)) ? Number(saved.appliedDiscount) : 0;
@@ -220,6 +231,10 @@
       setupPWA();
       updateOnlineStatus();
       refreshIcons();
+      if (CHECKOUT_STATUS_KNOWN_FAILURE) {
+        const knownFailure = document.getElementById('checkout-status-known-failure');
+        if (knownFailure) knownFailure.hidden = false;
+      }
       if (pendingCheckout) {
         const warning = document.getElementById('checkout-status-unknown');
         if (warning) warning.hidden = false;
