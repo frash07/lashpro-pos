@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
@@ -64,7 +65,7 @@ class StockReceipt(models.Model):
         self.supplier_reference = (self.supplier_reference or "").strip().upper()
         self.delivery_note_number = (self.delivery_note_number or "").strip().upper()
         if not self.supplier_reference:
-            raise models.ValidationError({"supplier_reference": "Enter the supplier's invoice or document reference."})
+            raise ValidationError({"supplier_reference": "Enter the supplier's invoice or document reference."})
 
     @property
     def total_cost(self):
