@@ -46,11 +46,6 @@
               <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
               <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="sparkles"></i> VIP studio</div></div>
             </div>
-            <div class="mini-metrics">
-              <div class="mini-metric"><div class="metric-icon"><i data-lucide="wallet"></i></div><div><div class="metric-title">Today's revenue</div><div class="metric-value">KES 142,500</div><div class="metric-caption">+8.6% vs yesterday</div></div></div>
-              <div class="mini-metric"><div class="metric-icon"><i data-lucide="calendar-check"></i></div><div><div class="metric-title">Appointments served</div><div class="metric-value">24 <span class="metric-badge success">On-time</span></div><div class="metric-caption">6 walk-ins today</div></div></div>
-              <div class="mini-metric"><div class="metric-icon"><i data-lucide="gem"></i></div><div><div class="metric-title">Studio experience</div><div class="metric-value">Luxe tier</div><div class="metric-caption">Retention score 96%</div></div></div>
-            </div>
             <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><span aria-hidden="true">⌕</span><input type="search" id="catalog-search" placeholder="Search lash sets, adhesive, services…" autocomplete="off"></label></div>
             <div class="category-tabs">
               <button type="button" class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
@@ -99,14 +94,7 @@
 
       <section id="admin-mode-view" class="view hidden">
         <div class="admin-hero">
-          <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div><h1 class="admin-title">The studio, <em style="color:var(--pink)">beautifully managed.</em></h1><p>Track sales, stock, and learner progress from a single overview.</p></div>
-          <div class="admin-hero-actions"><button type="button" class="button-secondary" onclick="exportReport()"><i data-lucide="file-down"></i> Export report</button><button type="button" class="button-secondary" onclick="printReceipt()"><i data-lucide="printer"></i> Print</button></div>
-        </div>
-        <div class="admin-kpis">
-          <div class="kpi-card"><div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div><div class="kpi-number">KES 142,500</div><div class="kpi-subtext">+8.6% vs yesterday</div></div>
-          <div class="kpi-card"><div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div><div class="kpi-number">KES 118,000</div><div class="kpi-subtext">19 successful tops-ups</div></div>
-          <div class="kpi-card"><div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="kpi-number">65% / 35%</div><div class="kpi-subtext">Healthy cross-sell</div></div>
-          <div class="kpi-card"><div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div><div class="kpi-number">14</div><div class="kpi-subtext">3 confirmation reminders</div></div>
+          <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="boxes"></i> Inventory workspace · Manager access</div><h1 class="admin-title">Stock, <em style="color:var(--pink)">accurately accounted for.</em></h1><p>Live product balances from the inventory database. Stock increases must be recorded through a supplier receipt.</p></div>
         </div>
         <div class="admin-hero-actions" style="flex-wrap:wrap;gap:8px;margin:16px 0">
           <a class="button-secondary" href="{% url 'reporting:dashboard' %}" style="text-decoration:none"><i data-lucide="file-down"></i> Full reports</a>
@@ -121,40 +109,24 @@
         </p>
         {% endif %}
         <div class="admin-content">
-          <div class="admin-content-head"><div><div class="admin-content-title">Studio management</div><div class="admin-content-subtitle">Operational detail, neatly brought together.</div></div></div>
-          <div class="admin-tabs">
-            <button type="button" id="tab-inventory-btn" class="admin-tab active" onclick="switchAdminTab('inventory')"><i data-lucide="boxes"></i> Inventory &amp; stock</button>
-            <button type="button" id="tab-academy-btn" class="admin-tab" onclick="switchAdminTab('academy')"><i data-lucide="graduation-cap"></i> Academy hub</button>
-            <button type="button" id="tab-staff-btn" class="admin-tab" onclick="switchAdminTab('staff')"><i data-lucide="users"></i> Artist commissions</button>
-            <button type="button" id="tab-reconciliation-btn" class="admin-tab" onclick="switchAdminTab('reconciliation')"><i data-lucide="file-check-2"></i> M-PESA audit</button>
-          </div>
-          <div id="admin-sec-inventory" class="admin-section">
-            <div class="subhead"><div><h3>Retail &amp; professional supplies</h3><p>Keep your most-loved essentials in stock.</p></div><button type="button" class="button-primary" onclick="openAddStockModal()"><i data-lucide="plus"></i> Add stock</button></div>
-            <div class="table-shell"><table><thead><tr><th>Product</th><th>Category</th><th>Stock level</th><th>Unit price</th><th>Status</th><th>Action</th></tr></thead><tbody id="inventory-table-body"></tbody></table></div>
-          </div>
-          <div id="admin-sec-academy" class="admin-section hidden">
-            <div class="subhead"><div><h3>Student certifications &amp; cohorts</h3><p>Build the next generation of exceptional lash artists.</p></div><button type="button" class="button-primary" onclick="enrollStudentPrompt()"><i data-lucide="user-plus"></i> Enrol student</button></div>
-            <div class="academy-grid">
-              <article class="course-card"><span class="course-level gold">Beginner masterclass</span><h4>Classic Lash Fundamentals</h4><p>Three days of careful technique, client safety and foundational retention.</p></article>
-              <article class="course-card"><span class="course-level">Advanced masterclass</span><h4>Mega Volume &amp; Fan Artistry</h4><p>Advanced fan creation, texture, direction and professional finishing.</p></article>
-              <article class="course-card"><span class="course-level blue">Specialist course</span><h4>Lash Lift &amp; Keratin Tint</h4><p>A focused one-day intensive in natural lash enhancement and finish.</p></article>
-            </div>
-          </div>
-          <div id="admin-sec-staff" class="admin-section hidden">
-            <div class="subhead"><div><h3>Artist service commissions</h3><p>Current commission rate: 30% on eligible services.</p></div><span class="soft-pill">Today's closeout</span></div>
-            <div class="commission-summary"><div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div><div class="summary-box"><span>Commission payable</span><strong>KES 22,050</strong></div><div class="summary-box"><span>Pending payouts</span><strong>3 artists</strong></div></div>
-            <div class="table-shell"><table><thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead><tbody>
-              <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
-              <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
-              <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+          <div class="admin-content-head"><div><div class="admin-content-title">Inventory on hand</div><div class="admin-content-subtitle">Read-only stock balances. Record all incoming stock using a supplier receipt.</div></div></div>
+          <div class="admin-section">
+            <div class="subhead"><div><h3>Products &amp; reorder status</h3><p>Balances and reorder thresholds are read directly from the database.</p></div><a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a></div>
+            <div class="table-shell"><table><thead><tr><th>SKU</th><th>Product</th><th>On hand</th><th>Reorder level</th><th>Stock status</th></tr></thead><tbody>
+              {% for product in inventory_products %}
+              <tr>
+                <td>{{ product.sku }}</td>
+                <td><strong>{{ product.name }}</strong></td>
+                <td>{{ product.on_hand|floatformat:3 }}</td>
+                <td>{{ product.reorder_level|floatformat:3 }}</td>
+                <td>{% if product.low_stock %}<span class="status-tag" style="color:var(--danger)">Low stock</span>{% else %}<span class="status-tag ok">In stock</span>{% endif %}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5">No active products are registered yet.</td></tr>
+              {% endfor %}
             </tbody></table></div>
           </div>
-          <div id="admin-sec-reconciliation" class="admin-section hidden">
-            <div class="subhead"><div><h3>M-PESA Express reconciliation</h3><p>Payment records generated in this demo appear at the top of this log.</p></div><span class="status-tag ok">Demo ledger</span></div>
-            <div class="table-shell"><table><thead><tr><th>Timestamp</th><th>Receipt reference</th><th>Client phone</th><th>Amount (KES)</th><th>Status</th></tr></thead><tbody id="mpesa-log-table"></tbody></table></div>
-          </div>
         </div>
-        <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
       </section>
     </main>
 
@@ -162,7 +134,6 @@
 
     <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="receipt-title">Payment receipt</h3><button type="button" class="icon-button" onclick="closeModal('receipt-modal')" aria-label="Close">×</button></div><div class="modal-body receipt-body"><div class="receipt-meta"><span id="rcpt-ref">REF-0001</span><span id="rcpt-client">Wanjiku Njuguna</span></div><div id="rcpt-items" class="receipt-items"></div><div class="receipt-total"><span>Total</span><strong id="rcpt-total">KES 0</strong></div></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="printReceipt()">Print</button><button type="button" class="button-primary" onclick="closeModal('receipt-modal')">Done</button></div></div></div>
 
-    <div id="stock-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stock-title" onclick="backdropClose(event,'stock-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="stock-title">Add stock</h3><button type="button" class="icon-button" onclick="closeModal('stock-modal')" aria-label="Close">×</button></div><div class="modal-body"><label class="field-block"><span>Product</span><input id="stock-name" type="text" placeholder="e.g. Lash Glue"></label><label class="field-block"><span>Quantity</span><input id="stock-qty" type="number" min="1" value="10"></label><label class="field-block"><span>Unit price (KES)</span><input id="stock-price" type="number" min="0" step="0.01" value="2000"></label></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('stock-modal')">Cancel</button><button type="button" class="button-primary" onclick="saveNewStock()">Save stock</button></div></div></div>
   </form>
 
   <script>
@@ -174,11 +145,6 @@
     const technicianOptions = Array.from(document.querySelectorAll('#staff-select option')).filter(o => o.value).map(o => ({ id: o.value, name: o.textContent.trim() }));
     let lineSeq=0;
     let cart=[],appliedDiscount=0, appliedCode='', activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
-    let mpesaLogs=[
-      {time:'10:42 AM',ref:'QX892KL0P1',phone:'+254 712***678',amount:6000,status:'SUCCESS'},
-      {time:'09:15 AM',ref:'QX891MM9X4',phone:'+254 722***102',amount:25000,status:'SUCCESS'},
-      {time:'08:50 AM',ref:'QX890PP3L9',phone:'+254 701***992',amount:4500,status:'SUCCESS'}
-    ];
     const currency=n=>{const v=Number(n||0),hasCents=Math.round(v*100)%100!==0;return 'KES '+v.toLocaleString('en-KE',{minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2});};
     // Catalog prices are VAT-inclusive (gross). All money maths is done in integer cents so the
     // amount shown, the amount posted as payment and the backend SaleLine totals always agree.
@@ -209,7 +175,7 @@
     const typeLabel=type=>({service:'Service',academy:'Academy',product:'Retail'}[type]||type);
     function refreshIcons(){if(window.lucide&&typeof lucide.createIcons==='function')lucide.createIcons();}
     function setToday(){const d=new Date();document.getElementById('today-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
-    window.addEventListener('DOMContentLoaded',()=>{setToday();renderCatalog();renderCart();renderInventoryTable();renderMpesaAuditTable();setupPWA();updateOnlineStatus();refreshIcons();});
+    window.addEventListener('DOMContentLoaded',()=>{setToday();renderCatalog();renderCart();setupPWA();updateOnlineStatus();refreshIcons();});
 
     function addSyncField(form, name, value) {
       const input = document.createElement('input');
@@ -363,13 +329,6 @@
     function backdropClose(event,id){if(event.target.id===id)closeModal(id);}
     document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(el=>closeModal(el.id));});
 
-    function renderInventoryTable(){const tbody=document.getElementById('inventory-table-body');const products=catalogData.filter(item=>item.type==='product');tbody.innerHTML=products.map(p=>`<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>${escapeHtml(typeLabel(p.type))}</td><td>${p.stock ?? 0}</td><td>${currency(p.price)}</td><td><span class="status-tag ok">In stock</span></td><td><button type="button" class="button-secondary" onclick="quickAddStock('${p.id}')">Add 10</button></td></tr>`).join('');}
-    function renderMpesaAuditTable(){const tbody=document.getElementById('mpesa-log-table');tbody.innerHTML=mpesaLogs.map(log=>`<tr><td>${escapeHtml(log.time)}</td><td><span class="audit-ref">${escapeHtml(log.ref)}</span></td><td>${escapeHtml(log.phone)}</td><td>${currency(log.amount)}</td><td><span class="status-tag ok">${escapeHtml(log.status)}</span></td></tr>`).join('');}
-    function openAddStockModal(){document.getElementById('stock-name').value='';document.getElementById('stock-qty').value='10';document.getElementById('stock-price').value='2000';openModal('stock-modal');}
-    function saveNewStock(){const name=document.getElementById('stock-name').value.trim(),qty=Number.parseInt(document.getElementById('stock-qty').value,10),price=Number.parseFloat(document.getElementById('stock-price').value);if(!name||!Number.isFinite(qty)||qty<=0||!Number.isFinite(price)||price<0){alert('Please enter a valid product name, quantity and unit price.');return;}const item={id:`product-${Date.now()}`,type:'product',name,desc:'Added from stock modal',price,stock:qty};catalogData.push(item);renderInventoryTable();renderCatalog();closeModal('stock-modal');alert(`${name} added to stock.`);}
-    function quickAddStock(id){const item=catalogData.find(x=>x.id===id);if(item){item.stock=(Number(item.stock||0))+10;renderInventoryTable();renderCatalog();alert(`10 units added to ${item.name}.`);}}
-    function enrollStudentPrompt(){const name=prompt('Enter student full name:');if(name&&name.trim())alert(`Student “${name.trim()}” marked for enrolment in the next cohort. This preview does not persist data.`);}
-    function exportReport(){const rows=[['Product','Category','Stock','Unit price (KES)'],...catalogData.filter(x=>x.type==='product').map(x=>[x.name,'Retail',x.stock,x.price])];const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='lashpro-stock-report.csv';a.click();URL.revokeObjectURL(url);}
     function printReceipt(){window.print();}
     function sendSMSReceipt(){alert('SMS delivery is a UI simulation. Connect your SMS provider before using this in production.');}
 

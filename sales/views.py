@@ -172,10 +172,12 @@ def checkout(request):
         catalog_items.append({"id": f"service-{service.pk}", "name": service.name, "price": float(service.price), "type": "service", "desc": f"{service.duration_minutes} minute session", "icon": "sparkles", "duration_minutes": service.duration_minutes, "commission_eligible": service.commission_eligible, "commission_rate": float(service.commission_rate)})
     from payments.models import CashSession
     cash_session = CashSession.objects.filter(cashier=request.user, status=CashSession.Status.OPEN).first()
+    admin_suite = _build_admin_suite_context(request.user)
+    inventory_products = Product.objects.filter(active=True).order_by("name") if admin_suite["is_manager"] else Product.objects.none()
     technicians = list(User.objects.filter(role=User.Role.TECHNICIAN, is_active=True).order_by("first_name", "username"))
     default_technician_id = request.user.pk if getattr(request.user, "role", None) == User.Role.TECHNICIAN else None
     technician_payload = [{"id": technician.pk, "name": technician.get_full_name() or technician.username} for technician in technicians]
-    return render(request, "sales/checkout.html", {"admin_suite": _build_admin_suite_context(request.user), "details": details, "lines": lines, "payments": payments_formset, "prices": prices, "products": products, "services": services, "catalog_items": catalog_items, "catalog_data_json": json.dumps(catalog_items), "initial_cart": initial_cart, "initial_payments": initial_payments, "cash_session": cash_session, "can_discount": request.user.is_superuser or request.user.role in {User.Role.OWNER, User.Role.MANAGER}, "technicians": technicians, "default_technician_id": default_technician_id, "technicians_json": json.dumps(technician_payload)})
+    return render(request, "sales/checkout.html", {"admin_suite": admin_suite, "inventory_products": inventory_products, "details": details, "lines": lines, "payments": payments_formset, "prices": prices, "products": products, "services": services, "catalog_items": catalog_items, "catalog_data_json": json.dumps(catalog_items), "initial_cart": initial_cart, "initial_payments": initial_payments, "cash_session": cash_session, "can_discount": request.user.is_superuser or request.user.role in {User.Role.OWNER, User.Role.MANAGER}, "technicians": technicians, "default_technician_id": default_technician_id, "technicians_json": json.dumps(technician_payload)})
 
 
 @login_required(login_url="login")
