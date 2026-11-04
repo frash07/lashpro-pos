@@ -79,8 +79,15 @@
 {% endblock %}
 {% block scripts %}
 <script>
-  // The receipt is the server-confirmed completion signal; clear the pending retry only here.
-  try { window.sessionStorage.removeItem("lashpro.pos.pendingCheckout.v1"); } catch (error) {}
+  // Clear only the pending checkout confirmed by this exact receipt.
+  try {
+    const storageKey = "lashpro.pos.pendingCheckout.v1";
+    const pending = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
+    const completedCheckoutKey = "{{ sale.checkout_idempotency_key }}";
+    if (pending && pending.idempotencyKey === completedCheckoutKey) {
+      window.sessionStorage.removeItem(storageKey);
+    }
+  } catch (error) {}
 </script>
 <script src="{% static 'js/receipt.js' %}" defer></script>
 {% endblock %}
