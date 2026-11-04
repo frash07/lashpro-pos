@@ -323,8 +323,10 @@
         const soldOut=item.type==='product'&&available<1;
         const locked=Boolean(pendingCheckout);
         const disabled=soldOut||locked;
+        const stockValue=Number(item.stock)||0;
+        const stockText=stockValue.toLocaleString('en-KE',{maximumFractionDigits:3});
         const stockBadge=item.type==='product'
-          ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+(soldOut?'Sold out':available+' in stock')+'</span>'
+          ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+(soldOut?(stockValue>0?stockText+' on hand · sold out':'Sold out'):stockText+' in stock')+'</span>'
           : '';
         const activation=disabled?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
         return '<article class="catalog-card'+(soldOut?' is-sold-out':'')+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(disabled?'-1':'0')+'" aria-disabled="'+String(disabled)+'" aria-label="'+escapeHtml(item.name)+(soldOut?', sold out':locked?', checkout pending':', add to order')+'" '+activation+'><div class="card-image"><span>'+escapeHtml(item.icon||'✦')+'</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">'+escapeHtml(typeLabel(item.type))+'</span><span class="card-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span></div><h3>'+escapeHtml(item.name)+'</h3><p>'+escapeHtml(item.desc)+'</p>'+stockBadge+'</div></article>';
