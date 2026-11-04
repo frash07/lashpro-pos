@@ -449,7 +449,7 @@ class SupplierReceiptServiceTests(TestCase):
         with self.assertRaises(TypeError):
             line.delete()
 
-     def test_receipt_view_retry_with_same_key_does_not_receive_stock_twice(self):
+    def test_receipt_view_retry_with_same_key_does_not_receive_stock_twice(self):
         key = uuid.uuid4()
         self.client.force_login(self.owner)
         data = {
