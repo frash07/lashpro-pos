@@ -311,11 +311,13 @@
       grid.innerHTML=filtered.map(item=>{
         const available=maxSellableQuantity(item);
         const soldOut=item.type==='product'&&available<1;
+        const locked=Boolean(pendingCheckout);
+        const disabled=soldOut||locked;
         const stockBadge=item.type==='product'
           ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+(soldOut?'Sold out':available+' in stock')+'</span>'
           : '';
-        const activation=soldOut?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
-        return '<article class="catalog-card'+(soldOut?' is-sold-out':'')+'" role="button" tabindex="'+(soldOut?'-1':'0')+'" aria-disabled="'+String(soldOut)+'" aria-label="'+escapeHtml(item.name)+(soldOut?', sold out':', add to order')+'" '+activation+'><div class="card-image"><span>'+escapeHtml(item.icon||'✦')+'</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">'+escapeHtml(typeLabel(item.type))+'</span><span class="card-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span></div><h3>'+escapeHtml(item.name)+'</h3><p>'+escapeHtml(item.desc)+'</p>'+stockBadge+'</div></article>';
+        const activation=disabled?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
+        return '<article class="catalog-card'+(soldOut?' is-sold-out':'')+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(disabled?'-1':'0')+'" aria-disabled="'+String(disabled)+'" aria-label="'+escapeHtml(item.name)+(soldOut?', sold out':locked?', checkout pending':', add to order')+'" '+activation+'><div class="card-image"><span>'+escapeHtml(item.icon||'✦')+'</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">'+escapeHtml(typeLabel(item.type))+'</span><span class="card-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span></div><h3>'+escapeHtml(item.name)+'</h3><p>'+escapeHtml(item.desc)+'</p>'+stockBadge+'</div></article>';
       }).join('');
       refreshIcons();
     }
@@ -359,12 +361,14 @@
       const container=document.getElementById('cart-items-container');
       if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
       container.innerHTML=cart.map(item=>{
+        const locked=Boolean(pendingCheckout);
         const techPicker=item.type==='service'
-          ? '<div class="cart-tech field"><label>ARTIST</label><select class="cart-tech-select'+(item.technicianId?'':' needs-tech')+'" aria-label="Technician for '+escapeHtml(item.name)+'" onchange="setLineTechnician('+item.lineId+',this)">'+technicianOptionsHtml(item.technicianId)+'</select></div>'
+          ? '<div class="cart-tech field"><label>ARTIST</label><select class="cart-tech-select'+(item.technicianId?'':' needs-tech')+'" aria-label="Technician for '+escapeHtml(item.name)+'" onchange="setLineTechnician('+item.lineId+',this)"'+(locked?' disabled':'')+'>'+technicianOptionsHtml(item.technicianId)+'</select></div>'
           : '';
         const maximum=maxSellableQuantity(item);
-        const plusDisabled=item.type==='product'&&item.qty>=maximum;
-        return '<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">'+escapeHtml(item.name)+'</div><div class="cart-item-price">'+currency(item.price)+'</div></div><button type="button" class="row-action" onclick="removeFromCart('+item.lineId+')">Remove</button></div>'+techPicker+'<div class="qty-row"><button type="button" class="qty-btn" onclick="updateQty('+item.lineId+',-1)" aria-label="Decrease quantity">−</button><span>'+item.qty+'</span><button type="button" class="qty-btn" onclick="updateQty('+item.lineId+',1)" aria-label="Increase quantity" '+(plusDisabled?'disabled aria-disabled="true"':'')+'>+</button><strong>'+currency(item.price*item.qty)+'</strong></div></div>';
+        const plusDisabled=locked||(item.type==='product'&&item.qty>=maximum);
+        const actionDisabled=locked?' disabled aria-disabled="true"':'';
+        return '<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">'+escapeHtml(item.name)+'</div><div class="cart-item-price">'+currency(item.price)+'</div></div><button type="button" class="row-action" onclick="removeFromCart('+item.lineId+')"'+actionDisabled+'>Remove</button></div>'+techPicker+'<div class="qty-row"><button type="button" class="qty-btn" onclick="updateQty('+item.lineId+',-1)" aria-label="Decrease quantity"'+actionDisabled+'>−</button><span>'+item.qty+'</span><button type="button" class="qty-btn" onclick="updateQty('+item.lineId+',1)" aria-label="Increase quantity" '+(plusDisabled?'disabled aria-disabled="true"':'')+'>+</button><strong>'+currency(item.price*item.qty)+'</strong></div></div>';
       }).join('');
       updateFinancials();refreshIcons();
     }
