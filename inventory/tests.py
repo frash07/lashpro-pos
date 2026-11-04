@@ -1,20 +1,21 @@
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
+import uuid
 from threading import Barrier
 
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import close_old_connections, connection
-from django.test import TestCase, TransactionTestCase
+from django.test import RequestFactory, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from accounts.models import User
 from audit.models import AuditEvent
 from catalog.models import Product, Service
 from sales.services import checkout_sale
-from .models import InventoryMovement, ServiceConsumable, StockAdjustmentRequest
-from .services import receive_stock, request_stock_adjustment, review_stock_adjustment
+from .models import InventoryMovement, ServiceConsumable, StockAdjustmentRequest, StockReceipt, Supplier
+from .services import receive_stock, receive_supplier_stock, request_stock_adjustment, review_stock_adjustment
 
 
 class InventoryServiceTests(TestCase):
@@ -73,7 +74,7 @@ class InventoryServiceTests(TestCase):
         self.assertEqual(self.product.cost_price, Decimal("125.50"))
         self.assertEqual(movement.movement_type, InventoryMovement.Type.PURCHASE)
         self.assertEqual(movement.quantity_delta, Decimal("2.125"))
-        self.assertTrue(AuditEvent.objects.filter(event_type=AuditEvent.EventType.STOCK_ADJUSTMENT, object_id=str(movement.pk)).exists())
+        self.assertTrue(AuditEvent.objects.filter(event_type=AuditEvent.EventType.STOCK_RECEIPT, object_id=str(movement.pk)).exists())
 
     def test_low_stock_uses_reorder_threshold(self):
         self.assertTrue(self.product.low_stock)
@@ -304,3 +305,170 @@ class InventoryAdminIntegrationTests(TestCase):
         self.assertFalse(
             InventoryMovement.objects.filter(source_adjustment=adjustment).exists()
         )
+
+
+class SupplierReceiptServiceTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = User.objects.create_user(username="receipt-owner", password="x", role=User.Role.OWNER)
+        cls.cashier = User.objects.create_user(username="receipt-cashier", password="x", role=User.Role.CASHIER)
+        cls.supplier = Supplier.objects.create(name="Coastal Beauty Supplies", phone="+254700000000")
+        cls.glue = Product.objects.create(
+            sku="RCPT-GLUE", name="Lash Adhesive", cost_price=Decimal("300.00"),
+            selling_price=Decimal("650.00"), on_hand=Decimal("2.000"),
+        )
+        cls.cleanser = Product.objects.create(
+            sku="RCPT-CLEAN", name="Lash Cleanser", cost_price=Decimal("200.00"),
+            selling_price=Decimal("450.00"), on_hand=Decimal("1.000"),
+        )
+
+    def receipt_args(self, key=None, reference="INV-2026-0042"):
+        from datetime import date
+        return {
+            "supplier": self.supplier,
+            "reference_type": StockReceipt.ReferenceType.INVOICE,
+            "supplier_reference": reference,
+            "delivery_note_number": "DN-0042",
+            "received_date": date(2026, 11, 4),
+            "notes": "Checked at delivery",
+            "lines": [
+                {"product": self.glue, "quantity": "4.000", "unit_cost": "325.00"},
+                {"product": self.cleanser, "quantity": "3.000", "unit_cost": "210.50"},
+            ],
+            "actor": self.owner,
+            "idempotency_key": key or uuid.uuid4(),
+        }
+
+    def test_supplier_receipt_posts_all_lines_and_movements_atomically(self):
+        receipt, created = receive_supplier_stock(**self.receipt_args())
+        self.assertTrue(created)
+        self.assertEqual(receipt.lines.count(), 2)
+        self.assertEqual(receipt.total_cost, Decimal("1931.50"))
+        self.glue.refresh_from_db()
+        self.cleanser.refresh_from_db()
+        self.assertEqual(self.glue.on_hand, Decimal("6.000"))
+        self.assertEqual(self.glue.cost_price, Decimal("325.00"))
+        self.assertEqual(self.cleanser.on_hand, Decimal("4.000"))
+        self.assertEqual(self.cleanser.cost_price, Decimal("210.50"))
+        movements = InventoryMovement.objects.filter(receipt_line__receipt=receipt)
+        self.assertEqual(movements.count(), 2)
+        self.assertEqual(
+            set(movements.values_list("movement_type", flat=True)),
+            {InventoryMovement.Type.PURCHASE},
+        )
+        self.assertTrue(all(movement.quantity_delta > 0 for movement in movements))
+        self.assertTrue(AuditEvent.objects.filter(
+            object_type="supplier_stock_receipt", object_id=str(receipt.pk),
+        ).exists())
+
+    def test_same_submission_key_is_idempotent_and_does_not_double_stock(self):
+        key = uuid.uuid4()
+        args = self.receipt_args(key=key)
+        first, created_first = receive_supplier_stock(**args)
+        second, created_second = receive_supplier_stock(**args)
+        self.glue.refresh_from_db()
+        self.assertTrue(created_first)
+        self.assertFalse(created_second)
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(self.glue.on_hand, Decimal("6.000"))
+        self.assertEqual(InventoryMovement.objects.filter(receipt_line__receipt=first).count(), 2)
+
+    def test_same_submission_key_cannot_be_reused_for_different_payload(self):
+        key = uuid.uuid4()
+        receive_supplier_stock(**self.receipt_args(key=key))
+        changed = self.receipt_args(key=key)
+        changed["lines"] = [{"product": self.glue, "quantity": "1.000", "unit_cost": "325.00"}]
+        with self.assertRaises(ValidationError):
+            receive_supplier_stock(**changed)
+        self.glue.refresh_from_db()
+        self.assertEqual(self.glue.on_hand, Decimal("6.000"))
+
+    def test_duplicate_supplier_document_is_rejected_even_with_new_key(self):
+        receive_supplier_stock(**self.receipt_args())
+        changed = self.receipt_args(key=uuid.uuid4())
+        with self.assertRaisesMessage(ValidationError, "already recorded"):
+            receive_supplier_stock(**changed)
+        self.glue.refresh_from_db()
+        self.assertEqual(self.glue.on_hand, Decimal("6.000"))
+        self.assertEqual(StockReceipt.objects.count(), 1)
+
+    def test_cashier_cannot_receive_supplier_stock(self):
+        args = self.receipt_args()
+        args["actor"] = self.cashier
+        with self.assertRaisesMessage(ValidationError, "Only an active owner or manager"):
+            receive_supplier_stock(**args)
+
+    def test_duplicate_product_lines_are_rejected(self):
+        args = self.receipt_args()
+        args["lines"] = [
+            {"product": self.glue, "quantity": "1.000", "unit_cost": "325.00"},
+            {"product": self.glue, "quantity": "2.000", "unit_cost": "325.00"},
+        ]
+        with self.assertRaisesMessage(ValidationError, "only once"):
+            receive_supplier_stock(**args)
+        self.glue.refresh_from_db()
+        self.assertEqual(self.glue.on_hand, Decimal("2.000"))
+        self.assertEqual(StockReceipt.objects.count(), 0)
+
+    def test_receipt_is_read_only_in_admin_and_supplier_is_manageable(self):
+        admin_user = User.objects.create_superuser(
+            username="receipt-admin",
+            email="receipt-admin@example.test",
+            password="test-password",
+            role=User.Role.OWNER,
+        )
+        receipt, _ = receive_supplier_stock(**self.receipt_args())
+        self.client.force_login(admin_user)
+        response = self.client.get(reverse("admin:inventory_stockreceipt_change", args=[receipt.pk]))
+        self.assertEqual(response.status_code, 200)
+        receipt_admin = admin.site._registry[StockReceipt]
+        self.assertFalse(receipt_admin.has_add_permission(None))
+        self.assertFalse(receipt_admin.has_delete_permission(None, receipt))
+        supplier_admin = admin.site._registry[Supplier]
+        supplier_request = RequestFactory().get(reverse("admin:inventory_supplier_add"))
+        supplier_request.user = admin_user
+        self.assertTrue(supplier_admin.has_add_permission(supplier_request))
+        self.assertEqual(self.client.get(reverse("admin:inventory_supplier_add")).status_code, 200)
+
+        receipt.notes = "This must not be editable"
+        with self.assertRaises(TypeError):
+            receipt.save()
+        with self.assertRaises(TypeError):
+            receipt.delete()
+        line = receipt.lines.first()
+        with self.assertRaises(TypeError):
+            line.delete()
+
+    def test_receipt_view_posts_multiple_lines_and_shows_receipt_detail(self):
+        key = uuid.uuid4()
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse("inventory:receive"), {
+            "supplier": str(self.supplier.pk),
+            "reference_type": "INVOICE",
+            "supplier_reference": "INV-VIEW-1",
+            "delivery_note_number": "DN-VIEW-1",
+            "received_date": "2026-11-04",
+            "notes": "View test",
+            "idempotency_key": str(key),
+            "lines-TOTAL_FORMS": "2",
+            "lines-INITIAL_FORMS": "0",
+            "lines-MIN_NUM_FORMS": "1",
+            "lines-MAX_NUM_FORMS": "50",
+            "lines-0-product": str(self.glue.pk),
+            "lines-0-quantity": "2.000",
+            "lines-0-unit_cost": "300.00",
+            "lines-0-DELETE": "",
+            "lines-1-product": str(self.cleanser.pk),
+            "lines-1-quantity": "1.000",
+            "lines-1-unit_cost": "200.00",
+            "lines-1-DELETE": "",
+        })
+        receipt = StockReceipt.objects.get(supplier_reference="INV-VIEW-1")
+        self.assertRedirects(response, reverse("inventory:receipt_detail", args=[receipt.pk]))
+        self.assertEqual(receipt.lines.count(), 2)
+        self.glue.refresh_from_db()
+        self.assertEqual(self.glue.on_hand, Decimal("4.000"))
+        detail = self.client.get(reverse("inventory:receipt_detail", args=[receipt.pk]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertContains(detail, "INV-VIEW-1")
+

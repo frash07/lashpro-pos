@@ -19,6 +19,7 @@ ImmutableManager = models.Manager.from_queryset(ImmutableQuerySet)
 class AuditEvent(models.Model):
     class EventType(models.TextChoices):
         STOCK_ADJUSTMENT = "STOCK_ADJUSTMENT", "Stock adjustment"
+        STOCK_RECEIPT = "STOCK_RECEIPT", "Supplier stock receipt"
         PAYMENT_RECONCILIATION = "PAYMENT_RECONCILIATION", "Payment reconciliation"
         REFUND = "REFUND", "Refund"
         PAYOUT = "PAYOUT", "Payout"

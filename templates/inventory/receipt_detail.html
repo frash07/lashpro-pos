@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Supplier receipt #{{ receipt.pk }} · LashPro{% endblock %}
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receipts' %}">Receipt history</a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
+<main class="page" style="max-width:1000px;margin:0 auto;padding:1rem">
+  <h1>Supplier receipt #{{ receipt.pk }}</h1>
+  <section class="card">
+    <h2>{{ receipt.supplier.name }}</h2>
+    <p><strong>{{ receipt.get_reference_type_display }}:</strong> {{ receipt.supplier_reference }}</p>
+    <p><strong>Delivery note:</strong> {{ receipt.delivery_note_number|default:"—" }}</p>
+    <p><strong>Received date:</strong> {{ receipt.received_date|date:"d M Y" }}</p>
+    <p><strong>Recorded by:</strong> {{ receipt.received_by.get_full_name|default:receipt.received_by.username }}</p>
+    <p><strong>Notes:</strong> {{ receipt.notes|default:"—" }}</p>
+  </section>
+  <section class="card" style="overflow-x:auto">
+    <h2>Items received</h2>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr><th>Product</th><th>SKU</th><th>Quantity</th><th>Unit cost</th><th>Line total</th><th>Movement</th></tr></thead>
+      <tbody>
+        {% for line in receipt.lines.all %}
+          <tr>
+            <td>{{ line.product.name }}</td>
+            <td>{{ line.product.sku }}</td>
+            <td>{{ line.quantity|floatformat:"-3" }}</td>
+            <td>KSh {{ line.unit_cost|floatformat:2 }}</td>
+            <td>KSh {{ line.line_total|floatformat:2 }}</td>
+            <td><a href="{% url 'admin:inventory_inventorymovement_change' line.movement.pk %}">#{{ line.movement.pk }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr><th colspan="4" style="text-align:right">Receipt total</th><th>KSh {{ receipt.total_cost|floatformat:2 }}</th><th></th></tr></tfoot>
+    </table>
+  </section>
+  <p><a href="{% url 'inventory:receipts' %}">Back to receipt history</a></p>
+</main>
+{% endblock %}

@@ -1,0 +1,30 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("audit", "0004_alter_auditevent_event_type"),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="auditevent",
+            name="event_type",
+            field=models.CharField(
+                choices=[
+                    ("STOCK_ADJUSTMENT", "Stock adjustment"),
+                    ("STOCK_RECEIPT", "Supplier stock receipt"),
+                    ("PAYMENT_RECONCILIATION", "Payment reconciliation"),
+                    ("REFUND", "Refund"),
+                    ("PAYOUT", "Payout"),
+                    ("APPROVAL", "Approval"),
+                    ("SALE_STOCK_DEDUCTION", "Sale stock deduction"),
+                    ("SERVICE_COMPLETION", "Service completion"),
+                    ("COMMISSION_ADJUSTMENT", "Commission adjustment"),
+                    ("PRODUCT_IMPORT", "Product import"),
+                ],
+                max_length=40,
+            ),
+        ),
+    ]

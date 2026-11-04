@@ -1,7 +1,152 @@
 {% extends "base.html" %}
 
-{% block title %}Receive stock · LashPro{% endblock %}
+{% block title %}Receive supplier stock · LashPro{% endblock %}
+
+{% block head_extra %}
+  {{ block.super }}
+  <style>
+    .receipt-page{max-width:980px;margin:0 auto;padding:1rem}
+    .receipt-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0}
+    .receipt-card{background:#fff;border:1px solid #eadde4;border-radius:14px;padding:1rem;margin:1rem 0}
+    .receipt-card h2{margin-top:0}
+    .receipt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.85rem}
+    .receipt-grid p{margin:.35rem 0}
+    .receipt-lines{display:grid;gap:.65rem}
+    .receipt-line{display:grid;grid-template-columns:minmax(180px,2fr) minmax(105px,1fr) minmax(130px,1fr) auto;gap:.65rem;align-items:end;border:1px solid #eee2e9;border-radius:10px;padding:.75rem}
+    .receipt-line p{margin:0}
+    .receipt-line label{display:block;font-size:.86rem;font-weight:600;margin-bottom:.25rem}
+    .receipt-line input,.receipt-line select{width:100%;min-width:0}
+    .receipt-line-delete{display:flex;align-items:center;gap:.3rem;font-size:.8rem}
+    .receipt-line-delete input{width:auto}
+    .receipt-error{color:#a0184b;margin:.35rem 0}
+    .receipt-note{color:#665c63;font-size:.9rem}
+    .receipt-submit{margin-top:1rem}
+    @media(max-width:650px){.receipt-line{grid-template-columns:1fr 1fr}.receipt-line .product-field{grid-column:1/-1}.receipt-line .delete-field{grid-column:1/-1}}
+  </style>
+{% endblock %}
 
 {% block content %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">Back to checkout</a></header><main class="page"><h1>Receive stock</h1><p>Supplier stock receipts update the product balance and create an audited inventory movement.</p><p><a href="{% url 'inventory:product_import' %}">Import products from CSV or Excel</a></p>{% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}<section class="card"><form method="post">{% csrf_token %}{{ form.as_p }}<button>Record stock receipt</button></form></section></main>
+<header>
+  <a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a>
+  <a href="{% url 'sales:checkout' %}">Back to checkout</a>
+</header>
+<main class="page receipt-page">
+  <h1>Receive supplier stock</h1>
+  <p>Record the supplier document once, then enter every product delivered. Stock and movement records post together.</p>
+  <div class="receipt-actions">
+    <a href="{% url 'inventory:receipts' %}">Receipt history</a>
+    <a href="{% url 'admin:inventory_supplier_changelist' %}">Manage suppliers</a>
+    <a href="{% url 'inventory:product_import' %}">Import products</a>
+  </div>
+  {% if messages %}
+    {% for message in messages %}<p class="message {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}
+  {% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.idempotency_key }}
+    <section class="receipt-card">
+      <h2>Supplier document</h2>
+      {% if form.non_field_errors %}<div class="receipt-error">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="receipt-grid">
+        {% for field in form %}
+          {% if field.name != "idempotency_key" %}
+            <p>
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<small class="receipt-note">{{ field.help_text }}</small>{% endif %}
+              {% for error in field.errors %}<span class="receipt-error">{{ error }}</span>{% endfor %}
+            </p>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="receipt-card">
+      <h2>Products received</h2>
+      <p class="receipt-note">Enter the quantity physically received and the supplier's unit cost in KSh. Use one line per product, with quantities to three decimal places.</p>
+      {{ line_formset.management_form }}
+      {% if line_formset.non_form_errors %}<div class="receipt-error">{{ line_formset.non_form_errors }}</div>{% endif %}
+      <div class="receipt-lines" id="receipt-lines">
+        {% for line_form in line_formset %}
+          <div class="receipt-line">
+            <div class="product-field">
+              {{ line_form.product.label_tag }}
+              {{ line_form.product }}
+              {% for error in line_form.product.errors %}<span class="receipt-error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              {{ line_form.quantity.label_tag }}
+              {{ line_form.quantity }}
+              {% for error in line_form.quantity.errors %}<span class="receipt-error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              {{ line_form.unit_cost.label_tag }}
+              {{ line_form.unit_cost }}
+              {% for error in line_form.unit_cost.errors %}<span class="receipt-error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="delete-field receipt-line-delete">
+              {{ line_form.DELETE }} <label for="{{ line_form.DELETE.id_for_label }}">Remove</label>
+            </div>
+            {% for error in line_form.non_field_errors %}<span class="receipt-error">{{ error }}</span>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      <template id="empty-receipt-line">
+        <div class="receipt-line">
+          <div class="product-field">
+            {{ line_formset.empty_form.product.label_tag }}
+            {{ line_formset.empty_form.product }}
+          </div>
+          <div>
+            {{ line_formset.empty_form.quantity.label_tag }}
+            {{ line_formset.empty_form.quantity }}
+          </div>
+          <div>
+            {{ line_formset.empty_form.unit_cost.label_tag }}
+            {{ line_formset.empty_form.unit_cost }}
+          </div>
+          <div class="delete-field receipt-line-delete">
+            {{ line_formset.empty_form.DELETE }} <label for="{{ line_formset.empty_form.DELETE.id_for_label }}">Remove</label>
+          </div>
+        </div>
+      </template>
+      <button type="button" class="button-secondary" id="add-receipt-line">Add another product</button>
+      <p class="receipt-note">Maximum 50 product lines per supplier document. Duplicate products must be combined on one line.</p>
+    </section>
+    <button type="submit" class="receipt-submit">Record supplier receipt and update stock</button>
+  </form>
+</main>
+
+<script>
+  (function () {
+    const prefix = "{{ line_formset.prefix }}";
+    const totalForms = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+    const container = document.getElementById("receipt-lines");
+    const template = document.getElementById("empty-receipt-line");
+    const addButton = document.getElementById("add-receipt-line");
+
+    if (!totalForms || !container || !template || !addButton) return;
+
+    addButton.addEventListener("click", function () {
+      const index = Number(totalForms.value);
+      if (index >= 50) {
+        addButton.disabled = true;
+        return;
+      }
+      const html = template.innerHTML.replaceAll("__prefix__", String(index));
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = html.trim();
+      const row = wrapper.firstElementChild;
+      if (row) container.appendChild(row);
+      totalForms.value = String(index + 1);
+      if (index + 1 >= 50) addButton.disabled = true;
+    });
+
+    container.addEventListener("change", function (event) {
+      if (!event.target.matches('input[type="checkbox"][name$="-DELETE"]')) return;
+      const row = event.target.closest(".receipt-line");
+      if (row) row.hidden = event.target.checked;
+    });
+  })();
+</script>
 {% endblock %}

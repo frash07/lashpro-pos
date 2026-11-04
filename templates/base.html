@@ -24,5 +24,13 @@
 <body class="{% block body_class %}{% endblock %}">
   {% block content %}{% endblock %}
   {% block scripts %}{% endblock %}
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("{% url 'service_worker' %}", { scope: "/" })
+          .catch(() => console.warn("LashPro offline support could not be enabled."));
+      });
+    }
+  </script>
 </body>
 </html>

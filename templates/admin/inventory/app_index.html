@@ -81,6 +81,10 @@
               <span class="inventory-hub-icon">
                 {% if model.object_name == "InventoryMovement" %}
                   <i data-lucide="arrow-left-right"></i>
+                {% elif model.object_name == "StockReceipt" %}
+                  <i data-lucide="truck"></i>
+                {% elif model.object_name == "Supplier" %}
+                  <i data-lucide="store"></i>
                 {% elif model.object_name == "StockAdjustmentRequest" %}
                   <i data-lucide="clipboard-list"></i>
                 {% elif model.object_name == "ServiceConsumable" %}
@@ -93,7 +97,11 @@
                 <strong>{{ model.name }}</strong>
                 <small>
                   {% if model.object_name == "InventoryMovement" %}
-                    Inspect the stock movement ledger, including sales, receipts, returns, service use and approved adjustments.
+                    Inspect the stock movement ledger, including sales, supplier receipts, returns, service use and approved adjustments.
+                  {% elif model.object_name == "StockReceipt" %}
+                    Review posted supplier documents, received items, unit costs and the linked stock movements.
+                  {% elif model.object_name == "Supplier" %}
+                    Maintain supplier names and contact details used when recording stock receipts.
                   {% elif model.object_name == "StockAdjustmentRequest" %}
                     Review proposed stock changes and approve or reject requests with an auditable decision.
                   {% elif model.object_name == "ServiceConsumable" %}

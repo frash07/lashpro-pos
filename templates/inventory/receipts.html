@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Supplier receipt history · LashPro{% endblock %}
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
+<main class="page" style="max-width:1000px;margin:0 auto;padding:1rem">
+  <h1>Supplier receipt history</h1>
+  <p>Supplier documents already posted to inventory. This register is read-only; corrections must be recorded as separate stock movements.</p>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <section class="card" style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr><th>Received</th><th>Supplier</th><th>Document</th><th>Delivery note</th><th>Lines</th><th>Total cost</th><th>Received by</th></tr></thead>
+      <tbody>
+        {% for receipt in receipts %}
+          <tr>
+            <td>{{ receipt.received_date|date:"d M Y" }}</td>
+            <td>{{ receipt.supplier.name }}</td>
+            <td><a href="{% url 'inventory:receipt_detail' receipt.pk %}">{{ receipt.get_reference_type_display }} · {{ receipt.supplier_reference }}</a></td>
+            <td>{{ receipt.delivery_note_number|default:"—" }}</td>
+            <td>{{ receipt.lines.count }}</td>
+            <td>KSh {{ receipt.total_cost|floatformat:2 }}</td>
+            <td>{{ receipt.received_by.get_full_name|default:receipt.received_by.username }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7">No supplier receipts have been recorded yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <p><a href="{% url 'inventory:receive' %}">Record another supplier receipt</a></p>
+</main>
+{% endblock %}
