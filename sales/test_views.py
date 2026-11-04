@@ -163,6 +163,15 @@ class CashierViewTests(TestCase):
         self.assertEqual(Sale.objects.get().total_amount, Decimal("800.00"))
 
 
+    def test_receipt_clears_only_the_matching_pending_checkout_key(self):
+        sale = checkout_sale(cashier=self.cashier, items=[{"service_id": self.service.pk}])
+        response = self.client.get(reverse("sales:receipt", args=[sale.receipt_token]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, str(sale.checkout_idempotency_key))
+        self.assertContains(response, "pending.idempotencyKey === completedCheckoutKey")
+        self.assertContains(response, 'window.sessionStorage.removeItem(storageKey)')
+
     def test_receipt_uses_public_random_token_without_database_id(self):
         from sales.services import checkout_sale
         sale = checkout_sale(cashier=self.cashier, items=[{"service_id": self.service.pk}])
