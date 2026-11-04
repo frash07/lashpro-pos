@@ -200,8 +200,8 @@ def receive_stock(*, product, quantity, unit_cost, reason, actor, receipt_line=N
         receipt_line=receipt_line,
     )
     record_audit_event(
-        event_type=AuditEvent.EventType.STOCK_ADJUSTMENT, object_type="inventory_movement",
-        object_id=movement.pk, actor=actor, reason=reason,
+        event_type=AuditEvent.EventType.STOCK_RECEIPT, object_type="inventory_movement",
+        object_id=movement.pk, actor=actor,
         before_state={"on_hand": str(before), "cost_price": str(old_cost)},
         after_state={"on_hand": str(locked_product.on_hand), "cost_price": str(rounded_cost)},
         metadata={"product_id": locked_product.pk, "movement_type": InventoryMovement.Type.PURCHASE, "receipt_id": receipt_line.receipt_id if receipt_line else None},
@@ -386,7 +386,7 @@ def receive_supplier_stock(
                 )
 
             record_audit_event(
-                event_type=AuditEvent.EventType.STOCK_ADJUSTMENT,
+                event_type=AuditEvent.EventType.STOCK_RECEIPT,
                 object_type="supplier_stock_receipt",
                 object_id=receipt.pk,
                 actor=actor,
