@@ -153,6 +153,8 @@ class CashierViewTests(TestCase):
         response = self.client.post(reverse("sales:checkout"), data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Sale.objects.count(), 0)
+        self.assertTrue(response.context["checkout_status_known_failure"])
+        self.assertContains(response, "CHECKOUT_STATUS_KNOWN_FAILURE = true")
 
     def test_client_cannot_override_catalog_price(self):
         self.client.force_login(self.cashier)
