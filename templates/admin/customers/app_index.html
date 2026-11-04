@@ -1,0 +1,98 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Customer workspace · LashPro KE{% endblock %}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-ledger.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/customer-directory.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/customer-hub.css' %}">
+{% endblock %}
+{% block content %}
+<header class="topbar commission-topbar customer-topbar customer-hub-topbar">
+  <a class="brand commission-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+    <span class="brand-mark"><i data-lucide="sparkles"></i></span><span><span class="brand-name">LASHPRO <span>KE</span></span><span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span></span>
+  </a>
+  <nav class="mode-switch" aria-label="Application navigation">
+    <a class="mode-btn" href="{% url 'sales:checkout' %}"><i data-lucide="shopping-bag"></i><span>Salon POS</span></a>
+    <a class="mode-btn active" href="{% url 'admin:app_list' app_label='customers' %}" aria-current="page"><i data-lucide="users"></i><span>Customers</span></a>
+    <a class="mode-btn" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}"><i data-lucide="wallet"></i><span>Commissions</span></a>
+  </nav>
+  <div class="top-actions">
+    <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+    <button class="icon-button" id="customer-hub-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
+    <div class="profile"><div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div><div class="profile-copy"><div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div><div class="profile-role">STAFF WORKSPACE</div></div></div>
+  </div>
+</header>
+<main class="main commission-main customer-main customer-hub-main"><section class="view">
+  <div class="page-heading commission-heading customer-heading customer-hub-heading">
+    <div><div class="eyebrow">Studio workspace · Client relationships</div><h1>Customer workspace <em>starts with connection.</em></h1><p>Find client profiles, keep contact details current and make every visit easier to follow up.</p></div>
+    <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div><div class="soft-pill"><i data-lucide="contact-round"></i> Client management</div></div>
+  </div>
+  <section class="customer-hub-welcome">
+    <div class="customer-hub-welcome-copy">
+      <div class="customer-hub-kicker"><i data-lucide="heart-handshake"></i> THE CLIENT EXPERIENCE</div>
+      <h2>Every great appointment<br><em>begins with knowing your client.</em></h2>
+      <p>Use the customer register to maintain accurate contact details, record useful preferences and review completed purchase history.</p>
+      <div class="customer-hub-welcome-actions">
+        {% for app in app_list %}{% for model in app.models %}{% if model.object_name == "Customer" and model.admin_url %}
+          <a class="customer-hub-primary-action" href="{{ model.admin_url }}"><i data-lucide="users"></i> Open customer directory <i data-lucide="arrow-up-right"></i></a>
+        {% endif %}{% endfor %}{% endfor %}
+        <a class="customer-hub-secondary-action" href="{% url 'sales:checkout' %}"><i data-lucide="shopping-bag"></i> Go to salon POS</a>
+      </div>
+    </div>
+    <div class="customer-hub-welcome-art" aria-hidden="true"><div class="customer-hub-orbit customer-hub-orbit-one"></div><div class="customer-hub-orbit customer-hub-orbit-two"></div><div class="customer-hub-welcome-symbol"><i data-lucide="users-round"></i></div><span class="customer-hub-art-label">PERSONAL SERVICE · EVERY VISIT</span></div>
+  </section>
+  <div class="customer-hub-section-heading"><div><div class="section-title">Customer tools</div><div class="section-caption">Choose where you want to work.</div></div><span class="customer-directory-tag"><i data-lucide="shield-check"></i> Secure client records</span></div>
+  <section class="customer-hub-tools" aria-label="Customer management tools">
+    {% for app in app_list %}{% for model in app.models %}{% if model.object_name == "Customer" %}
+      <article class="customer-hub-tool-card customer-hub-tool-directory">
+        <div class="customer-hub-tool-icon"><i data-lucide="contact-round"></i></div><div class="customer-hub-tool-eyebrow">CUSTOMER REGISTER</div><h3>{{ model.name }}</h3>
+        <p>Search existing clients by name, phone number or notes. Open a profile to update contact details and review completed sales.</p>
+        <div class="customer-hub-tool-footer">{% if model.admin_url %}<a href="{{ model.admin_url }}">Browse customer records <i data-lucide="arrow-right"></i></a>{% else %}<span class="customer-hub-restricted">Directory access is restricted</span>{% endif %}{% if model.add_url %}<a class="customer-hub-tool-add" href="{{ model.add_url }}" aria-label="Add customer"><i data-lucide="plus"></i></a>{% endif %}</div>
+      </article>
+      <article class="customer-hub-tool-card customer-hub-tool-create">
+        <div class="customer-hub-tool-icon"><i data-lucide="user-round-plus"></i></div><div class="customer-hub-tool-eyebrow">NEW CLIENT PROFILE</div><h3>Add a customer</h3>
+        <p>Create a client record with a name, phone number and service notes so the team can keep important details in one place.</p>
+        <div class="customer-hub-tool-footer">{% if model.add_url %}<a href="{{ model.add_url }}">Create customer profile <i data-lucide="arrow-right"></i></a>{% else %}<span class="customer-hub-restricted">Create access is restricted</span>{% endif %}</div>
+      </article>
+    {% endif %}{% endfor %}{% endfor %}
+  </section>
+  <section class="customer-hub-guidance" aria-label="Customer workflow">
+    <div class="customer-hub-guidance-heading"><span class="customer-hub-guidance-icon"><i data-lucide="lightbulb"></i></span><div><strong>A simple client workflow</strong><span>Keep the register useful and consistent.</span></div></div>
+    <div class="customer-hub-guidance-steps">
+      <div><span>01</span><strong>Find or create</strong><p>Check for an existing profile before adding a new client.</p></div>
+      <div><span>02</span><strong>Keep details current</strong><p>Update phone numbers and add concise service preferences.</p></div>
+      <div><span>03</span><strong>Review past visits</strong><p>Use the customer directory to see completed sales linked to each profile.</p></div>
+    </div>
+  </section>
+  <footer class="commission-footer"><span class="commission-footer-brand">LASHPRO KE</span><span>Thoughtful client records support consistent service and follow-up.</span></footer>
+</section></main>
+{% endblock %}
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("customer-hub-theme-toggle");
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+      try { const saved = localStorage.getItem("lashpro-theme"); applyTheme(saved === "light" ? "light" : "dark"); }
+      catch (error) { applyTheme("dark"); }
+      if (button) button.addEventListener("click", function () {
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        applyTheme(next);
+        try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+      });
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
