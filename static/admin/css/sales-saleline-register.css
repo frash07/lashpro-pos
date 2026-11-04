@@ -1,0 +1,198 @@
+/* SalesLine register — branded to match the Sales workspace. */
+body.model-saleline.change-list,
+body.model-saleline.change-list #container,
+body.model-saleline.change-list #content {
+  background: var(--bg) !important;
+  color: var(--text);
+  font-family: 'DM Sans',system-ui,sans-serif;
+}
+.sales-lines-topbar { gap: 16px; }
+.sales-lines-main { max-width: 1540px; padding: 25px 28px 38px; }
+.sales-lines-heading { align-items: flex-end; margin: 5px 0 20px; }
+.sales-lines-heading h1 { color: var(--text); }
+.sales-lines-heading h1 em { color: var(--pink); font-style: italic; font-weight: 400; }
+
+.sales-lines-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  min-height: 218px;
+  margin: 0 0 24px;
+  padding: 27px 31px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  background: radial-gradient(ellipse at 84% 25%,rgba(241,125,182,.19),transparent 36%),linear-gradient(110deg,var(--surface),var(--surface-2));
+  box-shadow: var(--shadow);
+}
+.sales-lines-hero:after {
+  content: "LP";
+  position: absolute;
+  right: 24%;
+  top: -65px;
+  color: var(--pink);
+  font: 205px/1 'Playfair Display',Georgia,serif;
+  opacity: .035;
+  pointer-events: none;
+}
+.sales-lines-hero-copy { position: relative; z-index: 1; max-width: 740px; }
+.sales-lines-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--pink-wash);
+  color: var(--pink);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+.sales-lines-kicker svg { width: 13px; height: 13px; }
+.sales-lines-hero h2 {
+  margin: 14px 0 8px;
+  color: var(--text);
+  font: 500 29px/1.15 'Playfair Display',Georgia,serif;
+  letter-spacing: -.025em;
+}
+.sales-lines-hero h2 em { color: var(--pink); font-weight: 400; }
+.sales-lines-hero-copy > p {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+.sales-lines-hero-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.sales-lines-primary,.sales-lines-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 10px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none !important;
+  transition: transform .18s,border-color .18s,background .18s;
+}
+.sales-lines-primary { border-color: var(--pink); background: var(--pink); color: #fff !important; }
+.sales-lines-primary:hover { transform: translateY(-1px); background: var(--pink-strong); color: #fff !important; }
+.sales-lines-secondary { background: var(--surface); color: var(--text) !important; }
+.sales-lines-secondary:hover { border-color: var(--pink); background: var(--pink-wash); color: var(--pink) !important; }
+.sales-lines-primary svg,.sales-lines-secondary svg { width: 14px; height: 14px; }
+.sales-lines-hero-metric {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 155px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 112px;
+  padding-left: 24px;
+  border-left: 1px solid var(--line-strong);
+}
+.sales-lines-hero-metric strong { color: var(--pink); font-size: 34px; line-height: 1; letter-spacing: -.045em; }
+.sales-lines-hero-metric span { margin-top: 8px; color: var(--text); font-size: 10px; font-weight: 700; }
+.sales-lines-hero-metric small { margin-top: 5px; color: var(--subtle); font-size: 9px; }
+
+.sales-lines-register-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 13px;
+}
+.sales-lines-register-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+.sales-lines-register-tag svg { width: 12px; height: 12px; color: var(--pink); }
+.sales-lines-content {
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.sales-lines-guidance {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 19px 0 0;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface);
+}
+.sales-lines-guidance-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: rgba(109,214,173,.10);
+  color: var(--green);
+}
+.sales-lines-guidance-icon svg { width: 17px; height: 17px; }
+.sales-lines-guidance strong { display: block; color: var(--text); font-size: 10px; }
+.sales-lines-guidance p { margin: 4px 0 0; color: var(--muted); font-size: 9px; line-height: 1.7; }
+.sales-lines-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 19px;
+  padding: 14px 2px 2px;
+  border-top: 1px solid var(--line);
+  color: var(--subtle);
+  font-size: 9px;
+}
+.sales-lines-footer-brand { color: var(--pink); font-weight: 700; letter-spacing: .08em; }
+.sales-lines-topbar a:focus-visible,
+.sales-lines-main a:focus-visible,
+.sales-lines-topbar button:focus-visible { outline: 2px solid var(--pink); outline-offset: 3px; }
+
+@media (max-width: 1180px) {
+  .sales-lines-main { padding: 21px 20px 32px; }
+}
+@media (max-width: 900px) {
+  .sales-lines-heading { align-items: flex-start; flex-direction: column; }
+  .sales-lines-hero { align-items: flex-start; flex-direction: column; }
+  .sales-lines-hero-metric {
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
+    padding: 13px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+@media (max-width: 620px) {
+  .sales-lines-main { padding: 19px 14px 27px; }
+  .sales-lines-heading { gap: 12px; margin-bottom: 16px; }
+  .sales-lines-heading h1 { font-size: 26px; }
+  .sales-lines-heading .heading-actions { flex-wrap: wrap; }
+  .sales-lines-hero { min-height: 0; padding: 21px 18px; border-radius: 17px; }
+  .sales-lines-hero h2 { font-size: 24px; }
+  .sales-lines-hero-actions { flex-direction: column; align-items: stretch; }
+  .sales-lines-primary,.sales-lines-secondary { justify-content: center; }
+  .sales-lines-register-heading { align-items: flex-start; flex-direction: column; }
+  .sales-lines-content { padding: 10px; border-radius: 14px; }
+  .sales-lines-guidance { padding: 13px; }
+  .sales-lines-footer { flex-direction: column; gap: 5px; }
+}
