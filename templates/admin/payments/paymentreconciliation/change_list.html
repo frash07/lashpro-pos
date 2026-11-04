@@ -1,0 +1,42 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}M-Pesa Reconciliation Register · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/payment-reconciliation-register.css' %}">
+{% endblock %}
+
+{% block content_title %}M-Pesa Reconciliation Register{% endblock %}
+
+{% block object-tools %}
+  <section class="payment-recon-hero" aria-label="Payment reconciliation register overview">
+    <div class="payment-recon-copy">
+      <div class="payment-recon-kicker"><span></span> FINANCE OPERATIONS · PAYMENT VERIFICATION</div>
+      <h2>Every reference, <em>accounted for.</em></h2>
+      <p>Audit the recorded decisions used to verify M-Pesa payment references. Review the decision, reference snapshot, reviewer and timestamp. Reconciliation entries are immutable audit records.</p>
+    </div>
+
+    <nav class="payment-recon-actions" aria-label="Payment review tools">
+      <a href="{% url 'admin:payments_paymenttransaction_changelist' %}">Payment transactions <span aria-hidden="true">↗</span></a>
+      <a href="{% url 'admin:payments_payoutreconciliation_changelist' %}">Payout reconciliation</a>
+      <a href="{% url 'admin:app_list' app_label='payments' %}">Payment registers</a>
+    </nav>
+
+    <div class="payment-recon-metric">
+      <strong>{{ cl.result_count }}</strong>
+      <span>Matching records</span>
+      {% if cl.full_result_count != cl.result_count %}
+        <small>{{ cl.full_result_count }} total decisions</small>
+      {% else %}
+        <small>Current register</small>
+      {% endif %}
+    </div>
+  </section>
+  {{ block.super }}
+{% endblock %}
