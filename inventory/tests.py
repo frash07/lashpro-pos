@@ -347,7 +347,7 @@ class SupplierReceiptServiceTests(TestCase):
         self.assertTrue(form.fields["idempotency_key"].required)
         self.assertIsInstance(form.fields["idempotency_key"].widget, forms.HiddenInput)
         self.assertTrue(StockReceipt._meta.get_field("idempotency_key").unique)
-        self.assertIsNotNone(form.initial["idempotency_key"])
+        self.assertIsNotNone(form["idempotency_key"].value())
 
     def test_supplier_receipt_posts_all_lines_and_movements_atomically(self):
         receipt, created = receive_supplier_stock(**self.receipt_args())
