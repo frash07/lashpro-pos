@@ -332,6 +332,29 @@ class AdminSuiteGateTests(TestCase):
         response = self.client.get(reverse("sales:checkout"))
         self.assertEqual(response.context["admin_suite"]["pending_reconciliation_count"], 20)
 
+    def test_manager_inventory_panel_uses_database_balances_and_reorder_thresholds(self):
+        low = Product.objects.create(
+            sku="ADMIN-LOW-001", name="Low adhesive",
+            cost_price=Decimal("100.00"), selling_price=Decimal("250.00"),
+            on_hand=Decimal("2.000"), reorder_level=Decimal("5.000"),
+        )
+        healthy = Product.objects.create(
+            sku="ADMIN-OK-001", name="Healthy tweezers",
+            cost_price=Decimal("200.00"), selling_price=Decimal("500.00"),
+            on_hand=Decimal("8.000"), reorder_level=Decimal("3.000"),
+        )
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("sales:checkout"))
+        self.assertEqual(response.status_code, 200)
+        listed = list(response.context["inventory_products"])
+        self.assertEqual({item.pk for item in listed}, {low.pk, healthy.pk})
+        self.assertContains(response, "Low stock")
+        self.assertContains(response, "Receive stock")
+        self.assertContains(response, "2.000")
+        self.assertContains(response, "5.000")
+        self.assertNotContains(response, "Add 10")
+        self.assertNotContains(response, "saveNewStock")
+
 
 class ConcurrentStockCheckoutTests(TransactionTestCase):
     reset_sequences = True
