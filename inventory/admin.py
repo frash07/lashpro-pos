@@ -1,15 +1,66 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 
-from .models import InventoryMovement, ServiceConsumable, StockAdjustmentRequest
+from .models import (
+    InventoryMovement,
+    ServiceConsumable,
+    StockAdjustmentRequest,
+    StockReceipt,
+    StockReceiptLine,
+    Supplier,
+)
 from .services import request_stock_adjustment, review_stock_adjustment
+
+
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ("name", "contact_person", "phone", "email", "active")
+    list_filter = ("active",)
+    search_fields = ("name", "contact_person", "phone", "email")
+    ordering = ("name",)
+
+
+class StockReceiptLineInline(admin.TabularInline):
+    model = StockReceiptLine
+    extra = 0
+    can_delete = False
+    fields = ("product", "quantity", "unit_cost")
+    readonly_fields = fields
+    show_change_link = False
+
+
+@admin.register(StockReceipt)
+class StockReceiptAdmin(admin.ModelAdmin):
+    list_display = (
+        "received_date", "supplier", "reference_type", "supplier_reference",
+        "line_count", "total_cost", "received_by",
+    )
+    list_filter = ("reference_type", "received_date", "supplier")
+    search_fields = ("supplier__name", "supplier_reference", "delivery_note_number", "notes")
+    readonly_fields = tuple(field.name for field in StockReceipt._meta.fields)
+    inlines = (StockReceiptLineInline,)
+    actions = None
+
+    @admin.display(description="Lines")
+    def line_count(self, obj):
+        return obj.lines.count()
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(InventoryMovement)
 class InventoryMovementAdmin(admin.ModelAdmin):
-    list_display = ("created_at", "movement_type", "product", "quantity_delta", "actor", "sale_line")
+    list_display = ("created_at", "movement_type", "product", "quantity_delta", "actor", "sale_line", "receipt_line")
     list_filter = ("movement_type", "created_at")
-    search_fields = ("product__name", "product__sku", "reason")
+    search_fields = (
+        "product__name", "product__sku", "reason",
+        "receipt_line__receipt__supplier__name",
+        "receipt_line__receipt__supplier_reference",
+    )
     readonly_fields = tuple(field.name for field in InventoryMovement._meta.fields)
     actions = None
 
@@ -33,16 +84,12 @@ class StockAdjustmentRequestAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
-        # Keep the approval history; requests must not be erased from the admin.
         return False
 
     def save_model(self, request, obj, form, change):
         if change:
             super().save_model(request, obj, form, change)
             return
-
-        # Route admin-created requests through the domain service so validation
-        # and the corresponding audit event cannot be bypassed.
         created = request_stock_adjustment(
             product=obj.product,
             quantity_delta=obj.quantity_delta,
