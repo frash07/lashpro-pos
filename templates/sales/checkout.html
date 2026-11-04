@@ -16,6 +16,10 @@
   <form id="pos-form" method="post" novalidate>
     {% csrf_token %}
     {{ details.idempotency_key }}
+    <div id="checkout-status-unknown" class="checkout-status-unknown" role="alert" hidden>
+      A previous checkout may have completed, but its response was not confirmed. Check Sales before retrying.
+      This tab retains the original cart and checkout key so a retry cannot create a second sale.
+    </div>
     {{ lines.management_form }}
     {{ payments.management_form }}
 
@@ -143,8 +147,39 @@
     // Technician choices come from the rendered #staff-select options, whose values are real user primary
     // keys. Each service line in the cart keeps its own technicianId; products never carry one.
     const technicianOptions = Array.from(document.querySelectorAll('#staff-select option')).filter(o => o.value).map(o => ({ id: o.value, name: o.textContent.trim() }));
+    const PENDING_CHECKOUT_STORAGE_KEY = 'lashpro.pos.pendingCheckout.v1';
     let lineSeq=0;
     let cart=[],appliedDiscount=0, appliedCode='', activeCategory='all', currentMode='pos', currentPaymentMethod='mpesa', orderSequence=1, deferredPrompt=null;
+    let pendingCheckout = null;
+    let checkoutSubmitting = false;
+
+    (function restorePendingCheckout() {
+      try {
+        const raw = sessionStorage.getItem(PENDING_CHECKOUT_STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (!saved || typeof saved.idempotencyKey !== 'string' ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(saved.idempotencyKey) ||
+            !Array.isArray(saved.cart) || !saved.cart.length) return;
+
+        const restoredCart = saved.cart.filter(item =>
+          item && typeof item.id === 'string' && ['product', 'service'].includes(item.type)
+        );
+        if (!restoredCart.length) return;
+
+        pendingCheckout = saved;
+        cart = restoredCart.map(item => ({ ...item, qty: Math.max(1, Number(item.qty) || 1) }));
+        lineSeq = cart.reduce((max, item) => Math.max(max, Number(item.lineId) || 0), 0);
+        appliedDiscount = [0, 0.1, 0.2].includes(Number(saved.appliedDiscount)) ? Number(saved.appliedDiscount) : 0;
+        appliedCode = typeof saved.appliedCode === 'string' ? saved.appliedCode : '';
+        currentPaymentMethod = typeof saved.method === 'string' ? saved.method : 'mpesa';
+
+        const keyField = document.querySelector('#pos-form [name="idempotency_key"]');
+        if (keyField) keyField.value = saved.idempotencyKey;
+      } catch (error) {
+        pendingCheckout = null;
+      }
+    })();
     const currency=n=>{const v=Number(n||0),hasCents=Math.round(v*100)%100!==0;return 'KES '+v.toLocaleString('en-KE',{minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2});};
     // Catalog prices are VAT-inclusive (gross). All money maths is done in integer cents so the
     // amount shown, the amount posted as payment and the backend SaleLine totals always agree.
@@ -175,7 +210,24 @@
     const typeLabel=type=>({service:'Service',academy:'Academy',product:'Retail'}[type]||type);
     function refreshIcons(){if(window.lucide&&typeof lucide.createIcons==='function')lucide.createIcons();}
     function setToday(){const d=new Date();document.getElementById('today-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
-    window.addEventListener('DOMContentLoaded',()=>{setToday();renderCatalog();renderCart();setupPWA();updateOnlineStatus();refreshIcons();});
+    window.addEventListener('DOMContentLoaded',()=>{
+      setToday();
+      renderCatalog();
+      renderCart();
+      setupPWA();
+      updateOnlineStatus();
+      refreshIcons();
+      if (pendingCheckout) {
+        const warning = document.getElementById('checkout-status-unknown');
+        if (warning) warning.hidden = false;
+        const reference = document.getElementById('mpesa-reference');
+        if (reference && typeof pendingCheckout.mpesaReference === 'string') {
+          reference.value = pendingCheckout.mpesaReference;
+        }
+        const discountCode = document.getElementById('discount-code');
+        if (discountCode) discountCode.value = appliedCode;
+      }
+    });
 
     function addSyncField(form, name, value) {
       const input = document.createElement('input');
@@ -231,14 +283,27 @@
       });
     }
 
+    function maxSellableQuantity(item) {
+      if (!item || item.type !== 'product') return Infinity;
+      const stock = Number(item.stock);
+      return Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0;
+    }
     function renderCatalog(){
       const grid=document.getElementById('catalog-grid');if(!grid)return;
       const search=document.getElementById('catalog-search');
       const query=(search?search.value:'').trim().toLowerCase();
       const filtered=catalogData.filter(item=>(activeCategory==='all'||item.type===activeCategory)&&(item.name.toLowerCase().includes(query)||item.desc.toLowerCase().includes(query)));
-      document.getElementById('result-count').textContent=`${filtered.length} ${filtered.length===1?'item':'items'}`;
+      document.getElementById('result-count').textContent=filtered.length+' '+(filtered.length===1?'item':'items');
       if(!filtered.length){grid.innerHTML='<div class="no-results">No items match your search. Try another name or category.</div>';return;}
-      grid.innerHTML=filtered.map(item=>`<article class="catalog-card" role="button" tabindex="0" aria-label="Add ${escapeHtml(item.name)} to order" onclick="addToCart('${item.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();addToCart('${item.id}');}"><div class="card-image"><span>${escapeHtml(item.icon || '✦')}</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">${escapeHtml(typeLabel(item.type))}</span><span class="card-price">KES ${Number(item.price||0).toLocaleString('en-KE')}</span></div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.desc)}</p></div></article>`).join('');
+      grid.innerHTML=filtered.map(item=>{
+        const available=maxSellableQuantity(item);
+        const soldOut=item.type==='product'&&available<1;
+        const stockBadge=item.type==='product'
+          ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+(soldOut?'Sold out':available+' in stock')+'</span>'
+          : '';
+        const activation=soldOut?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
+        return '<article class="catalog-card'+(soldOut?' is-sold-out':'')+'" role="button" tabindex="'+(soldOut?'-1':'0')+'" aria-disabled="'+String(soldOut)+'" aria-label="'+escapeHtml(item.name)+(soldOut?', sold out':', add to order')+'" '+activation+'><div class="card-image"><span>'+escapeHtml(item.icon||'✦')+'</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">'+escapeHtml(typeLabel(item.type))+'</span><span class="card-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span></div><h3>'+escapeHtml(item.name)+'</h3><p>'+escapeHtml(item.desc)+'</p>'+stockBadge+'</div></article>';
+      }).join('');
       refreshIcons();
     }
     function filterCategory(category,button){activeCategory=category;document.querySelectorAll('.cat-tab').forEach(el=>el.classList.toggle('active',el.dataset.category===category));renderCatalog();}
@@ -252,19 +317,39 @@
       const isService=item.type==='service';
       const technicianId=isService?defaultTechnicianId():'';
       const existing=cart.find(x=>x.id===id&&(!isService||x.technicianId===technicianId));
-      if(existing)existing.qty++;else cart.push({...item,lineId:++lineSeq,technicianId,qty:1});
+      const maximum=maxSellableQuantity(item);
+      if(!isService&&maximum<1){alert(item.name+' is sold out and cannot be added.');return;}
+      if(existing) {
+        if(!isService&&existing.qty>=maximum){alert('Only '+maximum+' unit(s) of '+item.name+' are available.');return;}
+        existing.qty++;
+      } else {
+        cart.push({...item,lineId:++lineSeq,technicianId,qty:1});
+      }
       renderCart();
     }
     function removeFromCart(lineId){cart=cart.filter(x=>x.lineId!==lineId);renderCart();}
-    function updateQty(lineId,delta){const item=cart.find(x=>x.lineId===lineId);if(!item)return;item.qty+=delta;if(item.qty<=0)cart=cart.filter(x=>x.lineId!==lineId);renderCart();}
+    function updateQty(lineId,delta){
+      const item=cart.find(x=>x.lineId===lineId);if(!item)return;
+      const next=item.qty+delta;
+      const catalogItem=catalogData.find(x=>x.id===item.id);
+      const maximum=maxSellableQuantity(catalogItem||item);
+      if(delta>0&&item.type==='product'&&next>maximum){alert('Only '+maximum+' unit(s) of '+item.name+' are available.');return;}
+      item.qty=next;
+      if(item.qty<=0)cart=cart.filter(x=>x.lineId!==lineId);
+      renderCart();
+    }
     function setLineTechnician(lineId,select){const item=cart.find(x=>x.lineId===lineId);if(!item||item.type!=='service')return;item.technicianId=select.value;select.classList.toggle('needs-tech',!select.value);}
     function clearCart(){cart=[];appliedDiscount=0;appliedCode='';document.getElementById('discount-code').value='';renderCart();}
     function renderCart(){
       const container=document.getElementById('cart-items-container');
       if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
       container.innerHTML=cart.map(item=>{
-        const techPicker=item.type==='service'?`<div class="cart-tech field"><label>ARTIST</label><select class="cart-tech-select${item.technicianId?'':' needs-tech'}" aria-label="Technician for ${escapeHtml(item.name)}" onchange="setLineTechnician(${item.lineId},this)">${technicianOptionsHtml(item.technicianId)}</select></div>`:'';
-        return `<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">${escapeHtml(item.name)}</div><div class="cart-item-price">${currency(item.price)}</div></div><button type="button" class="row-action" onclick="removeFromCart(${item.lineId})">Remove</button></div>${techPicker}<div class="qty-row"><button type="button" class="qty-btn" onclick="updateQty(${item.lineId},-1)" aria-label="Decrease quantity">−</button><span>${item.qty}</span><button type="button" class="qty-btn" onclick="updateQty(${item.lineId},1)" aria-label="Increase quantity">+</button><strong>${currency(item.price*item.qty)}</strong></div></div>`;
+        const techPicker=item.type==='service'
+          ? '<div class="cart-tech field"><label>ARTIST</label><select class="cart-tech-select'+(item.technicianId?'':' needs-tech')+'" aria-label="Technician for '+escapeHtml(item.name)+'" onchange="setLineTechnician('+item.lineId+',this)">'+technicianOptionsHtml(item.technicianId)+'</select></div>'
+          : '';
+        const maximum=maxSellableQuantity(item);
+        const plusDisabled=item.type==='product'&&item.qty>=maximum;
+        return '<div class="cart-row"><div class="cart-row-head"><div><div class="cart-item-name">'+escapeHtml(item.name)+'</div><div class="cart-item-price">'+currency(item.price)+'</div></div><button type="button" class="row-action" onclick="removeFromCart('+item.lineId+')">Remove</button></div>'+techPicker+'<div class="qty-row"><button type="button" class="qty-btn" onclick="updateQty('+item.lineId+',-1)" aria-label="Decrease quantity">−</button><span>'+item.qty+'</span><button type="button" class="qty-btn" onclick="updateQty('+item.lineId+',1)" aria-label="Increase quantity" '+(plusDisabled?'disabled aria-disabled="true"':'')+'>+</button><strong>'+currency(item.price*item.qty)+'</strong></div></div>';
       }).join('');
       updateFinancials();refreshIcons();
     }
@@ -305,6 +390,39 @@
     function switchAdminTab(tabName){['inventory','academy','staff','reconciliation'].forEach(name=>{document.getElementById(`admin-sec-${name}`).classList.toggle('hidden',name!==tabName);document.getElementById(`tab-${name}-btn`).classList.toggle('active',name===tabName);});}
 
     function getCartTotal(){return computeTotals().amountDue/100;}
+    function persistPendingCheckout(method, mpesaReference='') {
+      const keyField=document.querySelector('#pos-form [name="idempotency_key"]');
+      const key=keyField&&keyField.value;
+      if(!key){alert('Checkout could not be prepared safely. Reload the POS and review the order before trying again.');return false;}
+      const state={
+        version:1,
+        idempotencyKey:key,
+        cart:cart.map(item=>({...item})),
+        appliedDiscount,
+        appliedCode,
+        method:String(method||'CASH'),
+        mpesaReference:String(mpesaReference||'').trim().toUpperCase(),
+        savedAt:new Date().toISOString()
+      };
+      try {
+        sessionStorage.setItem(PENDING_CHECKOUT_STORAGE_KEY,JSON.stringify(state));
+        pendingCheckout=state;
+        return true;
+      } catch (error) {
+        alert('Checkout was not submitted because this browser could not preserve the cart and checkout key. Enable session storage and try again.');
+        return false;
+      }
+    }
+    function submitCheckout(method, mpesaReference='') {
+      if(checkoutSubmitting)return;
+      const form=document.getElementById('pos-form');
+      if(!form)return;
+      syncCartToFormset(method,mpesaReference);
+      if(!persistPendingCheckout(method,mpesaReference))return;
+      checkoutSubmitting=true;
+      document.querySelectorAll('.pay-primary,.pay-secondary button').forEach(button=>{button.disabled=true;});
+      form.submit();
+    }
     function triggerCheckout(method){
       if(!cart.length){alert('Your order is empty. Add at least one item before checkout.');return;}
       currentPaymentMethod=method;
@@ -315,14 +433,12 @@
       }
       if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
       if(method==='mpesa'){openModal('mpesa-modal');document.getElementById('mpesa-reference').focus();return;}
-      syncCartToFormset(method);
-      document.getElementById('pos-form').submit();
+      submitCheckout(method);
     }
     function submitMpesaReference(){
       const reference=document.getElementById('mpesa-reference').value.trim().toUpperCase();
       if(!reference){alert('Enter the M-Pesa transaction code before recording this payment.');return;}
-      syncCartToFormset('mpesa',reference);
-      document.getElementById('pos-form').submit();
+      submitCheckout('mpesa',reference);
     }
     function openModal(id){document.getElementById(id).classList.remove('hidden');document.body.style.overflow='hidden';}
     function closeModal(id){document.getElementById(id).classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}
