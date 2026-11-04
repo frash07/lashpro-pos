@@ -1,0 +1,128 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}People &amp; access · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/commission-ledger.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/auth-access-hub.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="topbar commission-topbar auth-hub-topbar">
+  <a class="brand commission-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+    <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+    <span><span class="brand-name">LASHPRO <span>KE</span></span><span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span></span>
+  </a>
+  <nav class="mode-switch" aria-label="Application navigation">
+    <a class="mode-btn" href="{% url 'sales:checkout' %}"><i data-lucide="shopping-bag"></i><span>Salon POS</span></a>
+    <a class="mode-btn active" href="{% url 'admin:app_list' app_label='auth' %}" aria-current="page"><i data-lucide="shield-check"></i><span>People &amp; access</span></a>
+    {% for available_app in available_apps %}{% if available_app.app_label == "accounts" %}
+      {% for available_model in available_app.models %}{% if available_model.object_name == "User" and available_model.admin_url %}
+        <a class="mode-btn" href="{{ available_model.admin_url }}"><i data-lucide="users"></i><span>Staff accounts</span></a>
+      {% endif %}{% endfor %}
+    {% endif %}{% endfor %}
+    <a class="mode-btn" href="{% url 'admin:commissions_commissionledgerentry_changelist' %}"><i data-lucide="wallet"></i><span>Commissions</span></a>
+  </nav>
+  <div class="top-actions">
+    <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+    <button class="icon-button" id="auth-hub-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
+    <div class="profile"><div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div><div class="profile-copy"><div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div><div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div></div></div>
+  </div>
+</header>
+
+<main class="main commission-main auth-hub-main">
+  <section class="view">
+    <div class="page-heading commission-heading auth-hub-heading">
+      <div><div class="eyebrow">Studio administration · Team governance</div><h1>People &amp; access <em>with control.</em></h1><p>Manage reusable permission groups and the staff accounts that use them across LashPro.</p></div>
+      <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div><div class="soft-pill"><i data-lucide="shield-check"></i> Access management</div></div>
+    </div>
+
+    <section class="auth-hub-hero">
+      <div class="auth-hub-hero-copy">
+        <div class="auth-hub-kicker"><i data-lucide="lock-keyhole"></i> IDENTITY &amp; PERMISSIONS</div>
+        <h2>Give every team member<br><em>the access they need.</em></h2>
+        <p>Keep access structured. Assign permissions through groups, then manage individual staff profiles and their studio roles in the Accounts workspace.</p>
+        <div class="auth-hub-actions">
+          {% for app in app_list %}{% for model in app.models %}{% if model.object_name == "Group" and model.admin_url %}
+            <a class="auth-hub-primary" href="{{ model.admin_url }}"><i data-lucide="users-round"></i> Open permission groups <i data-lucide="arrow-up-right"></i></a>
+          {% endif %}{% endfor %}{% endfor %}
+          <a class="auth-hub-secondary" href="{% url 'admin_suite' %}"><i data-lucide="layout-dashboard"></i> Admin suite</a>
+        </div>
+      </div>
+      <div class="auth-hub-visual" aria-hidden="true"><div class="auth-hub-ring auth-hub-ring-one"></div><div class="auth-hub-ring auth-hub-ring-two"></div><div class="auth-hub-shield"><i data-lucide="shield-check"></i></div><span>SECURE BY DESIGN</span></div>
+    </section>
+
+    <div class="auth-hub-section-heading"><div><div class="section-title">Access management tools</div><div class="section-caption">Choose the register you need.</div></div><span class="auth-hub-tag"><i data-lucide="lock"></i> Permission-aware access</span></div>
+    <section class="auth-hub-grid" aria-label="People and access tools">
+      {% for app in app_list %}{% for model in app.models %}
+        <article class="auth-hub-card">
+          <span class="auth-hub-card-icon"><i data-lucide="users-round"></i></span>
+          <div class="auth-hub-card-kicker">PERMISSION REGISTER</div>
+          <h3>{{ model.name }}</h3>
+          <p>Create and maintain permission groups. Review the capabilities assigned to each group and keep staff access consistent.</p>
+          <div class="auth-hub-card-footer">
+            {% if model.admin_url %}<a href="{{ model.admin_url }}">Browse permission groups <i data-lucide="arrow-right"></i></a>{% else %}<span class="auth-hub-restricted">View access is restricted</span>{% endif %}
+            {% if model.add_url %}<a class="auth-hub-add" href="{{ model.add_url }}" aria-label="Add permission group"><i data-lucide="plus"></i></a>{% endif %}
+          </div>
+        </article>
+      {% endfor %}{% endfor %}
+
+      {% for available_app in available_apps %}{% if available_app.app_label == "accounts" %}
+        {% for model in available_app.models %}{% if model.object_name == "User" %}
+          <article class="auth-hub-card auth-hub-staff-card">
+            <span class="auth-hub-card-icon"><i data-lucide="user-round-cog"></i></span>
+            <div class="auth-hub-card-kicker">STAFF DIRECTORY</div>
+            <h3>{{ model.name }}</h3>
+            <p>Manage staff profiles, studio roles and account status. Keep each team member's identity and role information current.</p>
+            <div class="auth-hub-card-footer">
+              {% if model.admin_url %}<a href="{{ model.admin_url }}">Manage staff accounts <i data-lucide="arrow-right"></i></a>{% else %}<span class="auth-hub-restricted">View access is restricted</span>{% endif %}
+              {% if model.add_url %}<a class="auth-hub-add" href="{{ model.add_url }}" aria-label="Add staff account"><i data-lucide="plus"></i></a>{% endif %}
+            </div>
+          </article>
+        {% endif %}{% endfor %}
+      {% endif %}{% endfor %}
+    </section>
+
+    <section class="auth-hub-guidance">
+      <div class="auth-hub-guidance-heading"><span class="auth-hub-guidance-icon"><i data-lucide="workflow"></i></span><div><strong>Recommended access workflow</strong><span>Keep permissions deliberate and auditable.</span></div></div>
+      <div class="auth-hub-steps">
+        <div><span>01</span><strong>Define group permissions</strong><p>Use groups to bundle the capabilities required for a job function.</p></div>
+        <div><span>02</span><strong>Assign staff roles</strong><p>Maintain each person's account and LashPro role in the staff directory.</p></div>
+        <div><span>03</span><strong>Review access regularly</strong><p>Remove permissions that are no longer required for the role.</p></div>
+      </div>
+    </section>
+    <footer class="commission-footer"><span class="commission-footer-brand">LASHPRO KE</span><span>Apply least-privilege access and review changes regularly.</span></footer>
+  </section>
+</main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("auth-hub-theme-toggle");
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+      try { const saved = localStorage.getItem("lashpro-theme"); applyTheme(saved === "light" ? "light" : "dark"); }
+      catch (error) { applyTheme("dark"); }
+      if (button) button.addEventListener("click", function () {
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        applyTheme(next);
+        try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+      });
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
