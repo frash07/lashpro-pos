@@ -7,7 +7,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import close_old_connections, connection
-from django.test import TestCase, TransactionTestCase
+from django.test import RequestFactory, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from accounts.models import User
@@ -425,7 +425,19 @@ class SupplierReceiptServiceTests(TestCase):
         self.assertFalse(receipt_admin.has_add_permission(None))
         self.assertFalse(receipt_admin.has_delete_permission(None, receipt))
         supplier_admin = admin.site._registry[Supplier]
-        self.assertTrue(supplier_admin.has_add_permission(None))
+        supplier_request = RequestFactory().get(reverse("admin:inventory_supplier_add"))
+        supplier_request.user = admin_user
+        self.assertTrue(supplier_admin.has_add_permission(supplier_request))
+        self.assertEqual(self.client.get(reverse("admin:inventory_supplier_add")).status_code, 200)
+
+        receipt.notes = "This must not be editable"
+        with self.assertRaises(TypeError):
+            receipt.save()
+        with self.assertRaises(TypeError):
+            receipt.delete()
+        line = receipt.lines.first()
+        with self.assertRaises(TypeError):
+            line.delete()
 
     def test_receipt_view_posts_multiple_lines_and_shows_receipt_detail(self):
         key = uuid.uuid4()
