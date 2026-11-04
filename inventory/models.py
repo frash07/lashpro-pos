@@ -41,6 +41,8 @@ class StockReceipt(models.Model):
         CASH_RECEIPT = "CASH_RECEIPT", "Cash receipt"
         OTHER = "OTHER", "Other supplier document"
 
+    objects = ImmutableManager()
+
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="stock_receipts")
     reference_type = models.CharField(max_length=20, choices=ReferenceType.choices, default=ReferenceType.INVOICE)
     supplier_reference = models.CharField(max_length=100)
@@ -72,11 +74,21 @@ class StockReceipt(models.Model):
         from decimal import Decimal
         return sum((line.line_total for line in self.lines.all()), Decimal("0.00"))
 
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise TypeError("Supplier receipts are immutable.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("Supplier receipts are immutable.")
+
     def __str__(self):
         return f"{self.supplier} · {self.supplier_reference}"
 
 
 class StockReceiptLine(models.Model):
+    objects = ImmutableManager()
+
     receipt = models.ForeignKey(StockReceipt, on_delete=models.PROTECT, related_name="lines")
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="supplier_receipt_lines")
     quantity = models.DecimalField(max_digits=12, decimal_places=3)
@@ -89,6 +101,14 @@ class StockReceiptLine(models.Model):
             models.CheckConstraint(condition=Q(quantity__gt=0), name="inventory_receipt_quantity_positive"),
             models.CheckConstraint(condition=Q(unit_cost__gte=0), name="inventory_receipt_cost_nonnegative"),
         ]
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise TypeError("Supplier receipt lines are immutable.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("Supplier receipt lines are immutable.")
 
     @property
     def line_total(self):
