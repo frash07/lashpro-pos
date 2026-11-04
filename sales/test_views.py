@@ -36,6 +36,21 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "Classic Set")
         self.assertContains(response, "Lash Glue")
 
+    def test_pos_catalog_includes_stock_and_stock_limited_cart_controls(self):
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("sales:checkout"))
+        product_item = next(
+            item for item in response.context["catalog_items"]
+            if item["id"] == f"product-{self.product.pk}"
+        )
+
+        self.assertEqual(product_item["stock"], float(self.product.on_hand))
+        self.assertContains(response, "stock-badge")
+        self.assertContains(response, "aria-disabled")
+        self.assertContains(response, "maxSellableQuantity")
+        self.assertContains(response, "sessionStorage.setItem")
+        self.assertContains(response, "PENDING_CHECKOUT_STORAGE_KEY")
+
     def test_redesigned_checkout_uses_real_customer_and_manual_mpesa_fields(self):
         self.client.force_login(self.cashier)
         response = self.client.get(reverse("sales:checkout"))
@@ -95,6 +110,33 @@ class CashierViewTests(TestCase):
         self.assertEqual(sale.customer, self.customer)
         self.assertEqual(sale.paid_amount, Decimal("2500.00"))
         self.assertContains(self.client.get(reverse("sales:receipt", args=[sale.receipt_token])), "Sale receipt")
+
+    def test_replayed_checkout_after_lost_response_does_not_double_charge_or_deduct_stock(self):
+        self.client.force_login(self.cashier)
+        data = self.data(method="CASH", amount="800.00")
+        data.update({
+            "items-0-product": str(self.product.pk),
+            "items-0-service": "",
+            "items-0-technician": "",
+            "items-0-quantity": "1",
+            "payments-0-amount": "800.00",
+        })
+
+        first_response = self.client.post(reverse("sales:checkout"), data)
+        sale = Sale.objects.get()
+        retry_response = self.client.post(reverse("sales:checkout"), data)
+
+        receipt_url = reverse("sales:receipt", args=[sale.receipt_token])
+        self.assertRedirects(first_response, receipt_url)
+        self.assertRedirects(retry_response, receipt_url)
+        self.assertEqual(Sale.objects.count(), 1)
+        self.assertEqual(sale.lines.count(), 1)
+        self.assertEqual(
+            PaymentTransaction.objects.filter(sale_allocation__sale=sale).count(),
+            1,
+        )
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.on_hand, Decimal("9.000"))
 
     def test_mpesa_reference_is_saved_unverified(self):
         self.client.force_login(self.cashier)
