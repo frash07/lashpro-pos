@@ -23,6 +23,17 @@ class CustomerAdminIntegrationTests(TestCase):
     def setUp(self):
         self.client.force_login(self.admin_user)
 
+    def test_customer_app_index_renders_customer_workspace(self):
+        response = self.client.get(
+            reverse("admin:app_list", kwargs={"app_label": "customers"})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Customer workspace")
+        self.assertContains(response, "Open customer directory")
+        self.assertContains(response, "Create customer profile")
+        self.assertContains(response, reverse("admin:customers_customer_changelist"))
+        self.assertContains(response, reverse("admin:customers_customer_add"))
+
     def test_customer_admin_list_displays_existing_records(self):
         response = self.client.get(reverse("admin:customers_customer_changelist"))
         self.assertEqual(response.status_code, 200)
