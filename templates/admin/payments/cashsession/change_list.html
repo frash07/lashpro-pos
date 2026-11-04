@@ -1,0 +1,42 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Cash Session Register · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/cash-session-register.css' %}">
+{% endblock %}
+
+{% block content_title %}Cash Session Register{% endblock %}
+
+{% block object-tools %}
+  <section class="cash-session-hero" aria-label="Cash session register overview">
+    <div class="cash-session-hero-copy">
+      <div class="cash-session-kicker"><span></span> FINANCE OPERATIONS · CASH CONTROL</div>
+      <h2>Every shift, <em>accounted for.</em></h2>
+      <p>Review cashier openings and close-outs, opening floats, expected balances, counted cash and recorded variances. This register is read-only; use the cash-session workspace to operate a shift.</p>
+    </div>
+
+    <nav class="cash-session-hero-actions" aria-label="Cash session tools">
+      <a href="{% url 'payments:cash-session' %}"><span aria-hidden="true">↗</span> Open cash session</a>
+      <a href="{% url 'admin:payments_cashsessionmovement_changelist' %}">Cash movement ledger</a>
+      <a href="{% url 'admin:app_list' app_label='payments' %}">Payment registers</a>
+    </nav>
+
+    <div class="cash-session-hero-metric">
+      <strong>{{ cl.result_count }}</strong>
+      <span>Matching sessions</span>
+      {% if cl.full_result_count != cl.result_count %}
+        <small>{{ cl.full_result_count }} total in register</small>
+      {% else %}
+        <small>Showing current register</small>
+      {% endif %}
+    </div>
+  </section>
+  {{ block.super }}
+{% endblock %}

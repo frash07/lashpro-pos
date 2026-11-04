@@ -1,0 +1,359 @@
+/* Cash Session Register — LashPro checkout visual system */
+body.model-cashsession.change-list,
+body.model-cashsession.change-list #container,
+body.model-cashsession.change-list #content {
+  background: var(--bg) !important;
+  color: var(--text);
+  font-family: 'DM Sans',system-ui,sans-serif;
+}
+body.model-cashsession.change-list #header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+}
+body.model-cashsession.change-list #branding h1,
+body.model-cashsession.change-list #branding h1 a {
+  color: var(--text) !important;
+  font-family: 'Playfair Display',Georgia,serif;
+  letter-spacing: .035em;
+}
+body.model-cashsession.change-list #user-tools,
+body.model-cashsession.change-list #user-tools a {
+  color: var(--muted) !important;
+}
+body.model-cashsession.change-list div.breadcrumbs {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+body.model-cashsession.change-list div.breadcrumbs a { color: var(--pink); }
+body.model-cashsession.change-list #content {
+  max-width: 1580px;
+  margin: 0 auto;
+  padding: 25px 28px 40px;
+}
+body.model-cashsession.change-list #content h1 {
+  margin: 3px 0 15px;
+  color: var(--text);
+  font-family: 'Playfair Display',Georgia,serif;
+  font-size: 29px;
+  font-weight: 500;
+  letter-spacing: -.025em;
+}
+body.model-cashsession.change-list #content-main { min-width: 0; }
+
+body.model-cashsession.change-list .cash-session-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 180px;
+  margin: 0 0 20px;
+  padding: 25px 27px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 21px;
+  background: radial-gradient(ellipse at 80% 20%,rgba(241,125,182,.18),transparent 35%),linear-gradient(110deg,var(--surface),var(--surface-2));
+  box-shadow: var(--shadow);
+}
+body.model-cashsession.change-list .cash-session-hero:after {
+  content: "LP";
+  position: absolute;
+  right: 19%;
+  top: -63px;
+  color: var(--pink);
+  font: 190px/1 'Playfair Display',Georgia,serif;
+  opacity: .035;
+  pointer-events: none;
+}
+.cash-session-hero-copy { position: relative; z-index: 1; flex: 1; min-width: 0; }
+.cash-session-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--pink);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .15em;
+}
+.cash-session-kicker span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 0 4px var(--pink-wash);
+}
+.cash-session-hero h2 {
+  margin: 12px 0 7px;
+  color: var(--text);
+  font: 500 27px/1.2 'Playfair Display',Georgia,serif;
+  letter-spacing: -.02em;
+}
+.cash-session-hero h2 em { color: var(--pink); font-weight: 400; }
+.cash-session-hero p {
+  max-width: 690px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.cash-session-hero-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+}
+.cash-session-hero-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 37px;
+  padding: 9px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text) !important;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cash-session-hero-actions a:first-child {
+  border-color: var(--pink);
+  background: var(--pink);
+  color: #fff !important;
+}
+.cash-session-hero-actions a:hover {
+  border-color: var(--pink);
+  background: var(--pink-wash);
+  color: var(--pink) !important;
+}
+.cash-session-hero-actions a:first-child:hover {
+  background: var(--pink-strong);
+  color: #fff !important;
+}
+.cash-session-hero-metric {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 132px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 102px;
+  padding-left: 22px;
+  border-left: 1px solid var(--line-strong);
+}
+.cash-session-hero-metric strong {
+  color: var(--pink);
+  font-size: 31px;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+.cash-session-hero-metric span {
+  margin-top: 7px;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+}
+.cash-session-hero-metric small {
+  margin-top: 4px;
+  color: var(--subtle);
+  font-size: 9px;
+}
+
+body.model-cashsession.change-list .cash-session-hero + .object-tools { margin-top: 0; }
+body.model-cashsession.change-list .object-tools { margin: 0 0 13px; }
+body.model-cashsession.change-list .object-tools a {
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--pink) !important;
+  font: 700 10px 'DM Sans',sans-serif;
+  letter-spacing: 0;
+  padding: 8px 12px;
+}
+body.model-cashsession.change-list #changelist {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+body.model-cashsession.change-list #changelist-form { min-width: 0; }
+body.model-cashsession.change-list #toolbar {
+  padding: 13px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+body.model-cashsession.change-list #toolbar form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+body.model-cashsession.change-list #toolbar input[type="text"] {
+  min-width: 220px;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text);
+  font: 11px 'DM Sans',sans-serif;
+}
+body.model-cashsession.change-list #toolbar input[type="submit"],
+body.model-cashsession.change-list #changelist .button,
+body.model-cashsession.change-list #changelist input[type="submit"] {
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid var(--pink);
+  border-radius: 9px;
+  background: var(--pink);
+  color: #fff !important;
+  font: 700 10px 'DM Sans',sans-serif;
+}
+body.model-cashsession.change-list #changelist table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font: 10px 'DM Sans',sans-serif;
+}
+body.model-cashsession.change-list #changelist table thead th {
+  padding: 12px 13px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--subtle);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+body.model-cashsession.change-list #changelist table thead th a { color: var(--subtle); }
+body.model-cashsession.change-list #changelist table tbody td {
+  padding: 13px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  vertical-align: middle;
+}
+body.model-cashsession.change-list #changelist table tbody tr { background: transparent; }
+body.model-cashsession.change-list #changelist table tbody tr:nth-child(even) {
+  background: color-mix(in srgb,var(--surface-2) 42%,transparent);
+}
+body.model-cashsession.change-list #changelist table tbody tr:hover { background: var(--pink-wash); }
+body.model-cashsession.change-list #changelist table tbody tr:last-child td { border-bottom: 0; }
+body.model-cashsession.change-list #changelist table a { color: var(--pink); font-weight: 600; }
+
+/* Keep the cash figures easy to scan without altering their source values. */
+body.model-cashsession.change-list #changelist td.field-opening_float,
+body.model-cashsession.change-list #changelist td.field-expected_cash,
+body.model-cashsession.change-list #changelist td.field-counted_cash,
+body.model-cashsession.change-list #changelist td.field-variance {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+body.model-cashsession.change-list #changelist td.field-opening_float,
+body.model-cashsession.change-list #changelist td.field-expected_cash,
+body.model-cashsession.change-list #changelist td.field-counted_cash {
+  color: var(--text);
+  font-weight: 600;
+}
+body.model-cashsession.change-list #changelist td.field-variance {
+  color: var(--pink);
+  font-weight: 700;
+}
+body.model-cashsession.change-list #changelist td.field-status {
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+body.model-cashsession.change-list #changelist td.field-id {
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+body.model-cashsession.change-list #changelist .paginator {
+  padding: 13px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 10px;
+}
+body.model-cashsession.change-list #changelist-filter {
+  min-width: 190px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface);
+}
+body.model-cashsession.change-list #changelist-filter h2 {
+  padding: 13px 14px;
+  background: var(--surface-2);
+  color: var(--pink);
+  font: 700 10px 'DM Sans',sans-serif;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+body.model-cashsession.change-list #changelist-filter h3 {
+  padding: 10px 13px 5px;
+  color: var(--text);
+  font-size: 10px;
+}
+body.model-cashsession.change-list #changelist-filter ul { padding: 0 13px 9px; }
+body.model-cashsession.change-list #changelist-filter li { margin: 5px 0; font-size: 10px; }
+body.model-cashsession.change-list #changelist-filter a { color: var(--muted); }
+body.model-cashsession.change-list #changelist-filter li.selected a {
+  color: var(--pink);
+  font-weight: 700;
+}
+body.model-cashsession.change-list #changelist .actions {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+body.model-cashsession.change-list .help,
+body.model-cashsession.change-list .quiet { color: var(--subtle); }
+body.model-cashsession.change-list #content a:focus-visible {
+  outline: 2px solid var(--pink);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1000px) {
+  body.model-cashsession.change-list #content { padding: 20px 16px 30px; }
+  .cash-session-hero { flex-wrap: wrap; }
+  .cash-session-hero-copy { flex-basis: calc(100% - 160px); }
+  .cash-session-hero-actions { flex-direction: row; flex-wrap: wrap; }
+  .cash-session-hero-metric {
+    flex-basis: 100%;
+    min-height: 0;
+    padding: 12px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+@media (max-width: 650px) {
+  body.model-cashsession.change-list #content { padding: 16px 12px 24px; }
+  body.model-cashsession.change-list #content h1 { font-size: 25px; }
+  .cash-session-hero {
+    display: block;
+    padding: 19px 17px;
+    border-radius: 16px;
+  }
+  .cash-session-hero h2 { font-size: 23px; }
+  .cash-session-hero-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 15px;
+  }
+  .cash-session-hero-actions a { flex: 1 1 130px; }
+  .cash-session-hero-metric { margin-top: 15px; padding-top: 12px; }
+  body.model-cashsession.change-list #changelist { overflow-x: auto; }
+  body.model-cashsession.change-list #changelist table { min-width: 940px; }
+  body.model-cashsession.change-list #changelist-filter { margin-top: 14px; }
+}
