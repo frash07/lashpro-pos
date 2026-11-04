@@ -77,4 +77,17 @@
   <p class="receipt-new-sale no-print"><a class="btn btn-primary" href="{% url 'sales:checkout' %}">Start a new sale</a></p>
 </main>
 {% endblock %}
-{% block page_scripts %}<script src="{% static 'js/receipt.js' %}" defer></script>{% endblock %}
+{% block scripts %}
+<script>
+  // Clear only the pending checkout confirmed by this exact receipt.
+  try {
+    const storageKey = "lashpro.pos.pendingCheckout.v1";
+    const pending = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
+    const completedCheckoutKey = "{{ sale.checkout_idempotency_key }}";
+    if (pending && pending.idempotencyKey === completedCheckoutKey) {
+      window.sessionStorage.removeItem(storageKey);
+    }
+  } catch (error) {}
+</script>
+<script src="{% static 'js/receipt.js' %}" defer></script>
+{% endblock %}

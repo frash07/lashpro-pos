@@ -32,12 +32,14 @@ def service_worker(request):
     ]
     cache_name = "lashpro-static-" + hashlib.sha256(json.dumps(precache_urls).encode("utf-8")).hexdigest()[:12]
     logout_paths = [reverse("logout"), reverse("admin:logout")]
+    checkout_path = reverse("sales:checkout")
     script = '''
 const CACHE_NAME = __CACHE_NAME__;
 const CACHE_PREFIX = "lashpro-static-";
 const PRECACHE_URLS = __PRECACHE_URLS__;
 const OFFLINE_URL = __OFFLINE_URL__;
 const LOGOUT_PATHS = __LOGOUT_PATHS__;
+const CHECKOUT_PATH = __CHECKOUT_PATH__;
 const PRECACHE_PATHS = new Set(PRECACHE_URLS.map((path) => new URL(path, self.location.origin).pathname));
 
 async function clearLashProCaches() {
@@ -68,9 +70,31 @@ self.addEventListener("fetch", (event) => {
 
   if (LOGOUT_PATHS.includes(url.pathname)) event.waitUntil(clearLashProCaches());
   if (request.method !== "GET") {
-    event.respondWith(fetch(request).catch(async () => {
-      const fallback = await caches.match(OFFLINE_URL);
-      return fallback || new Response("You are offline. Reconnect to continue.", { headers: { "Content-Type": "text/plain; charset=utf-8" }, status: 503 });
+    event.respondWith(fetch(request).catch(() => {
+      const checkoutFailed = request.method === "POST" && url.pathname === CHECKOUT_PATH;
+      const heading = checkoutFailed ? "Checkout status unknown" : "Request status unknown";
+      const guidance = checkoutFailed
+        ? "Check Sales before retrying. Do not start a new sale or payment until you have checked whether this checkout was recorded."
+        : "The server may have received this request before the connection was lost. Check the relevant record before retrying.";
+      const html = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${heading} · LashPro</title></head>
+<body style="font-family:system-ui,sans-serif;max-width:42rem;margin:10vh auto;padding:1.5rem;line-height:1.55;color:#241b23">
+  <main role="alert">
+    <h1>${heading}</h1>
+    <p>${guidance}</p>
+    <p>Your checkout details are retained in this tab. Return to the POS only after checking the Sales register.</p>
+  </main>
+</body>
+</html>`;
+      return new Response(html, {
+        status: 503,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff"
+        }
+      });
     }));
     return;
   }
@@ -92,6 +116,7 @@ self.addEventListener("fetch", (event) => {
     script = script.replace("__PRECACHE_URLS__", json.dumps(precache_urls))
     script = script.replace("__OFFLINE_URL__", json.dumps(static("pwa/offline.html")))
     script = script.replace("__LOGOUT_PATHS__", json.dumps(logout_paths))
+    script = script.replace("__CHECKOUT_PATH__", json.dumps(checkout_path))
     response = HttpResponse(script, content_type="application/javascript; charset=utf-8")
     response["Cache-Control"] = "no-cache"
     response["Service-Worker-Allowed"] = "/"

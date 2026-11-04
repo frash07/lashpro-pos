@@ -3,6 +3,7 @@ from decimal import Decimal
 import uuid
 from threading import Barrier
 
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
@@ -14,6 +15,7 @@ from accounts.models import User
 from audit.models import AuditEvent
 from catalog.models import Product, Service
 from sales.services import checkout_sale
+from .forms import StockReceiptForm
 from .models import InventoryMovement, ServiceConsumable, StockAdjustmentRequest, StockReceipt, Supplier
 from .services import receive_stock, receive_supplier_stock, request_stock_adjustment, review_stock_adjustment
 
@@ -339,6 +341,14 @@ class SupplierReceiptServiceTests(TestCase):
             "idempotency_key": key or uuid.uuid4(),
         }
 
+    def test_receipt_form_uses_required_hidden_key_and_unique_database_field(self):
+        form = StockReceiptForm()
+
+        self.assertTrue(form.fields["idempotency_key"].required)
+        self.assertIsInstance(form.fields["idempotency_key"].widget, forms.HiddenInput)
+        self.assertTrue(StockReceipt._meta.get_field("idempotency_key").unique)
+        self.assertIsNotNone(form["idempotency_key"].value())
+
     def test_supplier_receipt_posts_all_lines_and_movements_atomically(self):
         receipt, created = receive_supplier_stock(**self.receipt_args())
         self.assertTrue(created)
@@ -439,10 +449,10 @@ class SupplierReceiptServiceTests(TestCase):
         with self.assertRaises(TypeError):
             line.delete()
 
-    def test_receipt_view_posts_multiple_lines_and_shows_receipt_detail(self):
+    def test_receipt_view_retry_with_same_key_does_not_receive_stock_twice(self):
         key = uuid.uuid4()
         self.client.force_login(self.owner)
-        response = self.client.post(reverse("inventory:receive"), {
+        data = {
             "supplier": str(self.supplier.pk),
             "reference_type": "INVOICE",
             "supplier_reference": "INV-VIEW-1",
@@ -462,13 +472,25 @@ class SupplierReceiptServiceTests(TestCase):
             "lines-1-quantity": "1.000",
             "lines-1-unit_cost": "200.00",
             "lines-1-DELETE": "",
-        })
+        }
+
+        first_response = self.client.post(reverse("inventory:receive"), data)
         receipt = StockReceipt.objects.get(supplier_reference="INV-VIEW-1")
-        self.assertRedirects(response, reverse("inventory:receipt_detail", args=[receipt.pk]))
+        retry_response = self.client.post(reverse("inventory:receive"), data)
+
+        expected_url = reverse("inventory:receipt_detail", args=[receipt.pk])
+        self.assertRedirects(first_response, expected_url)
+        self.assertRedirects(retry_response, expected_url)
+        self.assertEqual(StockReceipt.objects.count(), 1)
         self.assertEqual(receipt.lines.count(), 2)
         self.glue.refresh_from_db()
+        self.cleanser.refresh_from_db()
         self.assertEqual(self.glue.on_hand, Decimal("4.000"))
-        detail = self.client.get(reverse("inventory:receipt_detail", args=[receipt.pk]))
+        self.assertEqual(self.cleanser.on_hand, Decimal("2.000"))
+        self.assertEqual(
+            InventoryMovement.objects.filter(receipt_line__receipt=receipt).count(),
+            2,
+        )
+        detail = self.client.get(expected_url)
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "INV-VIEW-1")
-
