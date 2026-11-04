@@ -28,3 +28,12 @@ html[data-theme="light"]{color-scheme:light;--pink:#df4f95;--pink-strong:#d93686
 .field-hint{display:block;margin-top:5px;font-size:9px;color:var(--muted)}
 .cart-tech{margin-top:10px}
 .cart-tech-select.needs-tech{border-color:var(--danger)}
+
+
+/* Stock-aware POS catalog and lost-response recovery notice. */
+.checkout-status-unknown{margin:0 0 14px;padding:13px 16px;border:1px solid rgba(244,199,125,.42);border-radius:12px;background:rgba(244,199,125,.1);color:var(--text);font-size:13px;line-height:1.5}
+.stock-badge{display:inline-flex;align-items:center;margin-top:10px;padding:5px 9px;border:1px solid rgba(109,214,173,.25);border-radius:999px;background:rgba(109,214,173,.09);color:var(--green);font-size:10px;font-weight:700;letter-spacing:.02em}
+.stock-badge.is-sold-out{border-color:rgba(255,140,170,.32);background:rgba(255,140,170,.1);color:var(--red)}
+.catalog-card.is-sold-out{cursor:not-allowed;opacity:.62;filter:saturate(.55)}
+.catalog-card.is-sold-out:hover{transform:none;border-color:var(--line);box-shadow:none}
+.catalog-card.is-sold-out:hover:before{transform:none}
