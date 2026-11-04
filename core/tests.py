@@ -111,3 +111,15 @@ class AdminSuiteAccessTests(TestCase):
         self.assertEqual(len(set(destinations)), 25)
         self.assertEqual(set(destinations), expected)
         self.assertContains(response, "Existing Django Admin Model Pages")
+
+
+class ServiceWorkerCheckoutSafetyTests(TestCase):
+    def test_failed_checkout_post_returns_status_unknown_guidance_not_offline_fallback(self):
+        response = self.client.get(reverse("service_worker"))
+        script = response.content.decode("utf-8")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('request.method === "POST" && url.pathname === CHECKOUT_PATH', script)
+        self.assertIn("Checkout status unknown", script)
+        self.assertIn("Check Sales before retrying", script)
+        self.assertIn('"Cache-Control": "no-store"', script)
