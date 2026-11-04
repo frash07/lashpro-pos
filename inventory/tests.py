@@ -74,7 +74,7 @@ class InventoryServiceTests(TestCase):
         self.assertEqual(self.product.cost_price, Decimal("125.50"))
         self.assertEqual(movement.movement_type, InventoryMovement.Type.PURCHASE)
         self.assertEqual(movement.quantity_delta, Decimal("2.125"))
-        self.assertTrue(AuditEvent.objects.filter(event_type=AuditEvent.EventType.STOCK_ADJUSTMENT, object_id=str(movement.pk)).exists())
+        self.assertTrue(AuditEvent.objects.filter(event_type=AuditEvent.EventType.STOCK_RECEIPT, object_id=str(movement.pk)).exists())
 
     def test_low_stock_uses_reorder_threshold(self):
         self.assertTrue(self.product.low_stock)
