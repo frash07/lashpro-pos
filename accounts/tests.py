@@ -129,6 +129,30 @@ class PeopleAccessAdminIntegrationTests(TestCase):
                 self.assertEqual(response.status_code, 403)
 
 
+class AuthAdminHubIntegrationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = User.objects.create_superuser(
+            username="auth-hub-owner",
+            email="auth-hub-owner@example.test",
+            password="test-password",
+            role=User.Role.OWNER,
+        )
+
+    def test_auth_app_index_renders_people_and_access_workspace(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(
+            reverse("admin:app_list", kwargs={"app_label": "auth"})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "People &amp; access")
+        self.assertContains(response, "Open permission groups")
+        self.assertContains(response, "Staff directory")
+        self.assertContains(response, reverse("admin:auth_group_changelist"))
+        self.assertContains(response, reverse("admin:auth_group_add"))
+        self.assertContains(response, reverse("admin:accounts_user_changelist"))
+
+
 class SyntheticSeedCommandTests(TestCase):
     def test_seed_refuses_to_run_without_explicit_enablement(self):
         with patch.dict(os.environ, {"SYNTHETIC_DATA_ENABLED": "false"}):
