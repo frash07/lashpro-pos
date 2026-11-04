@@ -77,4 +77,10 @@
   <p class="receipt-new-sale no-print"><a class="btn btn-primary" href="{% url 'sales:checkout' %}">Start a new sale</a></p>
 </main>
 {% endblock %}
-{% block page_scripts %}<script src="{% static 'js/receipt.js' %}" defer></script>{% endblock %}
+{% block page_scripts %}
+<script>
+  // The receipt is the server-confirmed completion signal; clear the pending retry only here.
+  try { window.sessionStorage.removeItem("lashpro.pos.pendingCheckout.v1"); } catch (error) {}
+</script>
+<script src="{% static 'js/receipt.js' %}" defer></script>
+{% endblock %}
