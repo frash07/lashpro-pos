@@ -230,7 +230,17 @@
         const discountCode = document.getElementById('discount-code');
         if (discountCode) discountCode.value = appliedCode;
         document.querySelectorAll('.pay-primary,.pay-secondary').forEach(element => { element.hidden = true; });
-        document.querySelectorAll('#staff-select,#id_customer,#discount-code').forEach(element => { element.disabled = true; });
+        document.querySelectorAll('#staff-select,#discount-code').forEach(element => { element.disabled = true; });
+        const customerField = document.querySelector('#pos-form [name="customer"]');
+        if (customerField) {
+          customerField.disabled = true;
+          const customerMirror = document.createElement('input');
+          customerMirror.type = 'hidden';
+          customerMirror.name = 'customer';
+          customerMirror.value = pendingCheckout.customerId || '';
+          customerMirror.dataset.pendingCheckoutCustomer = 'true';
+          document.getElementById('pos-form').appendChild(customerMirror);
+        }
         const retryButton = document.getElementById('retry-pending-checkout');
         if (retryButton) {
           retryButton.hidden = false;
