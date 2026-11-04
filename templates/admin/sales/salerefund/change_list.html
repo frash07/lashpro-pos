@@ -1,0 +1,156 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Refund Register · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/sales-app-index.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/sales-refund-register.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar sales-hub-topbar sales-refunds-topbar">
+    <a class="brand sales-hub-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch sales-hub-nav" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:app_list' app_label='sales' %}" aria-current="page">
+        <i data-lucide="receipt-text"></i><span>Sales</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:app_list' app_label='payments' %}">
+        <i data-lucide="wallet-cards"></i><span>Payments</span>
+      </a>
+      <a class="mode-btn" href="{% url 'sales:refunds' %}">
+        <i data-lucide="undo-2"></i><span>Refunds</span>
+      </a>
+    </nav>
+
+    <div class="top-actions sales-hub-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="sales-refunds-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main sales-hub-main sales-refunds-main">
+    <section class="view">
+      <div class="page-heading sales-hub-heading sales-refunds-heading">
+        <div>
+          <div class="eyebrow">Sales operations · Refund oversight</div>
+          <h1>Refunds <em>with accountability.</em></h1>
+          <p>Review refund requests, issued payments and decisions with a clear audit trail back to the original sale.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Refund register</div>
+        </div>
+      </div>
+
+      <section class="sales-refunds-hero" aria-labelledby="sales-refunds-hero-title">
+        <div class="sales-refunds-hero-copy">
+          <div class="sales-refunds-kicker"><i data-lucide="undo-2"></i> REFUND CONTROL · FINANCIAL AUDIT</div>
+          <h2 id="sales-refunds-hero-title">Every refund,<br><em>properly accounted for.</em></h2>
+          <p>Trace each refund to its receipt, payment method, reason and review decision. Keep the original sale and its refund history connected for reliable reconciliation.</p>
+          <div class="sales-refunds-hero-actions">
+            <a class="sales-refunds-primary" href="{% url 'sales:refunds' %}">
+              <i data-lucide="workflow"></i> Open refund workflow <i data-lucide="arrow-up-right"></i>
+            </a>
+            <a class="sales-refunds-secondary" href="{% url 'admin:sales_sale_changelist' %}">
+              <i data-lucide="receipt-text"></i> View sales register
+            </a>
+          </div>
+        </div>
+        <div class="sales-refunds-hero-metric">
+          <strong>{{ cl.result_count }}</strong>
+          <span>Matching refund records</span>
+          {% if cl.full_result_count != cl.result_count %}
+            <small>{{ cl.full_result_count }} records in register</small>
+          {% else %}
+            <small>Current register results</small>
+          {% endif %}
+        </div>
+      </section>
+
+      <div class="sales-refunds-register-heading">
+        <div>
+          <div class="section-title">Refund register</div>
+          <div class="section-caption">Search and filter the audit record by status, method or request date. Open a record to inspect its details.</div>
+        </div>
+        <span class="sales-refunds-register-tag"><i data-lucide="lock-keyhole"></i> Read-only audit register</span>
+      </div>
+
+      <div class="sales-refunds-content">
+        {{ block.super }}
+      </div>
+
+      <section class="sales-refunds-guidance">
+        <span class="sales-refunds-guidance-icon"><i data-lucide="shield-check"></i></span>
+        <div>
+          <strong>Process refund decisions through the controlled workflow.</strong>
+          <p>This register is a read-only audit view. Submit new refund requests and complete manager approval or rejection in the Refunds workflow. Issued refunds are recorded against the original sale; M-Pesa payout verification remains part of the payment record.</p>
+        </div>
+      </section>
+
+      <footer class="sales-refunds-footer">
+        <span class="sales-refunds-footer-brand">LASHPRO KE</span>
+        <span>Private studio workspace · Refund oversight</span>
+      </footer>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("sales-refunds-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
