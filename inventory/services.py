@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -209,11 +210,12 @@ def receive_stock(*, product, quantity, unit_cost, reason, actor, receipt_line=N
 
 
 
-def _receipt_payload_matches(receipt, *, supplier_id, reference_type, supplier_reference, received_date, notes, line_specs):
+def _receipt_payload_matches(receipt, *, supplier_id, reference_type, supplier_reference, delivery_note_number, received_date, notes, line_specs):
     if (
         receipt.supplier_id != supplier_id
         or receipt.reference_type != reference_type
         or receipt.supplier_reference != supplier_reference
+        or receipt.delivery_note_number != delivery_note_number
         or receipt.received_date != received_date
         or receipt.notes != notes
     ):
@@ -263,6 +265,13 @@ def receive_supplier_stock(
         raise ValidationError({"notes": "Receipt notes must be 2,000 characters or fewer."})
     if received_date is None:
         received_date = timezone.localdate()
+    elif isinstance(received_date, str):
+        try:
+            received_date = date.fromisoformat(received_date)
+        except ValueError:
+            raise ValidationError({"received_date": "Enter a valid received date."}) from None
+    elif not isinstance(received_date, date):
+        raise ValidationError({"received_date": "Enter a valid received date."})
 
     try:
         raw_lines = list(lines)
@@ -315,7 +324,8 @@ def receive_supplier_stock(
             if existing_key:
                 if _receipt_payload_matches(
                     existing_key, supplier_id=supplier_id, reference_type=reference_type,
-                    supplier_reference=supplier_reference, received_date=received_date,
+                    supplier_reference=supplier_reference, delivery_note_number=delivery_note_number,
+                    received_date=received_date,
                     notes=notes, line_specs=line_specs,
                 ):
                     return existing_key, False
@@ -401,7 +411,8 @@ def receive_supplier_stock(
         existing_key = StockReceipt.objects.filter(idempotency_key=key).first()
         if existing_key and _receipt_payload_matches(
             existing_key, supplier_id=supplier_id, reference_type=reference_type,
-            supplier_reference=supplier_reference, received_date=received_date,
+            supplier_reference=supplier_reference, delivery_note_number=delivery_note_number,
+            received_date=received_date,
             notes=notes, line_specs=line_specs,
         ):
             return existing_key, False
