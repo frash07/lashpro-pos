@@ -1,3 +1,10 @@
+// A rendered receipt confirms the checkout completed; only now discard the retry payload.
+try {
+  window.sessionStorage.removeItem("lashpro.pos.pendingCheckout.v1");
+} catch (error) {
+  // Storage may be disabled; the receipt remains authoritative.
+}
+
 document.getElementById("share-receipt")?.addEventListener("click", async () => {
   const url = window.location.href;
   try {
