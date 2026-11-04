@@ -18,7 +18,8 @@
     {{ details.idempotency_key }}
     <div id="checkout-status-unknown" class="checkout-status-unknown" role="alert" hidden>
       A previous checkout may have completed, but its response was not confirmed. Check Sales before retrying.
-      This tab retains the original cart and checkout key so a retry cannot create a second sale.
+      This tab retains the original cart and checkout key. Only retry the original checkout if no sale is listed.
+      <p><button id="retry-pending-checkout" type="button" hidden>Retry original checkout</button></p>
     </div>
     {{ lines.management_form }}
     {{ payments.management_form }}
@@ -176,6 +177,8 @@
 
         const keyField = document.querySelector('#pos-form [name="idempotency_key"]');
         if (keyField) keyField.value = saved.idempotencyKey;
+        const customerField = document.querySelector('#pos-form [name="customer"]');
+        if (customerField) customerField.value = saved.customerId || '';
       } catch (error) {
         pendingCheckout = null;
       }
@@ -226,6 +229,16 @@
         }
         const discountCode = document.getElementById('discount-code');
         if (discountCode) discountCode.value = appliedCode;
+        document.querySelectorAll('.pay-primary,.pay-secondary').forEach(element => { element.hidden = true; });
+        document.querySelectorAll('#staff-select,#id_customer,#discount-code').forEach(element => { element.disabled = true; });
+        const retryButton = document.getElementById('retry-pending-checkout');
+        if (retryButton) {
+          retryButton.hidden = false;
+          retryButton.addEventListener('click', () => {
+            if (!window.confirm('Check Sales first. Retry the original checkout only if no matching sale was recorded. Continue?')) return;
+            submitCheckout(pendingCheckout.method, pendingCheckout.mpesaReference);
+          });
+        }
       }
     });
 
@@ -313,6 +326,7 @@
     // Services are merged only when the technician matches, so one checkout can hold the same service
     // for different artists. Lines are addressed by lineId because catalog ids can repeat.
     function addToCart(id){
+      if(pendingCheckout)return;
       const item=catalogData.find(x=>x.id===id);if(!item)return;
       const isService=item.type==='service';
       const technicianId=isService?defaultTechnicianId():'';
@@ -327,8 +341,9 @@
       }
       renderCart();
     }
-    function removeFromCart(lineId){cart=cart.filter(x=>x.lineId!==lineId);renderCart();}
+    function removeFromCart(lineId){if(pendingCheckout)return;cart=cart.filter(x=>x.lineId!==lineId);renderCart();}
     function updateQty(lineId,delta){
+      if(pendingCheckout)return;
       const item=cart.find(x=>x.lineId===lineId);if(!item)return;
       const next=item.qty+delta;
       const catalogItem=catalogData.find(x=>x.id===item.id);
@@ -338,8 +353,8 @@
       if(item.qty<=0)cart=cart.filter(x=>x.lineId!==lineId);
       renderCart();
     }
-    function setLineTechnician(lineId,select){const item=cart.find(x=>x.lineId===lineId);if(!item||item.type!=='service')return;item.technicianId=select.value;select.classList.toggle('needs-tech',!select.value);}
-    function clearCart(){cart=[];appliedDiscount=0;appliedCode='';document.getElementById('discount-code').value='';renderCart();}
+    function setLineTechnician(lineId,select){if(pendingCheckout)return;const item=cart.find(x=>x.lineId===lineId);if(!item||item.type!=='service')return;item.technicianId=select.value;select.classList.toggle('needs-tech',!select.value);}
+    function clearCart(){if(pendingCheckout)return;cart=[];appliedDiscount=0;appliedCode='';document.getElementById('discount-code').value='';renderCart();}
     function renderCart(){
       const container=document.getElementById('cart-items-container');
       if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
@@ -364,6 +379,7 @@
       document.getElementById('discount-row').classList.toggle('hidden',t.discount<=0);
     }
     function applyDiscount(){
+      if(pendingCheckout)return;
       const code=document.getElementById('discount-code').value.trim().toUpperCase();
       let rate=0;
       if(code==='STUDENT10'||code==='LASHPRO10')rate=.1;else if(code==='VIP20')rate=.2;
@@ -402,6 +418,7 @@
         appliedCode,
         method:String(method||'CASH'),
         mpesaReference:String(mpesaReference||'').trim().toUpperCase(),
+        customerId:document.querySelector('#pos-form [name="customer"]')?.value || '',
         savedAt:new Date().toISOString()
       };
       try {
