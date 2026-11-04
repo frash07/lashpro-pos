@@ -1,0 +1,39 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block title %}Cash Movement Ledger · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/cash-movement-ledger.css' %}">
+{% endblock %}
+
+{% block content_title %}Cash Movement Ledger{% endblock %}
+
+{% block object-tools %}
+  <section class="cash-movement-hero" aria-label="Cash movement ledger overview">
+    <div class="cash-movement-hero-copy">
+      <div class="cash-movement-kicker"><span></span> FINANCE OPERATIONS · AUDIT REGISTER</div>
+      <h2>Every cash movement, <em>accounted for.</em></h2>
+      <p>Review expenses, authorized cash-ins and cash-outs recorded against cashier sessions. Entries are immutable and retained for audit traceability.</p>
+    </div>
+    <div class="cash-movement-hero-actions">
+      <a href="{% url 'payments:cash-session' %}"> <span aria-hidden="true">↗</span> Open cash session</a>
+      <a href="{% url 'admin:app_list' app_label='payments' %}">All payment registers</a>
+    </div>
+    <div class="cash-movement-hero-metric">
+      <strong>{{ cl.result_count }}</strong>
+      <span>Matching records</span>
+      {% if cl.full_result_count != cl.result_count %}
+        <small>{{ cl.full_result_count }} total in register</small>
+      {% else %}
+        <small>Showing current register</small>
+      {% endif %}
+    </div>
+  </section>
+  {{ block.super }}
+{% endblock %}
