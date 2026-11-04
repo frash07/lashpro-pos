@@ -1,0 +1,227 @@
+{% extends "admin/app_index.html" %}
+{% load static %}
+
+{% block title %}Payments · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/payments-app-index.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar payments-hub-topbar">
+    <a class="brand payments-hub-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch payments-hub-nav" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:app_list' app_label='payments' %}" aria-current="page">
+        <i data-lucide="wallet-cards"></i><span>Payments</span>
+      </a>
+      <a class="mode-btn" href="{% url 'payments:cash-session' %}">
+        <i data-lucide="wallet"></i><span>Cash session</span>
+      </a>
+      <a class="mode-btn" href="{% url 'payments:reconciliation' %}">
+        <i data-lucide="file-check-2"></i><span>M-Pesa review</span>
+      </a>
+    </nav>
+
+    <div class="top-actions payments-hub-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="payments-hub-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main payments-hub-main">
+    <section class="view">
+      <div class="page-heading payments-hub-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Finance operations</div>
+          <h1>Payments <em>with clarity.</em></h1>
+          <p>Keep collections, cash activity and payout records connected in one secure workspace.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Finance workspace</div>
+        </div>
+      </div>
+
+      <section class="payments-hub-hero" aria-labelledby="payments-hub-hero-title">
+        <div class="payments-hub-hero-copy">
+          <div class="payments-hub-kicker"><i data-lucide="landmark"></i> PAYMENT OPERATIONS</div>
+          <h2 id="payments-hub-hero-title">Every payment,<br><em>beautifully accounted for.</em></h2>
+          <p>Move from a completed sale to a verified payment with clear records for M-Pesa, cash, refunds and payout reconciliation.</p>
+          <div class="payments-hub-hero-actions">
+            <a class="payments-hub-primary" href="{% url 'sales:checkout' %}">
+              <i data-lucide="shopping-bag"></i> Open salon POS <i data-lucide="arrow-up-right"></i>
+            </a>
+            <a class="payments-hub-secondary" href="{% url 'payments:reconciliation' %}">
+              <i data-lucide="file-check-2"></i> Review M-Pesa
+            </a>
+          </div>
+        </div>
+        <div class="payments-hub-hero-art" aria-hidden="true">
+          <div class="payments-hub-orbit payments-hub-orbit-one"></div>
+          <div class="payments-hub-orbit payments-hub-orbit-two"></div>
+          <div class="payments-hub-hero-icon"><i data-lucide="wallet-cards"></i></div>
+          <span class="payments-hub-hero-caption">COLLECT · VERIFY · RECONCILE</span>
+        </div>
+      </section>
+
+      <section class="payments-hub-overview" aria-label="Payments workspace overview">
+        <div class="payments-hub-overview-count">
+          <span class="payments-hub-overview-icon"><i data-lucide="layers-3"></i></span>
+          <span><strong>{{ app.models|length }}</strong><small>Payment registers</small></span>
+        </div>
+        <p>One place for transaction records, sale allocations, cash sessions, refunds and reconciliation history.</p>
+        <a href="{% url 'sales:refunds' %}" class="payments-hub-overview-link">Open refunds <i data-lucide="arrow-up-right"></i></a>
+      </section>
+
+      <div class="payments-hub-section-heading">
+        <div>
+          <div class="section-title">Payment registers</div>
+          <div class="section-caption">Choose a register to review its records and available actions.</div>
+        </div>
+        <span class="payments-hub-section-tag"><i data-lucide="lock-keyhole"></i> Permission-aware access</span>
+      </div>
+
+      <section class="payments-hub-grid" aria-label="Payment administration registers">
+        {% for model in app.models %}
+          <article class="payments-hub-card">
+            <div class="payments-hub-card-top">
+              <span class="payments-hub-card-icon">
+                {% if model.object_name == "PaymentTransaction" %}
+                  <i data-lucide="receipt-text"></i>
+                {% elif model.object_name == "SalePayment" %}
+                  <i data-lucide="wallet"></i>
+                {% elif model.object_name == "PaymentReconciliation" %}
+                  <i data-lucide="file-check-2"></i>
+                {% elif model.object_name == "CashSession" %}
+                  <i data-lucide="banknote"></i>
+                {% elif model.object_name == "CashSessionMovement" %}
+                  <i data-lucide="arrow-left-right"></i>
+                {% elif model.object_name == "RefundPayout" %}
+                  <i data-lucide="undo-2"></i>
+                {% elif model.object_name == "PayoutReconciliation" %}
+                  <i data-lucide="clipboard-check"></i>
+                {% else %}
+                  <i data-lucide="wallet-cards"></i>
+                {% endif %}
+              </span>
+              <span class="payments-hub-card-kicker">
+                {% if model.object_name == "PaymentTransaction" %}COLLECTION LEDGER
+                {% elif model.object_name == "SalePayment" %}SALE ALLOCATIONS
+                {% elif model.object_name == "PaymentReconciliation" %}M-PESA REVIEW
+                {% elif model.object_name == "CashSession" %}CASH CONTROL
+                {% elif model.object_name == "CashSessionMovement" %}CASH ADJUSTMENTS
+                {% elif model.object_name == "RefundPayout" %}REFUND DISBURSEMENTS
+                {% elif model.object_name == "PayoutReconciliation" %}PAYOUT REVIEW
+                {% else %}PAYMENT REGISTER{% endif %}
+              </span>
+            </div>
+
+            <h2>{{ model.name }}</h2>
+            <p>
+              {% if model.object_name == "PaymentTransaction" %}
+                Track cash, M-Pesa and card transactions, their references and processing status.
+              {% elif model.object_name == "SalePayment" %}
+                Review how received transactions are allocated to completed sales.
+              {% elif model.object_name == "PaymentReconciliation" %}
+                Confirm or reject M-Pesa references and keep incoming payment checks auditable.
+              {% elif model.object_name == "CashSession" %}
+                Review cashier opening floats, expected cash, counted balances and session variances.
+              {% elif model.object_name == "CashSessionMovement" %}
+                Audit cash expenses and authorized cash-in or cash-out movements against a session.
+              {% elif model.object_name == "RefundPayout" %}
+                Review refund disbursements, payment methods, references and verification details.
+              {% elif model.object_name == "PayoutReconciliation" %}
+                Verify outgoing payout references and record reconciliation decisions.
+              {% else %}
+                Open this payment register to review its records and permission-aware administration tools.
+              {% endif %}
+            </p>
+
+            <div class="payments-hub-card-footer">
+              {% if model.admin_url %}
+                <a class="payments-hub-open-link" href="{{ model.admin_url }}">Open register <i data-lucide="arrow-up-right"></i></a>
+              {% else %}
+                <span class="payments-hub-restricted">View access is restricted</span>
+              {% endif %}
+              {% if model.add_url %}
+                <a class="payments-hub-add-link" href="{{ model.add_url }}" aria-label="Add {{ model.name }}"><i data-lucide="plus"></i></a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      <section class="payments-hub-guidance">
+        <span class="payments-hub-guidance-icon"><i data-lucide="shield-check"></i></span>
+        <div>
+          <strong>Keep every financial action traceable.</strong>
+          <p>Use the operational screens for payment capture and reconciliation. The registers above provide a permission-aware view of the underlying records and audit history.</p>
+        </div>
+      </section>
+
+      <footer class="payments-hub-footer">
+        <span class="payments-hub-footer-brand">LASHPRO KE</span>
+        <span>Private studio workspace · Finance operations</span>
+      </footer>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("payments-hub-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
