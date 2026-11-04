@@ -1,0 +1,207 @@
+{% extends "admin/app_index.html" %}
+{% load static %}
+
+{% block title %}Sales · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/sales-app-index.css' %}">
+{% endblock %}
+
+{% block content %}
+  <header class="topbar sales-hub-topbar">
+    <a class="brand sales-hub-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch sales-hub-nav" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:app_list' app_label='sales' %}" aria-current="page">
+        <i data-lucide="receipt-text"></i><span>Sales</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:app_list' app_label='payments' %}">
+        <i data-lucide="wallet-cards"></i><span>Payments</span>
+      </a>
+      <a class="mode-btn" href="{% url 'sales:refunds' %}">
+        <i data-lucide="undo-2"></i><span>Refunds</span>
+      </a>
+    </nav>
+
+    <div class="top-actions sales-hub-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="sales-hub-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main sales-hub-main">
+    <section class="view">
+      <div class="page-heading sales-hub-heading">
+        <div>
+          <div class="eyebrow">Studio workspace · Sales operations</div>
+          <h1>Sales <em>with clarity.</em></h1>
+          <p>Keep receipts, service delivery and refund activity connected in one secure workspace.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Sales workspace</div>
+        </div>
+      </div>
+
+      <section class="sales-hub-hero" aria-labelledby="sales-hub-hero-title">
+        <div class="sales-hub-hero-copy">
+          <div class="sales-hub-kicker"><i data-lucide="receipt-text"></i> SALES OPERATIONS</div>
+          <h2 id="sales-hub-hero-title">Every sale,<br><em>beautifully recorded.</em></h2>
+          <p>Review completed receipts, service-line progress and refund activity with clear, permission-aware records from checkout through closeout.</p>
+          <div class="sales-hub-hero-actions">
+            <a class="sales-hub-primary" href="{% url 'sales:checkout' %}">
+              <i data-lucide="shopping-bag"></i> Open salon POS <i data-lucide="arrow-up-right"></i>
+            </a>
+            <a class="sales-hub-secondary" href="{% url 'sales:refunds' %}">
+              <i data-lucide="undo-2"></i> Review refunds
+            </a>
+          </div>
+        </div>
+        <div class="sales-hub-hero-art" aria-hidden="true">
+          <div class="sales-hub-orbit sales-hub-orbit-one"></div>
+          <div class="sales-hub-orbit sales-hub-orbit-two"></div>
+          <div class="sales-hub-hero-icon"><i data-lucide="receipt-text"></i></div>
+          <span class="sales-hub-hero-caption">RECORD · COMPLETE · REVIEW</span>
+        </div>
+      </section>
+
+      <section class="sales-hub-overview" aria-label="Sales workspace overview">
+        <div class="sales-hub-overview-count">
+          <span class="sales-hub-overview-icon"><i data-lucide="layers-3"></i></span>
+          <span><strong>{{ app.models|length }}</strong><small>Sales registers</small></span>
+        </div>
+        <p>A connected view of receipts, service-line details and refund history for the studio.</p>
+        <a href="{% url 'sales:services' %}" class="sales-hub-overview-link">Open service queue <i data-lucide="arrow-up-right"></i></a>
+      </section>
+
+      <div class="sales-hub-section-heading">
+        <div>
+          <div class="section-title">Sales registers</div>
+          <div class="section-caption">Choose a register to review its records and available actions.</div>
+        </div>
+        <span class="sales-hub-section-tag"><i data-lucide="lock-keyhole"></i> Permission-aware access</span>
+      </div>
+
+      <section class="sales-hub-grid" aria-label="Sales administration registers">
+        {% for model in app.models %}
+          <article class="sales-hub-card">
+            <div class="sales-hub-card-top">
+              <span class="sales-hub-card-icon">
+                {% if model.object_name == "Sale" %}
+                  <i data-lucide="receipt-text"></i>
+                {% elif model.object_name == "SaleLine" %}
+                  <i data-lucide="list-checks"></i>
+                {% elif model.object_name == "SaleRefund" %}
+                  <i data-lucide="undo-2"></i>
+                {% else %}
+                  <i data-lucide="shopping-bag"></i>
+                {% endif %}
+              </span>
+              <span class="sales-hub-card-kicker">
+                {% if model.object_name == "Sale" %}COMPLETED SALES
+                {% elif model.object_name == "SaleLine" %}SERVICE DETAILS
+                {% elif model.object_name == "SaleRefund" %}REFUND REGISTER
+                {% else %}SALES REGISTER{% endif %}
+              </span>
+            </div>
+
+            <h2>{{ model.name }}</h2>
+            <p>
+              {% if model.object_name == "Sale" %}
+                Review receipt numbers, customer and cashier details, sale status and transaction timestamps. Completed sale records remain view-only.
+              {% elif model.object_name == "SaleLine" %}
+                Inspect service-line quantities, technician assignments and completion history. Eligible services can be marked complete to accrue commissions.
+              {% elif model.object_name == "SaleRefund" %}
+                Review refund amounts, methods, status, reasons and the staff members who requested or reviewed each case.
+              {% else %}
+                Open this sales register to review its records and permission-aware administration tools.
+              {% endif %}
+            </p>
+
+            <div class="sales-hub-card-footer">
+              {% if model.admin_url %}
+                <a class="sales-hub-open-link" href="{{ model.admin_url }}">Open register <i data-lucide="arrow-up-right"></i></a>
+              {% else %}
+                <span class="sales-hub-restricted">View access is restricted</span>
+              {% endif %}
+              {% if model.add_url %}
+                <a class="sales-hub-add-link" href="{{ model.add_url }}" aria-label="Add {{ model.name }}"><i data-lucide="plus"></i></a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      <section class="sales-hub-guidance">
+        <span class="sales-hub-guidance-icon"><i data-lucide="shield-check"></i></span>
+        <div>
+          <strong>Keep the sales trail complete.</strong>
+          <p>Use the salon POS for new transactions and the operational screens for service completion or refund processing. These registers provide a permission-aware record of completed sales and related activity.</p>
+        </div>
+      </section>
+
+      <footer class="sales-hub-footer">
+        <span class="sales-hub-footer-brand">LASHPRO KE</span>
+        <span>Private studio workspace · Sales operations</span>
+      </footer>
+    </section>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("sales-hub-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
