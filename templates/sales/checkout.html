@@ -47,7 +47,13 @@
         <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
         <button class="icon-button" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
         <button id="pwa-install-btn" class="icon-button hidden" type="button" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
-        <div class="profile"><div class="avatar">LY</div><div class="profile-copy"><div class="profile-name">Lyn Wanjiru</div><div class="profile-role">FOUNDER &amp; MASTER ARTIST</div></div></div>
+        <div class="profile">
+          <div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div>
+          <div class="profile-copy">
+            <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="profile-role">{{ request.user.get_role_display|upper }}</div>
+          </div>
+        </div>
       </div>
     </header>
 
