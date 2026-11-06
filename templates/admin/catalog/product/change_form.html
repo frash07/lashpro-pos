@@ -47,6 +47,8 @@
       <button class="icon-button" id="product-form-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
         <i data-lucide="sun-moon"></i>
       </button>
+      <a class="product-form-account-link" href="{% url 'admin:password_change' %}">Password</a>
+      <form class="product-form-logout" method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
       <div class="profile">
         <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
         <div class="profile-copy">
