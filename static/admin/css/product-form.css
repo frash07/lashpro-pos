@@ -586,7 +586,9 @@ body.lashpro-product-workspace #content h3 {
     min-width: 0;
   }
 
-  .product-form-actions .status-pill {
+  .product-form-actions .status-pill,
+  .product-form-account-link,
+  .product-form-actions .profile-copy {
     display: none;
   }
 
@@ -664,9 +666,12 @@ body.lashpro-product-workspace #content h3 {
     gap: 7px;
   }
 
-  .product-form-account-link,
-  .product-form-logout {
+  .product-form-account-link {
     display: none;
+  }
+
+  .product-form-logout button {
+    font-size: 9px;
   }
 
   .product-form-main {
