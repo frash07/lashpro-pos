@@ -27,6 +27,13 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("sku", "name", "selling_price", "on_hand", "reorder_level", "low_stock", "active")
     list_filter = ("active", LowStockFilter)
     search_fields = ("sku", "name")
+    change_form_template = "admin/catalog/product/change_form.html"
+    fieldsets = (
+        ("Product details", {"fields": (("sku", "name"), "image")}),
+        ("Pricing", {"fields": (("cost_price", "selling_price"),)}),
+        ("Inventory controls", {"fields": (("on_hand", "reorder_level"), "active")}),
+    )
+
     def get_readonly_fields(self, request, obj=None):
         return ("on_hand", "sku") if obj else ("on_hand",)
 
