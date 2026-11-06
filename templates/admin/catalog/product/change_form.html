@@ -1,0 +1,170 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block title %}{% if add %}Add product{% else %}Edit product{% endif %} · LashPro KE{% endblock %}
+
+{% block bodyclass %}{{ block.super }} lashpro-product-workspace{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/product-form.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <header class="topbar product-form-topbar">
+    <a class="brand product-form-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
+
+    <nav class="mode-switch product-form-nav" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:app_list' app_label='catalog' %}">
+        <i data-lucide="grid-2x2"></i><span>Catalog</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:catalog_product_changelist' %}" aria-current="page">
+        <i data-lucide="package"></i><span>Products</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:catalog_service_changelist' %}">
+        <i data-lucide="sparkles"></i><span>Services</span>
+      </a>
+    </nav>
+
+    <div class="top-actions product-form-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="product-form-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <a class="product-form-account-link" href="{% url 'admin:password_change' %}">Password</a>
+      <form class="product-form-logout" method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main product-form-main">
+    <div class="page-heading product-form-heading">
+      <div>
+        <div class="eyebrow">Studio workspace · Catalog</div>
+        <h1>{% if add %}Add a new <em>product.</em>{% else %}Update your <em>product.</em>{% endif %}</h1>
+        <p>{% if add %}Create a retail item with clear pricing and inventory thresholds.{% else %}Keep product details, pricing and stock settings accurate.{% endif %}</p>
+      </div>
+      <div class="heading-actions">
+        <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+        <a class="button-secondary product-form-back" href="{% url 'admin:catalog_product_changelist' %}">
+          <i data-lucide="arrow-left"></i> Back to products
+        </a>
+      </div>
+    </div>
+
+    <div class="product-form-layout">
+      <section class="product-form-panel" aria-labelledby="product-form-panel-title">
+        <div class="product-form-panel-heading">
+          <div>
+            <div class="product-form-overline"><i data-lucide="package"></i> PRODUCT RECORD</div>
+            <h2 id="product-form-panel-title">Product information</h2>
+            <p>Enter the details used across the LashPro studio.</p>
+          </div>
+          <span class="product-form-state">{% if add %}New product{% else %}Edit product{% endif %}</span>
+        </div>
+        {{ block.super }}
+      </section>
+
+      <aside class="product-form-aside" aria-label="Product setup guidance">
+        <section class="product-guide-card">
+          <div class="product-guide-kicker">SETUP CHECKLIST</div>
+          <h2>Ready for your studio collection.</h2>
+          <p>Accurate product records make pricing and stock checks easier at checkout.</p>
+
+          <div class="product-guide-steps">
+            <div class="product-guide-step">
+              <span>01</span>
+              <div><strong>Identify the item</strong><small>Use a clear product name and a unique SKU.</small></div>
+            </div>
+            <div class="product-guide-step">
+              <span>02</span>
+              <div><strong>Set your prices</strong><small>Enter the unit cost and customer selling price in KSh.</small></div>
+            </div>
+            <div class="product-guide-step">
+              <span>03</span>
+              <div><strong>Choose a reorder point</strong><small>Set the quantity at which the team should review stock.</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="product-guide-note">
+          <span class="product-guide-note-icon"><i data-lucide="shield-check"></i></span>
+          <div>
+            <strong>Inventory stays controlled.</strong>
+            <p>On-hand quantity is read-only here. Use supplier receipts or authorized stock movements to update the balance.</p>
+          </div>
+        </section>
+
+        <section class="product-guide-note product-guide-note-subtle">
+          <span class="product-guide-note-icon"><i data-lucide="fingerprint"></i></span>
+          <div>
+            <strong>Keep the SKU consistent.</strong>
+            <p>Once issued, a product SKU is permanent and cannot be reused for another item.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <footer class="product-form-footer">
+      <span class="product-form-footer-brand">LASHPRO KE</span>
+      <span>Private studio workspace · Product catalog</span>
+    </footer>
+  </main>
+{% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("product-form-theme-toggle");
+
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    })();
+  </script>
+{% endblock %}
