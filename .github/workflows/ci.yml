@@ -2,7 +2,7 @@ name: Django CI
 
 on:
   push:
-    branches: [main, "deployment/**"]
+    branches: [main, "deployment/**", "flyio-new-files"]
   pull_request:
   workflow_dispatch:
 
