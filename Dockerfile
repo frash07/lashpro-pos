@@ -1,30 +1,28 @@
-ARG PYTHON_VERSION=3.10-slim
+FROM python:3.14.8-slim
 
-FROM python:${PYTHON_VERSION}
-
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# install psycopg2 dependencies.
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /code
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
 
 WORKDIR /code
 
+# Psycopg can use its binary wheel; libpq-dev and gcc also allow source builds.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt /tmp/requirements.txt
-RUN set -ex && \
-    pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt && \
-    rm -rf /root/.cache/
+RUN python -m pip install --upgrade pip \
+    && python -m pip install --no-cache-dir -r /tmp/requirements.txt
+
 COPY . /code
 
-ENV SECRET_KEY "ebHhxxO6t7fOG0UlkP0LRC5dbkmHbhARduC1abANUD57pbjhKk"
-RUN python manage.py collectstatic --noinput
+# Django settings require a secret and DATABASE_URL even during collectstatic.
+# These are disposable build-only values; runtime values come from Fly secrets.
+RUN DJANGO_SECRET_KEY=build-only-not-a-runtime-secret \
+    DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
+    python manage.py collectstatic --noinput
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["gunicorn","--bind",":8000","--workers","2","config.wsgi"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "2", "--access-logfile", "-", "--error-logfile", "-"]
