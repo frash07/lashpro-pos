@@ -1,33 +1,46 @@
-# fly.toml app configuration file generated for lashpro-pos on 2026-11-10T13:37:14Z
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'lashpro-pos'
-primary_region = 'ams'
-console_command = '/code/manage.py shell'
+app = "lashpro-pos"
+primary_region = "ams"
 
 [build]
+  dockerfile = "Dockerfile"
+
 [deploy]
-  release_command = 'python manage.py migrate --noinput'
+  release_command = "bash release.sh"
 
 [env]
-  PORT = '8000'
+  PORT = "8080"
+  DEBUG = "false"
+  DJANGO_ENV = "synthetic-test"
+  ALLOWED_HOSTS = "lashpro-pos.fly.dev"
+  CSRF_TRUSTED_ORIGINS = "https://lashpro-pos.fly.dev"
+  SECURE_SSL_REDIRECT = "true"
+  SECURE_HSTS_SECONDS = "300"
+  SECURE_HSTS_INCLUDE_SUBDOMAINS = "false"
+  SECURE_HSTS_PRELOAD = "false"
+  SESSION_COOKIE_SECURE = "true"
+  CSRF_COOKIE_SECURE = "true"
+  TRUST_PROXY_SSL_HEADER = "true"
+  DB_CONN_MAX_AGE = "0"
+  DB_DISABLE_SERVER_SIDE_CURSORS = "true"
+  AXES_IPWARE_PROXY_COUNT = "1"
+  LOG_LEVEL = "INFO"
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+    method = "GET"
+    path = "/accounts/login/"
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
+  cpu_kind = "shared"
   cpus = 1
-  memory_mb = 256
-
-[[statics]]
-  guest_path = '/code/static'
-  url_prefix = '/static/'
+  memory = "1gb"
