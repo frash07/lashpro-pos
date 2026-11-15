@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Fly.io release task. .gitattributes forces LF line endings on Windows checkouts.
 set -euo pipefail
 
 # Use Neon’s direct (unpooled) URL for schema changes when supplied.
