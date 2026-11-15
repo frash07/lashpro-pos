@@ -45,6 +45,10 @@ primary_region = 'ams'
     method = 'GET'
     path = '/accounts/login/'
 
+    [http_service.checks.headers]
+      Host = 'lashpro-pos.fly.dev'
+      X-Forwarded-Proto = 'https'
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
