@@ -1,52 +1,47 @@
-# fly.toml app configuration file generated for lashpro-pos on 2026-11-14T22:06:01Z
-#
-# See https://docs.fly.io/reference/configuration for information about how to use this file.
-#
-
-app = 'lashpro-pos'
-primary_region = 'ams'
+# Fly.io application configuration for LashPro POS pilot.
+app = "lashpro-pos"
+primary_region = "fra"
 
 [build]
-  dockerfile = 'Dockerfile'
+  dockerfile = "Dockerfile"
 
 [deploy]
-  release_command = 'bash release.sh'
+  release_command = "bash release.sh"
 
 [env]
-  ALLOWED_HOSTS = 'lashpro-pos.fly.dev'
-  AXES_IPWARE_PROXY_COUNT = '1'
-  CSRF_COOKIE_SECURE = 'true'
-  CSRF_TRUSTED_ORIGINS = 'https://lashpro-pos.fly.dev'
-  DB_CONN_MAX_AGE = '0'
-  DB_DISABLE_SERVER_SIDE_CURSORS = 'true'
-  DEBUG = 'false'
-  DJANGO_ENV = 'synthetic-test'
-  LOG_LEVEL = 'INFO'
-  PORT = '8080'
-  SECURE_HSTS_INCLUDE_SUBDOMAINS = 'false'
-  SECURE_HSTS_PRELOAD = 'false'
-  SECURE_HSTS_SECONDS = '300'
-  SECURE_SSL_REDIRECT = 'true'
-  SESSION_COOKIE_SECURE = 'true'
-  TRUST_PROXY_SSL_HEADER = 'true'
+  ALLOWED_HOSTS = "lashpro-pos.fly.dev"
+  AXES_IPWARE_PROXY_COUNT = "1"
+  CSRF_COOKIE_SECURE = "true"
+  CSRF_TRUSTED_ORIGINS = "https://lashpro-pos.fly.dev"
+  DB_CONN_MAX_AGE = "0"
+  DB_DISABLE_SERVER_SIDE_CURSORS = "true"
+  DEBUG = "false"
+  DJANGO_ENV = "synthetic-test"
+  LOG_LEVEL = "INFO"
+  PORT = "8080"
+  SECURE_HSTS_INCLUDE_SUBDOMAINS = "false"
+  SECURE_HSTS_PRELOAD = "false"
+  SECURE_HSTS_SECONDS = "300"
+  SECURE_SSL_REDIRECT = "true"
+  SESSION_COOKIE_SECURE = "true"
+  TRUST_PROXY_SSL_HEADER = "true"
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = "stop"
   auto_start_machines = true
   min_machines_running = 1
-  processes = ['app']
+  processes = ["app"]
 
   [[http_service.checks]]
-    interval = '30s'
-    timeout = '5s'
-    grace_period = '15s'
-    method = 'GET'
-    path = '/accounts/login/'
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+    method = "GET"
+    path = "/accounts/login/"
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
+  memory = "1gb"
+  cpu_kind = "shared"
   cpus = 1
-  memory_mb = 1024
