@@ -68,3 +68,62 @@ jobs:
         run: python manage.py collectstatic --noinput
       - name: Run tests
         run: python manage.py test
+
+      # Optional preview deployment. The pilot Fly app is never targeted here.
+      # Configure the repository secrets/variable documented in docs/STOREFRONT_PREVIEW.md.
+      - name: Check storefront preview configuration
+        if: github.ref == 'refs/heads/storefront'
+        id: storefront-preview
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_ORG: ${{ vars.FLY_ORG }}
+          PREVIEW_DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
+          PREVIEW_DJANGO_SECRET_KEY: ${{ secrets.PREVIEW_DJANGO_SECRET_KEY }}
+          PREVIEW_STAFF_PASSWORD: ${{ secrets.PREVIEW_STAFF_PASSWORD }}
+        run: |
+          missing=()
+          for name in FLY_API_TOKEN FLY_ORG PREVIEW_DATABASE_URL PREVIEW_DJANGO_SECRET_KEY PREVIEW_STAFF_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              missing+=("$name")
+            fi
+          done
+          if (( ${#missing[@]} )); then
+            echo "::notice::Storefront preview not deployed. Configure repository secrets/variable: ${missing[*]}."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install flyctl
+        if: steps.storefront-preview.outputs.configured == 'true'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy isolated storefront preview
+        if: steps.storefront-preview.outputs.configured == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_ORG: ${{ vars.FLY_ORG }}
+          PREVIEW_DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
+          PREVIEW_DJANGO_SECRET_KEY: ${{ secrets.PREVIEW_DJANGO_SECRET_KEY }}
+          PREVIEW_STAFF_PASSWORD: ${{ secrets.PREVIEW_STAFF_PASSWORD }}
+        run: |
+          set -euo pipefail
+          APP="lashpro-storefront-preview"
+
+          if ! flyctl status --app "$APP" >/dev/null 2>&1; then
+            flyctl apps create "$APP" --org "$FLY_ORG"
+          fi
+
+          DATABASE_NAME="$(PREVIEW_DATABASE_URL="$PREVIEW_DATABASE_URL" python -c 'import os; from urllib.parse import urlparse; print(urlparse(os.environ["PREVIEW_DATABASE_URL"]).path.lstrip("/"))')"
+          if [[ -z "$DATABASE_NAME" ]]; then
+            echo "Could not determine the preview database name from PREVIEW_DATABASE_URL." >&2
+            exit 1
+          fi
+
+          flyctl secrets set --app "$APP" \
+            DJANGO_SECRET_KEY="$PREVIEW_DJANGO_SECRET_KEY" \
+            DATABASE_URL="$PREVIEW_DATABASE_URL" \
+            SYNTHETIC_DATA_CONFIRM_DATABASE="$DATABASE_NAME" \
+            SYNTHETIC_STAFF_PASSWORD="$PREVIEW_STAFF_PASSWORD"
+
+          flyctl deploy --config fly.storefront-preview.toml --app "$APP" --remote-only --ha=false
