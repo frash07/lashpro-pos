@@ -76,13 +76,12 @@ jobs:
         id: storefront-preview
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          FLY_ORG: ${{ vars.FLY_ORG }}
           PREVIEW_DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
           PREVIEW_DJANGO_SECRET_KEY: ${{ secrets.PREVIEW_DJANGO_SECRET_KEY }}
           PREVIEW_STAFF_PASSWORD: ${{ secrets.PREVIEW_STAFF_PASSWORD }}
         run: |
           missing=()
-          for name in FLY_API_TOKEN FLY_ORG PREVIEW_DATABASE_URL PREVIEW_DJANGO_SECRET_KEY PREVIEW_STAFF_PASSWORD; do
+          for name in FLY_API_TOKEN PREVIEW_DATABASE_URL PREVIEW_DJANGO_SECRET_KEY PREVIEW_STAFF_PASSWORD; do
             if [[ -z "${!name:-}" ]]; then
               missing+=("$name")
             fi
@@ -102,17 +101,12 @@ jobs:
         if: steps.storefront-preview.outputs.configured == 'true'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          FLY_ORG: ${{ vars.FLY_ORG }}
           PREVIEW_DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
           PREVIEW_DJANGO_SECRET_KEY: ${{ secrets.PREVIEW_DJANGO_SECRET_KEY }}
           PREVIEW_STAFF_PASSWORD: ${{ secrets.PREVIEW_STAFF_PASSWORD }}
         run: |
           set -euo pipefail
           APP="lashpro-storefront-preview"
-
-          if ! flyctl status --app "$APP" >/dev/null 2>&1; then
-            flyctl apps create "$APP" --org "$FLY_ORG"
-          fi
 
           DATABASE_NAME="$(PREVIEW_DATABASE_URL="$PREVIEW_DATABASE_URL" python -c 'import os; from urllib.parse import urlparse; print(urlparse(os.environ["PREVIEW_DATABASE_URL"]).path.lstrip("/"))')"
           if [[ -z "$DATABASE_NAME" ]]; then
