@@ -1,0 +1,4 @@
+# Keep Unix shell scripts LF even when contributors use Windows.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.toml text eol=lf
