@@ -240,11 +240,24 @@ STORAGES = {
     },
 }
 
-# Fly.io runs the POS and storefront as separate apps. Uploaded files must live
-# in shared object storage rather than either app's ephemeral container disk.
-# `fly storage create --public` provides BUCKET_NAME and AWS_ENDPOINT_URL_S3.
+# Cloudinary provides shared, durable image storage for both Fly apps.
+# The POS app sets CLOUDINARY_URL; the storefront only sets CLOUDINARY_CLOUD_NAME.
+CLOUDINARY_URL = env("CLOUDINARY_URL", default="").strip()
+CLOUDINARY_CLOUD_NAME = env("CLOUDINARY_CLOUD_NAME", default="").strip()
+if CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME:
+    import cloudinary
+
+    if CLOUDINARY_CLOUD_NAME and not CLOUDINARY_URL:
+        cloudinary.config(cloud_name=CLOUDINARY_CLOUD_NAME, secure=True)
+    else:
+        cloudinary.config(secure=True)
+    STORAGES["default"] = {
+        "BACKEND": "core.storage.CloudinaryMediaStorage",
+    }
+
+# Optional Tigris support remains available when no Cloudinary settings are set.
 MEDIA_STORAGE_BUCKET_NAME = env("BUCKET_NAME", default="").strip()
-if MEDIA_STORAGE_BUCKET_NAME:
+if not (CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME) and MEDIA_STORAGE_BUCKET_NAME:
     MEDIA_PUBLIC_DOMAIN = env(
         "MEDIA_PUBLIC_DOMAIN",
         default=f"{MEDIA_STORAGE_BUCKET_NAME}.t3.tigrisfiles.io",
