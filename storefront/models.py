@@ -134,3 +134,42 @@ class StorefrontOrderLine(models.Model):
 
     def __str__(self):
         return f"{self.quantity} × {self.name_snapshot}"
+
+
+
+class StorefrontStockReservation(models.Model):
+    """Quantity held for an online order until it is cancelled or fulfilled."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Reserved"
+        CONSUMED = "CONSUMED", "Fulfilled"
+        RELEASED = "RELEASED", "Released"
+
+    order_line = models.OneToOneField(
+        StorefrontOrderLine,
+        on_delete=models.PROTECT,
+        related_name="stock_reservation",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="storefront_stock_reservations",
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=3)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    released_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("created_at", "pk")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(quantity__gt=0),
+                name="storefront_reservation_quantity_positive",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.quantity} × {self.product} · {self.get_status_display()}"

@@ -12,7 +12,7 @@
     {% endfor %}
   </div>
   <div class="summary-total"><span>Estimated total</span><strong>KSh {{ order.total_amount|floatformat:2 }}</strong></div>
-  <div class="payment-notice"><strong>This is not a payment confirmation.</strong><span>Your order request has not been paid and stock has not been reserved. The LashPro team will contact you using {{ order.customer_phone }} to confirm availability and collection. Payment is made at the studio.</span></div>
+  <div class="payment-notice"><strong>This is not a payment confirmation.</strong><span>{% if order.status == "CANCELLED" %}The stock reservation has been released. Contact the studio using {{ order.customer_phone }} if you need help.{% elif order.status == "FULFILLED" %}The reserved stock has been deducted from inventory and the order is marked fulfilled. Payment is handled separately at the studio.{% else %}The ordered quantity is reserved against LashPro inventory. The team will contact you using {{ order.customer_phone }} to confirm collection. This order is not paid; payment is made at the studio.{% endif %}</span></div>
   <p class="form-footnote">Keep your order reference for follow-up. This private order link also lets you check the latest status.</p>
   <a class="button button-dark" href="{% url 'storefront:home' %}">Return to LashPro</a>
 </section>

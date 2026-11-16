@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Sum
 from django.utils import timezone
 from accounts.models import User
 from audit.models import AuditEvent
@@ -11,6 +12,36 @@ from catalog.models import Product
 from .models import InventoryMovement, StockAdjustmentRequest, StockReceipt, StockReceiptLine, Supplier
 
 UNIT = Decimal("0.001")
+
+
+def reserved_stock_by_product(product_ids):
+    """Return active online-order reservations grouped by product ID."""
+    ids = {int(value) for value in product_ids}
+    if not ids:
+        return {}
+    # Import lazily to keep inventory usable while Django loads app models.
+    from storefront.models import StorefrontStockReservation
+
+    rows = (
+        StorefrontStockReservation.objects
+        .filter(product_id__in=ids, status=StorefrontStockReservation.Status.ACTIVE)
+        .values("product_id")
+        .annotate(total=Sum("quantity"))
+    )
+    return {row["product_id"]: row["total"] for row in rows}
+
+
+def available_stock_by_product(products):
+    products = list(products)
+    reserved = reserved_stock_by_product([product.pk for product in products])
+    return {
+        product.pk: product.on_hand - reserved.get(product.pk, Decimal("0.000"))
+        for product in products
+    }
+
+
+def available_stock_for_product(product):
+    return available_stock_by_product([product])[product.pk]
 
 
 def _quantity(value):
@@ -33,8 +64,9 @@ def deduct_product_for_sale_line(*, sale_line, actor):
     if existing:
         return existing
     quantity = Decimal(sale_line.quantity).quantize(UNIT)
-    if product.on_hand < quantity:
-        raise ValidationError({"items": f"Not enough stock for {product.name}. Available: {product.on_hand}; requested: {quantity}."})
+    available = available_stock_for_product(product)
+    if available < quantity:
+        raise ValidationError({"items": f"Not enough unreserved stock for {product.name}. Available: {available}; requested: {quantity}."})
     before = product.on_hand
     product.on_hand = before - quantity
     product.save(update_fields=("on_hand",))
@@ -107,6 +139,9 @@ def review_stock_adjustment(*, adjustment, approver, approve, reason=""):
     before, after = product.on_hand, product.on_hand + request.quantity_delta
     if after < 0:
         raise ValidationError({"quantity_delta": f"Adjustment would make stock negative (current: {before})."})
+    reserved = reserved_stock_by_product([product.pk]).get(product.pk, Decimal("0.000"))
+    if after < reserved:
+        raise ValidationError({"quantity_delta": f"Adjustment would reduce stock below the {reserved} unit(s) reserved for online orders."})
     product.on_hand = after
     product.save(update_fields=("on_hand",))
     request.status, request.reviewed_by = StockAdjustmentRequest.Status.APPROVED, approver
@@ -139,8 +174,9 @@ def consume_service_requirements(*, sale_line, actor):
     for requirement in requirements:
         product = Product.objects.select_for_update().get(pk=requirement.product_id)
         quantity = (requirement.quantity_per_service * Decimal(sale_line.quantity)).quantize(UNIT)
-        if product.on_hand < quantity:
-            raise ValidationError({"inventory": f"Not enough {product.name} to complete {sale_line.description}. Available: {product.on_hand}; required: {quantity}."})
+        available = available_stock_for_product(product)
+        if available < quantity:
+            raise ValidationError({"inventory": f"Not enough unreserved {product.name} to complete {sale_line.description}. Available: {available}; required: {quantity}."})
         before = product.on_hand
         product.on_hand = before - quantity
         product.save(update_fields=("on_hand",))
