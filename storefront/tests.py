@@ -2,14 +2,17 @@ import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from catalog.models import Product, Service
 from customers.models import Customer
+from inventory.models import InventoryMovement
+from inventory.services import available_stock_for_product
 from sales.models import Sale
-from .models import StorefrontOrder, StorefrontOrderLine, StorefrontProfile
-from .services import create_storefront_order
+from .models import StorefrontOrder, StorefrontOrderLine, StorefrontProfile, StorefrontStockReservation
+from .services import create_storefront_order, transition_storefront_order
 
 
 User = get_user_model()
@@ -253,3 +256,118 @@ class StorefrontGuestCheckoutTests(TestCase):
         response = self.client.get(reverse("storefront:order-detail", args=["invalid-token"]))
         self.assertEqual(response.status_code, 404)
         self.assertNotContains(response, "private@example.com", status_code=404)
+
+
+
+class StorefrontOrderInventoryTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            username="online-order-manager",
+            password="Manager!SecurePassphrase932",
+            role=User.Role.OWNER,
+            is_staff=True,
+        )
+        self.product = Product.objects.create(
+            sku="RESERVE-001",
+            name="Reserved Lash Glue",
+            cost_price=Decimal("200.00"),
+            selling_price=Decimal("500.00"),
+            on_hand=Decimal("5.000"),
+            active=True,
+        )
+
+    def _create_order(self, quantity=2):
+        return create_storefront_order(
+            items={str(self.product.pk): quantity},
+            customer_name="Inventory Test Guest",
+            customer_email="inventory@example.com",
+            customer_phone="+254700111222",
+            idempotency_key=uuid.uuid4(),
+        )
+
+    def test_checkout_reserves_stock_without_reducing_physical_on_hand(self):
+        order = self._create_order(quantity=2)
+        reservation = StorefrontStockReservation.objects.get(order_line=order.lines.get())
+
+        self.product.refresh_from_db()
+        self.assertEqual(reservation.status, StorefrontStockReservation.Status.ACTIVE)
+        self.assertEqual(reservation.quantity, Decimal("2.000"))
+        self.assertEqual(self.product.on_hand, Decimal("5.000"))
+        self.assertEqual(available_stock_for_product(self.product), Decimal("3.000"))
+
+    def test_active_online_reservation_prevents_overselling_on_another_order(self):
+        self._create_order(quantity=3)
+
+        with self.assertRaises(ValidationError):
+            self._create_order(quantity=3)
+
+        self.assertEqual(StorefrontOrder.objects.count(), 1)
+        self.assertEqual(available_stock_for_product(self.product), Decimal("2.000"))
+
+    def test_cancellation_releases_reserved_stock(self):
+        order = self._create_order(quantity=4)
+
+        transition_storefront_order(
+            order=order,
+            target_status=StorefrontOrder.Status.CANCELLED,
+            actor=self.staff,
+        )
+
+        reservation = StorefrontStockReservation.objects.get(order_line=order.lines.get())
+        self.assertEqual(reservation.status, StorefrontStockReservation.Status.RELEASED)
+        self.assertEqual(available_stock_for_product(self.product), Decimal("5.000"))
+        self.assertEqual(
+            StorefrontOrder.objects.get(pk=order.pk).status,
+            StorefrontOrder.Status.CANCELLED,
+        )
+
+    def test_fulfilment_deducts_stock_once_and_writes_immutable_movement(self):
+        order = self._create_order(quantity=2)
+        transition_storefront_order(
+            order=order,
+            target_status=StorefrontOrder.Status.CONFIRMED,
+            actor=self.staff,
+        )
+        transition_storefront_order(
+            order=order,
+            target_status=StorefrontOrder.Status.READY,
+            actor=self.staff,
+        )
+        transition_storefront_order(
+            order=order,
+            target_status=StorefrontOrder.Status.FULFILLED,
+            actor=self.staff,
+        )
+
+        self.product.refresh_from_db()
+        line = order.lines.get()
+        reservation = StorefrontStockReservation.objects.get(order_line=line)
+        movement = InventoryMovement.objects.get(storefront_order_line=line)
+        self.assertEqual(self.product.on_hand, Decimal("3.000"))
+        self.assertEqual(reservation.status, StorefrontStockReservation.Status.CONSUMED)
+        self.assertEqual(movement.movement_type, InventoryMovement.Type.ONLINE_ORDER)
+        self.assertEqual(movement.quantity_delta, Decimal("-2.000"))
+        self.assertEqual(Sale.objects.count(), 0)
+        with self.assertRaises(ValidationError):
+            transition_storefront_order(
+                order=order,
+                target_status=StorefrontOrder.Status.FULFILLED,
+                actor=self.staff,
+            )
+        self.assertEqual(InventoryMovement.objects.filter(storefront_order_line=line).count(), 1)
+
+    def test_pos_sale_cannot_consume_stock_reserved_for_online_orders(self):
+        from sales.services import checkout_sale
+
+        self._create_order(quantity=4)
+        with self.assertRaises(ValidationError):
+            checkout_sale(
+                cashier=self.staff,
+                items=[{"product_id": self.product.pk, "quantity": 2}],
+                payments=(),
+                idempotency_key=uuid.uuid4(),
+            )
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.on_hand, Decimal("5.000"))
+        self.assertEqual(Sale.objects.count(), 0)
