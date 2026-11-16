@@ -39,15 +39,24 @@ Deploy this branch to `lashpro-pos` and `lashpro-storefront`. Both apps must run
 
 ## 4. Preserve any images already uploaded to the old local filesystem
 
-Files previously uploaded to `/code/media` are not automatically copied to Tigris. Before replacing/restarting the old POS machine, make a backup of its `media/catalog` directory if it still contains the images.
-
-After the new version and bucket secrets are deployed, connect to the POS app and run:
+Files previously uploaded to `/code/media` are not automatically copied to Tigris. Back up the old POS machine's catalog directory **before deploying**, while the old machine is still running:
 
 ```sh
+fly ssh sftp get /code/media/catalog ./catalog-media-backup --recursive -a lashpro-pos
+```
+
+After the new version and bucket secrets are deployed, restore that backup onto the POS machine and run the migration command:
+
+```sh
+fly ssh console -a lashpro-pos
+mkdir -p /code/media/catalog
+exit
+fly ssh sftp put ./catalog-media-backup /code/media/catalog --recursive -a lashpro-pos
+fly ssh console -a lashpro-pos
 python manage.py copy_local_media_to_tigris
 ```
 
-This command copies any existing local product/service images into Tigris without deleting the originals. It is safe to run again: objects already present in the bucket are skipped. If the command reports missing local files, restore them from your backup or upload the images again through Django admin.
+This command copies product/service images from the restored local directory into Tigris without deleting the local originals. It is safe to run again: objects already present in the bucket are skipped. If the command reports missing local files, restore the correct directory structure from your backup or upload the images again through Django admin.
 
 If the old machine has already been replaced and no backup exists, the database may still contain image paths but the actual image files may no longer exist. In that case, re-upload those images.
 
