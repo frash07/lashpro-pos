@@ -1,7 +1,9 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
 
 from accounts.models import User
 from .models import StorefrontOrder, StorefrontOrderLine
+from .services import transition_storefront_order
 
 
 STAFF_ROLES = {User.Role.OWNER, User.Role.MANAGER, User.Role.CASHIER}
@@ -32,6 +34,10 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
     inlines = (StorefrontOrderLineInline,)
+    actions = (
+        "confirm_selected", "mark_ready_selected",
+        "fulfil_selected", "cancel_selected",
+    )
     fields = (
         "reference", "created_at", "updated_at",
         "customer_name", "customer_email", "customer_phone", "notes",
@@ -40,7 +46,7 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     readonly_fields = (
         "reference", "created_at", "updated_at",
         "customer_name", "customer_email", "customer_phone", "notes",
-        "payment_method", "total_amount",
+        "payment_method", "total_amount", "status",
     )
 
     def _can_review(self, request):
@@ -63,3 +69,51 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def _apply_transition(self, request, queryset, target_status, label):
+        updated = 0
+        failed = 0
+        for order in queryset:
+            try:
+                transition_storefront_order(
+                    order=order,
+                    target_status=target_status,
+                    actor=request.user,
+                )
+            except ValidationError as exc:
+                failed += 1
+                self.message_user(
+                    request,
+                    f"{order.reference}: {' '.join(exc.messages)}",
+                    level=messages.ERROR,
+                )
+            else:
+                updated += 1
+        if updated:
+            self.message_user(
+                request,
+                f"{updated} online order(s) {label}.",
+                level=messages.SUCCESS,
+            )
+        if failed:
+            self.message_user(
+                request,
+                f"{failed} order(s) could not be updated. Review the errors above.",
+                level=messages.WARNING,
+            )
+
+    @admin.action(description="Confirm selected online orders")
+    def confirm_selected(self, request, queryset):
+        self._apply_transition(request, queryset, StorefrontOrder.Status.CONFIRMED, "confirmed")
+
+    @admin.action(description="Mark selected orders ready for collection")
+    def mark_ready_selected(self, request, queryset):
+        self._apply_transition(request, queryset, StorefrontOrder.Status.READY, "marked ready")
+
+    @admin.action(description="Fulfil selected orders and deduct reserved stock")
+    def fulfil_selected(self, request, queryset):
+        self._apply_transition(request, queryset, StorefrontOrder.Status.FULFILLED, "fulfilled")
+
+    @admin.action(description="Cancel selected orders and release reserved stock")
+    def cancel_selected(self, request, queryset):
+        self._apply_transition(request, queryset, StorefrontOrder.Status.CANCELLED, "cancelled")
