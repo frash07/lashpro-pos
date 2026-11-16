@@ -8,8 +8,9 @@ from core.storage import CloudinaryMediaStorage
 
 
 class CloudinaryMediaStorageTests(SimpleTestCase):
+    @patch("core.storage.CloudinaryMediaStorage.exists", return_value=False)
     @patch("core.storage.cloudinary.uploader.upload")
-    def test_save_uses_unique_cloudinary_public_id(self, upload):
+    def test_save_uses_unique_cloudinary_public_id(self, upload, _exists):
         upload.side_effect = lambda content, **kwargs: {
             "public_id": kwargs["public_id"],
             "format": "jpg",
