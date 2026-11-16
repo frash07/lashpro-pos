@@ -27,6 +27,14 @@ ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     default=["localhost", "127.0.0.1"],
 )
+
+# Hosts that should keep the staff POS at the root URL. Add the custom POS
+# hostname here when the domain is registered; all other hosts serve the shop.
+POS_HOSTS = env.list("POS_HOSTS", default=["lashpro-pos.fly.dev"])
+POS_BASE_URL = env(
+    "POS_BASE_URL",
+    default="https://lashpro-pos.fly.dev",
+).strip().rstrip("/")
 RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME", default="").strip()
 if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -79,6 +87,7 @@ INSTALLED_APPS = [
 
     # LashPro applications
     "core",
+    "storefront",
     "accounts",
     "catalog",
     "customers",

@@ -1,0 +1,16 @@
+{% extends "storefront/base.html" %}
+{% block title %}My orders | LashPro{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow"><span></span> CUSTOMER ACCOUNT</p><h1>My <em>orders.</em></h1><p class="section-subtitle">Your storefront order requests are listed below.</p></section>
+<div class="account-orders">
+  {% for order in orders %}
+    <a class="account-order-row" href="{% url 'storefront:order-detail' order.access_token %}">
+      <span><strong>{{ order.reference }}</strong><small>{{ order.created_at|date:"d M Y, H:i" }}</small></span>
+      <span><strong>{{ order.get_status_display }}</strong><small>{{ order.lines.count }} product line(s)</small></span>
+      <strong>KSh {{ order.total_amount|floatformat:2 }}</strong>
+    </a>
+  {% empty %}
+    <div class="empty-state"><span>✳</span><h2>No orders yet</h2><p>Your storefront orders will appear here after checkout.</p><a class="button button-dark" href="{% url 'storefront:home' %}#shop">Shop products</a></div>
+  {% endfor %}
+</div>
+{% endblock %}

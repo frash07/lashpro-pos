@@ -4,7 +4,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
-from django.views.generic import RedirectView
 
 from core.views import service_worker, admin_suite
 from accounts.auth_views import SafePasswordResetView
@@ -51,7 +50,10 @@ urlpatterns = [
     path("commissions/", include("commissions.urls")),
     path("inventory/", include("inventory.urls")),
     path("reports/", include("reporting.urls")),
-    path("", RedirectView.as_view(pattern_name="sales:checkout", permanent=False)),
+
+    # Public storefront on the root domain. The view routes POS hostnames
+    # back to the existing staff checkout without changing POS URL patterns.
+    path("", include("storefront.urls")),
 ]
 
 if settings.DEBUG:

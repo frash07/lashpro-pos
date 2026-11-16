@@ -1,0 +1,19 @@
+{% extends "storefront/base.html" %}
+{% block title %}Customer sign in | LashPro{% endblock %}
+{% block content %}
+<section class="account-panel">
+  <p class="eyebrow"><span></span> WELCOME BACK</p>
+  <h1>Sign in to <em>LashPro.</em></h1>
+  <p class="section-subtitle">View your storefront orders and checkout with your saved customer details.</p>
+  <form method="post" class="storefront-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
+    {% endfor %}
+    <button class="button button-dark" type="submit">Sign in</button>
+  </form>
+  <p class="form-footnote"><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+  <p class="form-footnote">New to LashPro? <a href="{% url 'storefront:register' %}">Create a customer account</a>, or continue to checkout as a guest.</p>
+</section>
+{% endblock %}

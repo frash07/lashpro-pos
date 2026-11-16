@@ -1,0 +1,62 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171419">
+  <meta name="description" content="Shop professional lash products and explore LashPro beauty services.">
+  <title>{% block title %}LashPro | Beauty · Professional{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'storefront/css/storefront.css' %}">
+</head>
+<body>
+  <div class="announcement">
+    <span>Professional lash essentials</span>
+    <span class="announcement-divider">/</span>
+    <span>Products and services in one place</span>
+  </div>
+  <header class="site-header">
+    <div class="shell nav-shell">
+      <a class="brand" href="{% url 'storefront:home' %}" aria-label="LashPro home">
+        <span class="brand-mark">L</span>
+        <span class="brand-copy"><strong>LASH<span>PRO</span></strong><small>BEAUTY · PROFESSIONAL</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="{% url 'storefront:home' %}#shop">Shop products</a>
+        <a href="{% url 'storefront:home' %}#services">Our services</a>
+        <a href="{% url 'storefront:cart' %}">Bag ({{ cart_count|default:0 }})</a>
+      </nav>
+      <div class="header-actions">
+        {% if customer_account %}
+          <a class="staff-link" href="{% url 'storefront:account-orders' %}">My orders</a>
+          <form method="post" action="{% url 'storefront:logout' %}" class="inline-form">{% csrf_token %}<button class="staff-link" type="submit">Sign out</button></form>
+        {% else %}
+          <a class="staff-link" href="{% url 'storefront:login' %}">Sign in</a>
+          <a class="staff-link register-link" href="{% url 'storefront:register' %}">Create account</a>
+        {% endif %}
+        <a class="staff-link staff-only-link" href="{{ pos_url }}/accounts/login/">Staff login <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell shell">
+    {% if messages %}
+      <div class="message-stack" role="status">
+        {% for message in messages %}
+          <p class="site-message {{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <a class="brand brand-footer" href="{% url 'storefront:home' %}">
+        <span class="brand-mark">L</span>
+        <span class="brand-copy"><strong>LASH<span>PRO</span></strong><small>BEAUTY · PROFESSIONAL</small></span>
+      </a>
+      <p>Products and services managed through one connected LashPro system.</p>
+      <span class="copyright">© {% now "Y" %} LASH PRO</span>
+    </div>
+  </footer>
+</body>
+</html>
