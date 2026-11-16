@@ -31,9 +31,17 @@ def reserved_stock_by_product(product_ids):
     return {row["product_id"]: row["total"] for row in rows}
 
 
+def available_stock_by_product(products):
+    products = list(products)
+    reserved = reserved_stock_by_product([product.pk for product in products])
+    return {
+        product.pk: product.on_hand - reserved.get(product.pk, Decimal("0.000"))
+        for product in products
+    }
+
+
 def available_stock_for_product(product):
-    reserved = reserved_stock_by_product([product.pk]).get(product.pk, Decimal("0.000"))
-    return product.on_hand - reserved
+    return available_stock_by_product([product])[product.pk]
 
 
 def _quantity(value):
