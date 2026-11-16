@@ -137,11 +137,11 @@ def review_stock_adjustment(*, adjustment, approver, approve, reason=""):
 
     product = Product.objects.select_for_update().get(pk=request.product_id)
     before, after = product.on_hand, product.on_hand + request.quantity_delta
+    if after < 0:
+        raise ValidationError({"quantity_delta": f"Adjustment would make stock negative (current: {before})."})
     reserved = reserved_stock_by_product([product.pk]).get(product.pk, Decimal("0.000"))
     if after < reserved:
         raise ValidationError({"quantity_delta": f"Adjustment would reduce stock below the {reserved} unit(s) reserved for online orders."})
-    if after < 0:
-        raise ValidationError({"quantity_delta": f"Adjustment would make stock negative (current: {before})."})
     product.on_hand = after
     product.save(update_fields=("on_hand",))
     request.status, request.reviewed_by = StockAdjustmentRequest.Status.APPROVED, approver
