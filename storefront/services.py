@@ -108,13 +108,14 @@ def create_storefront_order(
     if len(products) != len(cleaned_items):
         raise ValidationError({"items": "One or more products are no longer available."})
 
+    reserved_by_product = reserved_stock_by_product(product.pk for product in locked_products)
     order_lines = []
     total = Decimal("0.00")
     for product_id, quantity in cleaned_items.items():
         product = products[product_id]
         if not product.active:
             raise ValidationError({"items": f"{product.name} is no longer available."})
-        reserved = reserved_stock_by_product([product.pk]).get(product.pk, Decimal("0.000"))
+        reserved = reserved_by_product.get(product.pk, Decimal("0.000"))
         available = product.on_hand - reserved
         if available < Decimal(quantity):
             raise ValidationError({"items": f"Only {available} unreserved unit(s) of {product.name} are currently available."})
