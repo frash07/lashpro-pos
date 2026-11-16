@@ -37,15 +37,19 @@ The storefront only needs the bucket name to render public image URLs. Keep the 
 
 Deploy this branch to `lashpro-pos` and `lashpro-storefront`. Both apps must run the same version of `config/settings.py` and have the same `BUCKET_NAME` (and, if configured, `MEDIA_PUBLIC_DOMAIN`).
 
-## 4. Preserve any images already uploaded to the old local filesystem
+## Before changing the Fly apps: back up the current uploads
 
-Files previously uploaded to `/code/media` are not automatically copied to Tigris. Back up the old POS machine's catalog directory **before deploying**, while the old machine is still running:
+Do this **before creating the bucket, changing Fly secrets, restarting the app, or deploying**. Existing uploads are on the old POS machine's local filesystem:
 
 ```sh
 fly ssh sftp get /code/media/catalog ./catalog-media-backup --recursive -a lashpro-pos
 ```
 
-After the new version and bucket secrets are deployed, restore that backup onto the POS machine and run the migration command:
+Keep the downloaded `catalog-media-backup` folder safe. If the command reports that the directory does not exist, the old machine may no longer have uploaded files.
+
+## 4. Restore any existing images after the new version is deployed
+
+After the new version and bucket secrets are deployed, restore the backup onto the POS machine and run the migration command:
 
 ```sh
 fly ssh console -a lashpro-pos
