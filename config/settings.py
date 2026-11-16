@@ -239,6 +239,31 @@ STORAGES = {
         ),
     },
 }
+
+# Fly.io runs the POS and storefront as separate apps. Uploaded files must live
+# in shared object storage rather than either app's ephemeral container disk.
+# `fly storage create --public` provides BUCKET_NAME and AWS_ENDPOINT_URL_S3.
+MEDIA_STORAGE_BUCKET_NAME = env("BUCKET_NAME", default="").strip()
+if MEDIA_STORAGE_BUCKET_NAME:
+    MEDIA_PUBLIC_DOMAIN = env(
+        "MEDIA_PUBLIC_DOMAIN",
+        default=f"{MEDIA_STORAGE_BUCKET_NAME}.t3.tigrisfiles.io",
+    ).strip()
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": MEDIA_STORAGE_BUCKET_NAME,
+            "endpoint_url": env(
+                "AWS_ENDPOINT_URL_S3",
+                default="https://t3.storage.dev",
+            ).strip(),
+            "region_name": env("AWS_REGION", default="auto").strip() or "auto",
+            "custom_domain": MEDIA_PUBLIC_DOMAIN,
+            "querystring_auth": False,
+            "file_overwrite": False,
+        },
+    }
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
