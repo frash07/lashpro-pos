@@ -239,6 +239,44 @@ STORAGES = {
         ),
     },
 }
+
+# Cloudinary provides shared, durable image storage for both Fly apps.
+# The POS app sets CLOUDINARY_URL; the storefront only sets CLOUDINARY_CLOUD_NAME.
+CLOUDINARY_URL = env("CLOUDINARY_URL", default="").strip()
+CLOUDINARY_CLOUD_NAME = env("CLOUDINARY_CLOUD_NAME", default="").strip()
+if CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME:
+    import cloudinary
+
+    if CLOUDINARY_CLOUD_NAME and not CLOUDINARY_URL:
+        cloudinary.config(cloud_name=CLOUDINARY_CLOUD_NAME, secure=True)
+    else:
+        cloudinary.config(secure=True)
+    STORAGES["default"] = {
+        "BACKEND": "core.storage.CloudinaryMediaStorage",
+    }
+
+# Optional Tigris support remains available when no Cloudinary settings are set.
+MEDIA_STORAGE_BUCKET_NAME = env("BUCKET_NAME", default="").strip()
+if not (CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME) and MEDIA_STORAGE_BUCKET_NAME:
+    MEDIA_PUBLIC_DOMAIN = env(
+        "MEDIA_PUBLIC_DOMAIN",
+        default=f"{MEDIA_STORAGE_BUCKET_NAME}.t3.tigrisfiles.io",
+    ).strip()
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": MEDIA_STORAGE_BUCKET_NAME,
+            "endpoint_url": env(
+                "AWS_ENDPOINT_URL_S3",
+                default="https://t3.storage.dev",
+            ).strip(),
+            "region_name": env("AWS_REGION", default="auto").strip() or "auto",
+            "custom_domain": MEDIA_PUBLIC_DOMAIN,
+            "querystring_auth": False,
+            "file_overwrite": False,
+        },
+    }
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
