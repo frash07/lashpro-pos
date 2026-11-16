@@ -8,6 +8,7 @@
   <meta name="description" content="Shop professional lash products and explore LashPro beauty services.">
   <title>{% block title %}LashPro | Beauty · Professional{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'storefront/css/storefront.css' %}">
+  <link rel="stylesheet" href="{% static 'storefront/css/appointments.css' %}">
 </head>
 <body>
   <div class="announcement">
@@ -24,11 +25,13 @@
       <nav class="main-nav" aria-label="Main navigation">
         <a href="{% url 'storefront:home' %}#shop">Shop products</a>
         <a href="{% url 'storefront:home' %}#services">Our services</a>
+        <a href="{% url 'appointments:book' %}">Book an appointment</a>
         <a href="{% url 'storefront:cart' %}">Bag ({{ cart_count|default:0 }})</a>
       </nav>
       <div class="header-actions">
         {% if customer_account %}
           <a class="staff-link" href="{% url 'storefront:account-orders' %}">My orders</a>
+          <a class="staff-link" href="{% url 'appointments:account' %}">My appointments</a>
           <form method="post" action="{% url 'storefront:logout' %}" class="inline-form">{% csrf_token %}<button class="staff-link" type="submit">Sign out</button></form>
         {% else %}
           <a class="staff-link" href="{% url 'storefront:login' %}">Sign in</a>
