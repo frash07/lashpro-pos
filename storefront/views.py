@@ -235,7 +235,7 @@ def checkout(request):
                 request.session.pop(CART_SESSION_KEY, None)
                 request.session.pop(CHECKOUT_KEY_SESSION_KEY, None)
                 messages.success(request, "Your order request has been received.")
-                return redirect("storefront:order_detail", token=order.access_token)
+                return redirect("storefront:order-detail", token=order.access_token)
         else:
             if not form.cleaned_data.get("idempotency_key"):
                 form.fields["idempotency_key"].initial = checkout_key
@@ -304,7 +304,7 @@ def register(request):
 @never_cache
 def customer_login(request):
     if _profile_for(request.user):
-        return redirect("storefront:account_orders")
+        return redirect("storefront:account-orders")
 
     if request.method == "POST":
         form = CustomerLoginForm(request.POST)
@@ -321,7 +321,7 @@ def customer_login(request):
                 )
             if user and user.role == User.Role.CUSTOMER and _profile_for(user):
                 auth_login(request, user)
-                return redirect("storefront:account_orders")
+                return redirect("storefront:account-orders")
             form.add_error(None, "Email or password was not recognised.")
     else:
         form = CustomerLoginForm()
