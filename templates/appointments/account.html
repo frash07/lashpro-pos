@@ -1,0 +1,26 @@
+{% extends "storefront/base.html" %}
+{% block title %}My appointments | LashPro{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow"><span></span> CUSTOMER ACCOUNT</p><h1>My <em>appointments.</em></h1><p class="section-subtitle">View your requests, confirmations and past visits.</p></section>
+<div class="appointment-list">
+  {% for row in appointment_rows %}
+    {% with appointment=row.appointment %}
+      <article class="appointment-account-row">
+        <div class="appointment-account-main">
+          <span class="appointment-reference">{{ appointment.reference }}</span>
+          <h2>{{ appointment.service_name_snapshot }}</h2>
+          <p>{{ appointment.starts_at|date:"D, d M Y" }} · {{ appointment.starts_at|date:"g:i A" }} · {{ appointment.duration_minutes_snapshot }} minutes</p>
+          <small>With {{ appointment.staff.get_full_name|default:appointment.staff.username }}</small>
+        </div>
+        <div class="appointment-account-status"><strong>{{ appointment.get_status_display }}</strong><small>KSh {{ appointment.price_snapshot|floatformat:2 }}</small>
+          {% if row.can_cancel %}
+            <form method="post" action="{% url 'appointments:cancel' appointment.pk %}">{% csrf_token %}<button class="text-button" type="submit">Cancel appointment</button></form>
+          {% endif %}
+        </div>
+      </article>
+    {% endwith %}
+  {% empty %}
+    <div class="empty-state"><span>✳</span><h2>No appointments yet</h2><p>Your online booking requests will appear here.</p><a class="button button-dark" href="{% url 'appointments:book' %}">Book an appointment</a></div>
+  {% endfor %}
+</div>
+{% endblock %}

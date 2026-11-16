@@ -1,0 +1,49 @@
+{% extends "storefront/base.html" %}
+{% block title %}Book an appointment | LashPro{% endblock %}
+{% block content %}
+<section class="booking-heading">
+  <p class="eyebrow"><span></span> THE LASHPRO EXPERIENCE</p>
+  <h1>Make time for <em>you.</em></h1>
+  <p>Choose a treatment and date to see live appointment times. Times are shown in East Africa Time (Nairobi).</p>
+</section>
+
+<section class="booking-panel">
+  <div class="booking-step"><span>01</span><div><strong>Choose your service</strong><small>Availability is calculated from the treatment duration and provider schedules.</small></div></div>
+  <form class="booking-filter" method="get" action="{% url 'appointments:book' %}">
+    <div class="booking-field"><label for="{{ form.service.id_for_label }}">Service</label>{{ form.service }}{{ form.service.errors }}</div>
+    <div class="booking-field"><label for="{{ form.appointment_date.id_for_label }}">Date</label>{{ form.appointment_date }}{{ form.appointment_date.errors }}</div>
+    <button class="button button-dark" type="submit">Check availability <span aria-hidden="true">→</span></button>
+  </form>
+
+  {% if selected_service %}
+    <div class="booking-service-summary">
+      <span>{{ selected_service.duration_minutes }} MINUTES</span>
+      <strong>{{ selected_service.name }}</strong>
+      <b>KSh {{ selected_service.price|floatformat:2 }}</b>
+    </div>
+    <div class="booking-step"><span>02</span><div><strong>Select a time</strong><small>Each time is assigned to the provider shown beside it.</small></div></div>
+    {% if slots %}
+      <form class="booking-form" method="post" action="{% url 'appointments:book' %}">
+        {% csrf_token %}
+        <input type="hidden" name="service" value="{{ selected_service.pk }}">
+        <input type="hidden" name="appointment_date" value="{{ selected_date|date:'Y-m-d' }}">
+        {{ form.idempotency_key }}
+        {% if form.non_field_errors %}<div class="booking-errors">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="booking-field"><label for="{{ form.slot.id_for_label }}">Available appointment</label>{{ form.slot }}{{ form.slot.errors }}</div>
+        <div class="booking-contact-grid">
+          <div class="booking-field"><label for="{{ form.full_name.id_for_label }}">Full name</label>{{ form.full_name }}{{ form.full_name.errors }}</div>
+          <div class="booking-field"><label for="{{ form.email.id_for_label }}">Email address</label>{{ form.email }}{{ form.email.errors }}</div>
+          <div class="booking-field"><label for="{{ form.phone.id_for_label }}">Phone number</label>{{ form.phone }}{{ form.phone.errors }}</div>
+          <div class="booking-field"><label for="{{ form.notes.id_for_label }}">Notes (optional)</label>{{ form.notes }}{{ form.notes.errors }}</div>
+        </div>
+        <div class="booking-disclaimer">This submits an appointment request. The studio will confirm it; no payment is taken online.</div>
+        <button class="button button-dark" type="submit">Request appointment <span aria-hidden="true">→</span></button>
+      </form>
+    {% else %}
+      <div class="booking-empty"><strong>No available times for this date.</strong><p>Try another date or choose a different service. If no times appear for any date, the studio may need to publish provider working hours.</p></div>
+    {% endif %}
+  {% else %}
+    <div class="booking-empty"><strong>Start by selecting a service and date.</strong><p>Available times will appear here once you check the schedule.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

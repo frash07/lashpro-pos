@@ -1,0 +1,70 @@
+/* Appointment booking, customer schedule and staff day view */
+.booking-heading { max-width:740px; margin:30px auto 25px; text-align:center; }
+.booking-heading h1 { margin:12px 0; font:500 clamp(39px,5vw,58px)/1.03 Georgia,serif; letter-spacing:-.045em; }
+.booking-heading h1 em { color:#bd8797; font-weight:400; }
+.booking-heading > p:last-child { max-width:590px; margin:0 auto; color:#7e7580; font-size:12px; }
+.booking-panel { max-width:850px; margin:0 auto 35px; padding:clamp(22px,4vw,42px); border:1px solid #e8e0dc; background:#fffdfb; }
+.booking-step { display:flex; align-items:center; gap:13px; margin:4px 0 21px; }
+.booking-step > span { width:34px; height:34px; display:grid; place-items:center; border:1px solid #bc8595; border-radius:50%; color:#9e6c7c; font:17px Georgia,serif; }
+.booking-step strong,.booking-step small { display:block; }
+.booking-step strong { font:500 19px Georgia,serif; }
+.booking-step small { margin-top:3px; color:#7e7580; font-size:10px; }
+.booking-filter { display:grid; grid-template-columns:1fr 1fr auto; align-items:end; gap:14px; padding-bottom:25px; border-bottom:1px solid #e8e0dc; }
+.booking-field { display:grid; gap:6px; min-width:0; }
+.booking-field label,.staff-date-filter label { color:#665963; font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.booking-field input,.booking-field select,.booking-field textarea,.staff-date-filter input { width:100%; min-height:43px; padding:10px 12px; border:1px solid #ded3d4; border-radius:0; background:#fff; color:#211d24; font:12px ui-sans-serif,system-ui,sans-serif; }
+.booking-field textarea { min-height:84px; resize:vertical; }
+.booking-filter .button,.booking-form > .button { border:0; cursor:pointer; }
+.booking-service-summary { display:flex; align-items:center; flex-wrap:wrap; gap:13px; margin:20px 0 27px; padding:14px 15px; background:#f3eceb; }
+.booking-service-summary span { color:#9c7380; font-size:8px; font-weight:800; letter-spacing:.12em; }
+.booking-service-summary strong { flex:1; font:500 18px Georgia,serif; }
+.booking-service-summary b { font:600 17px Georgia,serif; white-space:nowrap; }
+.booking-form { display:grid; gap:19px; }
+.booking-contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+.booking-contact-grid .booking-field:last-child { grid-column:1/-1; }
+.booking-disclaimer { padding:12px 14px; border-left:3px solid #bc8595; background:#f7f3f2; color:#665963; font-size:10px; line-height:1.7; }
+.booking-empty { margin-top:19px; padding:20px; border:1px dashed #d6c5cb; background:#faf7f5; }
+.booking-empty strong { font:500 18px Georgia,serif; }
+.booking-empty p { margin:6px 0 0; color:#7e7580; font-size:10px; line-height:1.7; }
+.booking-errors,.booking-field .errorlist { color:#9b4549; font-size:10px; }
+.booking-field .errorlist { margin:0; padding-left:17px; }
+.appointment-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:22px 0; }
+.appointment-detail-grid > div { padding-bottom:12px; border-bottom:1px solid #e8e0dc; }
+.appointment-detail-grid small,.appointment-detail-grid strong { display:block; }
+.appointment-detail-grid small { margin-bottom:5px; color:#9c7380; font-size:8px; font-weight:800; letter-spacing:.12em; }
+.appointment-detail-grid strong { font-size:12px; }
+.appointment-list,.staff-appointment-list { display:grid; gap:10px; }
+.appointment-account-row,.staff-appointment-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:20px; padding:20px; border:1px solid #e8e0dc; background:#fffdfb; }
+.appointment-reference { color:#9c7380; font-size:8px; font-weight:800; letter-spacing:.13em; }
+.appointment-account-main h2,.staff-appointment-copy h2 { margin:5px 0; font:500 21px Georgia,serif; }
+.appointment-account-main p,.staff-appointment-copy p { margin:0; color:#665963; font-size:11px; }
+.appointment-account-main small,.staff-appointment-copy small { display:block; margin-top:4px; color:#7e7580; font-size:9px; }
+.appointment-account-status { display:grid; justify-items:end; gap:7px; text-align:right; }
+.appointment-account-status strong,.staff-appointment-actions > strong { font-size:10px; }
+.appointment-account-status small { color:#7e7580; font-size:10px; }
+.text-button { border:0; background:none; color:#945b6e; cursor:pointer; font-size:9px; text-decoration:underline; }
+.staff-date-filter { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:0 0 22px; padding:15px; border:1px solid #e8e0dc; background:#fffdfb; }
+.staff-date-filter input { width:auto; min-width:160px; }
+.staff-date-filter .button { min-height:40px; border:0; cursor:pointer; }
+.staff-date-filter .text-link { margin-left:auto; color:#945b6e; }
+.staff-appointment-row { grid-template-columns:85px minmax(0,1fr) 130px; align-items:start; }
+.staff-appointment-time strong,.staff-appointment-time small { display:block; }
+.staff-appointment-time strong { font:600 20px Georgia,serif; }
+.staff-appointment-time small { margin-top:3px; color:#7e7580; font-size:10px; }
+.appointment-notes { margin-top:8px !important; }
+.staff-appointment-actions { display:grid; justify-items:end; gap:7px; }
+.staff-appointment-actions form { margin:0; }
+.small-action { padding:6px 9px; border:1px solid #352632; background:#352632; color:#fff; cursor:pointer; font-size:8px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.muted-action { border-color:#d9cbd0; background:transparent; color:#8b6573; }
+.service-book-link,.account-section-link { color:#945b6e; font-size:8px; font-weight:800; letter-spacing:.08em; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
+.account-section-link { font-size:10px; letter-spacing:0; }
+@media(max-width:700px) {
+  .booking-filter { grid-template-columns:1fr; }
+  .booking-filter .button { justify-self:start; }
+  .booking-contact-grid,.appointment-detail-grid { grid-template-columns:1fr; }
+  .appointment-account-row { grid-template-columns:1fr; }
+  .appointment-account-status { justify-items:start; text-align:left; }
+  .staff-appointment-row { grid-template-columns:65px minmax(0,1fr); gap:10px; }
+  .staff-appointment-actions { grid-column:2; justify-items:start; display:flex; flex-wrap:wrap; align-items:center; }
+  .staff-date-filter .text-link { margin-left:0; }
+}

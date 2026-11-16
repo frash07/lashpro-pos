@@ -1,0 +1,24 @@
+{% extends "storefront/base.html" %}
+{% block title %}Appointment {{ appointment.reference }} | LashPro{% endblock %}
+{% block content %}
+<section class="order-panel appointment-confirmation">
+  <p class="eyebrow"><span></span> APPOINTMENT REQUEST</p>
+  <h1>Your time is <em>requested.</em></h1>
+  <p class="order-reference">{{ appointment.reference }}</p>
+  <div class="order-status"><span>Status</span><strong>{{ appointment.get_status_display }}</strong></div>
+  <div class="appointment-detail-grid">
+    <div><small>SERVICE</small><strong>{{ appointment.service_name_snapshot }}</strong></div>
+    <div><small>DATE & TIME</small><strong>{{ appointment.starts_at|date:"l, d M Y" }} · {{ appointment.starts_at|date:"g:i A" }}</strong></div>
+    <div><small>PROVIDER</small><strong>{{ appointment.staff.get_full_name|default:appointment.staff.username }}</strong></div>
+    <div><small>DURATION</small><strong>{{ appointment.duration_minutes_snapshot }} minutes</strong></div>
+    <div><small>PRICE</small><strong>KSh {{ appointment.price_snapshot|floatformat:2 }}</strong></div>
+    <div><small>CLIENT</small><strong>{{ appointment.customer_name }}</strong></div>
+  </div>
+  <p class="payment-notice"><strong>What happens next?</strong>Your request is saved, but the studio still needs to confirm the appointment. Payment is not collected online. Please keep this reference for your records.</p>
+  {% if appointment.account %}
+    <a class="button button-dark" href="{% url 'appointments:account' %}">View my appointments</a>
+  {% else %}
+    <a class="text-link" href="{% url 'storefront:home' %}">Return to the storefront</a>
+  {% endif %}
+</section>
+{% endblock %}

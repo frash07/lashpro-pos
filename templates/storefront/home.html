@@ -9,6 +9,7 @@
     <div class="hero-actions">
       <a class="button button-light" href="#shop">Explore products <span aria-hidden="true">→</span></a>
       <a class="text-link text-link-light" href="#services">Discover services</a>
+      <a class="text-link text-link-light" href="{% url 'appointments:book' %}">Book a treatment</a>
     </div>
     <div class="hero-note"><span class="note-line"></span><span>TOOLS FOR ARTISTS. CARE FOR EVERY CLIENT.</span></div>
   </div>
@@ -65,7 +66,7 @@
 <section class="services-section" id="services">
   <div>
     <div class="section-heading">
-      <div><p class="eyebrow"><span></span> THE EXPERIENCE</p><h2>Services with <em>intention.</em></h2><p class="section-subtitle">Explore the treatments available from the LashPro service menu.</p></div>
+      <div><p class="eyebrow"><span></span> THE EXPERIENCE</p><h2>Services with <em>intention.</em></h2><p class="section-subtitle">Choose a treatment and book a time that works for you.</p></div>
       <span class="section-count">{{ service_count|stringformat:"02d" }} SERVICES</span>
     </div>
     {% if kind != 'products' %}
@@ -73,7 +74,7 @@
         {% for service in services %}
           <article class="service-card">
             <div class="service-visual"><span class="service-symbol" aria-hidden="true">✳</span><span class="service-duration">{{ service.duration_minutes }} MIN</span></div>
-            <div class="service-content"><p class="service-kicker">LASHPRO SERVICE</p><h3>{{ service.name }}</h3><div class="service-footer"><strong>KSh {{ service.price|floatformat:2 }}</strong><span>APPOINTMENT BOOKING COMING SOON</span></div></div>
+            <div class="service-content"><p class="service-kicker">LASHPRO SERVICE</p><h3>{{ service.name }}</h3><div class="service-footer"><strong>KSh {{ service.price|floatformat:2 }}</strong><a class="service-book-link" href="{% url 'appointments:book' %}?service={{ service.pk }}">BOOK NOW →</a></div></div>
           </article>
         {% empty %}
           <div class="empty-state"><span>✳</span><h3>No services found</h3><p>Try another search, or check back when the service menu is updated.</p></div>
@@ -84,7 +85,7 @@
 </section>
 <section class="about-section" id="about">
   <div class="about-mark">L.</div>
-  <div><p class="eyebrow"><span></span> ABOUT LASHPRO</p><h2>Made for the details<br>that make the difference.</h2><p class="about-copy">LashPro brings professional lash products and beauty services together in one place. Product orders are submitted for studio confirmation; payments and inventory are handled through the staff POS workflow.</p></div>
+  <div><p class="eyebrow"><span></span> ABOUT LASHPRO</p><h2>Made for the details<br>that make the difference.</h2><p class="about-copy">LashPro brings professional lash products and beauty services together in one place. Request an appointment online, or submit product orders for studio confirmation. Payments and inventory remain managed through the staff POS workflow.</p></div>
   <a class="button button-dark" href="{{ pos_url }}/accounts/login/">Staff portal <span aria-hidden="true">↗</span></a>
 </section>
 {% endblock %}

@@ -1,0 +1,36 @@
+{% extends "storefront/base.html" %}
+{% block title %}Appointment schedule | LashPro{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow"><span></span> STAFF SCHEDULE</p><h1>Appointments <em>schedule.</em></h1><p class="section-subtitle">Review requests, confirm bookings and update visit outcomes.</p></section>
+<form class="staff-date-filter" method="get" action="{% url 'appointments:staff-day' %}">
+  <label for="schedule-date">Schedule date</label><input id="schedule-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+  <button class="button button-dark" type="submit">View schedule</button>
+  <a class="text-link" href="/admin/appointments/staffavailability/">Manage weekly availability</a>
+  <a class="text-link" href="/admin/appointments/stafftimeoff/">Manage time off</a>
+</form>
+<div class="staff-appointment-list">
+  {% for appointment in appointments %}
+    <article class="staff-appointment-row">
+      <div class="staff-appointment-time"><strong>{{ appointment.starts_at|date:"g:i A" }}</strong><small>{{ appointment.ends_at|date:"g:i A" }}</small></div>
+      <div class="staff-appointment-copy">
+        <h2>{{ appointment.service_name_snapshot }}</h2>
+        <p>{{ appointment.customer_name }} · {{ appointment.customer_phone }}</p>
+        <small>{{ appointment.staff.get_full_name|default:appointment.staff.username }} · {{ appointment.duration_minutes_snapshot }} min · {{ appointment.reference }}</small>
+        {% if appointment.notes %}<p class="appointment-notes">{{ appointment.notes }}</p>{% endif %}
+      </div>
+      <div class="staff-appointment-actions"><strong>{{ appointment.get_status_display }}</strong>
+        {% if can_confirm and appointment.status == "REQUESTED" %}
+          <form method="post" action="{% url 'appointments:update-status' appointment.pk %}">{% csrf_token %}<input type="hidden" name="status" value="CONFIRMED"><button class="small-action" type="submit">Confirm</button></form>
+          <form method="post" action="{% url 'appointments:update-status' appointment.pk %}">{% csrf_token %}<input type="hidden" name="status" value="CANCELLED"><button class="small-action muted-action" type="submit">Cancel</button></form>
+        {% endif %}
+        {% if appointment.status == "REQUESTED" or appointment.status == "CONFIRMED" %}
+          <form method="post" action="{% url 'appointments:update-status' appointment.pk %}">{% csrf_token %}<input type="hidden" name="status" value="COMPLETED"><button class="small-action" type="submit">Complete</button></form>
+          <form method="post" action="{% url 'appointments:update-status' appointment.pk %}">{% csrf_token %}<input type="hidden" name="status" value="NO_SHOW"><button class="small-action muted-action" type="submit">No-show</button></form>
+        {% endif %}
+      </div>
+    </article>
+  {% empty %}
+    <div class="empty-state"><span>✳</span><h2>No appointments for this date</h2><p>Confirmed and requested bookings assigned to you will appear here.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}
