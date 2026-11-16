@@ -126,12 +126,14 @@ class InventoryMovement(models.Model):
         SERVICE_USE = "SERVICE_USE", "Service consumable"
         ADJUSTMENT = "ADJUSTMENT", "Approved adjustment"
         REVERSAL = "REVERSAL", "Reversal"
+        ONLINE_ORDER = "ONLINE_ORDER", "Online order fulfilment"
 
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="stock_movements")
     movement_type = models.CharField(max_length=20, choices=Type.choices)
     quantity_delta = models.DecimalField(max_digits=12, decimal_places=3)
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     sale_line = models.ForeignKey("sales.SaleLine", on_delete=models.PROTECT, null=True, blank=True, related_name="inventory_movements")
+    storefront_order_line = models.OneToOneField("storefront.StorefrontOrderLine", on_delete=models.PROTECT, null=True, blank=True, related_name="inventory_movement")
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="stock_movements")
     reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -145,6 +147,7 @@ class InventoryMovement(models.Model):
             models.CheckConstraint(condition=Q(quantity_delta__gt=0) | Q(quantity_delta__lt=0), name="inventory_movement_delta_nonzero"),
             models.UniqueConstraint(fields=("sale_line",), condition=Q(movement_type="SALE", sale_line__isnull=False), name="inventory_one_sale_movement_per_line"),
             models.CheckConstraint(condition=Q(receipt_line__isnull=True) | Q(movement_type="PURCHASE"), name="inventory_receipt_line_purchase_only"),
+            models.CheckConstraint(condition=(Q(movement_type="ONLINE_ORDER", storefront_order_line__isnull=False) | (~Q(movement_type="ONLINE_ORDER") & Q(storefront_order_line__isnull=True))), name="inventory_online_order_link_required"),
         ]
 
     def save(self, *args, **kwargs):
