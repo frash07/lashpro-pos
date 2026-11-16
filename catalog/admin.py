@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db.models import F
+from django.db.models import F, Q
 from .models import Product, Service
 
 
@@ -20,12 +20,12 @@ class LowStockFilter(admin.SimpleListFilter):
         return queryset
 
 
-from django.db.models import Q
-
-
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("image_preview", "sku", "name", "selling_price", "on_hand", "reorder_level", "low_stock", "active")
+    list_display = (
+        "image_preview", "sku", "name", "selling_price",
+        "on_hand", "reorder_level", "low_stock", "active",
+    )
     list_filter = ("active", LowStockFilter)
     search_fields = ("sku", "name")
     change_form_template = "admin/catalog/product/change_form.html"
