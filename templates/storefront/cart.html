@@ -8,7 +8,7 @@
       {% for item in items %}
         <article class="cart-line">
           <div class="cart-product-image">{% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% else %}<span>LP</span>{% endif %}</div>
-          <div class="cart-product-copy"><h2>{{ item.product.name }}</h2><p class="sku">SKU · {{ item.product.sku }}</p><p>KSh {{ item.product.selling_price|floatformat:2 }} each</p>{% if not item.available %}<p class="stock-warning">Quantity exceeds current available stock ({{ item.product.on_hand }}).</p>{% endif %}</div>
+          <div class="cart-product-copy"><h2>{{ item.product.name }}</h2><p class="sku">SKU · {{ item.product.sku }}</p><p>KSh {{ item.product.selling_price|floatformat:2 }} each</p>{% if not item.available %}<p class="stock-warning">Quantity exceeds currently unreserved stock ({{ item.product.available_stock }}).</p>{% endif %}</div>
           <form class="cart-quantity" method="post" action="{% url 'storefront:cart-update' item.product.pk %}">{% csrf_token %}<label for="qty-{{ item.product.pk }}">Qty</label><input id="qty-{{ item.product.pk }}" type="number" name="quantity" min="0" max="99" value="{{ item.quantity }}"><button type="submit">Update</button></form>
           <strong class="cart-line-total">KSh {{ item.line_total|floatformat:2 }}</strong>
           <form method="post" action="{% url 'storefront:cart-remove' item.product.pk %}">{% csrf_token %}<button class="remove-link" type="submit">Remove</button></form>
