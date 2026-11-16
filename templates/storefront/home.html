@@ -1,168 +1,90 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#171419">
-  <meta name="description" content="Shop professional lash products and explore LashPro beauty services.">
-  <title>LashPro | Lash products & beauty services</title>
-  <link rel="stylesheet" href="{% static 'storefront/css/storefront.css' %}">
-</head>
-<body>
-  <div class="announcement">
-    <span>Professional lash essentials</span>
-    <span class="announcement-divider">/</span>
-    <span>Products and services in one place</span>
+{% extends "storefront/base.html" %}
+{% block title %}LashPro | Lash products & beauty services{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow"><span></span> THE LASHPRO COLLECTION</p>
+    <h1>Everything for<br>your <em>lash business.</em></h1>
+    <p class="hero-lede">Professional products, considered treatments and the essentials behind every beautiful set.</p>
+    <div class="hero-actions">
+      <a class="button button-light" href="#shop">Explore products <span aria-hidden="true">→</span></a>
+      <a class="text-link text-link-light" href="#services">Discover services</a>
+    </div>
+    <div class="hero-note"><span class="note-line"></span><span>TOOLS FOR ARTISTS. CARE FOR EVERY CLIENT.</span></div>
   </div>
-
-  <header class="site-header">
-    <div class="shell nav-shell">
-      <a class="brand" href="{% url 'storefront:home' %}" aria-label="LashPro home">
-        <span class="brand-mark">L</span>
-        <span class="brand-copy">
-          <strong>LASH<span>PRO</span></strong>
-          <small>BEAUTY · PROFESSIONAL</small>
-        </span>
-      </a>
-      <nav class="main-nav" aria-label="Main navigation">
-        <a href="#shop">Shop products</a>
-        <a href="#services">Our services</a>
-        <a href="#about">About LashPro</a>
-      </nav>
-      <a class="staff-link" href="{{ pos_url }}/accounts/login/">Staff login <span aria-hidden="true">↗</span></a>
+  <div class="hero-art" aria-label="Abstract LashPro beauty campaign artwork" role="img">
+    <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-sun"></div>
+    <div class="art-word">LASH<br><i>RITUAL</i></div>
+    <div class="art-caption"><span>01 / 03</span><span>THE ART OF DETAIL</span></div>
+  </div>
+  <div class="hero-index">L / P <span>EST. BEAUTY</span></div>
+</section>
+<section class="trust-strip" aria-label="LashPro highlights">
+  <div><span class="trust-number">01</span><span><strong>Professional quality</strong><small>Products for lash artists</small></span></div>
+  <div><span class="trust-number">02</span><span><strong>One LashPro catalogue</strong><small>Products and services together</small></span></div>
+  <div><span class="trust-number">03</span><span><strong>Locally managed</strong><small>One connected business system</small></span></div>
+</section>
+<section class="catalog-section" id="shop">
+  <div class="section-heading">
+    <div><p class="eyebrow"><span></span> THE SHOP</p><h2>Professional <em>essentials.</em></h2><p class="section-subtitle">Browse the products currently available in the LashPro catalogue.</p></div>
+    <span class="section-count">{{ product_count|stringformat:"02d" }} PRODUCTS</span>
+  </div>
+  <form class="catalog-tools" method="get" action="{% url 'storefront:home' %}">
+    <label class="search-box"><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search products and services" aria-label="Search products and services"></label>
+    <div class="filter-links" aria-label="Catalogue filters">
+      <button type="submit" name="kind" value="all" class="{% if kind == 'all' %}selected{% endif %}">All</button>
+      <button type="submit" name="kind" value="products" class="{% if kind == 'products' %}selected{% endif %}">Products</button>
+      <button type="submit" name="kind" value="services" class="{% if kind == 'services' %}selected{% endif %}">Services</button>
     </div>
-  </header>
-
-  <main>
-    <section class="hero shell">
-      <div class="hero-copy">
-        <p class="eyebrow"><span></span> THE LASHPRO COLLECTION</p>
-        <h1>Everything for<br>your <em>lash business.</em></h1>
-        <p class="hero-lede">Professional products, considered treatments and the essentials behind every beautiful set.</p>
-        <div class="hero-actions">
-          <a class="button button-light" href="#shop">Explore products <span aria-hidden="true">→</span></a>
-          <a class="text-link text-link-light" href="#services">Discover services</a>
-        </div>
-        <div class="hero-note">
-          <span class="note-line"></span>
-          <span>TOOLS FOR ARTISTS. CARE FOR EVERY CLIENT.</span>
-        </div>
-      </div>
-      <div class="hero-art" aria-label="Abstract LashPro beauty campaign artwork" role="img">
-        <div class="art-orbit orbit-one"></div>
-        <div class="art-orbit orbit-two"></div>
-        <div class="art-sun"></div>
-        <div class="art-word">LASH<br><i>RITUAL</i></div>
-        <div class="art-caption"><span>01 / 03</span><span>THE ART OF DETAIL</span></div>
-      </div>
-      <div class="hero-index">L / P <span>EST. BEAUTY</span></div>
-    </section>
-
-    <section class="trust-strip shell" aria-label="LashPro highlights">
-      <div><span class="trust-number">01</span><span><strong>Professional quality</strong><small>Products for lash artists</small></span></div>
-      <div><span class="trust-number">02</span><span><strong>One LashPro catalogue</strong><small>Products and services together</small></span></div>
-      <div><span class="trust-number">03</span><span><strong>Locally managed</strong><small>One connected business system</small></span></div>
-    </section>
-
-    <section class="catalog-section shell" id="shop">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow"><span></span> THE SHOP</p>
-          <h2>Professional <em>essentials.</em></h2>
-          <p class="section-subtitle">Browse the products currently available in the LashPro catalogue.</p>
-        </div>
-        <span class="section-count">{{ product_count|stringformat:"02d" }} PRODUCTS</span>
-      </div>
-
-      <form class="catalog-tools" method="get" action="{% url 'storefront:home' %}">
-        <label class="search-box">
-          <span aria-hidden="true">⌕</span>
-          <input type="search" name="q" value="{{ query }}" placeholder="Search products and services" aria-label="Search products and services">
-        </label>
-        <div class="filter-links" aria-label="Catalogue filters">
-          <button type="submit" name="kind" value="all" class="{% if kind == 'all' %}selected{% endif %}">All</button>
-          <button type="submit" name="kind" value="products" class="{% if kind == 'products' %}selected{% endif %}">Products</button>
-          <button type="submit" name="kind" value="services" class="{% if kind == 'services' %}selected{% endif %}">Services</button>
-        </div>
-      </form>
-
-      {% if kind != 'services' %}
-        <div class="product-grid">
-          {% for product in products %}
-            <article class="catalog-card">
-              <div class="catalog-image product-image">
-                {% if product.image %}
-                  <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
-                {% else %}
-                  <span class="image-monogram" aria-hidden="true">LP</span>
-                {% endif %}
-                <span class="image-label">LASHPRO / PRODUCT</span>
-              </div>
-              <div class="catalog-card-body">
-                <div class="card-meta"><span>PRODUCT</span>{% if product.on_hand > 0 %}<span class="stock-status">IN STOCK</span>{% else %}<span class="stock-status stock-empty">OUT OF STOCK</span>{% endif %}</div>
-                <h3>{{ product.name }}</h3>
-                <p class="sku">SKU · {{ product.sku }}</p>
-                <div class="card-bottom"><strong>KSh {{ product.selling_price|floatformat:2 }}</strong><span class="coming-soon">ONLINE ORDERING SOON</span></div>
-              </div>
-            </article>
-          {% empty %}
-            <div class="empty-state"><span>✳</span><h3>No products found</h3><p>Try another search, or check back when new products are added.</p></div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    </section>
-
-    <section class="services-section" id="services">
-      <div class="shell">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow"><span></span> THE EXPERIENCE</p>
-            <h2>Services with <em>intention.</em></h2>
-            <p class="section-subtitle">Explore the treatments available from the LashPro service menu.</p>
+  </form>
+  {% if kind != 'services' %}
+    <div class="product-grid">
+      {% for product in products %}
+        <article class="catalog-card">
+          <div class="catalog-image product-image">
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">{% else %}<span class="image-monogram" aria-hidden="true">LP</span>{% endif %}
+            <span class="image-label">LASHPRO / PRODUCT</span>
           </div>
-          <span class="section-count">{{ service_count|stringformat:"02d" }} SERVICES</span>
-        </div>
-
-        {% if kind != 'products' %}
-          <div class="service-grid">
-            {% for service in services %}
-              <article class="service-card">
-                <div class="service-visual"><span class="service-symbol" aria-hidden="true">✳</span><span class="service-duration">{{ service.duration_minutes }} MIN</span></div>
-                <div class="service-content">
-                  <p class="service-kicker">LASHPRO SERVICE</p>
-                  <h3>{{ service.name }}</h3>
-                  <div class="service-footer"><strong>KSh {{ service.price|floatformat:2 }}</strong><span>ONLINE BOOKING SOON</span></div>
-                </div>
-              </article>
-            {% empty %}
-              <div class="empty-state"><span>✳</span><h3>No services found</h3><p>Try another search, or check back when the service menu is updated.</p></div>
-            {% endfor %}
+          <div class="catalog-card-body">
+            <div class="card-meta"><span>PRODUCT</span>{% if product.on_hand > 0 %}<span class="stock-status">IN STOCK</span>{% else %}<span class="stock-status stock-empty">OUT OF STOCK</span>{% endif %}</div>
+            <h3>{{ product.name }}</h3>
+            <p class="sku">SKU · {{ product.sku }}</p>
+            <div class="card-bottom"><strong>KSh {{ product.selling_price|floatformat:2 }}</strong>
+              {% if product.on_hand > 0 %}
+                <form method="post" action="{% url 'storefront:cart-add' product.pk %}">{% csrf_token %}<button class="button button-dark add-to-bag" type="submit">Add to bag +</button></form>
+              {% else %}<span class="coming-soon">CURRENTLY UNAVAILABLE</span>{% endif %}
+            </div>
           </div>
-        {% endif %}
-      </div>
-    </section>
-
-    <section class="about-section shell" id="about">
-      <div class="about-mark">L.</div>
-      <div>
-        <p class="eyebrow"><span></span> ABOUT LASHPRO</p>
-        <h2>Made for the details<br>that make the difference.</h2>
-        <p class="about-copy">LashPro brings professional lash products and beauty services together in one place. This catalogue is connected to the same product and service records used by the LashPro business system.</p>
-      </div>
-      <a class="button button-dark" href="{{ pos_url }}/accounts/login/">Staff portal <span aria-hidden="true">↗</span></a>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="shell footer-inner">
-      <a class="brand brand-footer" href="{% url 'storefront:home' %}">
-        <span class="brand-mark">L</span>
-        <span class="brand-copy"><strong>LASH<span>PRO</span></strong><small>BEAUTY · PROFESSIONAL</small></span>
-      </a>
-      <p>Products and services managed through one connected LashPro system.</p>
-      <span class="copyright">© {% now "Y" %} LASH PRO</span>
+        </article>
+      {% empty %}
+        <div class="empty-state"><span>✳</span><h3>No products found</h3><p>Try another search, or check back when new products are added.</p></div>
+      {% endfor %}
     </div>
-  </footer>
-</body>
-</html>
+  {% endif %}
+</section>
+<section class="services-section" id="services">
+  <div>
+    <div class="section-heading">
+      <div><p class="eyebrow"><span></span> THE EXPERIENCE</p><h2>Services with <em>intention.</em></h2><p class="section-subtitle">Explore the treatments available from the LashPro service menu.</p></div>
+      <span class="section-count">{{ service_count|stringformat:"02d" }} SERVICES</span>
+    </div>
+    {% if kind != 'products' %}
+      <div class="service-grid">
+        {% for service in services %}
+          <article class="service-card">
+            <div class="service-visual"><span class="service-symbol" aria-hidden="true">✳</span><span class="service-duration">{{ service.duration_minutes }} MIN</span></div>
+            <div class="service-content"><p class="service-kicker">LASHPRO SERVICE</p><h3>{{ service.name }}</h3><div class="service-footer"><strong>KSh {{ service.price|floatformat:2 }}</strong><span>APPOINTMENT BOOKING COMING SOON</span></div></div>
+          </article>
+        {% empty %}
+          <div class="empty-state"><span>✳</span><h3>No services found</h3><p>Try another search, or check back when the service menu is updated.</p></div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+<section class="about-section" id="about">
+  <div class="about-mark">L.</div>
+  <div><p class="eyebrow"><span></span> ABOUT LASHPRO</p><h2>Made for the details<br>that make the difference.</h2><p class="about-copy">LashPro brings professional lash products and beauty services together in one place. Product orders are submitted for studio confirmation; payments and inventory are handled through the staff POS workflow.</p></div>
+  <a class="button button-dark" href="{{ pos_url }}/accounts/login/">Staff portal <span aria-hidden="true">↗</span></a>
+</section>
+{% endblock %}

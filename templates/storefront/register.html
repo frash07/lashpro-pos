@@ -1,0 +1,19 @@
+{% extends "storefront/base.html" %}
+{% block title %}Create a customer account | LashPro{% endblock %}
+{% block content %}
+<section class="account-panel">
+  <p class="eyebrow"><span></span> CUSTOMER ACCOUNT</p>
+  <h1>Create your <em>LashPro account.</em></h1>
+  <p class="section-subtitle">Save your customer details and keep your storefront orders together.</p>
+  <form method="post" class="storefront-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>
+    {% endfor %}
+    <button class="button button-dark" type="submit">Create account</button>
+  </form>
+  <p class="form-footnote">Already registered? <a href="{% url 'storefront:login' %}">Sign in</a>.</p>
+  <p class="form-footnote">Customer accounts do not provide access to the staff POS.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "storefront/base.html" %}
+{% block title %}Order {{ order.reference }} | LashPro{% endblock %}
+{% block content %}
+<section class="order-panel">
+  <p class="eyebrow"><span></span> ORDER REQUEST RECEIVED</p>
+  <h1>Thank you, <em>{{ order.customer_name }}.</em></h1>
+  <p class="order-reference">Reference · {{ order.reference }}</p>
+  <div class="order-status"><span>Status</span><strong>{{ order.get_status_display }}</strong></div>
+  <div class="order-detail-lines">
+    {% for line in order.lines.all %}
+      <div class="summary-line"><span>{{ line.quantity }} × {{ line.name_snapshot }} <small>({{ line.sku_snapshot }})</small></span><strong>KSh {{ line.line_total|floatformat:2 }}</strong></div>
+    {% endfor %}
+  </div>
+  <div class="summary-total"><span>Estimated total</span><strong>KSh {{ order.total_amount|floatformat:2 }}</strong></div>
+  <div class="payment-notice"><strong>This is not a payment confirmation.</strong><span>Your order request has not been paid and stock has not been reserved. The LashPro team will contact you using {{ order.customer_phone }} to confirm availability and collection. Payment is made at the studio.</span></div>
+  <p class="form-footnote">Keep your order reference for follow-up. This private order link also lets you check the latest status.</p>
+  <a class="button button-dark" href="{% url 'storefront:home' %}">Return to LashPro</a>
+</section>
+{% endblock %}
