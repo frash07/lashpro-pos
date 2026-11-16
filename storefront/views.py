@@ -174,10 +174,9 @@ def cart_update(request, product_id):
         cart.pop(str(product.pk), None)
     else:
         available_quantity = max(int(available_stock_for_product(product)), 0)
-    if quantity > 0 and (quantity > 99 or quantity > available_quantity):
-        messages.error(request, f"Only {available_quantity} unreserved unit(s) of {product.name} are currently available.")
-        return redirect("storefront:cart")
-    elif quantity > 0:
+        if quantity > 99 or quantity > available_quantity:
+            messages.error(request, f"Only {available_quantity} unreserved unit(s) of {product.name} are currently available.")
+            return redirect("storefront:cart")
         cart[str(product.pk)] = quantity
     request.session[CART_SESSION_KEY] = cart
     request.session.modified = True
