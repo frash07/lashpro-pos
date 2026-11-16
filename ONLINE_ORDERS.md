@@ -36,6 +36,6 @@ On fulfilment, the system deducts physical on-hand quantity, changes the reserva
 
 The release adds:
 - storefront.0002_stock_reservations
-- inventory.0005_online_order_movements
+- inventory.0006_online_order_movements
 
 Deploy with the normal release.sh command so both migrations run before the web machine is updated. No new environment variables or external payment credentials are required.
