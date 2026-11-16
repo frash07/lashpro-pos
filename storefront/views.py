@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from accounts.models import User
 from catalog.models import Product, Service
 from customers.models import Customer
+from inventory.services import available_stock_by_product, available_stock_for_product
 from .forms import CustomerLoginForm, CustomerRegistrationForm, StorefrontCheckoutForm
 from .models import StorefrontOrder, StorefrontProfile
 from .services import create_storefront_order
@@ -69,12 +70,14 @@ def _cart_details(request):
         if product_id > 0 and 1 <= quantity <= 99:
             cleaned[str(product_id)] = quantity
 
-    products = Product.objects.filter(pk__in=[int(key) for key in cleaned], active=True).order_by("name")
+    products = list(Product.objects.filter(pk__in=[int(key) for key in cleaned], active=True).order_by("name"))
+    available_by_id = available_stock_by_product(products)
     items = []
     total = 0
     for product in products:
+        product.available_stock = available_by_id[product.pk]
         quantity = cleaned[str(product.pk)]
-        available = product.on_hand >= quantity
+        available = product.available_stock >= quantity
         line_total = product.selling_price * quantity
         total += line_total
         items.append({
@@ -116,13 +119,18 @@ def home(request):
     elif kind == "services":
         products = Product.objects.none()
 
+    products = list(products)
+    available_by_id = available_stock_by_product(products)
+    for product in products:
+        product.available_stock = available_by_id[product.pk]
+
     context = _base_context(request)
     context.update({
         "products": products,
         "services": services,
         "query": query,
         "kind": kind,
-        "product_count": products.count(),
+        "product_count": len(products),
         "service_count": services.count(),
     })
     return render(request, "storefront/home.html", context)
@@ -131,7 +139,7 @@ def home(request):
 @require_POST
 def cart_add(request, product_id):
     product = get_object_or_404(Product, pk=product_id, active=True)
-    available_quantity = int(product.on_hand)
+    available_quantity = max(int(available_stock_for_product(product)), 0)
     if available_quantity < 1:
         messages.error(request, "This product is currently out of stock.")
         return redirect("storefront:home")
@@ -164,8 +172,9 @@ def cart_update(request, product_id):
         cart = {}
     if quantity <= 0:
         cart.pop(str(product.pk), None)
-    elif quantity > 99 or quantity > int(product.on_hand):
-        messages.error(request, f"Only {int(product.on_hand)} unit(s) of {product.name} are currently available.")
+    elif quantity > 99 or quantity > max(int(available_stock_for_product(product)), 0):
+        available_quantity = max(int(available_stock_for_product(product)), 0)
+        messages.error(request, f"Only {available_quantity} unreserved unit(s) of {product.name} are currently available.")
         return redirect("storefront:cart")
     else:
         cart[str(product.pk)] = quantity
