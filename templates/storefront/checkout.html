@@ -1,7 +1,7 @@
 {% extends "storefront/base.html" %}
 {% block title %}Checkout | LashPro{% endblock %}
 {% block content %}
-<section class="page-heading"><p class="eyebrow"><span></span> CHECKOUT</p><h1>Almost <em>yours.</em></h1><p class="section-subtitle">Add your contact details so the studio can confirm stock and collection.</p></section>
+<section class="page-heading"><p class="eyebrow"><span></span> CHECKOUT</p><h1>Almost <em>yours.</em></h1><p class="section-subtitle">Your order reserves the available items while the studio prepares collection.</p></section>
 <div class="checkout-layout">
   <section class="checkout-details">
     {% if is_guest_checkout %}<p class="checkout-account-note">Checking out as a guest. <a href="{% url 'storefront:login' %}">Sign in</a> or <a href="{% url 'storefront:register' %}">create an account</a> to keep your orders together.</p>{% endif %}
@@ -14,14 +14,14 @@
           <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
         {% endif %}
       {% endfor %}
-      <div class="payment-notice"><strong>Pay at the studio</strong><span>No online payment is taken at this stage. The team will confirm availability and collection before payment.</span></div>
-      <button class="button button-dark" type="submit">Submit order request</button>
+      <div class="payment-notice"><strong>Pay at the studio</strong><span>No online payment is taken. The studio will confirm collection arrangements; payment is made at the studio.</span></div>
+      <button class="button button-dark" type="submit">Place order</button>
     </form>
   </section>
   <aside class="cart-summary checkout-summary"><p class="eyebrow"><span></span> YOUR ORDER</p>
     {% for item in items %}<div class="summary-line"><span>{{ item.quantity }} × {{ item.product.name }}</span><strong>KSh {{ item.line_total|floatformat:2 }}</strong></div>{% endfor %}
     <div class="summary-total"><span>Estimated total</span><strong>KSh {{ total|floatformat:2 }}</strong></div>
-    <p>Submitting this request does not reserve stock or create a paid POS sale. LashPro staff will confirm the order.</p>
+    <p>Submitting reserves the requested stock but does not create a paid POS sale. LashPro staff will confirm and prepare your collection.</p>
     <a class="text-link" href="{% url 'storefront:cart' %}">Edit bag</a>
   </aside>
 </div>
