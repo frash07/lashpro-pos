@@ -108,6 +108,24 @@ def create_storefront_order(
     if len(products) != len(cleaned_items):
         raise ValidationError({"items": "One or more products are no longer available."})
 
+    # A concurrent retry with the same key may have completed while this
+    # request waited for the product-row locks. Recheck before stock validation
+    # so the original order wins even when its reservation uses the last unit.
+    existing = StorefrontOrder.objects.filter(idempotency_key=key).first()
+    if existing:
+        if _matches_existing_order(
+            existing,
+            items=cleaned_items,
+            customer_name=customer_name,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
+            notes=notes,
+            account=account,
+            customer=customer,
+        ):
+            return existing
+        raise ValidationError({"idempotency_key": "This checkout key was already used. Start a fresh checkout."})
+
     reserved_by_product = reserved_stock_by_product(product.pk for product in locked_products)
     order_lines = []
     total = Decimal("0.00")
