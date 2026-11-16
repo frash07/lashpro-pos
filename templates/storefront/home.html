@@ -47,11 +47,11 @@
             <span class="image-label">LASHPRO / PRODUCT</span>
           </div>
           <div class="catalog-card-body">
-            <div class="card-meta"><span>PRODUCT</span>{% if product.on_hand > 0 %}<span class="stock-status">IN STOCK</span>{% else %}<span class="stock-status stock-empty">OUT OF STOCK</span>{% endif %}</div>
+            <div class="card-meta"><span>PRODUCT</span>{% if product.available_stock > 0 %}<span class="stock-status">IN STOCK</span>{% else %}<span class="stock-status stock-empty">OUT OF STOCK</span>{% endif %}</div>
             <h3>{{ product.name }}</h3>
             <p class="sku">SKU · {{ product.sku }}</p>
             <div class="card-bottom"><strong>KSh {{ product.selling_price|floatformat:2 }}</strong>
-              {% if product.on_hand > 0 %}
+              {% if product.available_stock > 0 %}
                 <form method="post" action="{% url 'storefront:cart-add' product.pk %}">{% csrf_token %}<button class="button button-dark add-to-bag" type="submit">Add to bag +</button></form>
               {% else %}<span class="coming-soon">CURRENTLY UNAVAILABLE</span>{% endif %}
             </div>
