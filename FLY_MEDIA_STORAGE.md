@@ -1,74 +1,65 @@
-# Shared product image storage on Fly.io
+# Product image storage using Cloudinary
 
-Product and service images are uploaded through Django's admin. The database stores the image path, while the image bytes must be stored somewhere both Fly apps can read.
+The POS and storefront are separate Fly.io applications. Uploaded product images therefore need shared storage rather than either app's local machine filesystem.
 
-The previous default stored files under `/code/media` on the POS machine. That filesystem is not shared with `lashpro-storefront`, is not durable across machine replacement, and production URL configuration does not serve Django's `/media/` route. The application now supports a public Tigris bucket as its default media storage when `BUCKET_NAME` is configured.
+Cloudinary is the temporary no-card option for this deployment. Its Free plan is listed at $0 with no credit card required and includes 25 monthly credits shared across storage, transformations and image bandwidth. Check current usage in the Cloudinary console; the free allowance is not unlimited.
 
-## 1. Create one public bucket
+## 1. Create a Cloudinary Free account
 
-Run this once from the repository directory:
+Register at https://cloudinary.com/users/register/free.
 
-```sh
-fly storage create --public -a lashpro-pos
+In the Cloudinary Console, open **Settings → API Keys**. Copy the `CLOUDINARY_URL` value shown by Cloudinary. It contains the API key, API secret and cloud name.
+
+Treat `CLOUDINARY_URL` as a password. Do not commit it, put it in source code, or send it in chat.
+
+## 2. Configure Fly secrets
+
+The POS app needs the full URL because it accepts and uploads images:
+
+```powershell
+fly secrets set CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME" -a lashpro-pos
 ```
 
-Choose a bucket name when prompted and keep a record of it. Fly sets the Tigris S3 credentials, endpoint, and `BUCKET_NAME` secret on `lashpro-pos`. The bucket must be public because product images are public storefront content.
+The storefront only needs the public cloud name to build image delivery URLs. It does not need the API key or API secret:
 
-For a bucket that already exists, do not create another bucket just for the storefront. Change its access setting to public in the Tigris/Fly storage dashboard if it is private.
-
-## 2. Point the storefront app at the same bucket
-
-The storefront app must use the exact same bucket name. Set the bucket name on the second Fly app:
-
-```sh
-fly secrets set BUCKET_NAME="<your-bucket-name>" -a lashpro-storefront
+```powershell
+fly secrets set CLOUDINARY_CLOUD_NAME="CLOUD_NAME" -a lashpro-storefront
 ```
 
-The code derives the public image host as `<your-bucket-name>.t3.tigrisfiles.io`. If you use a custom domain for Tigris, set `MEDIA_PUBLIC_DOMAIN` to that hostname on **both** Fly apps:
+Replace the placeholders with the values from the Cloudinary console. Do not set `CLOUDINARY_CLOUD_NAME` on the POS app when using `CLOUDINARY_URL`; the Cloudinary SDK treats individually supplied Cloudinary variables as overrides for the URL.
 
-```sh
-fly secrets set MEDIA_PUBLIC_DOMAIN="<your-media-domain>" -a lashpro-pos
-fly secrets set MEDIA_PUBLIC_DOMAIN="<your-media-domain>" -a lashpro-storefront
+## 3. Deploy the same code to both Fly apps
+
+Merge the image-storage pull request, then deploy the updated code to both apps:
+
+```powershell
+fly deploy -a lashpro-pos
+fly deploy --config fly.storefront.toml -a lashpro-storefront
 ```
 
-The storefront only needs the bucket name to render public image URLs. Keep the S3 access key and secret on the POS app, where staff upload images. Do not commit either key to Git.
+Both apps must run the same revision of the application code. The POS stores uploaded images in Cloudinary; the storefront builds public CDN URLs using the cloud name.
 
-## 3. Deploy the same code to both apps
+## 4. Re-upload the five recovered product images
 
-Deploy this branch to `lashpro-pos` and `lashpro-storefront`. Both apps must run the same version of `config/settings.py` and have the same `BUCKET_NAME` (and, if configured, `MEDIA_PUBLIC_DOMAIN`).
+The database still has the old filenames, but the files on the previous Fly machine could not be found. Those old database references do not mean the corresponding files exist in Cloudinary.
 
-## Before changing the Fly apps: back up the current uploads
+After the updated POS app is deployed, open `https://lashpro-pos.fly.dev/admin/` and edit each product. Upload the matching local file from your Downloads folder:
 
-Do this **before creating the bucket, changing Fly secrets, restarting the app, or deploying**. Existing uploads are on the old POS machine's local filesystem:
+| Product | Local file |
+|---|---|
+| Lash Training Strips | `lash_trainging_strips.jpg` |
+| Lash Tray | `Lash_Tray.jpg` |
+| Glue | `glue.jpg` |
+| Spoolies | `spoolies.png` |
+| Tape | `tapeee.jpg` |
 
-```sh
-fly ssh sftp get /code/media/catalog ./catalog-media-backup --recursive -a lashpro-pos
-```
-
-Keep the downloaded `catalog-media-backup` folder safe. If the command reports that the directory does not exist, the old machine may no longer have uploaded files.
-
-## 4. Restore any existing images after the new version is deployed
-
-After the new version and bucket secrets are deployed, restore the backup onto the POS machine and run the migration command:
-
-```sh
-fly ssh console -a lashpro-pos
-mkdir -p /code/media/catalog
-exit
-fly ssh sftp put ./catalog-media-backup /code/media/catalog --recursive -a lashpro-pos
-fly ssh console -a lashpro-pos
-python manage.py copy_local_media_to_tigris
-```
-
-This command copies product/service images from the restored local directory into Tigris without deleting the local originals. It is safe to run again: objects already present in the bucket are skipped. If the command reports missing local files, restore the correct directory structure from your backup or upload the images again through Django admin.
-
-If the old machine has already been replaced and no backup exists, the database may still contain image paths but the actual image files may no longer exist. In that case, re-upload those images.
+The Dummy product has no recovered image. It can remain without an image until its original is found.
 
 ## 5. Verify
 
-1. In `https://lashpro-pos.fly.dev/admin/`, open a product and upload an image.
-2. Save, then confirm the image link points to the Tigris public domain and opens directly.
-3. Open `https://lashpro-storefront.fly.dev/`; the matching product card should display the same image.
-4. Add the image to the cart and confirm it still displays there.
+1. Save a product after choosing its image in the admin.
+2. Confirm the admin preview loads from `res.cloudinary.com`.
+3. Open `https://lashpro-storefront.fly.dev/` and check the corresponding product card.
+4. Add the product to the cart and verify that its image loads there too.
 
-New uploads are stored in the shared bucket, so the admin and storefront apps no longer depend on local machine files.
+New uploads are now stored outside Fly machines, so both apps can display the same image and machine restarts no longer remove the uploaded files.
