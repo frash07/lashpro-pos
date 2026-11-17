@@ -1,0 +1,19 @@
+{% extends "storefront/base.html" %}
+{% block title %}{% block legal_title %}Customer information{% endblock %} | LashPro{% endblock %}
+{% block content %}
+<section class="legal-intro">
+  <p class="eyebrow"><span></span> LASHPRO CUSTOMER INFORMATION</p>
+  <h1>{% block legal_heading %}Customer information{% endblock %}</h1>
+  <p class="section-subtitle">{% block legal_summary %}{% endblock %}</p>
+  <p class="legal-updated">Effective date: 17 November 2026</p>
+</section>
+<article class="legal-document">
+  {% block legal_content %}{% endblock %}
+  <nav class="legal-related" aria-label="Related policies">
+    <a href="{% url 'storefront:privacy' %}">Privacy policy</a>
+    <a href="{% url 'storefront:terms' %}">Terms of service</a>
+    <a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a>
+  </nav>
+  <p class="legal-contact">Questions? Email <a href="mailto:support@lashpro.ke">support@lashpro.ke</a>.</p>
+</article>
+{% endblock %}
