@@ -347,6 +347,22 @@ class StorefrontGuestCheckoutTests(TestCase):
 
 
 class StorefrontOrderInventoryTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            username="online-order-manager",
+            password="Manager!SecurePassphrase932",
+            role=User.Role.OWNER,
+            is_staff=True,
+        )
+        self.product = Product.objects.create(
+            sku="RESERVE-001",
+            name="Reserved Lash Glue",
+            cost_price=Decimal("200.00"),
+            selling_price=Decimal("500.00"),
+            on_hand=Decimal("5.000"),
+            active=True,
+        )
+
     def _create_order(self, quantity=2):
         return create_storefront_order(
             items={str(self.product.pk): quantity},
