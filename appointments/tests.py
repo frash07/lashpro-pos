@@ -71,6 +71,18 @@ class AppointmentBookingTests(TestCase):
         self.assertContains(response, "Nia Kamau")
         self.assertContains(response, 'name="slot"')
 
+    def test_booking_page_explains_when_no_active_services_are_published(self):
+        self.service.active = False
+        self.service.save(update_fields=("active",))
+
+        response = self.client.get(reverse("appointments:book"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Online booking is not available yet")
+        self.assertContains(response, "has not published any active services")
+        self.assertEqual(response.context["active_service_count"], 0)
+        self.assertNotContains(response, 'name="service"')
+
     def test_availability_endpoint_returns_only_open_slots(self):
         response = self.client.get(reverse("appointments:availability"), {
             "service": self.service.pk,
