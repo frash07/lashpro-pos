@@ -9,11 +9,15 @@
 
 <section class="booking-panel">
   <div class="booking-step"><span>01</span><div><strong>Choose your service</strong><small>Availability is calculated from the treatment duration and provider schedules.</small></div></div>
-  <form class="booking-filter" method="get" action="{% url 'appointments:book' %}">
-    <div class="booking-field"><label for="{{ form.service.id_for_label }}">Service</label>{{ form.service }}{{ form.service.errors }}</div>
-    <div class="booking-field"><label for="{{ form.appointment_date.id_for_label }}">Date</label>{{ form.appointment_date }}{{ form.appointment_date.errors }}</div>
-    <button class="button button-dark" type="submit">Check availability <span aria-hidden="true">→</span></button>
-  </form>
+  {% if active_service_count %}
+    <form class="booking-filter" method="get" action="{% url 'appointments:book' %}">
+      <div class="booking-field"><label for="{{ form.service.id_for_label }}">Service</label>{{ form.service }}{{ form.service.errors }}</div>
+      <div class="booking-field"><label for="{{ form.appointment_date.id_for_label }}">Date</label>{{ form.appointment_date }}{{ form.appointment_date.errors }}</div>
+      <button class="button button-dark" type="submit">Check availability <span aria-hidden="true">→</span></button>
+    </form>
+  {% else %}
+    <div class="booking-empty"><strong>Online booking is not available yet.</strong><p>The studio has not published any active services. Please check back soon, or contact the studio directly.</p></div>
+  {% endif %}
 
   {% if selected_service %}
     <div class="booking-service-summary">
@@ -42,7 +46,7 @@
     {% else %}
       <div class="booking-empty"><strong>No available times for this date.</strong><p>Try another date or choose a different service. If no times appear for any date, the studio may need to publish provider working hours.</p></div>
     {% endif %}
-  {% else %}
+  {% elif active_service_count %}
     <div class="booking-empty"><strong>Start by selecting a service and date.</strong><p>Available times will appear here once you check the schedule.</p></div>
   {% endif %}
 </section>
