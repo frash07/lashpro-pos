@@ -10,6 +10,7 @@ from django.utils import timezone
 from accounts.models import User
 from catalog.models import Product
 from commissions.models import CommissionLedgerEntry, CommissionPayoutRecord
+from expenses.models import Expense
 from inventory.models import InventoryMovement
 from payments.models import CashSession, PaymentTransaction, RefundPayout, SalePayment
 from sales.models import Sale, SaleLine, SaleRefund
@@ -152,6 +153,11 @@ def daily_report(request):
     ), "amount")
     issued_refunds = SaleRefund.objects.filter(status=SaleRefund.Status.ISSUED, reviewed_at__date__range=(start, end))
 
+    expenses = Expense.objects.filter(expense_date__range=(start, end))
+    expense_total = _sum(expenses, "amount")
+    paid_expense_total = _sum(expenses.filter(payment_status=Expense.PaymentStatus.PAID), "amount")
+    unpaid_expense_total = _sum(expenses.filter(payment_status=Expense.PaymentStatus.UNPAID), "amount")
+
     ledger = CommissionLedgerEntry.objects.filter(created_at__date__range=(start, end))
     commission_earned = _sum(ledger.filter(entry_type=CommissionLedgerEntry.Type.EARNED), "amount")
     commission_reversed = abs(_sum(ledger.filter(entry_type=CommissionLedgerEntry.Type.REVERSAL), "amount"))
@@ -186,6 +192,9 @@ def daily_report(request):
         "net_confirmed_collection": confirmed_collection - confirmed_refunds,
         "issued_refund_count": issued_refunds.count(),
         "commission_earned": commission_earned,
+        "expense_total": expense_total,
+        "paid_expense_total": paid_expense_total,
+        "unpaid_expense_total": unpaid_expense_total,
         "commission_reversed": commission_reversed,
         "commission_net": commission_earned - commission_reversed,
         "commission_payout_total": commission_payout_total,
