@@ -50,7 +50,31 @@
           <td>{{ expense.expense_date|date:"d M Y" }}</td>
           <td><strong>{{ expense.get_category_display }}</strong><small>{{ expense.description }}</small></td>
           <td>{{ expense.supplier|default:"—" }}</td>
-          <td><span class="expense-status {{ expense.payment_status|lower }}">{{ expense.get_payment_status_display }}</span><small>{{ expense.get_payment_method_display|default:"Not paid" }}</small></td>
+          <td>
+            <span class="expense-status {{ expense.payment_status|lower }}">{{ expense.get_payment_status_display }}</span>
+            <small>{{ expense.get_payment_method_display|default:"Not paid" }}</small>
+            {% if expense.payment_status == "UNPAID" %}
+              <form method="post" class="expense-settle-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="settle">
+                <input type="hidden" name="expense_id" value="{{ expense.pk }}">
+                <select name="payment_method" aria-label="Settlement method for expense {{ expense.pk }}" required>
+                  <option value="">Payment method</option>
+                  <option value="CASH">Cash</option>
+                  <option value="MPESA">M-Pesa</option>
+                  <option value="BANK">Bank transfer</option>
+                </select>
+                <input name="reference" maxlength="80" placeholder="M-Pesa reference">
+                <select name="cash_session" aria-label="Cash drawer for expense {{ expense.pk }}">
+                  <option value="">Cash drawer (cash only)</option>
+                  {% for session in cash_sessions %}
+                    <option value="{{ session.pk }}">{{ session.cashier.get_full_name|default:session.cashier.username }} · {{ session.opened_at|date:"d M H:i" }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Mark paid</button>
+              </form>
+            {% endif %}
+          </td>
           <td>{{ expense.reference|default:"—" }}</td>
           <td>{{ expense.created_by.get_full_name|default:expense.created_by.username }}</td>
           <td class="amount">{{ expense.amount|floatformat:2 }}</td>
