@@ -46,6 +46,20 @@
       <div class="soft-pill"><i data-lucide="refresh-cw" style="width:12px;height:12px;color:var(--pink)"></i> Live workspace</div>
     </div>
 
+    <div class="booking-setup-panel">
+      <div class="subhead">
+        <div>
+          <h3>Online appointment booking</h3>
+          <p>Publish at least one active service and weekly provider hours before customers can book online.</p>
+        </div>
+      </div>
+      <div class="quick-links-grid">
+        <a href="{% url 'admin:catalog_service_changelist' %}"><span>Service catalogue</span><small>Add or activate treatments, with the correct public price and duration.</small></a>
+        <a href="{% url 'admin:appointments_staffavailability_changelist' %}"><span>Weekly staff availability</span><small>Add one recurring working-hours row for each provider and weekday.</small></a>
+        <a href="{% url 'admin:appointments_stafftimeoff_changelist' %}"><span>Staff time off</span><small>Block leave, training and other dated exceptions.</small></a>
+      </div>
+    </div>
+
     <div class="admin-tabs" aria-label="Management sections">
       <button type="button" class="admin-tab active" data-tab="inventory"><i data-lucide="boxes"></i> Inventory & stock</button>
       <button type="button" class="admin-tab" data-tab="academy"><i data-lucide="graduation-cap"></i> Academy hub</button>
