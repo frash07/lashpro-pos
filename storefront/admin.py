@@ -1,5 +1,7 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.urls import reverse
+from django.utils.html import format_html
 
 from accounts.models import User
 from .models import StorefrontOrder, StorefrontOrderLine
@@ -27,10 +29,10 @@ class StorefrontOrderLineInline(admin.TabularInline):
 class StorefrontOrderAdmin(admin.ModelAdmin):
     list_display = (
         "reference", "customer_name", "customer_phone", "total_amount",
-        "status", "created_at",
+        "status", "pos_sale", "created_at",
     )
     list_filter = ("status", "created_at")
-    search_fields = ("reference", "customer_name", "customer_email", "customer_phone")
+    search_fields = ("reference", "customer_name", "customer_email", "customer_phone", "sale__receipt_number")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
     inlines = (StorefrontOrderLineInline,)
@@ -41,13 +43,16 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     fields = (
         "reference", "created_at", "updated_at",
         "customer_name", "customer_email", "customer_phone", "notes",
-        "payment_method", "total_amount", "status",
+        "payment_method", "total_amount", "status", "pos_sale_link",
     )
     readonly_fields = (
         "reference", "created_at", "updated_at",
         "customer_name", "customer_email", "customer_phone", "notes",
-        "payment_method", "total_amount", "status",
+        "payment_method", "total_amount", "status", "pos_sale_link",
     )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("sale")
 
     def _can_review(self, request):
         user = request.user
@@ -69,6 +74,25 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    @admin.display(description="POS sale", ordering="sale__receipt_number")
+    def pos_sale(self, obj):
+        if not obj.sale_id:
+            return "Created when fulfilled"
+        return obj.sale.receipt_number
+
+    @admin.display(description="POS sale and payment")
+    def pos_sale_link(self, obj):
+        if not obj.sale_id:
+            return "A POS sale is created when this order is fulfilled."
+        receipt_url = reverse("sales:receipt", args=(obj.sale.receipt_token,))
+        payments_url = reverse("sales:payments")
+        return format_html(
+            '<a href="{}">{}</a> · <a href="{}">Collect payment</a>',
+            receipt_url,
+            obj.sale.receipt_number,
+            payments_url,
+        )
 
     def _apply_transition(self, request, queryset, target_status, label):
         updated = 0
@@ -110,9 +134,9 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     def mark_ready_selected(self, request, queryset):
         self._apply_transition(request, queryset, StorefrontOrder.Status.READY, "marked ready")
 
-    @admin.action(description="Fulfil selected orders and deduct reserved stock")
+    @admin.action(description="Fulfil orders, deduct stock and create POS sales")
     def fulfil_selected(self, request, queryset):
-        self._apply_transition(request, queryset, StorefrontOrder.Status.FULFILLED, "fulfilled")
+        self._apply_transition(request, queryset, StorefrontOrder.Status.FULFILLED, "fulfilled and posted to POS")
 
     @admin.action(description="Cancel selected orders and release reserved stock")
     def cancel_selected(self, request, queryset):

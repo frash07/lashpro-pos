@@ -11,12 +11,14 @@ from audit.models import AuditEvent
 from audit.services import record_audit_event
 from inventory.models import InventoryMovement
 from inventory.services import reserved_stock_by_product
+from sales.models import Sale, SaleLine
 
 from catalog.models import Product
 from .models import StorefrontOrder, StorefrontOrderLine, StorefrontStockReservation
 
 
 CENT = Decimal("0.01")
+ZERO = Decimal("0.00")
 MAX_CART_LINES = 25
 MAX_QUANTITY = 99
 
@@ -237,8 +239,80 @@ def _ensure_order_reservations(*, order, lines, products):
 
 
 @transaction.atomic
+def create_pos_sale_for_storefront_order(*, order, actor):
+    """Create/link the financial POS sale without running a second stock deduction."""
+    order_id = order.pk if isinstance(order, StorefrontOrder) else order
+    try:
+        locked_order = StorefrontOrder.objects.select_for_update().get(pk=order_id)
+    except (StorefrontOrder.DoesNotExist, TypeError, ValueError):
+        raise ValidationError({"order": "Online order not found."}) from None
+
+    if not (
+        getattr(actor, "is_superuser", False)
+        or getattr(actor, "role", None) in {User.Role.OWNER, User.Role.MANAGER, User.Role.CASHIER}
+    ):
+        raise ValidationError({"actor": "A recorded online-order fulfiller must be an owner, manager, or cashier."})
+
+    order_lines = list(locked_order.lines.order_by("pk"))
+    if not order_lines:
+        raise ValidationError({"order": "An online order without lines cannot be posted to POS."})
+
+    sale_key = uuid.uuid5(
+        uuid.NAMESPACE_URL,
+        f"lashpro:storefront-order:{locked_order.pk}:{locked_order.idempotency_key}",
+    )
+    sale = locked_order.sale if locked_order.sale_id else Sale.objects.filter(
+        checkout_idempotency_key=sale_key
+    ).first()
+
+    if sale is None:
+        sale = Sale.objects.create(
+            cashier=actor,
+            customer=locked_order.customer,
+            checkout_idempotency_key=sale_key,
+        )
+        for order_line in order_lines:
+            sale_line = SaleLine(
+                sale=sale,
+                product_id=order_line.product_id,
+                description=order_line.name_snapshot,
+                quantity=order_line.quantity,
+                unit_price=order_line.unit_price,
+                discount=ZERO,
+            )
+            sale_line.full_clean()
+            sale_line.save()
+        sale.status = Sale.Status.COMPLETED
+        sale.save(update_fields=("status",))
+
+    sale_lines = list(sale.lines.order_by("pk"))
+    if sale.status != Sale.Status.COMPLETED or len(sale_lines) != len(order_lines):
+        raise ValidationError({"order": "The linked POS sale is incomplete; ask a manager to review it."})
+    for sale_line, order_line in zip(sale_lines, order_lines):
+        if (
+            sale_line.product_id != order_line.product_id
+            or sale_line.description != order_line.name_snapshot
+            or sale_line.quantity != order_line.quantity
+            or sale_line.unit_price != order_line.unit_price
+            or sale_line.discount != ZERO
+        ):
+            raise ValidationError({"order": "The linked POS sale does not match the online order snapshots."})
+    if sale.total_amount != locked_order.total_amount:
+        raise ValidationError({"order": "The online order total does not match its POS sale; ask a manager to review it."})
+
+    existing_link = StorefrontOrder.objects.filter(sale_id=sale.pk).exclude(pk=locked_order.pk).exists()
+    if existing_link:
+        raise ValidationError({"order": "This POS sale is already linked to a different online order."})
+
+    if locked_order.sale_id != sale.pk:
+        locked_order.sale = sale
+        locked_order.save(update_fields=("sale", "updated_at"))
+    return sale
+
+
+@transaction.atomic
 def transition_storefront_order(*, order, target_status, actor):
-    """Move an order through the staff workflow and reconcile its stock reservation."""
+    """Move an online order through staff workflow, consume stock and post its POS sale."""
     _check_order_staff_actor(actor)
     order_id = order.pk if isinstance(order, StorefrontOrder) else order
     try:
@@ -327,6 +401,11 @@ def transition_storefront_order(*, order, target_status, actor):
                 },
             )
 
+    pos_sale = None
+    if target_status == StorefrontOrder.Status.FULFILLED:
+        pos_sale = create_pos_sale_for_storefront_order(order=locked_order, actor=actor)
+        locked_order.sale = pos_sale
+
     locked_order.status = target_status
     locked_order.save(update_fields=("status", "updated_at"))
     record_audit_event(
@@ -334,9 +413,22 @@ def transition_storefront_order(*, order, target_status, actor):
         object_type="storefront_order",
         object_id=locked_order.pk,
         actor=actor,
-        reason=f"Online order status changed from {before_status} to {target_status}.",
+        reason=(
+            f"Online order status changed from {before_status} to {target_status}; "
+            f"POS sale {pos_sale.receipt_number} created."
+            if pos_sale else
+            f"Online order status changed from {before_status} to {target_status}."
+        ),
         before_state={"status": before_status},
-        after_state={"status": target_status},
-        metadata={"reference": locked_order.reference},
+        after_state={
+            "status": target_status,
+            "pos_sale_id": pos_sale.pk if pos_sale else None,
+            "pos_receipt_number": pos_sale.receipt_number if pos_sale else None,
+        },
+        metadata={
+            "reference": locked_order.reference,
+            "pos_sale_id": pos_sale.pk if pos_sale else None,
+            "pos_receipt_number": pos_sale.receipt_number if pos_sale else None,
+        },
     )
     return locked_order
