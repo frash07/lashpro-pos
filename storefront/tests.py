@@ -10,7 +10,10 @@ from catalog.models import Product, Service
 from customers.models import Customer
 from inventory.models import InventoryMovement
 from inventory.services import available_stock_for_product
-from sales.models import Sale
+from payments.models import PaymentTransaction, SalePayment
+from payments.services import open_cash_session
+from sales.models import Sale, SaleLine
+from sales.services import record_sale_payment
 from .models import StorefrontOrder, StorefrontOrderLine, StorefrontProfile, StorefrontStockReservation
 from .services import create_storefront_order, transition_storefront_order
 
@@ -216,12 +219,14 @@ class StorefrontGuestCheckoutTests(TestCase):
         self.assertEqual(order.total_amount, Decimal("1000.00"))
         self.assertIsNone(order.account)
         self.assertIsNone(order.customer)
+        self.assertIsNone(order.sale)
         line = order.lines.get()
         self.assertEqual(line.name_snapshot, "Lash Shampoo")
         self.assertEqual(line.sku_snapshot, "GUEST-001")
         self.assertEqual(line.quantity, 2)
         self.assertEqual(line.unit_price, Decimal("500.00"))
         self.assertEqual(Sale.objects.count(), 0)
+        self.assertEqual(PaymentTransaction.objects.count(), 0)
         self.product.refresh_from_db()
         self.assertEqual(self.product.on_hand, Decimal("5.000"))
 
@@ -326,6 +331,20 @@ class StorefrontOrderInventoryTests(TestCase):
             idempotency_key=uuid.uuid4(),
         )
 
+    def _fulfil(self, order):
+        for status in (
+            StorefrontOrder.Status.CONFIRMED,
+            StorefrontOrder.Status.READY,
+            StorefrontOrder.Status.FULFILLED,
+        ):
+            transition_storefront_order(
+                order=order,
+                target_status=status,
+                actor=self.staff,
+            )
+        order.refresh_from_db()
+        return order.sale
+
     def test_checkout_reserves_stock_without_reducing_physical_on_hand(self):
         order = self._create_order(quantity=2)
         reservation = StorefrontStockReservation.objects.get(order_line=order.lines.get())
@@ -361,34 +380,39 @@ class StorefrontOrderInventoryTests(TestCase):
             StorefrontOrder.objects.get(pk=order.pk).status,
             StorefrontOrder.Status.CANCELLED,
         )
+        self.assertEqual(Sale.objects.count(), 0)
 
-    def test_fulfilment_deducts_stock_once_and_writes_immutable_movement(self):
+    def test_fulfilment_deducts_stock_once_and_posts_a_completed_pos_sale(self):
         order = self._create_order(quantity=2)
-        transition_storefront_order(
-            order=order,
-            target_status=StorefrontOrder.Status.CONFIRMED,
-            actor=self.staff,
-        )
-        transition_storefront_order(
-            order=order,
-            target_status=StorefrontOrder.Status.READY,
-            actor=self.staff,
-        )
-        transition_storefront_order(
-            order=order,
-            target_status=StorefrontOrder.Status.FULFILLED,
-            actor=self.staff,
-        )
+        sale = self._fulfil(order)
 
         self.product.refresh_from_db()
         line = order.lines.get()
         reservation = StorefrontStockReservation.objects.get(order_line=line)
         movement = InventoryMovement.objects.get(storefront_order_line=line)
+        sale_line = SaleLine.objects.get(sale=sale)
         self.assertEqual(self.product.on_hand, Decimal("3.000"))
         self.assertEqual(reservation.status, StorefrontStockReservation.Status.CONSUMED)
         self.assertEqual(movement.movement_type, InventoryMovement.Type.ONLINE_ORDER)
         self.assertEqual(movement.quantity_delta, Decimal("-2.000"))
-        self.assertEqual(Sale.objects.count(), 0)
+        self.assertEqual(sale.status, Sale.Status.COMPLETED)
+        self.assertEqual(sale.cashier, self.staff)
+        self.assertIsNone(sale.customer)
+        self.assertEqual(sale.total_amount, Decimal("1000.00"))
+        self.assertEqual(sale_line.product, self.product)
+        self.assertEqual(sale_line.description, "Reserved Lash Glue")
+        self.assertEqual(sale_line.quantity, 2)
+        self.assertEqual(sale_line.unit_price, Decimal("500.00"))
+        self.assertEqual(sale_line.discount, Decimal("0.00"))
+        self.assertEqual(order.sale, sale)
+        self.assertEqual(Sale.objects.count(), 1)
+
+        # Posting revenue does not invent a payment or trigger a second stock issue.
+        self.assertEqual(sale.paid_amount, Decimal("0.00"))
+        self.assertEqual(sale.balance_due, Decimal("1000.00"))
+        self.assertEqual(PaymentTransaction.objects.count(), 0)
+        self.assertEqual(SalePayment.objects.count(), 0)
+
         with self.assertRaises(ValidationError):
             transition_storefront_order(
                 order=order,
@@ -396,6 +420,33 @@ class StorefrontOrderInventoryTests(TestCase):
                 actor=self.staff,
             )
         self.assertEqual(InventoryMovement.objects.filter(storefront_order_line=line).count(), 1)
+        self.assertEqual(Sale.objects.count(), 1)
+
+    def test_online_order_sale_can_be_paid_through_existing_pos_collection_flow(self):
+        order = self._create_order(quantity=2)
+        sale = self._fulfil(order)
+        open_cash_session(
+            cashier=self.staff,
+            opening_float=Decimal("0.00"),
+            actor=self.staff,
+        )
+
+        payment = record_sale_payment(
+            sale=sale,
+            method=PaymentTransaction.Method.CASH,
+            amount=order.total_amount,
+            actor=self.staff,
+            idempotency_key=uuid.uuid4(),
+        )
+
+        allocation = SalePayment.objects.get(payment_transaction=payment)
+        sale.refresh_from_db()
+        self.assertEqual(payment.status, PaymentTransaction.Status.SUCCEEDED)
+        self.assertEqual(payment.amount, Decimal("1000.00"))
+        self.assertEqual(allocation.sale, sale)
+        self.assertEqual(allocation.amount, Decimal("1000.00"))
+        self.assertEqual(sale.paid_amount, Decimal("1000.00"))
+        self.assertEqual(sale.balance_due, Decimal("0.00"))
 
     def test_pos_sale_cannot_consume_stock_reserved_for_online_orders(self):
         from sales.services import checkout_sale
