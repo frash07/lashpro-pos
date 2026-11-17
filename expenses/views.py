@@ -8,9 +8,10 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from accounts.models import User
+from payments.models import CashSession
 from .forms import ExpenseDateFilterForm, ExpenseForm
 from .models import Expense
-from .services import record_expense
+from .services import record_expense, settle_expense
 
 
 def _can_manage_expenses(user):
@@ -22,7 +23,23 @@ def dashboard(request):
     if not _can_manage_expenses(request.user):
         raise PermissionDenied
 
-    form = ExpenseForm(request.POST or None)
+    is_settlement = request.method == "POST" and request.POST.get("action") == "settle"
+    form = ExpenseForm(request.POST if request.method == "POST" and not is_settlement else None)
+    if is_settlement:
+        try:
+            expense = settle_expense(
+                expense=request.POST.get("expense_id"),
+                actor=request.user,
+                payment_method=request.POST.get("payment_method"),
+                reference=request.POST.get("reference", ""),
+                cash_session=request.POST.get("cash_session") or None,
+            )
+        except ValidationError as exc:
+            messages.error(request, "; ".join(exc.messages))
+        else:
+            messages.success(request, f"Expense #{expense.pk} marked as paid.")
+        return redirect("expenses:dashboard")
+
     if request.method == "POST" and form.is_valid():
         try:
             expense = record_expense(actor=request.user, **form.cleaned_data)
@@ -66,4 +83,5 @@ def dashboard(request):
         "form": form, "filters": filters, "expenses": expenses[:200],
         "total": total, "paid_total": paid_total, "unpaid_total": unpaid_total,
         "category_summary": category_summary, "start": start, "end": end,
+        "cash_sessions": CashSession.objects.filter(status=CashSession.Status.OPEN).select_related("cashier").order_by("-opened_at"),
     })
