@@ -9,7 +9,7 @@ The customer-facing policy pages and consent prompts are published in this branc
 - [ ] Confirm the correct legal notice name for the data controller and add the verified address/contact details to the Privacy Policy and Terms.
 
 ## Data protection operations
-- [ ] Determine and document whether LashPro must register as a data controller and/or processor with the Office of the Data Protection Commissioner (ODPC). Check the current registration rules and any applicable exemption; do not assume that small size automatically removes all obligations.
+- [ ] Determine and document whether LashPro must register as a data controller and/or processor with the Office of the Data Protection Commissioner (ODPC). The ODPC FAQ currently describes a general exemption only where BOTH annual turnover is below KSh 5 million AND staffing is fewer than 10, subject to categories that must register regardless. Verify the current rule and whether any exception applies to the actual activities.
 - [ ] Confirm which Fly.io, database, Cloudinary and email-service regions/processors are actually used in the live environment.
 - [ ] Review provider contracts, access controls, breach response, backups, deletion and any cross-border transfer safeguards.
 - [ ] Approve a retention schedule for customer accounts, order/transaction data, appointment records, support messages and security logs. Tax records generally have a five-year statutory retention period from the end of the reporting period, subject to exceptions and ongoing proceedings.
