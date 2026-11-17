@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'css/legal.css' %}">
 </head>
 <body>
   <form id="pos-form" method="post" novalidate>
@@ -93,6 +94,7 @@
               </div>
               <div class="field"><label for="id_customer">CLIENT / STUDENT</label>{{ details.customer }}</div>
             </div>
+            <p class="legal-staff-notice">Use customer details only to identify and serve the client. See the customer <a href="{% url 'storefront:privacy' %}">Privacy Policy</a>, <a href="{% url 'storefront:terms' %}">Terms</a> and <a href="{% url 'storefront:returns' %}">Returns Policy</a>.</p>
             <div id="cart-items-container" class="cart-items"></div>
             <div class="checkout-bottom">
               <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button type="button" class="btn-small" onclick="applyDiscount()">Apply</button></div>
@@ -154,6 +156,11 @@
     <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="receipt-title">Payment receipt</h3><button type="button" class="icon-button" onclick="closeModal('receipt-modal')" aria-label="Close">×</button></div><div class="modal-body receipt-body"><div class="receipt-meta"><span id="rcpt-ref">REF-0001</span><span id="rcpt-client">Wanjiku Njuguna</span></div><div id="rcpt-items" class="receipt-items"></div><div class="receipt-total"><span>Total</span><strong id="rcpt-total">KES 0</strong></div></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="printReceipt()">Print</button><button type="button" class="button-primary" onclick="closeModal('receipt-modal')">Done</button></div></div></div>
 
   </form>
+  <footer class="legal-footer-links" aria-label="Customer legal policies">
+    <a href="{% url 'storefront:privacy' %}">Privacy policy</a>
+    <a href="{% url 'storefront:terms' %}">Terms of service</a>
+    <a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a>
+  </footer>
 
   <script>
     const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
