@@ -98,6 +98,7 @@ class AppointmentBookingTests(TestCase):
         slot = self._first_slot()
         response = self.client.post(reverse("appointments:book"), {
             "accept_terms": "on",
+            "accept_terms": "on",
             "service": self.service.pk,
             "appointment_date": self.day.isoformat(),
             "slot": slot["value"],
@@ -116,6 +117,22 @@ class AppointmentBookingTests(TestCase):
         self.assertEqual(appointment.duration_minutes_snapshot, 60)
         self.assertIsNone(appointment.account)
         self.assertEqual(self.client.get(response.url).status_code, 200)
+
+    def test_appointment_request_requires_terms_acceptance(self):
+        slot = self._first_slot()
+        response = self.client.post(reverse("appointments:book"), {
+            "service": self.service.pk,
+            "appointment_date": self.day.isoformat(),
+            "slot": slot["value"],
+            "full_name": "Guest Client",
+            "email": "guest@example.com",
+            "phone": "+254 700 123 456",
+            "notes": "",
+            "idempotency_key": str(uuid.uuid4()),
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Appointment.objects.count(), 0)
+        self.assertContains(response, "You must agree to the Terms of Service and Returns Policy")
 
     def test_appointment_request_requires_terms_acceptance(self):
         slot = self._first_slot()
