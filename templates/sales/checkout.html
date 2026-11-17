@@ -65,7 +65,7 @@
               <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
               <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="sparkles"></i> VIP studio</div></div>
             </div>
-            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search lash sets, adhesive, services…" autocomplete="off"></label></div>
+            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search products by name or SKU, or find a service…" oninput="filterCatalog()" autocomplete="off"></label></div>
             <div class="category-tabs">
               <button type="button" class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
               <button type="button" class="cat-tab" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
@@ -336,7 +336,12 @@
       const grid=document.getElementById('catalog-grid');if(!grid)return;
       const search=document.getElementById('catalog-search');
       const query=(search?search.value:'').trim().toLowerCase();
-      const filtered=catalogData.filter(item=>(activeCategory==='all'||item.type===activeCategory)&&(item.name.toLowerCase().includes(query)||item.desc.toLowerCase().includes(query)));
+      const terms=query.split(/\s+/).filter(Boolean);
+      const filtered=catalogData.filter(item=>{
+        if(activeCategory!=='all'&&item.type!==activeCategory)return false;
+        const searchable=String(item.search_text||[item.name,item.desc,item.sku,item.type].filter(Boolean).join(' ')).toLowerCase();
+        return terms.every(term=>searchable.includes(term));
+      });
       document.getElementById('result-count').textContent=filtered.length+' '+(filtered.length===1?'item':'items');
       if(!filtered.length){grid.innerHTML='<div class="no-results">No items match your search. Try another name or category.</div>';return;}
       grid.innerHTML=filtered.map(item=>{

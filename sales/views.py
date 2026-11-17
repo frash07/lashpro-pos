@@ -167,9 +167,33 @@ def checkout(request):
     prices = {"products": {str(x.pk): str(x.selling_price) for x in products}, "services": {str(x.pk): str(x.price) for x in services}}
     catalog_items = []
     for product in products:
-        catalog_items.append({"id": f"product-{product.pk}", "name": product.name, "price": float(product.selling_price), "type": "product", "desc": product.pos_description or product.name, "icon": "package", "stock": float(product.on_hand), "sku": product.sku})
+        description = product.pos_description or product.name
+        catalog_items.append({
+            "id": f"product-{product.pk}",
+            "name": product.name,
+            "price": float(product.selling_price),
+            "type": "product",
+            "desc": description,
+            "icon": "package",
+            "stock": float(product.on_hand),
+            "sku": product.sku,
+            "search_text": " ".join((product.name, product.sku, description, "product")).casefold(),
+        })
     for service in services:
-        catalog_items.append({"id": f"service-{service.pk}", "name": service.name, "price": float(service.price), "type": "service", "desc": f"{service.duration_minutes} minute session", "icon": "sparkles", "duration_minutes": service.duration_minutes, "commission_eligible": service.commission_eligible, "commission_rate": float(service.commission_rate)})
+        duration_label = f"{service.duration_minutes} minute session"
+        service_kind = service.get_kind_display()
+        catalog_items.append({
+            "id": f"service-{service.pk}",
+            "name": service.name,
+            "price": float(service.price),
+            "type": "service",
+            "desc": duration_label,
+            "icon": "sparkles",
+            "duration_minutes": service.duration_minutes,
+            "commission_eligible": service.commission_eligible,
+            "commission_rate": float(service.commission_rate),
+            "search_text": " ".join((service.name, duration_label, service_kind, "service")).casefold(),
+        })
     from payments.models import CashSession
     cash_session = CashSession.objects.filter(cashier=request.user, status=CashSession.Status.OPEN).first()
     admin_suite = _build_admin_suite_context(request.user)

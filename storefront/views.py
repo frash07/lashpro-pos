@@ -112,8 +112,11 @@ def home(request):
     products = Product.objects.filter(active=True).order_by("name")
     services = Service.objects.filter(active=True).order_by("name")
     if query:
-        products = products.filter(Q(name__icontains=query) | Q(sku__icontains=query))
-        services = services.filter(name__icontains=query)
+        # Match every search word against the product name/SKU or service name/type.
+        # Repeated filters make multi-word searches work regardless of word order.
+        for term in query.split():
+            products = products.filter(Q(name__icontains=term) | Q(sku__icontains=term))
+            services = services.filter(Q(name__icontains=term) | Q(kind__icontains=term))
     if kind == "products":
         services = Service.objects.none()
     elif kind == "services":
