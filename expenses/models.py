@@ -94,6 +94,14 @@ class Expense(models.Model):
                 errors["cash_movement"] = "A cash-paid expense must link to its drawer movement."
             if self.payment_method != self.PaymentMethod.CASH and self.cash_movement_id:
                 errors["cash_movement"] = "Only cash-paid expenses may link to a drawer movement."
+        if self.cash_movement_id:
+            movement = self.cash_movement
+            if (
+                movement.movement_type != "EXPENSE"
+                or movement.amount != -self.amount
+                or movement.session_id != self.cash_session_id
+            ):
+                errors["cash_movement"] = "The linked drawer movement must match this expense amount and cash session."
         if errors:
             raise ValidationError(errors)
 
