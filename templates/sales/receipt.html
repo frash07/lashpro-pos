@@ -29,9 +29,9 @@
   <article class="receipt-card" aria-label="Sale receipt">
     <header class="receipt-card-header">
       <div class="receipt-brand"><img src="{% static 'img/logo-placeholder.svg' %}" alt=""><span><strong>Lashpro KE</strong><small>Beauty. Skills. Opportunities.</small></span></div>
-      <div class="receipt-meta"><span>Receipt number</span><strong>{{ sale.receipt_number }}</strong><span>{{ sale.created_at|date:"d M Y, H:i" }}</span></div>
+      <div class="receipt-meta"><span>Receipt number</span><strong>{{ sale.receipt_number }}</strong><span>{{ sale.created_at|date:"d M Y, H:i" }}</span>{% if sale.storefront_order %}<span>Online order {{ sale.storefront_order.reference }}</span>{% endif %}</div>
     </header>
-    <div class="receipt-customer"><span>Client</span><strong>{{ sale.customer.name|default:"Walk-in customer" }}</strong></div>
+    <div class="receipt-customer"><span>Client</span><strong>{% if sale.storefront_order %}{{ sale.storefront_order.customer_name }}{% else %}{{ sale.customer.name|default:"Walk-in customer" }}{% endif %}</strong></div>
 
     <div class="receipt-table-wrap">
       <table class="receipt-table">
