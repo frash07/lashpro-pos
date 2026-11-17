@@ -1,0 +1,87 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Expenses · LashPro KE{% endblock %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/expenses.css' %}">{% endblock %}
+{% block admin_content %}
+<main class="expense-page">
+  <header class="expense-heading">
+    <div><span class="expense-eyebrow">FINANCE · OPERATING COSTS</span><h1>Expense register</h1><p>Record studio costs, track outstanding bills and retain an auditable payment trail.</p></div>
+    <a class="expense-report-link" href="{% url 'reporting:dashboard' %}">Executive reports ↗</a>
+  </header>
+  {% if messages %}<div class="expense-messages" aria-live="polite">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+  <section class="expense-metrics" aria-label="Expense totals for selected period">
+    <article><span>Total recorded</span><strong>KSh {{ total|floatformat:2 }}</strong><small>Paid and unpaid expenses</small></article>
+    <article><span>Paid</span><strong>KSh {{ paid_total|floatformat:2 }}</strong><small>Payments already made</small></article>
+    <article><span>Unpaid</span><strong>KSh {{ unpaid_total|floatformat:2 }}</strong><small>Outstanding expenses</small></article>
+  </section>
+  <section class="expense-layout">
+    <section class="expense-panel">
+      <div class="expense-panel-heading"><div><span class="expense-eyebrow">NEW RECORD</span><h2>Record an expense</h2></div></div>
+      <form method="post" class="expense-form">{% csrf_token %}{{ form.non_field_errors }}
+        <div class="expense-form-grid">
+          {% for field in form %}
+            <div class="expense-field {% if field.name == 'description' or field.name == 'cash_session' %}wide{% endif %}">
+              {{ field.label_tag }}{{ field }}
+              {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}
+            </div>
+          {% endfor %}
+        </div>
+        <p class="expense-form-note">Cash-paid entries must use an open cash session and are automatically included in that drawer's closeout. Unpaid items must not be marked with a payment method.</p>
+        <button class="expense-primary" type="submit">Save expense</button>
+      </form>
+    </section>
+    <aside class="expense-panel expense-category-panel">
+      <span class="expense-eyebrow">SPEND BY CATEGORY</span><h2>Category summary</h2>
+      {% for row in category_summary %}
+        <div class="expense-category-row"><div><strong>{{ row.label }}</strong><span>{{ row.count }} record{{ row.count|pluralize }}</span></div><b>KSh {{ row.amount|floatformat:2 }}</b></div>
+      {% empty %}<p class="expense-empty">No expenses recorded for this period.</p>{% endfor %}
+    </aside>
+  </section>
+  <section class="expense-panel expense-register-panel">
+    <div class="expense-panel-heading">
+      <div><span class="expense-eyebrow">AUDIT TRAIL</span><h2>Recorded expenses</h2></div>
+      <form method="get" class="expense-date-filter"><label>From {{ filters.start_date }}</label><label>To {{ filters.end_date }}</label><button type="submit">Filter</button></form>
+    </div>
+    <p class="expense-period">Showing {{ start|date:"d M Y" }} – {{ end|date:"d M Y" }}</p>
+    <div class="expense-table-wrap"><table class="expense-table">
+      <thead><tr><th>Date</th><th>Category / description</th><th>Supplier</th><th>Payment</th><th>Reference</th><th>Recorded by</th><th class="amount">Amount (KSh)</th></tr></thead>
+      <tbody>{% for expense in expenses %}
+        <tr>
+          <td>{{ expense.expense_date|date:"d M Y" }}</td>
+          <td><strong>{{ expense.get_category_display }}</strong><small>{{ expense.description }}</small></td>
+          <td>{{ expense.supplier|default:"—" }}</td>
+          <td>
+            <span class="expense-status {{ expense.payment_status|lower }}">{{ expense.get_payment_status_display }}</span>
+            <small>{{ expense.get_payment_method_display|default:"Not paid" }}</small>
+            {% if expense.payment_status == "UNPAID" %}
+              <form method="post" class="expense-settle-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="settle">
+                <input type="hidden" name="expense_id" value="{{ expense.pk }}">
+                <select name="payment_method" aria-label="Settlement method for expense {{ expense.pk }}" required>
+                  <option value="">Payment method</option>
+                  <option value="CASH">Cash</option>
+                  <option value="MPESA">M-Pesa</option>
+                  <option value="BANK">Bank transfer</option>
+                </select>
+                <input name="reference" maxlength="80" placeholder="M-Pesa reference">
+                <select name="cash_session" aria-label="Cash drawer for expense {{ expense.pk }}">
+                  <option value="">Cash drawer (cash only)</option>
+                  {% for session in cash_sessions %}
+                    <option value="{{ session.pk }}">{{ session.cashier.get_full_name|default:session.cashier.username }} · {{ session.opened_at|date:"d M H:i" }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Mark paid</button>
+              </form>
+            {% endif %}
+          </td>
+          <td>{{ expense.reference|default:"—" }}</td>
+          <td>{{ expense.created_by.get_full_name|default:expense.created_by.username }}</td>
+          <td class="amount">{{ expense.amount|floatformat:2 }}</td>
+        </tr>
+      {% empty %}<tr><td class="expense-empty" colspan="7">No expenses match this date range.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="expense-footnote">Expense entries are retained as immutable records. Correcting errors requires a separate correcting entry; records are not edited or deleted.</p>
+  </section>
+</main>
+{% endblock %}

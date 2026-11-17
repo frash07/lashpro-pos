@@ -55,7 +55,7 @@ class AdminSuiteAccessTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("admin:login"), response.url)
 
-    def test_dashboard_contains_seven_categories_and_all_25_admin_destinations(self):
+    def test_dashboard_contains_eight_categories_and_all_27_destinations(self):
         self.client.force_login(self.manager_staff)
 
         response = self.client.get(reverse("admin_suite"))
@@ -71,6 +71,7 @@ class AdminSuiteAccessTests(TestCase):
                 "Sales",
                 "Inventory",
                 "Payments & Cash",
+                "Expenses",
                 "Artist Commissions",
             ],
         )
@@ -105,10 +106,12 @@ class AdminSuiteAccessTests(TestCase):
             "/admin/sales/saleline/",
             "/admin/sales/salerefund/",
             "/admin/sales/sale/",
+            "/expenses/",
+            "/admin/expenses/expense/",
         }
 
-        self.assertEqual(len(destinations), 25)
-        self.assertEqual(len(set(destinations)), 25)
+        self.assertEqual(len(destinations), 27)
+        self.assertEqual(len(set(destinations)), 27)
         self.assertEqual(set(destinations), expected)
         self.assertContains(response, "Existing Django Admin Model Pages")
 

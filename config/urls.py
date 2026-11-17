@@ -47,6 +47,7 @@ urlpatterns = [
     ), name="password_reset_complete"),
     path("sales/", include("sales.urls")),
     path("payments/", include("payments.urls")),
+    path("expenses/", include("expenses.urls")),
     path("appointments/", include("appointments.urls")),
     path("commissions/", include("commissions.urls")),
     path("inventory/", include("inventory.urls")),

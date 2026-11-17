@@ -23,6 +23,7 @@ class AuditEvent(models.Model):
         PAYMENT_RECONCILIATION = "PAYMENT_RECONCILIATION", "Payment reconciliation"
         REFUND = "REFUND", "Refund"
         PAYOUT = "PAYOUT", "Payout"
+        EXPENSE = "EXPENSE", "Expense recorded"
         APPROVAL = "APPROVAL", "Approval"
         SALE_STOCK_DEDUCTION = "SALE_STOCK_DEDUCTION", "Sale stock deduction"
         SERVICE_COMPLETION = "SERVICE_COMPLETION", "Service completion"

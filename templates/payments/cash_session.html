@@ -33,6 +33,11 @@
       <a class="mode-btn cash-nav-link" href="{% url 'sales:refunds' %}">
         <i data-lucide="receipt-text"></i><span>Refunds</span>
       </a>
+      {% if is_manager %}
+      <a class="mode-btn cash-nav-link" href="{% url 'expenses:dashboard' %}">
+        <i data-lucide="wallet"></i><span>Expenses</span>
+      </a>
+      {% endif %}
     </nav>
 
     <div class="top-actions">
