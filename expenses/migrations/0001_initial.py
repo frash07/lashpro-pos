@@ -7,6 +7,27 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def backfill_cash_expenses(apps, schema_editor):
+    Expense = apps.get_model("expenses", "Expense")
+    CashSessionMovement = apps.get_model("payments", "CashSessionMovement")
+    for movement in CashSessionMovement.objects.filter(movement_type="EXPENSE").iterator():
+        Expense.objects.get_or_create(
+            cash_movement_id=movement.pk,
+            defaults={
+                "expense_date": django.utils.timezone.localtime(movement.created_at).date(),
+                "category": "OTHER",
+                "description": movement.reason[:500],
+                "supplier": "",
+                "amount": abs(movement.amount),
+                "payment_status": "PAID",
+                "payment_method": "CASH",
+                "reference": "",
+                "cash_session_id": movement.session_id,
+                "created_by_id": movement.actor_id,
+            },
+        )
+
+
 class Migration(migrations.Migration):
     initial = True
     dependencies = [
@@ -52,4 +73,5 @@ class Migration(migrations.Migration):
             model_name="expense",
             index=models.Index(fields=["payment_status", "expense_date"], name="expense_status_date_idx"),
         ),
+        migrations.RunPython(backfill_cash_expenses, migrations.RunPython.noop),
     ]
