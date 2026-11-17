@@ -38,6 +38,11 @@ class AppointmentBookingForm(forms.Form):
         label="Notes (optional)",
         widget=forms.Textarea(attrs={"rows": 3}),
     )
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="I agree to the Terms of Service and Returns Policy.",
+        error_messages={"required": "You must agree to the Terms of Service and Returns Policy."},
+    )
     idempotency_key = forms.UUIDField(widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):

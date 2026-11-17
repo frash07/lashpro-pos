@@ -28,6 +28,7 @@
     <div class="booking-step"><span>02</span><div><strong>Select a time</strong><small>Each time is assigned to the provider shown beside it.</small></div></div>
     {% if slots %}
       <form class="booking-form" method="post" action="{% url 'appointments:book' %}">
+        <p class="legal-notice">We use your name, email and phone to process and manage this appointment request. Read our <a href="{% url 'storefront:privacy' %}">Privacy Policy</a>.</p>
         {% csrf_token %}
         <input type="hidden" name="service" value="{{ selected_service.pk }}">
         <input type="hidden" name="appointment_date" value="{{ selected_date|date:'Y-m-d' }}">
@@ -41,6 +42,8 @@
           <div class="booking-field"><label for="{{ form.notes.id_for_label }}">Notes (optional)</label>{{ form.notes }}{{ form.notes.errors }}</div>
         </div>
         <div class="booking-disclaimer">This submits an appointment request. The studio will confirm it; no payment is taken online.</div>
+        <label class="legal-consent" for="{{ form.accept_terms.id_for_label }}">{{ form.accept_terms }}<span>I have read and agree to the <a href="{% url 'storefront:terms' %}">Terms of Service</a> and <a href="{% url 'storefront:returns' %}">Returns &amp; Refunds Policy</a>.</span></label>
+        {% if form.accept_terms.errors %}<p class="legal-errors">{{ form.accept_terms.errors }}</p>{% endif %}
         <button class="button button-dark" type="submit">Request appointment <span aria-hidden="true">→</span></button>
       </form>
     {% else %}

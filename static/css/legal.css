@@ -1,0 +1,28 @@
+/* Shared legal-page and footer styles for storefront and staff POS. */
+.legal-intro { max-width: 820px; margin: 12px auto 24px; }
+.legal-intro h1 { margin: 12px 0 10px; color: var(--ink, #211d24); font: 500 clamp(38px, 5vw, 58px)/1.04 Georgia, "Times New Roman", serif; letter-spacing: -.045em; }
+.legal-updated { margin: 16px 0 0; color: var(--muted, #7e7580); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.legal-document { max-width: 820px; margin: 0 auto 55px; padding: clamp(22px, 4vw, 42px); border: 1px solid var(--line, #e8e0dc); background: var(--surface, #fffdfb); color: var(--ink, #211d24); }
+.legal-document h2 { margin: 28px 0 8px; font: 500 23px/1.2 Georgia, "Times New Roman", serif; }
+.legal-document h2:first-child { margin-top: 0; }
+.legal-document p, .legal-document li { color: #625a63; font-size: 12px; line-height: 1.85; }
+.legal-document ul { padding-left: 22px; }
+.legal-document li + li { margin-top: 6px; }
+.legal-document a { color: #965d70; text-decoration: underline; text-underline-offset: 3px; }
+.legal-document a:hover { color: #704155; }
+.legal-related { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--line, #e8e0dc); }
+.legal-contact { margin-top: 23px; }
+.legal-notice { margin: 14px 0; padding: 12px 14px; border-left: 3px solid #bd8797; background: #f3eceb; color: #665963; font-size: 10px; line-height: 1.7; }
+.legal-consent { display: flex; align-items: flex-start; gap: 9px; color: #625a63; font-size: 10px; line-height: 1.6; }
+.legal-consent input { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 2px; accent-color: #965d70; }
+.legal-consent a { color: #965d70; text-decoration: underline; text-underline-offset: 3px; }
+.legal-errors { margin: 0; color: #9b4549; font-size: 10px; }
+.legal-footer-links { margin-top: 28px; background: #171419; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; padding: 13px 18px; border-top: 1px solid rgba(255,255,255,.12); color: #e9dfe4; font-size: 10px; }
+.legal-footer-links a { text-decoration: underline; text-underline-offset: 3px; }
+.legal-footer-links a:hover { color: #d6a7b2; }
+.legal-staff-notice { margin: 12px 0 0; color: var(--muted, #9da3af); font-size: 10px; line-height: 1.6; }
+@media (max-width: 620px) {
+  .legal-document { padding: 21px 17px; }
+  .legal-document h2 { font-size: 21px; }
+  .legal-related { gap: 12px 18px; }
+}

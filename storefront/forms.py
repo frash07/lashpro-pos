@@ -19,6 +19,11 @@ class CustomerRegistrationForm(forms.Form):
     full_name = forms.CharField(max_length=100, label="Full name")
     email = forms.EmailField(max_length=254)
     phone = forms.CharField(max_length=20, validators=[phone_validator])
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="I agree to the Terms of Service and Returns Policy.",
+        error_messages={"required": "You must agree to the Terms of Service and Returns Policy."},
+    )
     password1 = forms.CharField(
         min_length=8,
         widget=forms.PasswordInput,
@@ -86,6 +91,11 @@ class StorefrontCheckoutForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
         label="Collection notes (optional)",
+    )
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="I agree to the Terms of Service and Returns Policy.",
+        error_messages={"required": "You must agree to the Terms of Service and Returns Policy."},
     )
 
     def clean_full_name(self):

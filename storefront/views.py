@@ -55,6 +55,18 @@ def _base_context(request):
     }
 
 
+def privacy_policy(request):
+    return render(request, "storefront/privacy.html", _base_context(request))
+
+
+def terms_of_service(request):
+    return render(request, "storefront/terms.html", _base_context(request))
+
+
+def returns_policy(request):
+    return render(request, "storefront/returns.html", _base_context(request))
+
+
 def _cart_details(request):
     raw_cart = request.session.get(CART_SESSION_KEY, {})
     if not isinstance(raw_cart, dict):

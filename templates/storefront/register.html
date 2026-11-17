@@ -5,12 +5,15 @@
   <p class="eyebrow"><span></span> CUSTOMER ACCOUNT</p>
   <h1>Create your <em>LashPro account.</em></h1>
   <p class="section-subtitle">Save your customer details and keep your storefront orders together.</p>
+  <p class="legal-notice">We use your name, email and phone to create and manage your customer account and related orders or appointments. See the <a href="{% url 'storefront:privacy' %}">Privacy Policy</a> for details.</p>
   <form method="post" class="storefront-form">
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}
-      <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>
+      {% if field.name != "accept_terms" %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endif %}
     {% endfor %}
+    <label class="legal-consent" for="{{ form.accept_terms.id_for_label }}">{{ form.accept_terms }}<span>I have read and agree to the <a href="{% url 'storefront:terms' %}">Terms of Service</a> and <a href="{% url 'storefront:returns' %}">Returns &amp; Refunds Policy</a>.</span></label>
+    {% if form.accept_terms.errors %}<p class="legal-errors">{{ form.accept_terms.errors }}</p>{% endif %}
     <button class="button button-dark" type="submit">Create account</button>
   </form>
   <p class="form-footnote">Already registered? <a href="{% url 'storefront:login' %}">Sign in</a>.</p>

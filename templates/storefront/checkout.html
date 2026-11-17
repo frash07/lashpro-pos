@@ -4,16 +4,19 @@
 <section class="page-heading"><p class="eyebrow"><span></span> CHECKOUT</p><h1>Almost <em>yours.</em></h1><p class="section-subtitle">Your order reserves the available items while the studio prepares collection.</p></section>
 <div class="checkout-layout">
   <section class="checkout-details">
+    <p class="legal-notice">We use your name, email and phone number to process this order request and arrange collection. Read our <a href="{% url 'storefront:privacy' %}">Privacy Policy</a> before submitting your details.</p>
     {% if is_guest_checkout %}<p class="checkout-account-note">Checking out as a guest. <a href="{% url 'storefront:login' %}">Sign in</a> or <a href="{% url 'storefront:register' %}">create an account</a> to keep your orders together.</p>{% endif %}
     <form method="post" class="storefront-form">
       {% csrf_token %}
       {{ form.idempotency_key }}
       {{ form.non_field_errors }}
       {% for field in form %}
-        {% if field.name != "idempotency_key" %}
+        {% if field.name != "idempotency_key" and field.name != "accept_terms" %}
           <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
         {% endif %}
       {% endfor %}
+      <label class="legal-consent" for="{{ form.accept_terms.id_for_label }}">{{ form.accept_terms }}<span>I have read and agree to the <a href="{% url 'storefront:terms' %}">Terms of Service</a> and <a href="{% url 'storefront:returns' %}">Returns &amp; Refunds Policy</a>.</span></label>
+      {% if form.accept_terms.errors %}<p class="legal-errors">{{ form.accept_terms.errors }}</p>{% endif %}
       <div class="payment-notice"><strong>Pay at the studio</strong><span>No online payment is taken. The studio will confirm collection arrangements; payment is made at the studio.</span></div>
       <button class="button button-dark" type="submit">Place order</button>
     </form>
