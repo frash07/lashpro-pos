@@ -17,7 +17,7 @@
 .legal-consent input { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 2px; accent-color: #965d70; }
 .legal-consent a { color: #965d70; text-decoration: underline; text-underline-offset: 3px; }
 .legal-errors { margin: 0; color: #9b4549; font-size: 10px; }
-.legal-footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; padding: 13px 18px; border-top: 1px solid rgba(255,255,255,.12); color: #e9dfe4; font-size: 10px; }
+.legal-footer-links { margin-top: 28px; background: #171419; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; padding: 13px 18px; border-top: 1px solid rgba(255,255,255,.12); color: #e9dfe4; font-size: 10px; }
 .legal-footer-links a { text-decoration: underline; text-underline-offset: 3px; }
 .legal-footer-links a:hover { color: #d6a7b2; }
 .legal-staff-notice { margin: 12px 0 0; color: var(--muted, #9da3af); font-size: 10px; line-height: 1.6; }
