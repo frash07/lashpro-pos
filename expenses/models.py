@@ -1,3 +1,1 @@
-from django.db import models
-
-# Create your models here.
+71a836239075aa6e6e4ecb700e9c42c95c022d91
