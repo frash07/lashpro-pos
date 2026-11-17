@@ -23,11 +23,12 @@ def record_expense(*, actor, category, description, amount, expense_date,
         raise ValidationError({"actor": "Only an owner or manager may record business expenses."})
 
     try:
-        amount = Decimal(str(amount)).quantize(Decimal("0.01"))
+        raw_amount = Decimal(str(amount))
+        amount = raw_amount.quantize(Decimal("0.01"))
     except (InvalidOperation, TypeError, ValueError):
         raise ValidationError({"amount": "Enter a valid KSh amount."}) from None
-    if not amount.is_finite() or amount <= 0:
-        raise ValidationError({"amount": "Expense amount must be greater than zero."})
+    if not raw_amount.is_finite() or raw_amount != amount or amount <= 0:
+        raise ValidationError({"amount": "Enter an amount greater than zero with no more than two decimal places."})
 
     session_id = getattr(cash_session, "pk", cash_session)
     movement = None
