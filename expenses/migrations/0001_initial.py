@@ -1,6 +1,7 @@
 # Generated for the expenses register.
 import django.core.validators
 import django.db.models.deletion
+import django.db.models.functions.text
 import django.utils.timezone
 from decimal import Decimal
 from django.conf import settings
@@ -64,6 +65,14 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="expense",
             constraint=models.CheckConstraint(condition=models.Q(("amount__gt", 0)), name="expense_amount_positive"),
+        ),
+        migrations.AddConstraint(
+            model_name="expense",
+            constraint=models.UniqueConstraint(
+                django.db.models.functions.text.Lower("reference"),
+                condition=models.Q(("payment_method", "MPESA"), models.Q(("reference", ""), _negated=True)),
+                name="expense_mpesa_ref_ci_unique",
+            ),
         ),
         migrations.AddIndex(
             model_name="expense",
