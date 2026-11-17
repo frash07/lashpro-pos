@@ -146,7 +146,6 @@ class StorefrontHomeTests(TestCase):
 class StorefrontRegistrationTests(TestCase):
     def test_customer_registration_requires_terms_acceptance(self):
         response = self.client.post(reverse("storefront:register"), {
-            "accept_terms": "on",
             "full_name": "Amina Njeri",
             "email": "Amina@example.com",
             "phone": "+254 700 123 456",
@@ -278,6 +277,7 @@ class StorefrontGuestCheckoutTests(TestCase):
     def test_guest_checkout_rejects_stock_that_is_no_longer_available(self):
         self._set_cart(quantity=6)
         response = self.client.post(reverse("storefront:checkout"), {
+            "accept_terms": "on",
             "idempotency_key": str(uuid.uuid4()),
             "full_name": "Guest Customer",
             "email": "guest@example.com",
@@ -319,6 +319,7 @@ class StorefrontGuestCheckoutTests(TestCase):
         self._set_cart(quantity=1)
 
         response = self.client.post(reverse("storefront:checkout"), {
+            "accept_terms": "on",
             "idempotency_key": str(uuid.uuid4()),
             "full_name": "Linked Customer",
             "email": "linked@example.com",
