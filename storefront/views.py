@@ -111,6 +111,7 @@ def home(request):
 
     products = Product.objects.filter(active=True).order_by("name")
     services = Service.objects.filter(active=True).order_by("name")
+    active_service_count = Service.objects.filter(active=True).count()
     if query:
         # Match every search word against the product name/SKU or service name/type.
         # Repeated filters make multi-word searches work regardless of word order.
@@ -135,6 +136,7 @@ def home(request):
         "kind": kind,
         "product_count": len(products),
         "service_count": services.count(),
+        "active_service_count": active_service_count,
     })
     return render(request, "storefront/home.html", context)
 
