@@ -86,6 +86,35 @@ class StorefrontHomeTests(TestCase):
         self.assertEqual(response.context["product_count"], 1)
         self.assertEqual(response.context["service_count"], 0)
 
+    def test_search_matches_product_sku_and_service_names(self):
+        product_response = self.client.get(
+            "/",
+            {"q": "WEB-001"},
+            HTTP_HOST="lashproke.co.ke",
+        )
+        self.assertEqual(product_response.status_code, 200)
+        self.assertContains(product_response, "Lash Adhesive")
+        self.assertEqual(product_response.context["product_count"], 1)
+        self.assertEqual(product_response.context["service_count"], 0)
+
+        service_response = self.client.get(
+            "/",
+            {"q": "classic lash"},
+            HTTP_HOST="lashproke.co.ke",
+        )
+        self.assertEqual(service_response.status_code, 200)
+        self.assertContains(service_response, "Classic Lash Set")
+        self.assertEqual(service_response.context["product_count"], 0)
+        self.assertEqual(service_response.context["service_count"], 1)
+
+    def test_search_form_preserves_selected_catalog_filter(self):
+        response = self.client.get(
+            "/",
+            {"kind": "services"},
+            HTTP_HOST="lashproke.co.ke",
+        )
+        self.assertContains(response, 'type="hidden" name="kind" value="services"')
+
 
 class StorefrontRegistrationTests(TestCase):
     def test_customer_can_register_without_receiving_staff_access(self):

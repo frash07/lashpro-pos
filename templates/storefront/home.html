@@ -31,7 +31,8 @@
     <span class="section-count">{{ product_count|stringformat:"02d" }} PRODUCTS</span>
   </div>
   <form class="catalog-tools" method="get" action="{% url 'storefront:home' %}">
-    <label class="search-box"><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search products and services" aria-label="Search products and services"></label>
+    <label class="search-box"><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ query }}" placeholder="Search by product name, SKU or service" aria-label="Search by product name, SKU or service" autocomplete="off"></label>
+    <input type="hidden" name="kind" value="{{ kind }}">
     <div class="filter-links" aria-label="Catalogue filters">
       <button type="submit" name="kind" value="all" class="{% if kind == 'all' %}selected{% endif %}">All</button>
       <button type="submit" name="kind" value="products" class="{% if kind == 'products' %}selected{% endif %}">Products</button>

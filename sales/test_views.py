@@ -45,6 +45,13 @@ class CashierViewTests(TestCase):
         )
 
         self.assertEqual(product_item["stock"], float(self.product.on_hand))
+        self.assertIn("ui-glue", product_item["search_text"])
+        service_item = next(
+            item for item in response.context["catalog_items"]
+            if item["id"] == f"service-{self.service.pk}"
+        )
+        self.assertIn("classic set", service_item["search_text"])
+        self.assertContains(response, 'oninput="filterCatalog()"')
         self.assertContains(response, "stock-badge")
         self.assertContains(response, "aria-disabled")
         self.assertContains(response, "maxSellableQuantity")
