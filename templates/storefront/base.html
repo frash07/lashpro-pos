@@ -9,6 +9,7 @@
   <title>{% block title %}LashPro | Beauty · Professional{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'storefront/css/storefront.css' %}">
   <link rel="stylesheet" href="{% static 'storefront/css/appointments.css' %}">
+  <link rel="stylesheet" href="{% static 'css/legal.css' %}">
 </head>
 <body>
   <div class="announcement">
@@ -60,6 +61,11 @@
       <p>Products and services managed through one connected LashPro system.</p>
       <span class="copyright">© {% now "Y" %} LASH PRO</span>
     </div>
+    <nav class="legal-footer-links" aria-label="Legal policies">
+      <a href="{% url 'storefront:privacy' %}">Privacy policy</a>
+      <a href="{% url 'storefront:terms' %}">Terms of service</a>
+      <a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a>
+    </nav>
   </footer>
 </body>
 </html>
