@@ -158,6 +158,7 @@
           <div class="audit-support-grid">
             <article class="support-card"><span class="support-label">Confirmed collections</span><strong>KES {{ report.confirmed_collection|floatformat:"2g" }}</strong><span>Cash and reconciled M-PESA</span></article>
             <article class="support-card"><span class="support-label">M-PESA awaiting review</span><strong>KES {{ report.unverified_collection|floatformat:"2g" }}</strong><span>Pending references remain open</span></article>
+            <article class="support-card"><span class="support-label">Operating expenses</span><strong>KES {{ report.expense_total|floatformat:"2g" }}</strong><span>KES {{ report.unpaid_expense_total|floatformat:"2g" }} unpaid · <a href="{% url 'expenses:dashboard' %}">Open register</a></span></article>
             <article class="support-card"><span class="support-label">Cash sessions opened</span><strong>{{ report.cash_session_count }}</strong><span>{{ report.cash_sessions_pending_approval }} pending approval</span></article>
           </div>
         </section>
