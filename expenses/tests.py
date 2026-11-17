@@ -62,6 +62,11 @@ class ExpenseRegisterTests(TestCase):
         self.assertIsNone(expense.cash_movement_id)
         self.assertEqual(CashSessionMovement.objects.count(), 0)
 
+    def test_mpesa_reference_is_unique_case_insensitively(self):
+        self._expense(payment_method=Expense.PaymentMethod.MPESA, cash_session=None, reference="QXY12345")
+        with self.assertRaises(ValidationError):
+            self._expense(payment_method=Expense.PaymentMethod.MPESA, cash_session=None, reference="qxy12345")
+
     def test_unpaid_expense_has_no_payment_method_or_drawer_movement(self):
         expense = self._expense(payment_status=Expense.PaymentStatus.UNPAID, payment_method="", cash_session=None)
         self.assertEqual(expense.payment_status, Expense.PaymentStatus.UNPAID)
