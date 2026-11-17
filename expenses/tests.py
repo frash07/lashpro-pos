@@ -21,6 +21,7 @@ class ExpenseRegisterTests(TestCase):
         cls.manager = User.objects.create_user(username="expense-manager", password="test-password", role=User.Role.MANAGER, is_staff=True)
         cls.cashier = User.objects.create_user(username="expense-cashier", password="test-password", role=User.Role.CASHIER, is_staff=True)
         cls.session = open_cash_session(cashier=cls.cashier, opening_float=Decimal("1000.00"), actor=cls.cashier)
+        cls.manager_session = open_cash_session(cashier=cls.manager, opening_float=Decimal("500.00"), actor=cls.manager)
         cls.today = timezone.localdate()
 
     def _expense(self, **overrides):
@@ -66,6 +67,21 @@ class ExpenseRegisterTests(TestCase):
         self.assertEqual(expense.payment_status, Expense.PaymentStatus.UNPAID)
         self.assertFalse(expense.cash_movement_id)
         self.assertEqual(CashSessionMovement.objects.count(), 0)
+
+    def test_cash_session_expense_action_creates_expense_register_record(self):
+        self.client.force_login(self.manager)
+        response = self.client.post(reverse("payments:cash-session"), {
+            "action": "movement",
+            "movement_type": CashSessionMovement.Type.EXPENSE,
+            "amount": "75.00",
+            "reason": "Staff refreshments",
+        })
+        self.assertEqual(response.status_code, 302)
+        expense = Expense.objects.get(description="Staff refreshments")
+        self.assertEqual(expense.category, Expense.Category.OTHER)
+        self.assertEqual(expense.amount, Decimal("75.00"))
+        self.assertEqual(expense.cash_session_id, self.manager_session.pk)
+        self.assertEqual(expense.cash_movement.amount, Decimal("-75.00"))
 
     def test_cashier_cannot_record_expense_even_if_they_have_an_open_session(self):
         with self.assertRaises(ValidationError):
