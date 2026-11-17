@@ -113,6 +113,7 @@ class MpesaStkCallbackTests(TestCase):
                         "Item": [
                             {"Name": "Amount", "Value": 1500},
                             {"Name": "MpesaReceiptNumber", "Value": "QWE1234567"},
+                            {"Name": "PhoneNumber", "Value": 254712345678},
                         ]
                     },
                 }
@@ -182,5 +183,35 @@ class MpesaStkCallbackTests(TestCase):
                 payload={"Body": {"stkCallback": {
                     "CheckoutRequestID": "different-id",
                     "ResultCode": 0,
+                }}},
+            )
+
+    @patch("payments.mpesa._stk_request")
+    def test_success_callback_with_wrong_amount_is_rejected(self, stk_request):
+        stk_request.return_value = {
+            "ResponseCode": "0",
+            "MerchantRequestID": "merchant-request",
+            "CheckoutRequestID": "ws_CO_wrong_amount",
+        }
+        initiate_stk_push(
+            sale=self.sale,
+            amount=Decimal("1500.00"),
+            phone="0712345678",
+            callback_url="https://lashpro-pos.fly.dev/callback/",
+            callback_token="callback-wrong-amount",
+            idempotency_key=uuid.uuid4(),
+            actor=self.owner,
+        )
+        with self.assertRaises(ValidationError):
+            process_stk_callback(
+                callback_token="callback-wrong-amount",
+                payload={"Body": {"stkCallback": {
+                    "CheckoutRequestID": "ws_CO_wrong_amount",
+                    "ResultCode": 0,
+                    "CallbackMetadata": {"Item": [
+                        {"Name": "Amount", "Value": 10},
+                        {"Name": "MpesaReceiptNumber", "Value": "QWE1234567"},
+                        {"Name": "PhoneNumber", "Value": 254712345678},
+                    ]},
                 }}},
             )

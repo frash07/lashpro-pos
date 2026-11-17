@@ -26,7 +26,7 @@ class IntegrationSettingsForm(forms.Form):
         required=False, widget=forms.PasswordInput(render_value=False), label="SMS API key",
     )
     sms_sender_id = forms.CharField(max_length=30, required=False, label="Sender ID (optional)")
-    sms_sandbox = forms.BooleanField(required=False, label="Use sandbox")
+    sms_sandbox = forms.BooleanField(required=False, initial=True, label="Use sandbox")
     clear_sms = forms.BooleanField(required=False, label="Remove saved SMS API key")
 
     # Meta WhatsApp Cloud API

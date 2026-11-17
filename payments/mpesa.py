@@ -338,6 +338,15 @@ def process_stk_callback(*, callback_token, payload):
 
     payment = push.payment_transaction
     if result_code == "0" and receipt:
+        # The callback is accepted only when its transaction facts match the
+        # reserved amount and the phone to which the prompt was sent.
+        try:
+            reported_amount = Decimal(str(metadata.get("Amount"))).quantize(CENT)
+            reported_phone = normalize_mpesa_phone(metadata.get("PhoneNumber"))
+        except (InvalidOperation, TypeError, ValueError, ValidationError):
+            raise ValidationError("Successful M-Pesa callback is missing valid amount or phone metadata.") from None
+        if reported_amount != payment.amount or reported_phone != push.phone_number:
+            raise ValidationError("M-Pesa callback amount or phone does not match the STK payment request.")
         push.status = MpesaStkPush.Status.SUCCEEDED
         push.mpesa_receipt_number = receipt
         payment.status = PaymentTransaction.Status.SUCCEEDED
