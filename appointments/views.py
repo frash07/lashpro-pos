@@ -123,6 +123,7 @@ def book(request):
         "slots": slots,
         "selected_service": selected_service,
         "selected_date": selected_date,
+        "active_service_count": Service.objects.filter(active=True).count(),
         "customer_account": _customer_profile(request.user),
     }
     return render(request, "appointments/book.html", context)
