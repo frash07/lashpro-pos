@@ -76,6 +76,8 @@ class Expense(models.Model):
                 errors["cash_session"] = "An unpaid expense cannot use a cash session."
             if self.reference:
                 errors["reference"] = "An unpaid expense cannot have a payment reference."
+            if self.cash_movement_id:
+                errors["cash_movement"] = "An unpaid expense cannot have a drawer movement."
         elif self.payment_status == self.PaymentStatus.PAID:
             if not self.payment_method:
                 errors["payment_method"] = "Choose how the expense was paid."
