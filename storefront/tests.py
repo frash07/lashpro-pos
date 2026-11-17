@@ -88,6 +88,18 @@ class StorefrontHomeTests(TestCase):
             self.assertContains(response, "support@lashpro.ke")
             self.assertContains(response, 'aria-label="Legal policies"')
 
+    def test_customer_legal_pages_are_public_and_linked_from_the_storefront(self):
+        for name, heading in (
+            ("storefront:privacy", "Privacy policy"),
+            ("storefront:terms", "Terms of service"),
+            ("storefront:returns", "Returns &amp; refunds"),
+        ):
+            response = self.client.get(reverse(name), HTTP_HOST="lashproke.co.ke")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, heading)
+            self.assertContains(response, "support@lashpro.ke")
+            self.assertContains(response, 'aria-label="Legal policies"')
+
     def test_pos_hostname_root_redirects_to_staff_checkout(self):
         response = self.client.get(
             "/",
@@ -144,6 +156,19 @@ class StorefrontHomeTests(TestCase):
 
 
 class StorefrontRegistrationTests(TestCase):
+    def test_customer_registration_requires_terms_acceptance(self):
+        response = self.client.post(reverse("storefront:register"), {
+            "accept_terms": "on",
+            "full_name": "Amina Njeri",
+            "email": "Amina@example.com",
+            "phone": "+254 700 123 456",
+            "password1": "Amina!StrongPassphrase943",
+            "password2": "Amina!StrongPassphrase943",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(User.objects.filter(email="amina@example.com").count(), 0)
+        self.assertContains(response, "You must agree to the Terms of Service and Returns Policy")
+
     def test_customer_registration_requires_terms_acceptance(self):
         response = self.client.post(reverse("storefront:register"), {
             "full_name": "Amina Njeri",
@@ -231,6 +256,7 @@ class StorefrontGuestCheckoutTests(TestCase):
         key = uuid.uuid4()
         response = self.client.post(reverse("storefront:checkout"), {
             "accept_terms": "on",
+            "accept_terms": "on",
             "idempotency_key": str(key),
             "full_name": "Guest Customer",
             "email": "guest@example.com",
@@ -260,6 +286,19 @@ class StorefrontGuestCheckoutTests(TestCase):
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, order.reference)
         self.assertContains(detail, "not a payment confirmation")
+
+    def test_guest_checkout_requires_terms_acceptance(self):
+        self._set_cart(quantity=1)
+        response = self.client.post(reverse("storefront:checkout"), {
+            "idempotency_key": str(uuid.uuid4()),
+            "full_name": "Guest Customer",
+            "email": "guest@example.com",
+            "phone": "+254 711 222 333",
+            "notes": "",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(StorefrontOrder.objects.count(), 0)
+        self.assertContains(response, "You must agree to the Terms of Service and Returns Policy")
 
     def test_guest_checkout_requires_terms_acceptance(self):
         self._set_cart(quantity=1)
