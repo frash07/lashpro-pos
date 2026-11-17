@@ -78,7 +78,7 @@
             <div class="service-content"><p class="service-kicker">LASHPRO SERVICE</p><h3>{{ service.name }}</h3><div class="service-footer"><strong>KSh {{ service.price|floatformat:2 }}</strong><a class="service-book-link" href="{% url 'appointments:book' %}?service={{ service.pk }}">BOOK NOW →</a></div></div>
           </article>
         {% empty %}
-          <div class="empty-state"><span>✳</span><h3>No services found</h3><p>Try another search, or check back when the service menu is updated.</p></div>
+          {% if active_service_count == 0 %}<div class="empty-state"><span>✳</span><h3>Our service menu is being prepared</h3><p>The studio has not published any active services yet. Please check back soon to browse treatments and book online.</p></div>{% else %}<div class="empty-state"><span>✳</span><h3>No services match this search</h3><p>Try another search, or view all services to browse the current menu.</p></div>{% endif %}
         {% endfor %}
       </div>
     {% endif %}
