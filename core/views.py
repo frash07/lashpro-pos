@@ -203,6 +203,15 @@ def admin_suite(request):
             ],
         },
         {
+            "name": "Expenses",
+            "description": "Record operating costs, track outstanding bills and review the expense audit trail.",
+            "icon": "receipt",
+            "items": [
+                ("Expense Register", "/expenses/"),
+                ("Expense Records", "/admin/expenses/expense/"),
+            ],
+        },
+        {
             "name": "Artist Commissions",
             "description": "Review commission ledger entries and payout records.",
             "icon": "badge-dollar-sign",
