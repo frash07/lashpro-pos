@@ -7,7 +7,7 @@ from django.utils import timezone
 from accounts.models import User
 from commissions.models import CommissionPayoutRecord
 from .forms import CashSessionApprovalForm, CashSessionMovementForm, CloseCashSessionForm, OpenCashSessionForm
-from .models import CashSession, PaymentTransaction, RefundPayout
+from .models import CashSession, CashSessionMovement, PaymentTransaction, RefundPayout
 from .services import (
     add_cash_session_movement, approve_cash_session_close, calculate_expected_cash,
     close_cash_session, open_cash_session, reconcile_manual_mpesa,
