@@ -1,13 +1,23 @@
+import json
+import secrets
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 
 from accounts.models import User
 from commissions.models import CommissionPayoutRecord
 from .forms import CashSessionApprovalForm, CashSessionMovementForm, CloseCashSessionForm, OpenCashSessionForm
-from .models import CashSession, CashSessionMovement, PaymentTransaction, RefundPayout
+from sales.models import Sale
+from .models import CashSession, CashSessionMovement, MpesaStkPush, PaymentTransaction, RefundPayout
+from .mpesa import initiate_stk_push, process_stk_callback
 from .services import (
     add_cash_session_movement, approve_cash_session_close, calculate_expected_cash,
     close_cash_session, open_cash_session, reconcile_manual_mpesa,
@@ -108,4 +118,61 @@ def _render_cash_session(request, own_session):
         "close_form": CloseCashSessionForm(), "movement_form": CashSessionMovementForm(),
         "pending_sessions": pending_sessions, "approval_form": CashSessionApprovalForm(),
         "is_manager": _manager(request.user),
+    })
+
+
+
+@login_required(login_url="login")
+@require_POST
+def mpesa_stk_initiate(request):
+    if not _can_use_cash_tools(request.user):
+        raise PermissionDenied
+    sale = get_object_or_404(Sale, pk=request.POST.get("sale_id"), status=Sale.Status.COMPLETED)
+    if not _manager(request.user) and sale.cashier_id != request.user.pk:
+        raise PermissionDenied
+
+    callback_token = secrets.token_urlsafe(48)
+    callback_url = (
+        settings.POS_BASE_URL.rstrip("/")
+        + reverse("payments:mpesa-stk-callback", kwargs={"token": callback_token})
+    )
+    try:
+        push = initiate_stk_push(
+            sale=sale,
+            amount=request.POST.get("amount"),
+            phone=request.POST.get("phone"),
+            callback_url=callback_url,
+            callback_token=callback_token,
+            idempotency_key=request.POST.get("idempotency_key"),
+            actor=request.user,
+        )
+    except ValidationError as exc:
+        for error in exc.messages:
+            messages.error(request, error)
+    else:
+        if push.status == MpesaStkPush.Status.PENDING:
+            messages.success(request, f"M-Pesa prompt sent to {push.phone_number}. The sale is paid only after Daraja confirms the callback.")
+        elif push.status == MpesaStkPush.Status.SUCCEEDED:
+            messages.success(request, f"M-Pesa payment for {sale.receipt_number} is confirmed.")
+        elif push.status == MpesaStkPush.Status.UNKNOWN:
+            messages.warning(request, "Daraja did not return a definite response. Do not send another STK prompt until the payment outcome is checked.")
+        else:
+            messages.error(request, "The STK request was not accepted. Check the Daraja settings and try again.")
+    return redirect("sales:payments")
+
+
+@csrf_exempt
+@require_POST
+def mpesa_stk_callback(request, token):
+    try:
+        if len(request.body) > 65536:
+            return JsonResponse({"ResultCode": 1, "ResultDesc": "Payload too large"}, status=413)
+        payload = json.loads(request.body.decode("utf-8"))
+        push = process_stk_callback(callback_token=token, payload=payload)
+    except (ValueError, UnicodeDecodeError, ValidationError):
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid callback"}, status=400)
+    return JsonResponse({
+        "ResultCode": 0,
+        "ResultDesc": "Accepted",
+        "payment_status": push.status,
     })

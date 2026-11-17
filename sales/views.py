@@ -355,6 +355,18 @@ def balance_payments(request):
     if not is_manager:
         sales = sales.filter(cashier=request.user)
     sales = sales.select_related("customer", "cashier").prefetch_related("lines", "payment_allocations__payment_transaction").order_by("-created_at")[:100]
+    for sale in sales:
+        sale.available_for_collection = sale.available_to_collect
+        sale.payment_form_key = uuid.uuid4()
+    from core.models import IntegrationSettings
+    try:
+        integration_config = IntegrationSettings.get_solo().get_config()
+    except RuntimeError:
+        integration_config = {}
+    mpesa_stk_configured = all(
+        integration_config.get(key)
+        for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_shortcode", "mpesa_passkey")
+    )
     if request.method == "POST":
         allowed_sales = Sale.objects.filter(status=Sale.Status.COMPLETED)
         if not is_manager:
@@ -370,7 +382,11 @@ def balance_payments(request):
             else:
                 messages.success(request, f"Payment recorded for {data['sale'].receipt_number}.")
                 return redirect("sales:payments")
-    return render(request, "sales/payments.html", {"sales": sales, "is_manager": is_manager})
+    return render(request, "sales/payments.html", {
+        "sales": sales,
+        "is_manager": is_manager,
+        "mpesa_stk_configured": mpesa_stk_configured,
+    })
 
 
 @login_required(login_url="login")

@@ -196,6 +196,7 @@ def cancel_appointment(request, pk):
     else:
         appointment.status = Appointment.Status.CANCELLED
         appointment.save(update_fields=("status", "updated_at"))
+        send_booking_notification(appointment, "CANCELLED")
         messages.success(request, "Your appointment has been cancelled.")
     return redirect("appointments:account")
 

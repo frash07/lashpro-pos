@@ -6,7 +6,11 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render
+from django.contrib import messages
+from django.shortcuts import redirect, render
+
+from .forms import IntegrationSettingsForm
+from .models import IntegrationSettings
 
 
 @require_GET
@@ -221,6 +225,14 @@ def admin_suite(request):
                 ("Commission Payout Requests", "/admin/commissions/commissionpayoutrequest/"),
             ],
         },
+        {
+            "name": "Communications & Integrations",
+            "description": "Connect SMS, WhatsApp, email, M-Pesa Daraja and KRA eTIMS credentials.",
+            "icon": "plug-zap",
+            "items": [
+                ("API & Payment Integrations", "/admin-suite/integrations/"),
+            ],
+        },
     ]
 
     groups = [
@@ -237,3 +249,45 @@ def admin_suite(request):
     ]
 
     return render(request, "admin_suite/index.html", {"groups": groups})
+
+@staff_member_required
+def integration_settings(request):
+    from django.core.exceptions import PermissionDenied
+    from accounts.models import User
+
+    if not (
+        request.user.is_superuser
+        or (
+            request.user.is_staff
+            and getattr(request.user, "role", None) in {User.Role.OWNER, User.Role.MANAGER}
+        )
+    ):
+        raise PermissionDenied
+
+    record = IntegrationSettings.get_solo()
+    if request.method == "POST":
+        form = IntegrationSettingsForm(request.POST, settings_record=record)
+        if form.is_valid():
+            record.set_config(form.merged_config())
+            record.updated_by = request.user
+            record.save(update_fields=("encrypted_config", "updated_by", "updated_at"))
+            messages.success(request, "Integration settings saved. Provider credentials are encrypted at rest.")
+            return redirect("integrations-settings")
+        messages.error(request, "Review the highlighted fields and try again.")
+    else:
+        form = IntegrationSettingsForm(settings_record=record)
+
+    config = record.get_config()
+    return render(request, "core/integrations.html", {
+        "form": form,
+        "config_status": {
+            "email": bool(config.get("email_host") and config.get("email_from_email")),
+            "email_password": bool(config.get("email_password")),
+            "sms": bool(config.get("sms_provider") == "africastalking" and config.get("sms_username") and config.get("sms_api_key")),
+            "whatsapp": bool(config.get("whatsapp_access_token") and config.get("whatsapp_phone_number_id")),
+            "mpesa": bool(all(config.get(key) for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey", "mpesa_shortcode"))),
+            "etims": bool(config.get("etims_taxpayer_pin") and config.get("etims_communication_key")),
+        },
+        "updated_at": record.updated_at,
+    })
+
