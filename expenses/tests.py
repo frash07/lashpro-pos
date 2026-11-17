@@ -11,7 +11,7 @@ from audit.models import AuditEvent
 from payments.models import CashSessionMovement
 from payments.services import open_cash_session
 from .models import Expense
-from .services import record_expense
+from .services import record_expense, settle_expense
 
 
 class ExpenseRegisterTests(TestCase):
@@ -82,6 +82,49 @@ class ExpenseRegisterTests(TestCase):
         self.assertEqual(expense.amount, Decimal("75.00"))
         self.assertEqual(expense.cash_session_id, self.manager_session.pk)
         self.assertEqual(expense.cash_movement.amount, Decimal("-75.00"))
+
+    def test_unpaid_expense_can_be_settled_once_with_audited_cash_movement(self):
+        expense = self._expense(
+            payment_status=Expense.PaymentStatus.UNPAID,
+            payment_method="",
+            cash_session=None,
+        )
+        settled = settle_expense(
+            expense=expense,
+            actor=self.manager,
+            payment_method=Expense.PaymentMethod.CASH,
+            cash_session=self.manager_session,
+        )
+        settled.refresh_from_db()
+        self.assertEqual(settled.payment_status, Expense.PaymentStatus.PAID)
+        self.assertEqual(settled.payment_method, Expense.PaymentMethod.CASH)
+        self.assertEqual(settled.cash_movement.amount, Decimal("-250.00"))
+        self.assertTrue(AuditEvent.objects.filter(
+            event_type=AuditEvent.EventType.EXPENSE,
+            object_id=str(expense.pk),
+            after_state__payment_status=Expense.PaymentStatus.PAID,
+        ).exists())
+        with self.assertRaises(ValidationError):
+            settle_expense(
+                expense=expense,
+                actor=self.manager,
+                payment_method=Expense.PaymentMethod.BANK,
+            )
+
+    def test_expense_settlement_requires_manager(self):
+        expense = self._expense(
+            payment_status=Expense.PaymentStatus.UNPAID,
+            payment_method="",
+            cash_session=None,
+        )
+        with self.assertRaises(ValidationError):
+            settle_expense(
+                expense=expense,
+                actor=self.cashier,
+                payment_method=Expense.PaymentMethod.BANK,
+            )
+        expense.refresh_from_db()
+        self.assertEqual(expense.payment_status, Expense.PaymentStatus.UNPAID)
 
     def test_cashier_cannot_record_expense_even_if_they_have_an_open_session(self):
         with self.assertRaises(ValidationError):
