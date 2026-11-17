@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'css/legacy.css' %}">
+  <link rel="stylesheet" href="{% static 'css/legal.css' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap">
@@ -23,6 +24,11 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
   {% block content %}{% endblock %}
+  <footer class="legal-footer-links" aria-label="Customer legal policies">
+    <a href="{% url 'storefront:privacy' %}">Privacy policy</a>
+    <a href="{% url 'storefront:terms' %}">Terms of service</a>
+    <a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a>
+  </footer>
   {% block scripts %}{% endblock %}
   <script>
     if ("serviceWorker" in navigator) {
