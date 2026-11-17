@@ -37,11 +37,10 @@ class MpesaStkCallbackTests(TestCase):
             price=Decimal("1500.00"),
             active=True,
         )
-        self.sale = Sale.objects.create(
-            cashier=self.owner,
-            status=Sale.Status.COMPLETED,
-        )
+        self.sale = Sale.objects.create(cashier=self.owner)
         SaleLine.from_service(sale=self.sale, service=self.service).save()
+        self.sale.status = Sale.Status.COMPLETED
+        self.sale.save(update_fields=("status",))
         self.config = IntegrationSettings.get_solo()
         self.config.set_config({
             "mpesa_environment": "sandbox",
