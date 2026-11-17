@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from accounts.models import User
 from commissions.models import CommissionPayoutRecord
@@ -74,9 +75,24 @@ def cash_session_dashboard(request):
             if not form.is_valid():
                 raise ValidationError(form.errors.as_text())
             data = form.cleaned_data
-            amount = data["amount"] if data["movement_type"] == "CASH_IN" else -data["amount"]
-            add_cash_session_movement(session=own_session, movement_type=data["movement_type"], amount=amount, reason=data["reason"], actor=request.user)
-            messages.success(request, "Cash movement recorded.")
+            if data["movement_type"] == CashSessionMovement.Type.EXPENSE:
+                from expenses.models import Expense
+                from expenses.services import record_expense
+                record_expense(
+                    actor=request.user,
+                    category=Expense.Category.OTHER,
+                    description=data["reason"],
+                    amount=data["amount"],
+                    expense_date=timezone.localdate(),
+                    payment_status=Expense.PaymentStatus.PAID,
+                    payment_method=Expense.PaymentMethod.CASH,
+                    cash_session=own_session,
+                )
+                messages.success(request, "Cash expense recorded in the expense register and drawer ledger.")
+            else:
+                amount = data["amount"] if data["movement_type"] == "CASH_IN" else -data["amount"]
+                add_cash_session_movement(session=own_session, movement_type=data["movement_type"], amount=amount, reason=data["reason"], actor=request.user)
+                messages.success(request, "Cash movement recorded.")
     except ValidationError as exc:
         for error in exc.messages:
             messages.error(request, error)
