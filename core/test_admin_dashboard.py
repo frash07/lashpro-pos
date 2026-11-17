@@ -33,5 +33,8 @@ class AdminInventoryDashboardTests(TestCase):
         self.assertContains(response, "Products and stock levels")
         self.assertContains(response, "Inventory movement history")
         self.assertContains(response, "Low-stock alert")
+        self.assertContains(response, "Online appointment booking")
+        self.assertContains(response, reverse("admin:catalog_service_changelist"))
+        self.assertContains(response, reverse("admin:appointments_staffavailability_changelist"))
         self.assertContains(response, "Admin Dashboard Low Stock Test")
         self.assertContains(response, reverse("admin:catalog_product_changelist"))
