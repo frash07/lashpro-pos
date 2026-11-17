@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from audit.models import ImmutableManager
@@ -50,7 +51,14 @@ class Expense(models.Model):
 
     class Meta:
         ordering = ("-expense_date", "-created_at", "-pk")
-        constraints = [models.CheckConstraint(condition=Q(amount__gt=0), name="expense_amount_positive")]
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name="expense_amount_positive"),
+            models.UniqueConstraint(
+                Lower("reference"),
+                condition=Q(payment_method="MPESA") & ~Q(reference=""),
+                name="expense_mpesa_ref_ci_unique",
+            ),
+        ]
         indexes = [
             models.Index(fields=("expense_date", "category"), name="expense_date_category_idx"),
             models.Index(fields=("payment_status", "expense_date"), name="expense_status_date_idx"),
@@ -80,12 +88,29 @@ class Expense(models.Model):
                 errors["cash_session"] = "Only cash expenses can be assigned to a cash session."
             if self.payment_method == self.PaymentMethod.MPESA and not self.reference.strip():
                 errors["reference"] = "Enter the M-Pesa transaction reference."
+            if self.payment_method == self.PaymentMethod.CASH and not self.cash_movement_id:
+                errors["cash_movement"] = "A cash-paid expense must link to its drawer movement."
+            if self.payment_method != self.PaymentMethod.CASH and self.cash_movement_id:
+                errors["cash_movement"] = "Only cash-paid expenses may link to a drawer movement."
         if errors:
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
-        if self.pk and type(self).objects.filter(pk=self.pk).exists():
-            raise TypeError("Expense records are immutable. Record a correcting entry instead.")
+        if self.pk:
+            existing = type(self).objects.filter(pk=self.pk).first()
+            if existing:
+                immutable_fields = (
+                    "expense_date", "category", "description", "supplier",
+                    "amount", "created_by_id", "created_at",
+                )
+                if any(getattr(existing, field) != getattr(self, field) for field in immutable_fields):
+                    raise TypeError("Expense details are immutable. Record a correcting entry instead.")
+                if not (
+                    existing.payment_status == self.PaymentStatus.UNPAID
+                    and self.payment_status == self.PaymentStatus.PAID
+                ):
+                    raise TypeError("Only an unpaid expense may transition once to paid.")
+                self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
