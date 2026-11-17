@@ -73,6 +73,13 @@ class StorefrontOrder(models.Model):
         blank=True,
         related_name="storefront_orders",
     )
+    sale = models.OneToOneField(
+        "sales.Sale",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="storefront_order",
+    )
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField(max_length=254)
     customer_phone = models.CharField(max_length=20)
