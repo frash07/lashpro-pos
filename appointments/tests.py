@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import patch
 from datetime import time, timedelta
 from decimal import Decimal
 
@@ -116,6 +117,26 @@ class AppointmentBookingTests(TestCase):
         self.assertEqual(appointment.duration_minutes_snapshot, 60)
         self.assertIsNone(appointment.account)
         self.assertEqual(self.client.get(response.url).status_code, 200)
+
+
+    @patch("appointments.views.send_booking_notification")
+    def test_new_guest_booking_sends_request_received_notification(self, send_notification):
+        slot = self._first_slot()
+        response = self.client.post(reverse("appointments:book"), {
+            "accept_terms": "on",
+            "service": self.service.pk,
+            "appointment_date": self.day.isoformat(),
+            "slot": slot["value"],
+            "full_name": "Guest Client",
+            "email": "guest@example.com",
+            "phone": "+254700123456",
+            "notes": "",
+            "idempotency_key": str(uuid.uuid4()),
+        })
+
+        self.assertEqual(response.status_code, 302)
+        appointment = Appointment.objects.get()
+        send_notification.assert_called_once_with(appointment, "REQUESTED")
 
     def test_appointment_request_requires_terms_acceptance(self):
         slot = self._first_slot()

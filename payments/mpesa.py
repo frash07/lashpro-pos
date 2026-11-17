@@ -73,7 +73,7 @@ def _access_token(config):
     if not (consumer_key and consumer_secret):
         raise DarajaError("Enter the Daraja consumer key and consumer secret in API Integrations.")
     cache_key = "lashpro:daraja:token:" + hashlib.sha256(
-        consumer_key.encode("utf-8")
+        (_root(config) + ":" + consumer_key).encode("utf-8")
     ).hexdigest()
     token = cache.get(cache_key)
     if token:
@@ -172,9 +172,12 @@ def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, ac
             and allocation.amount == amount
         ):
             try:
-                return existing.stk_push, False
+                existing_push = existing.stk_push
             except MpesaStkPush.DoesNotExist:
                 raise ValidationError({"idempotency_key": "This checkout key has already been used."}) from None
+            if existing_push.phone_number == phone:
+                return existing_push, False
+        raise ValidationError({"idempotency_key": "This payment request key has already been used with different details."})
         raise ValidationError({"idempotency_key": "This payment request key has already been used."})
 
     if amount > locked_sale.available_to_collect:
@@ -204,6 +207,25 @@ def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, ac
     return push, True
 
 
+@transaction.atomic
+def _update_push_before_callback(push_id, updates, payment_status=None):
+    locked = MpesaStkPush.objects.select_for_update().select_related(
+        "payment_transaction"
+    ).get(pk=push_id)
+    # A very fast callback can arrive before the initial HTTP response is saved.
+    # Never let that response overwrite a callback-confirmed result.
+    if locked.callback_received_at:
+        return locked, True
+    for field, value in updates.items():
+        setattr(locked, field, value)
+    locked.save(update_fields=tuple(updates.keys()) + ("updated_at",))
+    if payment_status:
+        payment = locked.payment_transaction
+        payment.status = payment_status
+        payment.save(update_fields=("status",))
+    return locked, False
+
+
 def initiate_stk_push(
     *, sale, amount, phone, callback_url, callback_token=None,
     idempotency_key=None, actor,
@@ -231,38 +253,57 @@ def initiate_stk_push(
     try:
         payload = _stk_request(config, amount, phone, callback_url)
     except DarajaOutcomeUnknown as exc:
-        push.status = MpesaStkPush.Status.UNKNOWN
-        push.result_description = str(exc)[:500]
-        push.save(update_fields=("status", "result_description", "updated_at"))
-        raise ValidationError({"mpesa": "The request was sent but Daraja did not return a definite response. Do not send another prompt yet; wait for the callback or check the M-Pesa account."}) from None
+        push, callback_won = _update_push_before_callback(
+            push.pk,
+            {
+                "status": MpesaStkPush.Status.UNKNOWN,
+                "result_description": str(exc)[:500],
+            },
+        )
+        if callback_won:
+            return push
+        raise ValidationError({"mpesa": "The request outcome is not yet known. Do not send another prompt; wait for the callback or check the M-Pesa account."}) from None
     except DarajaError as exc:
-        push.status = MpesaStkPush.Status.FAILED
-        push.result_description = str(exc)[:500]
-        push.save(update_fields=("status", "result_description", "updated_at"))
-        payment = push.payment_transaction
-        payment.status = PaymentTransaction.Status.FAILED
-        payment.save(update_fields=("status",))
+        push, callback_won = _update_push_before_callback(
+            push.pk,
+            {
+                "status": MpesaStkPush.Status.FAILED,
+                "result_description": str(exc)[:500],
+            },
+            payment_status=PaymentTransaction.Status.FAILED,
+        )
+        if callback_won:
+            return push
         raise ValidationError({"mpesa": str(exc)}) from None
 
     response_code = str(payload.get("ResponseCode", ""))
     if response_code != "0" or not payload.get("CheckoutRequestID"):
-        push.status = MpesaStkPush.Status.FAILED
-        push.result_code = response_code
-        push.result_description = str(payload.get("ResponseDescription") or payload.get("errorMessage") or "Daraja did not accept the STK request.")[:500]
-        push.save(update_fields=("status", "result_code", "result_description", "updated_at"))
-        payment = push.payment_transaction
-        payment.status = PaymentTransaction.Status.FAILED
-        payment.save(update_fields=("status",))
+        push, callback_won = _update_push_before_callback(
+            push.pk,
+            {
+                "status": MpesaStkPush.Status.FAILED,
+                "result_code": response_code,
+                "result_description": str(
+                    payload.get("ResponseDescription")
+                    or payload.get("errorMessage")
+                    or "Daraja did not accept the STK request."
+                )[:500],
+            },
+            payment_status=PaymentTransaction.Status.FAILED,
+        )
+        if callback_won:
+            return push
         raise ValidationError({"mpesa": "Daraja rejected the STK request. Check the credentials, shortcode, passkey and transaction type."})
 
-    push.merchant_request_id = str(payload.get("MerchantRequestID") or "")[:100]
-    push.checkout_request_id = str(payload.get("CheckoutRequestID") or "")[:100]
-    push.status = MpesaStkPush.Status.PENDING
-    push.result_description = str(payload.get("CustomerMessage") or "STK prompt sent to customer.")[:500]
-    push.save(update_fields=(
-        "merchant_request_id", "checkout_request_id", "status",
-        "result_description", "updated_at",
-    ))
+    push, callback_won = _update_push_before_callback(
+        push.pk,
+        {
+            "merchant_request_id": str(payload.get("MerchantRequestID") or "")[:100],
+            "checkout_request_id": str(payload.get("CheckoutRequestID") or "")[:100],
+            "status": MpesaStkPush.Status.PENDING,
+            "result_description": str(payload.get("CustomerMessage") or "STK prompt sent to customer.")[:500],
+        },
+    )
     return push
 
 
@@ -275,10 +316,8 @@ def process_stk_callback(*, callback_token, payload):
     except MpesaStkPush.DoesNotExist:
         raise ValidationError("Unknown M-Pesa callback token.") from None
 
-    callback = (
-        (payload or {}).get("Body", {}).get("stkCallback")
-        if isinstance(payload, dict) else None
-    )
+    body = (payload or {}).get("Body") if isinstance(payload, dict) else None
+    callback = body.get("stkCallback") if isinstance(body, dict) else None
     if not isinstance(callback, dict):
         raise ValidationError("Invalid M-Pesa callback format.")
     checkout_id = str(callback.get("CheckoutRequestID") or "")
@@ -290,7 +329,9 @@ def process_stk_callback(*, callback_token, payload):
     result_code = str(callback.get("ResultCode", ""))
     result_description = str(callback.get("ResultDesc") or "")[:500]
     metadata = {}
-    for item in (callback.get("CallbackMetadata") or {}).get("Item", []) or []:
+    callback_metadata = callback.get("CallbackMetadata")
+    items = callback_metadata.get("Item", []) if isinstance(callback_metadata, dict) else []
+    for item in items or []:
         if isinstance(item, dict) and item.get("Name"):
             metadata[item["Name"]] = item.get("Value")
     receipt = str(metadata.get("MpesaReceiptNumber") or "").strip().upper()[:50]

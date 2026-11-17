@@ -53,7 +53,11 @@ def reconciliation_queue(request):
         else:
             messages.success(request, f"{label} reconciled.")
         return redirect("payments:reconciliation")
-    pending = PaymentTransaction.objects.filter(method=PaymentTransaction.Method.MPESA, status=PaymentTransaction.Status.UNVERIFIED).select_related("sale_allocation__sale__customer").order_by("created_at")
+    pending = PaymentTransaction.objects.filter(
+        method=PaymentTransaction.Method.MPESA,
+        status=PaymentTransaction.Status.UNVERIFIED,
+        stk_push__isnull=True,
+    ).select_related("sale_allocation__sale__customer").order_by("created_at")
     pending_refunds = RefundPayout.objects.filter(method="MPESA", payout_reconciliation__isnull=True).select_related("refund__sale")
     pending_commissions = CommissionPayoutRecord.objects.filter(method="MPESA", payout_reconciliation__isnull=True).select_related("technician")
     return render(request, "payments/reconciliation.html", {

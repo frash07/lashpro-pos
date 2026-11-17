@@ -63,6 +63,8 @@ class PaymentTransaction(models.Model):
                 return "STK prompt sent"
             if stk.status == MpesaStkPush.Status.UNKNOWN:
                 return "STK outcome pending"
+            if stk.status == MpesaStkPush.Status.FAILED:
+                return "STK failed"
             reference = stk.mpesa_receipt_number
             if reference:
                 return "••••" + reference[-4:] if len(reference) > 4 else "••••"
