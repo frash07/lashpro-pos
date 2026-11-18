@@ -171,7 +171,10 @@ def detail(request, token):
         Appointment.objects.select_related("service", "staff"),
         access_token=token,
     )
-    return render(request, "appointments/detail.html", {"appointment": appointment})
+    return render(request, "appointments/detail.html", {
+        "appointment": appointment,
+        "booking_hold_minutes": settings.PUBLIC_BOOKING_HOLD_MINUTES,
+    })
 
 
 @login_required(login_url="storefront:login")
