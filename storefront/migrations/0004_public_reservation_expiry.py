@@ -12,10 +12,10 @@ def backfill_order_expiry(apps, schema_editor):
     Reservation = apps.get_model("storefront", "StorefrontStockReservation")
     now = timezone.now()
     expired_ids = []
-    for order in Order.objects.using(database).filter(status="PLACED").iterator():
+    for order in Order.objects.using(database).all().iterator():
         expires_at = order.created_at + timedelta(minutes=30)
         order.expires_at = expires_at
-        if expires_at <= now:
+        if order.status == "PLACED" and expires_at <= now:
             order.status = "EXPIRED"
             order.expired_at = now
             expired_ids.append(order.pk)
