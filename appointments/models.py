@@ -1,10 +1,12 @@
 import secrets
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import F, Q
+from django.utils import timezone
 
 from catalog.models import Service
 
@@ -15,6 +17,11 @@ def generate_appointment_reference():
 
 def generate_appointment_token():
     return secrets.token_urlsafe(32)
+
+
+def default_booking_expiry():
+    minutes = getattr(settings, "PUBLIC_BOOKING_HOLD_MINUTES", 30)
+    return timezone.now() + timedelta(minutes=minutes)
 
 
 WEEKDAYS = (
@@ -122,6 +129,7 @@ class Appointment(models.Model):
         CANCELLED = "CANCELLED", "Cancelled"
         COMPLETED = "COMPLETED", "Completed"
         NO_SHOW = "NO_SHOW", "No-show"
+        EXPIRED = "EXPIRED", "Expired — slot released"
 
     reference = models.CharField(
         max_length=20,
@@ -169,6 +177,8 @@ class Appointment(models.Model):
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
     notes = models.CharField(max_length=500, blank=True)
+    expires_at = models.DateTimeField(default=default_booking_expiry, db_index=True)
+    expired_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=12,
         choices=Status.choices,
