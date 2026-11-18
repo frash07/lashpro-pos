@@ -10,10 +10,10 @@ def backfill_appointment_expiry(apps, schema_editor):
     database = schema_editor.connection.alias
     Appointment = apps.get_model("appointments", "Appointment")
     now = timezone.now()
-    for appointment in Appointment.objects.using(database).filter(status="REQUESTED").iterator():
+    for appointment in Appointment.objects.using(database).all().iterator():
         expires_at = appointment.created_at + timedelta(minutes=30)
         appointment.expires_at = expires_at
-        if expires_at <= now:
+        if appointment.status == "REQUESTED" and expires_at <= now:
             appointment.status = "EXPIRED"
             appointment.expired_at = now
         appointment.save(using=database, update_fields=("expires_at", "status", "expired_at"))
