@@ -13,7 +13,9 @@ def backfill_order_expiry(apps, schema_editor):
     now = timezone.now()
     expired_ids = []
     for order in Order.objects.using(database).all().iterator():
-        expires_at = order.created_at + timedelta(minutes=30)
+        # Start the new hold policy after deployment; give existing pending
+        # requests a full grace window rather than expiring them at migration.
+        expires_at = now + timedelta(minutes=30)
         order.expires_at = expires_at
         if order.status == "PLACED" and expires_at <= now:
             order.status = "EXPIRED"
