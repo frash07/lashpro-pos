@@ -1,6 +1,6 @@
 # Online orders, inventory and POS reconciliation
 
-The public storefront checkout reserves product stock immediately. A reservation reduces the quantity available to both other online customers and the staff POS, but does not change physical on-hand stock until the order is fulfilled.
+The public storefront checkout reserves product stock immediately. A reservation reduces the quantity available to both other online customers and the staff POS, but does not change physical on-hand stock until the order is fulfilled. An unconfirmed PLACED order holds stock for 30 minutes by default (`PUBLIC_ORDER_RESERVATION_MINUTES`); after its deadline it no longer counts against available stock and is marked EXPIRED by the cleanup command or the next storefront/admin sweep.
 
 ## Customer flow
 
@@ -19,6 +19,7 @@ Staff process orders from **Django Admin → Storefront orders**. Select orders 
 - **Mark selected orders ready for collection**: CONFIRMED → READY.
 - **Fulfil orders, deduct stock and create POS sales**: READY → FULFILLED.
 - **Cancel selected orders and release reserved stock**: PLACED, CONFIRMED or READY → CANCELLED.
+- Unconfirmed PLACED orders that pass their reservation deadline automatically become EXPIRED and release stock. Confirmed/ready orders are not subject to the public hold timeout.
 
 Only active owners, managers and cashiers can process orders. The status field is read-only; transitions go through the transactional service so stock cannot be released or deducted by a direct admin edit.
 
