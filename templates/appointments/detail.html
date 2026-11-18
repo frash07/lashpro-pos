@@ -17,7 +17,7 @@
   {% if appointment.status == "EXPIRED" %}
     <p class="payment-notice"><strong>The time has been released.</strong>This request was not confirmed within the reservation window. Please submit a new booking request to choose from currently available times.</p>
   {% else %}
-    <p class="payment-notice"><strong>What happens next?</strong>Your request is saved, but the studio still needs to confirm the appointment. Unconfirmed requests hold the time for 30 minutes. Payment is not collected online. Please keep this reference for your records.</p>
+    <p class="payment-notice"><strong>What happens next?</strong>Your request is saved, but the studio still needs to confirm the appointment. Unconfirmed requests hold the time for {{ booking_hold_minutes }} minutes. Payment is not collected online. Please keep this reference for your records.</p>
   {% endif %}
   {% if appointment.account %}
     <a class="button button-dark" href="{% url 'appointments:account' %}">View my appointments</a>
