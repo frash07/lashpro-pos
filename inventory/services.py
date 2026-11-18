@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 from accounts.models import User
 from audit.models import AuditEvent
@@ -22,9 +22,14 @@ def reserved_stock_by_product(product_ids):
     # Import lazily to keep inventory usable while Django loads app models.
     from storefront.models import StorefrontStockReservation
 
+    now = timezone.now()
     rows = (
         StorefrontStockReservation.objects
         .filter(product_id__in=ids, status=StorefrontStockReservation.Status.ACTIVE)
+        .filter(
+            Q(order_line__order__status__in=("CONFIRMED", "READY"))
+            | Q(order_line__order__status="PLACED", order_line__order__expires_at__gt=now)
+        )
         .values("product_id")
         .annotate(total=Sum("quantity"))
     )
