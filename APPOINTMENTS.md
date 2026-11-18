@@ -28,11 +28,11 @@ The Admin dashboard includes direct links to the service catalogue, weekly staff
 ## Booking workflow
 
 - Customers can book as guests or sign in to link appointments to their customer account.
-- A new booking is saved as **Awaiting confirmation** and blocks that provider's time immediately.
+- A new booking is saved as **Awaiting confirmation** and blocks that provider's time immediately for 30 minutes by default (`PUBLIC_BOOKING_HOLD_MINUTES`).
 - Owners and managers can confirm or cancel requests from `/appointments/manage/` or Django Admin.
 - Assigned providers can mark their own bookings completed or no-show from the staff schedule.
 - A customer can cancel from **My appointments** until 24 hours before the start time.
-- Cancelled bookings release the slot. Requested and confirmed bookings block overlapping times.
+- Cancelled bookings release the slot. Unconfirmed requests that pass their hold deadline become **Expired** and release the slot automatically; confirmed bookings continue to block overlapping times.
 
 The booking transaction locks the selected provider row and rechecks the slot before saving, preventing concurrent storefront requests from assigning the same provider to overlapping appointments. Appointment service name, duration and price are snapshotted at booking time.
 
