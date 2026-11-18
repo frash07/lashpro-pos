@@ -24,9 +24,7 @@ def _client_address(request):
 
 
 def _bucket_hash(request, scope):
-    user = getattr(request, "user", None)
-    user_id = str(user.pk) if user and user.is_authenticated else "guest"
-    material = f"public-rate-limit:v1:{scope}:{_client_address(request)}:{user_id}".encode("utf-8")
+    material = f"public-rate-limit:v1:{scope}:{_client_address(request)}".encode("utf-8")
     return hmac.new(settings.SECRET_KEY.encode("utf-8"), material, hashlib.sha256).hexdigest()
 
 
