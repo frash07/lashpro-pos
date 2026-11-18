@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from .models import Appointment, StaffAvailability, StaffTimeOff
@@ -17,6 +19,49 @@ BOOKING_STATUSES = (
     Appointment.Status.COMPLETED,
     Appointment.Status.NO_SHOW,
 )
+NON_REQUEST_BOOKING_STATUSES = (
+    Appointment.Status.CONFIRMED,
+    Appointment.Status.COMPLETED,
+    Appointment.Status.NO_SHOW,
+)
+
+
+def _expire_appointment_if_due(appointment_id, *, now=None):
+    now = now or timezone.now()
+    with transaction.atomic():
+        appointment = Appointment.objects.select_for_update().filter(pk=appointment_id).first()
+        if (
+            appointment is None
+            or appointment.status != Appointment.Status.REQUESTED
+            or appointment.expires_at > now
+        ):
+            return False
+        appointment.status = Appointment.Status.EXPIRED
+        appointment.expired_at = now
+        appointment.save(update_fields=("status", "expired_at", "updated_at"))
+        appointment_id = appointment.pk
+        transaction.on_commit(lambda: _send_expiry_notification(appointment_id))
+        return True
+
+
+def _send_expiry_notification(appointment_id):
+    from .notifications import send_booking_notification
+
+    appointment = Appointment.objects.select_related("staff").filter(pk=appointment_id).first()
+    if appointment:
+        send_booking_notification(appointment, "EXPIRED")
+
+
+def expire_due_requested_appointments(*, limit=500):
+    """Expire public requests whose confirmation window has elapsed."""
+    now = timezone.now()
+    appointment_ids = list(
+        Appointment.objects.filter(
+            status=Appointment.Status.REQUESTED,
+            expires_at__lte=now,
+        ).order_by("expires_at", "pk").values_list("pk", flat=True)[:limit]
+    )
+    return sum(1 for appointment_id in appointment_ids if _expire_appointment_if_due(appointment_id, now=now))
 
 
 def _local_datetime(day, clock_time):
@@ -41,9 +86,11 @@ def _slot_conflicts(*, staff, starts_at, ends_at, exclude_appointment_id=None):
 
     appointments = Appointment.objects.filter(
         staff=staff,
-        status__in=BOOKING_STATUSES,
         starts_at__lt=ends_at,
         ends_at__gt=starts_at,
+    ).filter(
+        Q(status=Appointment.Status.REQUESTED, expires_at__gt=timezone.now())
+        | Q(status__in=NON_REQUEST_BOOKING_STATUSES)
     )
     if exclude_appointment_id:
         appointments = appointments.exclude(pk=exclude_appointment_id)
@@ -95,6 +142,9 @@ def get_available_slots(*, service, day):
     """Return public booking choices, ordered by time then provider."""
     if not service or not service.active or service.duration_minutes < 1:
         return []
+
+    # Materialise expired requests before building the public calendar.
+    expire_due_requested_appointments(limit=500)
 
     schedules = StaffAvailability.objects.filter(
         weekday=day.weekday(),
@@ -191,5 +241,6 @@ def create_appointment(
         starts_at=starts_at,
         ends_at=ends_at,
         notes=(notes or "").strip(),
+        expires_at=timezone.now() + timedelta(minutes=settings.PUBLIC_BOOKING_HOLD_MINUTES),
         idempotency_key=idempotency_key,
     )
