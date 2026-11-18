@@ -11,7 +11,9 @@ def backfill_appointment_expiry(apps, schema_editor):
     Appointment = apps.get_model("appointments", "Appointment")
     now = timezone.now()
     for appointment in Appointment.objects.using(database).all().iterator():
-        expires_at = appointment.created_at + timedelta(minutes=30)
+        # Start the new hold policy after deployment; give existing pending
+        # requests a full grace window rather than expiring them at migration.
+        expires_at = now + timedelta(minutes=30)
         appointment.expires_at = expires_at
         if appointment.status == "REQUESTED" and expires_at <= now:
             appointment.status = "EXPIRED"
