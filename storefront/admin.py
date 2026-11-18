@@ -46,7 +46,7 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
         "payment_method", "total_amount", "status", "pos_sale_link",
     )
     readonly_fields = (
-        "reference", "created_at", "updated_at",
+        "reference", "created_at", "updated_at", "expires_at", "expired_at",
         "customer_name", "customer_email", "customer_phone", "notes",
         "payment_method", "total_amount", "status", "pos_sale_link",
     )
