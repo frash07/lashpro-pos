@@ -1,0 +1,95 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}API Integrations · LashPro{% endblock %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'core/integrations.css' %}">{% endblock %}
+{% block admin_content %}
+<main class="page integration-page">
+  <header class="integration-header">
+    <p class="eyebrow">OWNER SETTINGS</p>
+    <h1>API &amp; Payment Integrations</h1>
+    <p>Connect your messaging providers, Safaricom Daraja and KRA eTIMS. Credentials are encrypted before storage and are never displayed again after saving.</p>
+  </header>
+
+  {% if messages %}<div class="integration-messages">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.errors %}<div class="integration-errors" role="alert">Some settings need attention. Check the fields marked below.</div>{% endif %}
+
+    <section class="integration-card">
+      <div class="integration-card-heading"><div><p class="integration-kicker">01 · EMAIL</p><h2>Email booking updates</h2><p>SMTP details for request received, confirmed and cancelled emails.</p></div><span class="integration-state">{% if config_status.email %}SMTP configured{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-grid">
+        <div class="integration-field">{{ form.email_host.label_tag }}{{ form.email_host }}{{ form.email_host.errors }}</div>
+        <div class="integration-field">{{ form.email_port.label_tag }}{{ form.email_port }}{{ form.email_port.errors }}</div>
+        <div class="integration-field">{{ form.email_username.label_tag }}{{ form.email_username }}{{ form.email_username.errors }}</div>
+        <div class="integration-field">{{ form.email_password.label_tag }}{{ form.email_password }}<small>{% if config_status.email_password %}A password is saved. Leave blank to keep it.{% else %}Enter your SMTP or app password.{% endif %}</small>{{ form.email_password.errors }}</div>
+        <div class="integration-field">{{ form.email_from_email.label_tag }}{{ form.email_from_email }}{{ form.email_from_email.errors }}</div>
+        <div class="integration-field integration-check">{{ form.email_use_tls }}{{ form.email_use_tls.label_tag }}</div>
+      </div>
+      <label class="integration-clear">{{ form.clear_email_password }} {{ form.clear_email_password.label }}</label>
+    </section>
+
+    <section class="integration-card">
+      <div class="integration-card-heading"><div><p class="integration-kicker">02 · SMS</p><h2>SMS booking updates</h2><p>Uses Africa's Talking. Create an app in their portal and paste the API key here.</p></div><span class="integration-state">{% if config_status.sms %}Connected{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-grid">
+        <div class="integration-field">{{ form.sms_provider.label_tag }}{{ form.sms_provider }}{{ form.sms_provider.errors }}</div>
+        <div class="integration-field">{{ form.sms_username.label_tag }}{{ form.sms_username }}{{ form.sms_username.errors }}</div>
+        <div class="integration-field">{{ form.sms_api_key.label_tag }}{{ form.sms_api_key }}<small>{% if config_status.sms %}An API key is saved. Leave blank to keep it.{% else %}Paste the provider API key.{% endif %}</small>{{ form.sms_api_key.errors }}</div>
+        <div class="integration-field">{{ form.sms_sender_id.label_tag }}{{ form.sms_sender_id }}{{ form.sms_sender_id.errors }}</div>
+        <div class="integration-field integration-check">{{ form.sms_sandbox }}{{ form.sms_sandbox.label_tag }}</div>
+      </div>
+      <label class="integration-clear">{{ form.clear_sms }} {{ form.clear_sms.label }}</label>
+    </section>
+
+    <section class="integration-card">
+      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp booking updates</h2><p>Meta WhatsApp Cloud API. The three template names must already be approved in WhatsApp Manager.</p></div><span class="integration-state">{% if config_status.whatsapp %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-grid">
+        <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste a permanent or long-lived system-user access token.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_phone_number_id.label_tag }}{{ form.whatsapp_phone_number_id }}{{ form.whatsapp_phone_number_id.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_api_version.label_tag }}{{ form.whatsapp_api_version }}{{ form.whatsapp_api_version.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_language.label_tag }}{{ form.whatsapp_language }}{{ form.whatsapp_language.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_template_requested.label_tag }}{{ form.whatsapp_template_requested }}{{ form.whatsapp_template_requested.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_template_confirmed.label_tag }}{{ form.whatsapp_template_confirmed }}{{ form.whatsapp_template_confirmed.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_template_cancelled.label_tag }}{{ form.whatsapp_template_cancelled }}{{ form.whatsapp_template_cancelled.errors }}</div>
+      </div>
+      <p class="integration-note">WhatsApp sends approved template messages with customer, service, date and provider details. Add the matching four text parameters to the body of each approved template.</p>
+      <label class="integration-clear">{{ form.clear_whatsapp }} {{ form.clear_whatsapp.label }}</label>
+    </section>
+
+    <section class="integration-card">
+      <div class="integration-card-heading"><div><p class="integration-kicker">04 · SAFARICOM DARAJA</p><h2>M-Pesa STK Push</h2><p>Enter your Daraja app credentials, Lipa Na M-Pesa passkey and business short code.</p></div><span class="integration-state">{% if config_status.mpesa %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-grid">
+        <div class="integration-field">{{ form.mpesa_environment.label_tag }}{{ form.mpesa_environment }}{{ form.mpesa_environment.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_shortcode.label_tag }}{{ form.mpesa_shortcode }}{{ form.mpesa_shortcode.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_consumer_key.label_tag }}{{ form.mpesa_consumer_key }}{{ form.mpesa_consumer_key.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_consumer_secret.label_tag }}{{ form.mpesa_consumer_secret }}{{ form.mpesa_consumer_secret.errors }}</div>
+        <div class="integration-field wide">{{ form.mpesa_passkey.label_tag }}{{ form.mpesa_passkey }}{{ form.mpesa_passkey.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_transaction_type.label_tag }}{{ form.mpesa_transaction_type }}{{ form.mpesa_transaction_type.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_party_b.label_tag }}{{ form.mpesa_party_b }}<small>Usually the same as the short code; optional.</small>{{ form.mpesa_party_b.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_account_reference.label_tag }}{{ form.mpesa_account_reference }}{{ form.mpesa_account_reference.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_transaction_description.label_tag }}{{ form.mpesa_transaction_description }}{{ form.mpesa_transaction_description.errors }}</div>
+      </div>
+      <p class="integration-note">Use sandbox credentials while testing. Switch to production only after Safaricom has approved the shortcode, passkey and callback domain. STK requests require whole-KSh amounts and a Kenyan mobile number.</p>
+      <label class="integration-clear">{{ form.clear_mpesa }} {{ form.clear_mpesa.label }}</label>
+    </section>
+
+    <section class="integration-card">
+      <div class="integration-card-heading"><div><p class="integration-kicker">05 · KRA eTIMS</p><h2>eTIMS connection setup</h2><p>Save the taxpayer and device connection details for the later OSCU/VSCU rollout.</p></div><span class="integration-state">{% if config_status.etims %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-warning"><strong>Setup only — invoice submission is not enabled.</strong> KRA requires the chosen OSCU/VSCU system integration to be tested and vetted/certified, and the taxpayer/device to be activated. These fields do not by themselves make eTIMS live or compliant.</div>
+      <div class="integration-grid">
+        <div class="integration-field">{{ form.etims_environment.label_tag }}{{ form.etims_environment }}{{ form.etims_environment.errors }}</div>
+        <div class="integration-field">{{ form.etims_api_base_url.label_tag }}{{ form.etims_api_base_url }}{{ form.etims_api_base_url.errors }}</div>
+        <div class="integration-field">{{ form.etims_taxpayer_pin.label_tag }}{{ form.etims_taxpayer_pin }}{{ form.etims_taxpayer_pin.errors }}</div>
+        <div class="integration-field">{{ form.etims_branch_id.label_tag }}{{ form.etims_branch_id }}{{ form.etims_branch_id.errors }}</div>
+        <div class="integration-field">{{ form.etims_device_serial.label_tag }}{{ form.etims_device_serial }}{{ form.etims_device_serial.errors }}</div>
+        <div class="integration-field">{{ form.etims_communication_key.label_tag }}{{ form.etims_communication_key }}{{ form.etims_communication_key.errors }}</div>
+      </div>
+      <label class="integration-clear">{{ form.clear_etims }} {{ form.clear_etims.label }}</label>
+    </section>
+
+    <div class="integration-save-row">
+      <p>Last saved: {% if updated_at %}{{ updated_at|date:"d M Y, H:i" }} EAT{% else %}Not saved yet{% endif %}. Secret values are never returned to this page.</p>
+      <button type="submit" class="integration-save">Save API settings</button>
+    </div>
+  </form>
+</main>
+{% endblock %}

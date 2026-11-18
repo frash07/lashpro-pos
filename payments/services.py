@@ -5,7 +5,7 @@ from django.utils import timezone
 from accounts.models import User
 from audit.models import AuditEvent
 from audit.services import record_audit_event
-from .models import CashSession, CashSessionMovement, PaymentReconciliation, PaymentTransaction, PayoutReconciliation, RefundPayout, SalePayment
+from .models import CashSession, CashSessionMovement, MpesaStkPush, PaymentReconciliation, PaymentTransaction, PayoutReconciliation, RefundPayout, SalePayment
 
 
 @transaction.atomic
@@ -19,6 +19,12 @@ def reconcile_manual_mpesa(*, payment, actor, decision, reason):
         raise ValidationError({"actor": "Only an owner or manager may reconcile M-Pesa."})
     if locked.method != PaymentTransaction.Method.MPESA:
         raise ValidationError({"payment": "Only M-Pesa payments can be reconciled here."})
+    try:
+        locked.stk_push
+    except MpesaStkPush.DoesNotExist:
+        pass
+    else:
+        raise ValidationError({"payment": "STK Push payments are confirmed by the Safaricom callback, not manual reconciliation."})
     if locked.status != PaymentTransaction.Status.UNVERIFIED:
         raise ValidationError({"payment": "This payment is not awaiting reconciliation."})
     decision = str(decision).upper()

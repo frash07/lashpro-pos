@@ -52,7 +52,23 @@ class PaymentTransaction(models.Model):
 
     @property
     def display_reference(self):
-        if self.method != self.Method.MPESA or not self.reference:
+        if self.method != self.Method.MPESA:
+            return ""
+        try:
+            stk = self.stk_push
+        except MpesaStkPush.DoesNotExist:
+            stk = None
+        if stk:
+            if stk.status == MpesaStkPush.Status.PENDING:
+                return "STK prompt sent"
+            if stk.status == MpesaStkPush.Status.UNKNOWN:
+                return "STK outcome pending"
+            if stk.status == MpesaStkPush.Status.FAILED:
+                return "STK failed"
+            reference = stk.mpesa_receipt_number
+            if reference:
+                return "••••" + reference[-4:] if len(reference) > 4 else "••••"
+        if not self.reference:
             return ""
         return "••••" + self.reference[-4:] if len(self.reference) > 4 else "••••"
 
@@ -239,3 +255,36 @@ class PayoutReconciliation(models.Model):
 
     def __str__(self):
         return f"{self.decision} M-Pesa payout · {self.reference_snapshot}"
+
+
+
+class MpesaStkPush(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Prompt sent"
+        UNKNOWN = "UNKNOWN", "Awaiting callback confirmation"
+        SUCCEEDED = "SUCCEEDED", "Paid"
+        FAILED = "FAILED", "Failed"
+
+    payment_transaction = models.OneToOneField(
+        PaymentTransaction,
+        on_delete=models.PROTECT,
+        related_name="stk_push",
+    )
+    callback_token = models.CharField(max_length=96, unique=True)
+    phone_number = models.CharField(max_length=16)
+    merchant_request_id = models.CharField(max_length=100, blank=True)
+    checkout_request_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
+    result_code = models.CharField(max_length=20, blank=True)
+    result_description = models.CharField(max_length=500, blank=True)
+    mpesa_receipt_number = models.CharField(max_length=50, blank=True)
+    callback_payload = models.JSONField(default=dict, blank=True)
+    callback_received_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at", "-pk")
+
+    def __str__(self):
+        return f"STK Push · payment #{self.payment_transaction_id} · {self.get_status_display()}"

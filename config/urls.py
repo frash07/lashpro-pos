@@ -5,13 +5,14 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 
-from core.views import service_worker, admin_suite
+from core.views import service_worker, admin_suite, integration_settings
 from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
 urlpatterns = [
     path("sw.js", service_worker, name="service_worker"),
 
     # LashPro Admin Suite
+    path("admin-suite/integrations/", integration_settings, name="integrations-settings"),
     path("admin-suite/", admin_suite, name="admin_suite"),
 
     # Django Administration

@@ -17,6 +17,7 @@ from storefront.models import StorefrontProfile
 
 from .forms import AppointmentBookingForm
 from .models import Appointment
+from .notifications import send_booking_notification
 from .services import PROVIDER_ROLES, create_appointment, get_available_slots
 
 
@@ -91,6 +92,8 @@ def book(request):
             if timezone.is_naive(starts_at):
                 starts_at = timezone.make_aware(starts_at, timezone.get_current_timezone())
             profile = _customer_profile(request.user)
+            booking_key = form.cleaned_data["idempotency_key"]
+            is_new_appointment = not Appointment.objects.filter(idempotency_key=booking_key).exists()
             appointment = create_appointment(
                 service=form.cleaned_data["service"],
                 staff_id=int(staff_id_raw),
@@ -101,7 +104,7 @@ def book(request):
                 notes=form.cleaned_data["notes"],
                 account=request.user if profile else None,
                 customer=profile.customer if profile else None,
-                idempotency_key=form.cleaned_data["idempotency_key"],
+                idempotency_key=booking_key,
             )
         except (ValueError, ValidationError) as exc:
             message = " ".join(exc.messages) if isinstance(exc, ValidationError) else "Choose a valid appointment time."
@@ -116,6 +119,8 @@ def book(request):
             ]
         else:
             messages.success(request, "Your appointment request has been received.")
+            if is_new_appointment:
+                send_booking_notification(appointment, "REQUESTED")
             return redirect("appointments:detail", token=appointment.access_token)
 
     context = {
@@ -196,6 +201,7 @@ def cancel_appointment(request, pk):
     else:
         appointment.status = Appointment.Status.CANCELLED
         appointment.save(update_fields=("status", "updated_at"))
+        send_booking_notification(appointment, "CANCELLED")
         messages.success(request, "Your appointment has been cancelled.")
     return redirect("appointments:account")
 
@@ -260,7 +266,12 @@ def update_status(request, pk):
     if requested_status not in transitions.get(appointment.status, set()):
         messages.error(request, "That status change is not allowed.")
     else:
+        previous_status = appointment.status
         appointment.status = requested_status
         appointment.save(update_fields=("status", "updated_at"))
+        if previous_status != requested_status and requested_status in {
+            Appointment.Status.CONFIRMED, Appointment.Status.CANCELLED
+        }:
+            send_booking_notification(appointment, requested_status)
         messages.success(request, f"Appointment {appointment.reference} updated.")
     return redirect(f"{reverse('appointments:staff-day')}?date={appointment.starts_at:%Y-%m-%d}")

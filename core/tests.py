@@ -55,7 +55,7 @@ class AdminSuiteAccessTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("admin:login"), response.url)
 
-    def test_dashboard_contains_eight_categories_and_all_27_destinations(self):
+    def test_dashboard_contains_nine_categories_and_all_28_destinations(self):
         self.client.force_login(self.manager_staff)
 
         response = self.client.get(reverse("admin_suite"))
@@ -73,6 +73,7 @@ class AdminSuiteAccessTests(TestCase):
                 "Payments & Cash",
                 "Expenses",
                 "Artist Commissions",
+                "Communications & Integrations",
             ],
         )
         destinations = [
@@ -106,12 +107,13 @@ class AdminSuiteAccessTests(TestCase):
             "/admin/sales/saleline/",
             "/admin/sales/salerefund/",
             "/admin/sales/sale/",
+            "/admin-suite/integrations/",
             "/expenses/",
             "/admin/expenses/expense/",
         }
 
-        self.assertEqual(len(destinations), 27)
-        self.assertEqual(len(set(destinations)), 27)
+        self.assertEqual(len(destinations), 28)
+        self.assertEqual(len(set(destinations)), 28)
         self.assertEqual(set(destinations), expected)
         self.assertContains(response, "Existing Django Admin Model Pages")
 
@@ -126,3 +128,51 @@ class ServiceWorkerCheckoutSafetyTests(TestCase):
         self.assertIn("Checkout status unknown", script)
         self.assertIn("Check Sales before retrying", script)
         self.assertIn('"Cache-Control": "no-store"', script)
+
+
+
+class IntegrationSettingsAccessTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = User.objects.create_user(
+            username="integration-settings-owner",
+            password="test-password",
+            role=User.Role.OWNER,
+            is_staff=True,
+        )
+        cls.cashier = User.objects.create_user(
+            username="integration-settings-cashier",
+            password="test-password",
+            role=User.Role.CASHIER,
+            is_staff=True,
+        )
+
+    def test_owner_can_open_integration_settings_page(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse("integrations-settings"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "M-Pesa STK Push")
+        self.assertContains(response, "KRA eTIMS")
+
+    def test_cashier_cannot_open_integration_settings_page(self):
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("integrations-settings"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_credentials_are_encrypted_and_never_rendered_back(self):
+        self.client.force_login(self.owner)
+        secret = "AT-super-secret-test-api-key"
+        response = self.client.post(reverse("integrations-settings"), {
+            "sms_provider": "africastalking",
+            "sms_username": "lashpro",
+            "sms_api_key": secret,
+            "sms_sandbox": "on",
+            "mpesa_environment": "sandbox",
+            "mpesa_transaction_type": "CustomerPayBillOnline",
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        from core.models import IntegrationSettings
+        record = IntegrationSettings.objects.get(pk=1)
+        self.assertNotIn(secret, record.encrypted_config)
+        self.assertEqual(record.get_config()["sms_api_key"], secret)
+        self.assertNotContains(response, secret)

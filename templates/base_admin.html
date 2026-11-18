@@ -26,7 +26,8 @@
       <a href="{% url 'commissions:dashboard' %}">Staff</a>
       <a href="{% url 'expenses:dashboard' %}">Expenses</a>
       <a href="{% url 'reporting:dashboard' %}">Reports</a>
-      <a href="{% url 'payments:cash-session' %}">Settings</a>
+      <a href="{% url 'integrations-settings' %}">API Integrations</a>
+      <a href="{% url 'payments:cash-session' %}">Cash session</a>
     </nav>
     <div class="admin-user">
       <span aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span>
