@@ -285,6 +285,7 @@ def order_detail(request, token):
     )
     context = _base_context(request)
     context["order"] = order
+    context["reservation_minutes"] = settings.PUBLIC_ORDER_RESERVATION_MINUTES
     return render(request, "storefront/order_detail.html", context)
 
 
