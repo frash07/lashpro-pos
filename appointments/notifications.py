@@ -23,6 +23,11 @@ EVENT_COPY = {
         "heading": "Appointment confirmed",
         "body": "Your appointment is confirmed. We look forward to seeing you.",
     },
+    "EXPIRED": {
+        "subject": "Your LashPro appointment request has expired",
+        "heading": "Appointment request expired",
+        "body": "We could not confirm your request within the reservation window, so the time has been released. Please submit a new request or contact the studio.",
+    },
     "CANCELLED": {
         "subject": "Your LashPro appointment has been cancelled",
         "heading": "Appointment cancelled",
