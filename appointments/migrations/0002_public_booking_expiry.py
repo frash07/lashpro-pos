@@ -23,6 +23,22 @@ class Migration(migrations.Migration):
     dependencies = [("appointments", "0001_initial")]
 
     operations = [
+        migrations.AlterField(
+            model_name="appointment",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("REQUESTED", "Awaiting confirmation"),
+                    ("CONFIRMED", "Confirmed"),
+                    ("CANCELLED", "Cancelled"),
+                    ("COMPLETED", "Completed"),
+                    ("NO_SHOW", "No-show"),
+                    ("EXPIRED", "Expired — slot released"),
+                ],
+                default="REQUESTED",
+                max_length=12,
+            ),
+        ),
         migrations.AddField(
             model_name="appointment",
             name="expires_at",
