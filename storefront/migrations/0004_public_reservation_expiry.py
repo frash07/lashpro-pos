@@ -31,6 +31,22 @@ class Migration(migrations.Migration):
     dependencies = [("storefront", "0003_storefrontorder_sale")]
 
     operations = [
+        migrations.AlterField(
+            model_name="storefrontorder",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("PLACED", "Awaiting staff confirmation"),
+                    ("CONFIRMED", "Confirmed"),
+                    ("READY", "Ready for collection"),
+                    ("FULFILLED", "Fulfilled"),
+                    ("CANCELLED", "Cancelled"),
+                    ("EXPIRED", "Expired — stock released"),
+                ],
+                default="PLACED",
+                max_length=12,
+            ),
+        ),
         migrations.AddField(
             model_name="storefrontorder",
             name="expires_at",
