@@ -1,6 +1,9 @@
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
+from datetime import timedelta
 import uuid
+
+from django.conf import settings
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -168,6 +171,7 @@ def create_storefront_order(
                 customer_phone=customer_phone,
                 notes=notes,
                 total_amount=total.quantize(CENT),
+                expires_at=timezone.now() + timedelta(minutes=settings.PUBLIC_ORDER_RESERVATION_MINUTES),
             )
             for line in order_lines:
                 line.order = order
@@ -311,6 +315,48 @@ def create_pos_sale_for_storefront_order(*, order, actor):
 
 
 @transaction.atomic
+def _expire_locked_storefront_order(locked_order, *, now=None):
+    """Release one overdue unconfirmed order while its row lock is held."""
+    now = now or timezone.now()
+    if locked_order.status != StorefrontOrder.Status.PLACED or locked_order.expires_at > now:
+        return False
+    reservations = list(
+        StorefrontStockReservation.objects.select_for_update()
+        .filter(order_line__order=locked_order, status=StorefrontStockReservation.Status.ACTIVE)
+        .order_by("product_id", "pk")
+    )
+    for reservation in reservations:
+        reservation.status = StorefrontStockReservation.Status.RELEASED
+        reservation.released_at = now
+        reservation.save(update_fields=("status", "released_at", "updated_at"))
+    locked_order.status = StorefrontOrder.Status.EXPIRED
+    locked_order.expired_at = now
+    locked_order.save(update_fields=("status", "expired_at", "updated_at"))
+    return True
+
+
+@transaction.atomic
+def _expire_storefront_order_if_due(order_id, *, now=None):
+    now = now or timezone.now()
+    order = StorefrontOrder.objects.select_for_update().filter(pk=order_id).first()
+    if order is None:
+        return False
+    return _expire_locked_storefront_order(order, now=now)
+
+
+def expire_due_storefront_orders(*, limit=500):
+    """Materialise expired order states and release their stock holds."""
+    now = timezone.now()
+    order_ids = list(
+        StorefrontOrder.objects.filter(
+            status=StorefrontOrder.Status.PLACED,
+            expires_at__lte=now,
+        ).order_by("expires_at", "pk").values_list("pk", flat=True)[:limit]
+    )
+    return sum(1 for order_id in order_ids if _expire_storefront_order_if_due(order_id, now=now))
+
+
+@transaction.atomic
 def transition_storefront_order(*, order, target_status, actor):
     """Move an online order through staff workflow, consume stock and post its POS sale."""
     _check_order_staff_actor(actor)
@@ -324,6 +370,11 @@ def transition_storefront_order(*, order, target_status, actor):
         target_status = StorefrontOrder.Status(target_status)
     except ValueError:
         raise ValidationError({"status": "Choose a valid online order status."}) from None
+
+    # A staff confirmation arriving after the public hold deadline cannot
+    # revive the reservation; release it and expose the EXPIRED state instead.
+    if _expire_locked_storefront_order(locked_order):
+        return locked_order
 
     allowed = {
         StorefrontOrder.Status.PLACED: {StorefrontOrder.Status.CONFIRMED, StorefrontOrder.Status.CANCELLED},

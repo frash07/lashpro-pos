@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import Appointment, StaffAvailability, StaffTimeOff
+from .services import expire_due_requested_appointments
 
 
 @admin.register(StaffAvailability)
@@ -21,9 +22,13 @@ class StaffTimeOffAdmin(admin.ModelAdmin):
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        expire_due_requested_appointments(limit=500)
+        return super().get_queryset(request)
+
     list_display = (
         "reference", "starts_at", "service_name_snapshot", "staff",
-        "customer_name", "customer_phone", "status",
+        "customer_name", "customer_phone", "status", "expires_at",
     )
     list_filter = ("status", "starts_at", "staff")
     search_fields = (
@@ -36,11 +41,11 @@ class AppointmentAdmin(admin.ModelAdmin):
         "reference", "access_token", "idempotency_key", "service", "staff",
         "customer", "account", "service_name_snapshot", "duration_minutes_snapshot",
         "price_snapshot", "customer_name", "customer_email", "customer_phone",
-        "starts_at", "ends_at", "notes", "created_at", "updated_at",
+        "starts_at", "ends_at", "notes", "expires_at", "expired_at", "created_at", "updated_at",
     )
     fields = (
         "reference", "status", "service", "staff", "customer", "account",
         "service_name_snapshot", "duration_minutes_snapshot", "price_snapshot",
         "customer_name", "customer_email", "customer_phone", "starts_at", "ends_at",
-        "notes", "access_token", "idempotency_key", "created_at", "updated_at",
+        "notes", "expires_at", "expired_at", "access_token", "idempotency_key", "created_at", "updated_at",
     )

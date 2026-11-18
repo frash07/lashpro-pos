@@ -2,7 +2,7 @@
 {% block title %}Order {{ order.reference }} | LashPro{% endblock %}
 {% block content %}
 <section class="order-panel">
-  <p class="eyebrow"><span></span> ORDER REQUEST RECEIVED</p>
+  <p class="eyebrow"><span></span> {% if order.status == "EXPIRED" %}ORDER RESERVATION EXPIRED{% else %}ORDER REQUEST RECEIVED{% endif %}</p>
   <h1>Thank you, <em>{{ order.customer_name }}.</em></h1>
   <p class="order-reference">Reference · {{ order.reference }}</p>
   <div class="order-status"><span>Status</span><strong>{{ order.get_status_display }}</strong></div>
@@ -12,7 +12,7 @@
     {% endfor %}
   </div>
   <div class="summary-total"><span>Estimated total</span><strong>KSh {{ order.total_amount|floatformat:2 }}</strong></div>
-  <div class="payment-notice"><strong>This is not a payment confirmation.</strong><span>{% if order.status == "CANCELLED" %}The stock reservation has been released. Contact the studio using {{ order.customer_phone }} if you need help.{% elif order.status == "FULFILLED" %}The reserved stock has been deducted from inventory and the order is marked fulfilled. Payment is handled separately at the studio.{% else %}The ordered quantity is reserved against LashPro inventory. The team will contact you using {{ order.customer_phone }} to confirm collection. This order is not paid; payment is made at the studio.{% endif %}</span></div>
+  <div class="payment-notice"><strong>This is not a payment confirmation.</strong><span>{% if order.status == "EXPIRED" %}The studio did not confirm this request within the reservation window. The stock has been released; submit a new order request to try again.{% elif order.status == "CANCELLED" %}The stock reservation has been released. Contact the studio using {{ order.customer_phone }} if you need help.{% elif order.status == "FULFILLED" %}The reserved stock has been deducted from inventory and the order is marked fulfilled. Payment is handled separately at the studio.{% else %}The ordered quantity is reserved against LashPro inventory for {{ reservation_minutes }} minutes while the studio reviews your request. The team will contact you using {{ order.customer_phone }} to confirm collection. This order is not paid; payment is made at the studio.{% endif %}</span></div>
   <p class="form-footnote">Keep your order reference for follow-up. This private order link also lets you check the latest status.</p>
   <a class="button button-dark" href="{% url 'storefront:home' %}">Return to LashPro</a>
 </section>

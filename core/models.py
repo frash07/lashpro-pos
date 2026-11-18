@@ -72,3 +72,17 @@ class IntegrationSettings(models.Model):
 
     def __str__(self):
         return "LashPro API and integration settings"
+
+
+class PublicRateLimitBucket(models.Model):
+    """Shared database-backed request counter; stores only an HMAC of the client key."""
+
+    key_hash = models.CharField(max_length=64, primary_key=True)
+    scope = models.CharField(max_length=48)
+    window_started_at = models.DateTimeField()
+    request_count = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=("updated_at",), name="core_rate_bucket_age_idx")]
+

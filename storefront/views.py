@@ -13,11 +13,12 @@ from django.views.decorators.http import require_POST
 
 from accounts.models import User
 from catalog.models import Product, Service
+from core.public_throttle import public_rate_limit
 from customers.models import Customer
 from inventory.services import available_stock_by_product, available_stock_for_product
 from .forms import CustomerLoginForm, CustomerRegistrationForm, StorefrontCheckoutForm
 from .models import StorefrontOrder, StorefrontProfile
-from .services import create_storefront_order
+from .services import create_storefront_order, expire_due_storefront_orders
 
 
 CART_SESSION_KEY = "storefront_cart"
@@ -68,6 +69,7 @@ def returns_policy(request):
 
 
 def _cart_details(request):
+    expire_due_storefront_orders(limit=100)
     raw_cart = request.session.get(CART_SESSION_KEY, {})
     if not isinstance(raw_cart, dict):
         raw_cart = {}
@@ -217,6 +219,7 @@ def cart(request):
     return render(request, "storefront/cart.html", context)
 
 
+@public_rate_limit("storefront-checkout", limits={"GET": (60, 60), "POST": (5, 900)})
 @never_cache
 def checkout(request):
     items, total = _cart_details(request)
@@ -275,16 +278,19 @@ def checkout(request):
 
 @never_cache
 def order_detail(request, token):
+    expire_due_storefront_orders(limit=100)
     order = get_object_or_404(
         StorefrontOrder.objects.prefetch_related("lines"),
         access_token=token,
     )
     context = _base_context(request)
     context["order"] = order
+    context["reservation_minutes"] = settings.PUBLIC_ORDER_RESERVATION_MINUTES
     return render(request, "storefront/order_detail.html", context)
 
 
 @never_cache
+@public_rate_limit("storefront-register", limits={"POST": (3, 3600)})
 def register(request):
     if request.method == "POST":
         form = CustomerRegistrationForm(request.POST)
@@ -367,6 +373,7 @@ def customer_logout(request):
 @login_required(login_url="storefront:login")
 @never_cache
 def account_orders(request):
+    expire_due_storefront_orders(limit=500)
     profile = _profile_for(request.user)
     if not profile or request.user.role != User.Role.CUSTOMER:
         raise PermissionDenied

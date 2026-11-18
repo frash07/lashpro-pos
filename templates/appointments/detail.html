@@ -3,7 +3,7 @@
 {% block content %}
 <section class="order-panel appointment-confirmation">
   <p class="eyebrow"><span></span> APPOINTMENT REQUEST</p>
-  <h1>Your time is <em>requested.</em></h1>
+  {% if appointment.status == "EXPIRED" %}<h1>This request has <em>expired.</em></h1>{% else %}<h1>Your time is <em>requested.</em></h1>{% endif %}
   <p class="order-reference">{{ appointment.reference }}</p>
   <div class="order-status"><span>Status</span><strong>{{ appointment.get_status_display }}</strong></div>
   <div class="appointment-detail-grid">
@@ -14,7 +14,11 @@
     <div><small>PRICE</small><strong>KSh {{ appointment.price_snapshot|floatformat:2 }}</strong></div>
     <div><small>CLIENT</small><strong>{{ appointment.customer_name }}</strong></div>
   </div>
-  <p class="payment-notice"><strong>What happens next?</strong>Your request is saved, but the studio still needs to confirm the appointment. Payment is not collected online. Please keep this reference for your records.</p>
+  {% if appointment.status == "EXPIRED" %}
+    <p class="payment-notice"><strong>The time has been released.</strong>This request was not confirmed within the reservation window. Please submit a new booking request to choose from currently available times.</p>
+  {% else %}
+    <p class="payment-notice"><strong>What happens next?</strong>Your request is saved, but the studio still needs to confirm the appointment. Unconfirmed requests hold the time for {{ booking_hold_minutes }} minutes. Payment is not collected online. Please keep this reference for your records.</p>
+  {% endif %}
   {% if appointment.account %}
     <a class="button button-dark" href="{% url 'appointments:account' %}">View my appointments</a>
   {% else %}

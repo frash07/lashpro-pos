@@ -1,9 +1,11 @@
 import secrets
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from catalog.models import Product
 from customers.models import Customer
@@ -15,6 +17,11 @@ def generate_order_reference():
 
 def generate_order_token():
     return secrets.token_urlsafe(32)
+
+
+def default_order_expiry():
+    minutes = getattr(settings, "PUBLIC_ORDER_RESERVATION_MINUTES", 30)
+    return timezone.now() + timedelta(minutes=minutes)
 
 
 class StorefrontProfile(models.Model):
@@ -48,6 +55,7 @@ class StorefrontOrder(models.Model):
         READY = "READY", "Ready for collection"
         FULFILLED = "FULFILLED", "Fulfilled"
         CANCELLED = "CANCELLED", "Cancelled"
+        EXPIRED = "EXPIRED", "Expired — stock released"
 
     class PaymentMethod(models.TextChoices):
         PAY_AT_STUDIO = "PAY_AT_STUDIO", "Pay at studio"
@@ -95,6 +103,8 @@ class StorefrontOrder(models.Model):
         default=PaymentMethod.PAY_AT_STUDIO,
     )
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    expires_at = models.DateTimeField(default=default_order_expiry, db_index=True)
+    expired_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

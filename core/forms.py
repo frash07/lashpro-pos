@@ -39,6 +39,7 @@ class IntegrationSettingsForm(forms.Form):
     whatsapp_template_requested = forms.CharField(max_length=100, required=False, label="Booking request template")
     whatsapp_template_confirmed = forms.CharField(max_length=100, required=False, label="Booking confirmed template")
     whatsapp_template_cancelled = forms.CharField(max_length=100, required=False, label="Booking cancelled template")
+    whatsapp_template_expired = forms.CharField(max_length=100, required=False, label="Booking request expired template")
     clear_whatsapp = forms.BooleanField(required=False, label="Remove saved WhatsApp token")
 
     # Safaricom Daraja STK Push

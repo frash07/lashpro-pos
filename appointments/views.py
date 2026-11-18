@@ -1,6 +1,7 @@
 import uuid
 from datetime import date, datetime, timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -13,12 +14,18 @@ from django.views.decorators.http import require_GET, require_POST
 
 from accounts.models import User
 from catalog.models import Service
+from core.public_throttle import public_rate_limit
 from storefront.models import StorefrontProfile
 
 from .forms import AppointmentBookingForm
 from .models import Appointment
 from .notifications import send_booking_notification
-from .services import PROVIDER_ROLES, create_appointment, get_available_slots
+from .services import (
+    PROVIDER_ROLES,
+    create_appointment,
+    expire_due_requested_appointments,
+    get_available_slots,
+)
 
 
 CUSTOMER_ROLE = User.Role.CUSTOMER
@@ -69,6 +76,7 @@ def _booking_initial(request):
     return initial, service
 
 
+@public_rate_limit("appointment-booking", limits={"GET": (60, 60), "POST": (5, 900)})
 @never_cache
 def book(request):
     initial, selected_service = _booking_initial(request)
@@ -134,6 +142,7 @@ def book(request):
     return render(request, "appointments/book.html", context)
 
 
+@public_rate_limit("appointment-availability", limits={"GET": (60, 60)})
 @require_GET
 def availability(request):
     """JSON availability feed for booking widgets and external storefront clients."""
@@ -158,16 +167,21 @@ def availability(request):
 
 @never_cache
 def detail(request, token):
+    expire_due_requested_appointments(limit=100)
     appointment = get_object_or_404(
         Appointment.objects.select_related("service", "staff"),
         access_token=token,
     )
-    return render(request, "appointments/detail.html", {"appointment": appointment})
+    return render(request, "appointments/detail.html", {
+        "appointment": appointment,
+        "booking_hold_minutes": settings.PUBLIC_BOOKING_HOLD_MINUTES,
+    })
 
 
 @login_required(login_url="storefront:login")
 @never_cache
 def account_appointments(request):
+    expire_due_requested_appointments(limit=500)
     profile = _customer_profile(request.user)
     if not profile:
         raise PermissionDenied
@@ -189,6 +203,7 @@ def account_appointments(request):
 @login_required(login_url="storefront:login")
 @require_POST
 def cancel_appointment(request, pk):
+    expire_due_requested_appointments(limit=500)
     profile = _customer_profile(request.user)
     if not profile:
         raise PermissionDenied
@@ -213,6 +228,7 @@ def _staff_user(user):
 @login_required(login_url="login")
 @never_cache
 def staff_day(request):
+    expire_due_requested_appointments(limit=500)
     if not _staff_user(request.user):
         raise PermissionDenied
     try:
@@ -236,6 +252,7 @@ def staff_day(request):
 @login_required(login_url="login")
 @require_POST
 def update_status(request, pk):
+    expire_due_requested_appointments(limit=500)
     if not _staff_user(request.user):
         raise PermissionDenied
     appointment = get_object_or_404(Appointment, pk=pk)

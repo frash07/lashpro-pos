@@ -41,7 +41,7 @@
     </section>
 
     <section class="integration-card">
-      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp booking updates</h2><p>Meta WhatsApp Cloud API. The three template names must already be approved in WhatsApp Manager.</p></div><span class="integration-state">{% if config_status.whatsapp %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp booking updates</h2><p>Meta WhatsApp Cloud API. Each template name must already be approved in WhatsApp Manager.</p></div><span class="integration-state">{% if config_status.whatsapp %}Credentials saved{% else %}Not configured{% endif %}</span></div>
       <div class="integration-grid">
         <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste a permanent or long-lived system-user access token.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_phone_number_id.label_tag }}{{ form.whatsapp_phone_number_id }}{{ form.whatsapp_phone_number_id.errors }}</div>
@@ -50,6 +50,7 @@
         <div class="integration-field">{{ form.whatsapp_template_requested.label_tag }}{{ form.whatsapp_template_requested }}{{ form.whatsapp_template_requested.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_confirmed.label_tag }}{{ form.whatsapp_template_confirmed }}{{ form.whatsapp_template_confirmed.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_cancelled.label_tag }}{{ form.whatsapp_template_cancelled }}{{ form.whatsapp_template_cancelled.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_template_expired.label_tag }}{{ form.whatsapp_template_expired }}{{ form.whatsapp_template_expired.errors }}</div>
       </div>
       <p class="integration-note">WhatsApp sends approved template messages with customer, service, date and provider details. Add the matching four text parameters to the body of each approved template.</p>
       <label class="integration-clear">{{ form.clear_whatsapp }} {{ form.clear_whatsapp.label }}</label>
