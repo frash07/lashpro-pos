@@ -22,6 +22,10 @@ class StaffTimeOffAdmin(admin.ModelAdmin):
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        expire_due_requested_appointments(limit=500)
+        return super().get_queryset(request)
+
     list_display = (
         "reference", "starts_at", "service_name_snapshot", "staff",
         "customer_name", "customer_phone", "status", "expires_at",
