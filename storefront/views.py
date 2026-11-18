@@ -373,6 +373,7 @@ def customer_logout(request):
 @login_required(login_url="storefront:login")
 @never_cache
 def account_orders(request):
+    expire_due_storefront_orders(limit=500)
     profile = _profile_for(request.user)
     if not profile or request.user.role != User.Role.CUSTOMER:
         raise PermissionDenied
