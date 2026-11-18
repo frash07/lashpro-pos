@@ -26,6 +26,7 @@
       <nav class="main-nav" aria-label="Main navigation">
         <a href="{% url 'storefront:home' %}#shop">Shop products</a>
         <a href="{% url 'storefront:home' %}#services">Our services</a>
+        <a href="{% url 'storefront:home' %}#contact">Contact</a>
         <a href="{% url 'appointments:book' %}">Book an appointment</a>
         <a href="{% url 'storefront:cart' %}">Bag ({{ cart_count|default:0 }})</a>
       </nav>
@@ -60,6 +61,23 @@
       </a>
       <p>Products and services managed through one connected LashPro system.</p>
       <span class="copyright">© {% now "Y" %} LASH PRO</span>
+    </div>
+    <div class="shell footer-contact" id="contact">
+      <section class="footer-contact-block footer-contact-address" aria-labelledby="footer-visit-heading">
+        <h2 id="footer-visit-heading">Visit our studio</h2>
+        <p><a href="https://www.google.com/maps/search/?api=1&amp;query=Emperor+Plaza%2C+4th+floor%2C+room+403%2C+Kenyatta+Avenue%2C+Nairobi%2C+Kenya" target="_blank" rel="noopener noreferrer">Emperor Plaza, 4th floor, room 403<br>Kenyatta Avenue, Nairobi, Kenya</a></p>
+      </section>
+      <section class="footer-contact-block" aria-labelledby="footer-call-heading">
+        <h2 id="footer-call-heading">Call us</h2>
+        <p class="footer-contact-links">
+          <a href="tel:+254183288835">+254 183 288 835</a>
+          <a href="tel:+254742780842">+254 742 780 842</a>
+        </p>
+      </section>
+      <section class="footer-contact-block" aria-labelledby="footer-social-heading">
+        <h2 id="footer-social-heading">Follow LashPro</h2>
+        <p><a href="https://www.instagram.com/lash_pro_ke/" target="_blank" rel="noopener noreferrer">@lash_pro_ke</a></p>
+      </section>
     </div>
     <nav class="legal-footer-links" aria-label="Legal policies">
       <a href="{% url 'storefront:privacy' %}">Privacy policy</a>
