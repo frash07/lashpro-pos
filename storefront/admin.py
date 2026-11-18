@@ -5,7 +5,7 @@ from django.utils.html import format_html
 
 from accounts.models import User
 from .models import StorefrontOrder, StorefrontOrderLine
-from .services import transition_storefront_order
+from .services import expire_due_storefront_orders, transition_storefront_order
 
 
 STAFF_ROLES = {User.Role.OWNER, User.Role.MANAGER, User.Role.CASHIER}
@@ -29,7 +29,7 @@ class StorefrontOrderLineInline(admin.TabularInline):
 class StorefrontOrderAdmin(admin.ModelAdmin):
     list_display = (
         "reference", "customer_name", "customer_phone", "total_amount",
-        "status", "pos_sale", "created_at",
+        "status", "pos_sale", "created_at", "expires_at",
     )
     list_filter = ("status", "created_at")
     search_fields = ("reference", "customer_name", "customer_email", "customer_phone", "sale__receipt_number")
@@ -41,7 +41,7 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
         "fulfil_selected", "cancel_selected",
     )
     fields = (
-        "reference", "created_at", "updated_at",
+        "reference", "created_at", "updated_at", "expires_at", "expired_at",
         "customer_name", "customer_email", "customer_phone", "notes",
         "payment_method", "total_amount", "status", "pos_sale_link",
     )
@@ -52,6 +52,7 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
+        expire_due_storefront_orders(limit=500)
         return super().get_queryset(request).select_related("sale")
 
     def _can_review(self, request):
@@ -99,11 +100,19 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
         failed = 0
         for order in queryset:
             try:
-                transition_storefront_order(
+                transitioned = transition_storefront_order(
                     order=order,
                     target_status=target_status,
                     actor=request.user,
                 )
+                if transitioned.status != target_status:
+                    failed += 1
+                    self.message_user(
+                        request,
+                        f"{order.reference}: the unconfirmed reservation expired before this action; stock has been released.",
+                        level=messages.ERROR,
+                    )
+                    continue
             except ValidationError as exc:
                 failed += 1
                 self.message_user(
