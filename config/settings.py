@@ -50,6 +50,11 @@ SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_SAVE_EVERY_REQUEST = True
+
+# Public reservation holds are short-lived until staff confirm them. These
+# deadlines are persisted on each order/appointment, not recalculated per read.
+PUBLIC_ORDER_RESERVATION_MINUTES = max(5, env.int("PUBLIC_ORDER_RESERVATION_MINUTES", default=30))
+PUBLIC_BOOKING_HOLD_MINUTES = max(5, env.int("PUBLIC_BOOKING_HOLD_MINUTES", default=30))
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
