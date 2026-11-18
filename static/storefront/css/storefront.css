@@ -115,6 +115,13 @@ button, input { font: inherit; }
 .about-copy { max-width: 620px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.9; }
 .site-footer { background: var(--deep); color: #e9dfe4; }
 .footer-inner { min-height: 105px; display: flex; align-items: center; justify-content: space-between; gap: 22px; }
+.footer-contact { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; padding: 25px 0 28px; border-top: 1px solid rgba(233,223,228,.14); border-bottom: 1px solid rgba(233,223,228,.14); }
+.footer-contact-block h2 { margin: 0 0 9px; color: #c99ba7; font-size: 8px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.footer-contact-block p { margin: 0; color: #e9dfe4; font-size: 11px; line-height: 1.8; }
+.footer-contact-block a { color: inherit; text-decoration: underline; text-decoration-color: rgba(198,143,158,.55); text-underline-offset: 3px; }
+.footer-contact-block a:hover { color: #e7c4ce; }
+.footer-contact-address a { text-decoration: none; }
+.footer-contact-links a { display: block; width: max-content; max-width: 100%; }
 .brand-footer .brand-mark { color: #e7c4ce; border-color: #936d7c; }
 .brand-footer .brand-copy small { color: #a69aa2; }
 .footer-inner > p, .copyright { color: #b3a8b0; font-size: 9px; }
@@ -169,6 +176,7 @@ button, input { font: inherit; }
   .about-section .button { grid-column: auto; }
   .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; padding: 25px 0; gap: 13px; }
   .footer-inner > p { margin: 0; }
+  .footer-contact { grid-template-columns: 1fr; gap: 17px; padding: 22px 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
