@@ -524,7 +524,7 @@
     }
     function submitMpesaStk(){
       const phone=document.getElementById('mpesa-phone').value.trim();
-      if(!phone){alert('Enter the customer's M-Pesa phone number.');document.getElementById('mpesa-phone').focus();return;}
+      if(!phone){alert("Enter the customer's M-Pesa phone number.");document.getElementById('mpesa-phone').focus();return;}
       submitCheckout('STK_PUSH',phone);
     }
     function submitMpesaReference(){
