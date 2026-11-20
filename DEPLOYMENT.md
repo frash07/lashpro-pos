@@ -180,10 +180,10 @@ The Fly edge terminates TLS and forwards requests to the Machine. `TRUST_PROXY_S
 
 ## 9. Availability, machine sizing and monitoring
 
-The current machine definition is one shared CPU with 1 GB RAM. That is a starting size, not a measured capacity guarantee.
+The current machine definition is one shared CPU with 1 GB RAM. That is a starting size, not a measured capacity guarantee. The production configuration keeps two Machines running; Fly does not create the extra Machine from this setting alone.
 
 For a production service:
-- provision at least two application Machines in the chosen primary region if the business requires the app to survive one Machine failure;
+- provision two application Machines in the chosen primary region (run `fly scale count 2 --app lashpro-pos`) so one Machine can fail without taking the web app offline;
 - keep the minimum running machine count aligned with the number of Machines actually provisioned;
 - confirm both Machines pass the configured `/accounts/login/` health check;
 - monitor CPU, memory, restarts, request errors, response latency and database connections;
