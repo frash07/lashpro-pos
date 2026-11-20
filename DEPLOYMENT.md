@@ -15,9 +15,11 @@ This is the canonical production deployment guide for the `lashpro-pos` Fly.io a
 | Email | Authenticated SMTP provider | Staff password recovery and transactional email |
 | DNS/TLS | Customer-owned domain with Fly certificates | Branded HTTPS access |
 
-The repository currently sets `primary_region = "ams"` in `fly.toml`. Do not move the application to another region until the live database region is confirmed and the application and database can be moved together. For a Kenya-focused deployment, Fly's Johannesburg (`jnb`) region is the nearest Fly region in Africa; it is the preferred target for a new installation **only when the PostgreSQL database is also provisioned in the same region**. The available region list can change; verify it using `fly platform regions`.
+The repository currently sets `primary_region = "ams"` in `fly.toml`. Keep the existing app in Amsterdam until the actual database region and the current data source are verified. **Amsterdam is an actively listed Fly Managed Postgres region**, so it is the lowest-risk same-region choice for this existing app. Johannesburg (`jnb`) is a Fly Machines region, but it is **not** in Fly's currently published Managed Postgres region list; do not provision Fly Managed Postgres in `jnb` or move this app there as part of this database setup. The managed-database region list can change; verify it at provisioning time.
 
-Fly's Managed Postgres provides automated backups, recovery/PITR, high availability with failover, monitoring and encryption. Prefer it for a new installation if its current plan and region meet the business requirements. An existing paid Neon or other managed PostgreSQL database may be retained; verify its region, TLS, backup retention, point-in-time recovery and restore process before production use. Do not move an existing database merely to follow this recommendation—plan and rehearse the data migration first.
+Fly Managed Postgres provides automated backups and point-in-time recovery, high availability with automatic failover, monitoring and encryption. Its current published Basic plan is US$38/month plus storage at US$0.28 per provisioned GB/month; the published starting storage is 10 GB, so budget from approximately US$40.80/month before tax, egress or any app compute charges. The next published Starter plan is US$72/month plus storage. Confirm current pricing and availability in the Fly dashboard before provisioning. For this single-salon alpha, start with Basic and upgrade if measured CPU, memory, storage or connection demand requires it.
+
+An existing paid Neon or other managed PostgreSQL database may be retained instead. Verify its region, TLS, plan, backup retention, point-in-time recovery and restore process before production use. Do not replace or attach a new empty database until the current `DATABASE_URL` target and whether it contains business data are verified. Rehearse a complete dump/restore and financial-record reconciliation before cutover.
 
 Useful provider references:
 - [Fly.io Managed Postgres](https://fly.io/docs/mpg/)
@@ -32,7 +34,7 @@ Useful provider references:
 - `fly.toml` defines the app name, region, HTTPS routing, health check, machine resources and the release command.
 - `release.sh` runs `manage.py check --deploy`, applies migrations, and optionally creates the first owner account. The deploy is stopped if the release command fails.
 - `DATABASE_URL` is the runtime PostgreSQL connection. Fly Managed Postgres can set it when attached to the app.
-- `DATABASE_URL_DIRECT` is optional. Use it only when the database provider supplies a direct/unpooled connection intended for schema migrations.
+- `DATABASE_URL_DIRECT` is optional but recommended when the provider supplies a direct/unpooled connection for schema migrations. For Fly Managed Postgres, copy the Direct connection URL from the cluster's Connect tab into the Fly app secret `DATABASE_URL_DIRECT`. The release script temporarily uses it for migrations while web Machines use the pooled `DATABASE_URL` provided by `fly mpg attach`. Do not copy a password into Git or ChatGPT.
 - `CLOUDINARY_URL` configures durable product/service image uploads. Production mode now refuses to start without Cloudinary or the configured S3-compatible storage backend because Fly Machine filesystems are not a durable media store.
 - The app uses database-backed sessions and transaction records. Do not rely on a Machine's local filesystem for customer uploads or business data.
 
@@ -48,7 +50,27 @@ Complete these before the first live deployment:
 6. **Use independent owner/manager accounts.** At least two distinct people must be able to approve refunds and cash variances; do not share the deployment bootstrap account.
 7. **Keep synthetic seeding disabled.** `SYNTHETIC_DATA_ENABLED=false` must remain set on the production app.
 
-## 4. Configure Fly application secrets
+## 4. Inspect the existing app before changing database secrets
+
+Run these read-only commands from a machine authenticated to the Fly organization:
+
+```bash
+fly status --app lashpro-pos
+fly scale show --app lashpro-pos
+fly machines list --app lashpro-pos
+fly secrets list --app lashpro-pos
+fly mpg list
+```
+
+`fly secrets list` displays secret names, not values. Do not use `fly secrets show` or print the raw `DATABASE_URL` into a shared terminal/chat transcript. To identify the existing database provider without exposing credentials, inspect only the hostname and database name inside a running Machine:
+
+```bash
+fly ssh console --app lashpro-pos -C 'python -c "import os; from urllib.parse import urlparse; u=urlparse(os.environ.get(\u0022DATABASE_URL\u0022, \u0022\u0022)); print(\u0022DATABASE_HOST=\u0022+(u.hostname or \u0022unset\u0022)); print(\u0022DATABASE_NAME=\u0022+(u.path.lstrip(\u0022/\u0022) or \u0022unset\u0022)); print(\u0022FLY_REGION=\u0022+os.getenv(\u0022FLY_REGION\u0022, \u0022unknown\u0022))"'
+```
+
+Record the database host/provider, app and database regions, database name, machine count and which secret names are present. This is a read-only inventory; it does not change the running app.
+
+## 5. Configure Fly application secrets
 
 Authenticate with the Fly account that owns the app:
 
@@ -74,7 +96,7 @@ Required for the production application:
 | `DEFAULT_FROM_EMAIL` | Verified sender address. |
 
 Optional:
-- `DATABASE_URL_DIRECT`: direct/unpooled database URL for migrations, if supplied by the provider.
+- `DATABASE_URL_DIRECT`: direct/unpooled database URL for migrations, if supplied by the provider. For Fly Managed Postgres, use the Direct URL shown in the cluster Connect tab.
 - `EMAIL_TIMEOUT`: SMTP timeout in seconds; default is 10.
 - `DJANGO_BOOTSTRAP_OWNER_USERNAME`, `DJANGO_BOOTSTRAP_OWNER_EMAIL`, and `DJANGO_BOOTSTRAP_OWNER_PASSWORD`: use only for the first owner account, then remove all three secrets after confirming login.
 - `SYNTHETIC_DATA_ENABLED`: must stay `false` in production.
@@ -97,7 +119,7 @@ fly secrets set \
 
 For a new Fly Managed Postgres database, create the cluster in the same region as the app and attach it to `lashpro-pos` using the current Fly CLI instructions. Attachment normally provisions `DATABASE_URL` as an app secret. For an existing paid external provider, set `DATABASE_URL` yourself. Confirm that the connection works before deploying. Do not echo secrets into terminal logs or GitHub Actions logs.
 
-## 5. Database provisioning, backups and migration safety
+## 6. Database provisioning, backups and migration safety
 
 ### New installation
 
@@ -127,7 +149,7 @@ For a new Fly Managed Postgres database, create the cluster in the same region a
 
 For Fly Managed Postgres, the provider documents a rolling ten-day backup window and restore to a new cluster; verify the actual cluster's recovery window and restore behaviour in the dashboard before relying on it. For an external provider, use that provider's documented paid-plan backup and restore controls.
 
-## 6. Durable media storage
+## 7. Durable media storage
 
 The catalogue has `ImageField` fields for products and services. A Fly Machine's local disk is not a durable shared image store.
 
@@ -141,7 +163,7 @@ After configuration:
 
 See [FLY_MEDIA_STORAGE.md](FLY_MEDIA_STORAGE.md) for the Cloudinary configuration details.
 
-## 7. Deploy the application
+## 8. Deploy the application
 
 Before deploying, confirm that the app secrets are present, the database is reachable, media storage is configured, and the production data source is correct.
 
@@ -163,7 +185,7 @@ Once the first owner login is confirmed:
 - remove `DJANGO_BOOTSTRAP_OWNER_PASSWORD`;
 - confirm `SYNTHETIC_DATA_ENABLED=false`.
 
-## 8. Domain and TLS
+## 9. Domain and TLS
 
 The current app has the Fly hostname `lashpro-pos.fly.dev`. For a branded POS hostname:
 
@@ -178,7 +200,7 @@ The current app has the Fly hostname `lashpro-pos.fly.dev`. For a branded POS ho
 
 The Fly edge terminates TLS and forwards requests to the Machine. `TRUST_PROXY_SSL_HEADER=true` is configured for the Fly proxy; do not enable it on another host unless that proxy overwrites the forwarded-protocol header on every request.
 
-## 9. Availability, machine sizing and monitoring
+## 10. Availability, machine sizing and monitoring
 
 The current machine definition is one shared CPU with 1 GB RAM. That is a starting size, not a measured capacity guarantee. The production configuration keeps two Machines running; Fly does not create the extra Machine from this setting alone.
 
@@ -203,7 +225,7 @@ fly secrets list --app lashpro-pos
 
 The `secrets list` command shows secret names and deployment status, not secret values. Do not share screenshots of secret values from the Fly dashboard.
 
-## 10. Production smoke test
+## 11. Production smoke test
 
 After deployment, use separate named staff accounts and test with controlled transactions:
 
@@ -225,11 +247,11 @@ After deployment, use separate named staff accounts and test with controlled tra
 
 Use synthetic data on a disposable database for this smoke test. Never run the synthetic seed command against the live business database.
 
-## 11. Render test environment is not production
+## 12. Render test environment is not production
 
 `render.yaml`, `build.sh` and `Procfile` remain in the repository for the disposable Render synthetic-data path. That Render Free configuration must not be used for real salon operations. Do not copy its free-tier instructions into a production handover. The production target is the Fly.io application defined by `fly.toml`.
 
-## 12. Release gate
+## 13. Release gate
 
 Do not declare production ready until all of the following are evidenced:
 
