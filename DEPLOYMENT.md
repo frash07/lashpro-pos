@@ -65,7 +65,7 @@ fly mpg list
 `fly secrets list` displays secret names, not values. Do not use `fly secrets show` or print the raw `DATABASE_URL` into a shared terminal/chat transcript. To identify the existing database provider without exposing credentials, inspect only the hostname and database name inside a running Machine:
 
 ```bash
-fly ssh console --app lashpro-pos -C 'python -c "import os; from urllib.parse import urlparse; u=urlparse(os.environ.get(\u0022DATABASE_URL\u0022, \u0022\u0022)); print(\u0022DATABASE_HOST=\u0022+(u.hostname or \u0022unset\u0022)); print(\u0022DATABASE_NAME=\u0022+(u.path.lstrip(\u0022/\u0022) or \u0022unset\u0022)); print(\u0022FLY_REGION=\u0022+os.getenv(\u0022FLY_REGION\u0022, \u0022unknown\u0022))"'
+fly ssh console --app lashpro-pos -C "python -c 'import os; from urllib.parse import urlparse; u=urlparse(os.environ.get(\"DATABASE_URL\", \"\")); print(\"DATABASE_HOST=\"+(u.hostname or \"unset\")); print(\"DATABASE_NAME=\"+(u.path.lstrip(\"/\") or \"unset\")); print(\"FLY_REGION=\"+os.getenv(\"FLY_REGION\", \"unknown\"))'"
 ```
 
 Record the database host/provider, app and database regions, database name, machine count and which secret names are present. This is a read-only inventory; it does not change the running app.
