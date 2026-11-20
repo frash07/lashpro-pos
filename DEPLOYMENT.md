@@ -1,59 +1,247 @@
-# LashPro POS deployment: Render + Neon
+# LashPro POS production deployment — Fly.io
 
-This setup creates a public alpha deployment on Render's free web service and uses Neon Free for PostgreSQL. It prepares the app for a supervised trial with synthetic data. Render explicitly says its free web services are not for production applications; do not use this free setup for real customer records, payments, inventory operations, or business-critical sales.
+This is the canonical production deployment guide for the `lashpro-pos` Fly.io application defined by `fly.toml`. It replaces the old Render Free + Neon Free instructions.
 
-## What the deployment files do
+**Production boundary:** Do not use the Render Free Blueprint (`render.yaml`) for live customer records, payments, inventory, or business-critical operations. It is retained only as a disposable synthetic-data test environment. Fly.io and the database provider must be on paid plans appropriate for production before live records are loaded.
 
-- .python-version pins Render to Python 3.14.8.
-- render.yaml describes one free Render web service and asks for database and secret values during initial Blueprint creation.
-- build.sh installs requirements, runs Django's production deployment check, collects static files, applies migrations, and optionally creates the first owner.
-- Procfile starts Gunicorn with one worker and two threads to fit the free service's limited memory.
-- config/settings.py accepts either a DATABASE_URL or the existing local DB_* variables. It adds Render's hostname and HTTPS URL automatically, requires SSL by default for URL-based connections, disables server-side cursors for Neon pooler compatibility, and keeps database connections short-lived.
-- accounts/management/commands/bootstrap_deploy_owner.py creates an owner only when all three bootstrap credentials are present. It validates the password and never changes an existing account.
+## 1. Target architecture
 
-The app currently has no persistent uploaded-file fields, so the free service's ephemeral local disk does not need to hold business media. Do not add persistent user uploads without external object storage.
+| Component | Production target | Purpose |
+|---|---|---|
+| Web application | Fly.io app `lashpro-pos` | Django + Gunicorn |
+| Database | Fly Managed Postgres, or an equivalent paid managed PostgreSQL service | Durable transactional data, automated backups, recovery |
+| Uploaded images | Cloudinary or another durable object-storage provider | Product/service images shared across machines |
+| Static assets | WhiteNoise manifest storage in the container image | Versioned CSS, JavaScript and static images |
+| Email | Authenticated SMTP provider | Staff password recovery and transactional email |
+| DNS/TLS | Customer-owned domain with Fly certificates | Branded HTTPS access |
 
-## Compatibility and automated validation
+The repository currently sets `primary_region = "ams"` in `fly.toml`. Do not move the application to another region until the live database region is confirmed and the application and database can be moved together. For a Kenya-focused deployment, Fly's Johannesburg (`jnb`) region is the nearest Fly region in Africa; it is the preferred target for a new installation **only when the PostgreSQL database is also provisioned in the same region**. The available region list can change; verify it using `fly platform regions`.
 
-The alpha pins Django 6.0.9 alongside WhiteNoise 6.12.0. The released WhiteNoise 6.12.0 package metadata lists Django 6.0 support; Django 6.1 support is not listed in that release. Keep these versions together unless a newer released WhiteNoise version explicitly supports the selected Django version and CI passes.
+Fly's Managed Postgres provides automated backups, recovery/PITR, high availability with failover, monitoring and encryption. Prefer it for a new installation if its current plan and region meet the business requirements. An existing paid Neon or other managed PostgreSQL database may be retained; verify its region, TLS, backup retention, point-in-time recovery and restore process before production use. Do not move an existing database merely to follow this recommendation—plan and rehearse the data migration first.
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` provisions PostgreSQL and runs dependency checks, Django system checks, migration-drift checks, fresh migrations, the test suite, and static collection. Treat a failing workflow as a release blocker.
+Useful provider references:
+- [Fly.io Managed Postgres](https://fly.io/docs/mpg/)
+- [Fly.io regions and platform status](https://fly.io/docs/reference/regions/)
+- [Fly.io pricing](https://fly.io/docs/about/pricing/)
+- [Fly.io custom domains and TLS](https://fly.io/docs/networking/custom-domain/)
 
-## Create the alpha
+## 2. What the repository does during deployment
 
-1. Push the project to a private GitHub repository that Render can access. Do not include .env, local databases, virtual environments, or staticfiles/.
-2. Create a Neon project. Choose a region close to the Render service and, if possible, use the same region for both to reduce database latency.
-3. In Neon, copy the pooled connection string (its hostname includes -pooler) and ensure it includes sslmode=require. Keep it private.
-4. In Render, create a new Blueprint from the repository containing render.yaml. Choose the same or nearest supported region to Neon.
-5. When prompted for the sync: false values, provide:
-   - Neon's pooled connection string as DATABASE_URL;
-   - a unique DJANGO_SECRET_KEY, generated with Django's get_random_secret_key;
-   - a first owner username, email, and strong password for the three DJANGO_BOOTSTRAP_OWNER_* settings.
-6. Let the first build finish. It checks the deployment settings, collects static files, migrates the empty Neon database, and creates the owner account. Open the Render URL and sign in.
-7. After confirming that owner login works, remove all three DJANGO_BOOTSTRAP_OWNER_* values from Render. The command then skips on later builds. If a later build fails after the owner was created, the rerun detects the same owner and leaves its password unchanged.
-8. During the initial Blueprint sync, set SYNTHETIC_DATA_ENABLED to false. After the owner can log in, use the Render service's Environment page to add SYNTHETIC_DATA_CONFIRM_DATABASE equal to the exact database name from the Neon URL and a strong SYNTHETIC_STAFF_PASSWORD. On the dedicated disposable Alpha service only, set SYNTHETIC_DATA_ENABLED=true and save/deploy once; build.sh runs the guarded seed command after migrations. Immediately set SYNTHETIC_DATA_ENABLED=false again and save/deploy, leaving the two test-only variables present only if you want controlled reseeding later. The command refuses non-PostgreSQL databases and requires the exact database-name confirmation.
-9. The seed creates demo users demo_manager, demo_cashier, demo_technician_1, and demo_technician_2; five fictional customers; three products; three services; a consumable rule; ledgered opening stock; and one mixed product/service sale paid by synthetic cash and an unverified synthetic M-Pesa reference. It completes the sample service so stock consumption and commission reporting have an example entry. The password supplied is applied only to new demo accounts; reruns do not change existing passwords. Use the sample transaction to test receipt, reporting, cash-session and M-Pesa reconciliation workflows; never represent its synthetic M-Pesa reference as a real payment.
-10. Never enable synthetic seeding against real business data. Keep the test-only environment settings aligned with the values in render.yaml if synchronizing the Blueprint.
-11. If you add a custom domain, add its hostname to ALLOWED_HOSTS and its https:// origin to CSRF_TRUSTED_ORIGINS. Keep HTTPS enabled.
+- `.python-version` pins Python 3.14.8. The Docker image uses the same Python patch version.
+- `Dockerfile` installs the pinned dependencies, collects static assets, and runs Gunicorn as a non-root user.
+- `fly.toml` defines the app name, region, HTTPS routing, health check, machine resources and the release command.
+- `release.sh` runs `manage.py check --deploy`, applies migrations, and optionally creates the first owner account. The deploy is stopped if the release command fails.
+- `DATABASE_URL` is the runtime PostgreSQL connection. Fly Managed Postgres can set it when attached to the app.
+- `DATABASE_URL_DIRECT` is optional. Use it only when the database provider supplies a direct/unpooled connection intended for schema migrations.
+- `CLOUDINARY_URL` configures durable product/service image uploads. Production mode now refuses to start without Cloudinary or the configured S3-compatible storage backend because Fly Machine filesystems are not a durable media store.
+- The app uses database-backed sessions and transaction records. Do not rely on a Machine's local filesystem for customer uploads or business data.
 
-Render supplies RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_URL; settings use those for the generated service domain. Do not put secrets in the repository or commit .env.production.example values after replacing its placeholders.
+## 3. Pre-deployment decisions and safeguards
 
-### Staff password recovery
+Complete these before the first live deployment:
 
-The staff login provides password reset by email and authenticated password change. To activate email recovery, configure the Render environment variables `EMAIL_HOST`, `EMAIL_PORT` (usually `587`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS=true`, and `DEFAULT_FROM_EMAIL` using a verified SMTP provider. Do not use a console email backend in production: reset links must be delivered privately, not written to deployment logs. Until SMTP is configured, the reset form instructs the user to contact a manager. Users who are already signed in can change their password from the staff checkout navigation.
+1. **Identify the current data source.** Confirm whether the existing Fly app or another environment already contains real customers, sales, payment records, stock movements, appointments, or staff accounts.
+2. **Do not attach an empty database to an app containing live data.** If the production database must change, take a backup, restore it into the target provider, verify row counts and financial totals, test the restored database, and schedule a controlled cutover. Keep the old database intact until acceptance.
+3. **Confirm the database region.** Keep Fly Machines close to PostgreSQL. For a new Kenya-focused environment, consider `jnb` for both. The current checked-in app region remains `ams` until this is confirmed.
+4. **Choose an owner for infrastructure and billing.** The business must own or explicitly approve the Fly, database, Cloudinary, domain/DNS and email-provider accounts.
+5. **Choose production support contacts.** At least one person must receive service alerts and one person must be authorised to restore the database.
+6. **Use independent owner/manager accounts.** At least two distinct people must be able to approve refunds and cash variances; do not share the deployment bootstrap account.
+7. **Keep synthetic seeding disabled.** `SYNTHETIC_DATA_ENABLED=false` must remain set on the production app.
 
-## Free-tier behavior and data limits
+## 4. Configure Fly application secrets
 
-Render free web services spin down after 15 minutes without traffic and may take about a minute to start again. Their local filesystem is ephemeral, and free web services do not provide SSH shell access, one-off jobs, or a separate pre-deploy command. This is why this alpha runs migrations in the build command. Test every migration against a disposable Neon database before deploying schema changes.
+Authenticate with the Fly account that owns the app:
 
-Neon Free currently includes 1 GB of database storage per project, 100 CU-hours per month, and a six-hour restore window. Limits and plan terms can change. Monitor the Neon dashboard and keep a separate backup before any important data is entered.
+```bash
+fly auth login
+fly status --app lashpro-pos
+```
 
-These services are suitable for trying the app with synthetic records. Upgrade to a paid hosting/database plan with backups, monitoring, and an operational restore process before using it for actual salon transactions or personal data. The free-tier alpha may be slow after idle, and it is not an availability guarantee.
+Set secrets in the Fly app. Do not commit real values to GitHub, place them in `.env.production.example`, or paste them into support tickets.
 
-## Before sharing the URL
+Required for the production application:
 
-- Confirm python manage.py check --deploy is clean in the Render build log.
-- Verify login, product/service setup, checkout, cash/manual M-Pesa, receipt, refunds, cash-session close, and reconciliation using synthetic data.
-- Keep owner credentials private and remove bootstrap credentials after the first owner login. Treat the seeded `demo_*` accounts as shared disposable QA identities only; create individual named accounts for any real pilot staff, with the least privilege required.
-- Keep HSTS at 300 seconds during the alpha. `SECURE_HSTS_INCLUDE_SUBDOMAINS` and `SECURE_HSTS_PRELOAD` are false in the deployment Blueprint until the domain policy is deliberately reviewed.
-- Take a database backup and verify that you can restore it before moving beyond synthetic trial data.
+| Secret / variable | Requirement |
+|---|---|
+| `DJANGO_SECRET_KEY` | Unique, cryptographically random secret. Keep it stable and securely backed up; integration credentials are encrypted using it. |
+| `DATABASE_URL` | Set by `fly mpg attach` for Fly Managed Postgres, or set to the paid managed PostgreSQL connection string. Require TLS for an external database. |
+| `CLOUDINARY_URL` | Full Cloudinary URL for the POS app's image uploads, unless the S3-compatible backend is fully configured instead. |
+| `EMAIL_HOST` | Authenticated SMTP host. |
+| `EMAIL_PORT` | Normally `587` for STARTTLS; use the provider's documented port. |
+| `EMAIL_HOST_USER` | SMTP username. |
+| `EMAIL_HOST_PASSWORD` | SMTP password/app password. |
+| `EMAIL_USE_TLS` | `true` when required by the SMTP provider. |
+| `DEFAULT_FROM_EMAIL` | Verified sender address. |
+
+Optional:
+- `DATABASE_URL_DIRECT`: direct/unpooled database URL for migrations, if supplied by the provider.
+- `EMAIL_TIMEOUT`: SMTP timeout in seconds; default is 10.
+- `DJANGO_BOOTSTRAP_OWNER_USERNAME`, `DJANGO_BOOTSTRAP_OWNER_EMAIL`, and `DJANGO_BOOTSTRAP_OWNER_PASSWORD`: use only for the first owner account, then remove all three secrets after confirming login.
+- `SYNTHETIC_DATA_ENABLED`: must stay `false` in production.
+
+Example command shape (replace every placeholder locally; never commit the command with real values):
+
+```bash
+fly secrets set \
+  DJANGO_SECRET_KEY='GENERATE_A_UNIQUE_SECRET' \
+  CLOUDINARY_URL='cloudinary://API_KEY:API_SECRET@CLOUD_NAME' \
+  EMAIL_HOST='smtp.example.com' \
+  EMAIL_PORT='587' \
+  EMAIL_HOST_USER='smtp-user' \
+  EMAIL_HOST_PASSWORD='SMTP_APP_PASSWORD' \
+  EMAIL_USE_TLS='true' \
+  DEFAULT_FROM_EMAIL='LashPro <no-reply@example.com>' \
+  SYNTHETIC_DATA_ENABLED='false' \
+  --app lashpro-pos
+```
+
+For a new Fly Managed Postgres database, create the cluster in the same region as the app and attach it to `lashpro-pos` using the current Fly CLI instructions. Attachment normally provisions `DATABASE_URL` as an app secret. For an existing paid external provider, set `DATABASE_URL` yourself. Confirm that the connection works before deploying. Do not echo secrets into terminal logs or GitHub Actions logs.
+
+## 5. Database provisioning, backups and migration safety
+
+### New installation
+
+- Provision a paid managed PostgreSQL cluster with automated backups, point-in-time recovery and a tested restore path.
+- Place it in the same region as the Fly application.
+- Attach it to the app or configure `DATABASE_URL`.
+- Confirm TLS is enabled and the database allows connections from the Fly app.
+- Keep a separate encrypted backup outside the database provider's account for business continuity.
+
+### Existing installation or database migration
+
+- Record the source database provider, database name, region, PostgreSQL version and current schema migration.
+- Take a fresh backup and restore it into a separate target database.
+- Compare row counts and totals for sales, payments, payment allocations, refunds, cash sessions, inventory movements, commission ledgers and audit events.
+- Test logins, reports, checkout and reconciliation on the restored copy.
+- Schedule a cutover window. Stop writes or use a provider-supported migration/replication process to capture the final changes.
+- Keep the original database untouched until the owner signs off the new environment.
+
+### Backup and recovery standard
+
+- Verify automatic backups are enabled and confirm their retention and recovery window in the provider console.
+- Make an additional encrypted off-provider backup on a documented schedule.
+- Perform a restore rehearsal to a **new, separate database** before live use and at regular intervals thereafter.
+- Record the recovery point objective (maximum acceptable data loss) and recovery time objective (maximum acceptable outage) with the business owner.
+- Keep the database secret and encryption key backups under separate access controls.
+- Never test restoration over the live production database.
+
+For Fly Managed Postgres, the provider documents a rolling ten-day backup window and restore to a new cluster; verify the actual cluster's recovery window and restore behaviour in the dashboard before relying on it. For an external provider, use that provider's documented paid-plan backup and restore controls.
+
+## 6. Durable media storage
+
+The catalogue has `ImageField` fields for products and services. A Fly Machine's local disk is not a durable shared image store.
+
+The POS app needs `CLOUDINARY_URL` (or a fully configured S3-compatible storage backend) to upload images. The storefront, when deployed as a separate app, needs the matching public Cloudinary cloud name to render those images; it must not receive the POS API secret.
+
+After configuration:
+1. Upload a test product image from the POS admin.
+2. Confirm the stored URL is served by the external media provider.
+3. Open the customer storefront and verify the same image loads.
+4. Restart or replace the app Machine and verify the image remains available.
+
+See [FLY_MEDIA_STORAGE.md](FLY_MEDIA_STORAGE.md) for the Cloudinary configuration details.
+
+## 7. Deploy the application
+
+Before deploying, confirm that the app secrets are present, the database is reachable, media storage is configured, and the production data source is correct.
+
+```bash
+fly deploy --app lashpro-pos
+```
+
+Fly executes `release.sh` as the configured release command before the new version receives traffic. The release command:
+- runs Django's production deployment checks;
+- applies the checked-in migrations;
+- bootstraps the owner only when the three bootstrap secrets are present;
+- runs synthetic seeding only when explicitly enabled.
+
+A failed release command must be treated as a failed deployment. Do not bypass a failed migration or deployment check to force a release. Inspect `fly logs --app lashpro-pos`, fix the cause, and retry after taking any required backup.
+
+Once the first owner login is confirmed:
+- remove `DJANGO_BOOTSTRAP_OWNER_USERNAME`;
+- remove `DJANGO_BOOTSTRAP_OWNER_EMAIL`;
+- remove `DJANGO_BOOTSTRAP_OWNER_PASSWORD`;
+- confirm `SYNTHETIC_DATA_ENABLED=false`.
+
+## 8. Domain and TLS
+
+The current app has the Fly hostname `lashpro-pos.fly.dev`. For a branded POS hostname:
+
+1. Choose and register a domain/subdomain controlled by the business (for example, a dedicated POS subdomain).
+2. Add that hostname to `ALLOWED_HOSTS`.
+3. Add its full HTTPS origin to `CSRF_TRUSTED_ORIGINS`.
+4. Add the hostname to `POS_HOSTS` if its root path should open the staff POS.
+5. Set `POS_BASE_URL` to the canonical HTTPS POS origin; the appointment/payment callback URLs use this value.
+6. Add the certificate using `fly certs add` and publish exactly the DNS records Fly displays.
+7. Verify certificate issuance and renewal using the Fly dashboard/CLI, then test HTTP-to-HTTPS redirection and the application login.
+8. Keep `SECURE_HSTS_INCLUDE_SUBDOMAINS=false` and `SECURE_HSTS_PRELOAD=false` until every affected subdomain is HTTPS-only and the business deliberately approves the domain-wide commitment.
+
+The Fly edge terminates TLS and forwards requests to the Machine. `TRUST_PROXY_SSL_HEADER=true` is configured for the Fly proxy; do not enable it on another host unless that proxy overwrites the forwarded-protocol header on every request.
+
+## 9. Availability, machine sizing and monitoring
+
+The current machine definition is one shared CPU with 1 GB RAM. That is a starting size, not a measured capacity guarantee.
+
+For a production service:
+- provision at least two application Machines in the chosen primary region if the business requires the app to survive one Machine failure;
+- keep the minimum running machine count aligned with the number of Machines actually provisioned;
+- confirm both Machines pass the configured `/accounts/login/` health check;
+- monitor CPU, memory, restarts, request errors, response latency and database connections;
+- configure alerts to a named support contact;
+- retain application logs and investigate repeated errors;
+- verify that media is external and sessions/data are stored in shared durable services before scaling horizontally.
+
+Useful operational commands:
+
+```bash
+fly status --app lashpro-pos
+fly checks list --app lashpro-pos
+fly logs --app lashpro-pos
+fly machines list --app lashpro-pos
+fly secrets list --app lashpro-pos
+```
+
+The `secrets list` command shows secret names and deployment status, not secret values. Do not share screenshots of secret values from the Fly dashboard.
+
+## 10. Production smoke test
+
+After deployment, use separate named staff accounts and test with controlled transactions:
+
+- HTTPS login, logout and session expiry;
+- static CSS and JavaScript load without 404s;
+- upload and retrieve a product/service image;
+- create a test product and service;
+- open and close a cash session;
+- complete a product + service checkout;
+- print the receipt;
+- record a cash payment and a manual M-Pesa reference;
+- verify the manual M-Pesa payment remains unverified until reconciliation;
+- test a partial payment and repeat submission to confirm idempotency;
+- test refund request and independent manager approval;
+- verify stock movements, service consumables and commission ledger entries;
+- confirm daily reports reconcile to the test sales and payment records;
+- verify password recovery email delivery;
+- check logs and Fly health checks after the tests.
+
+Use synthetic data on a disposable database for this smoke test. Never run the synthetic seed command against the live business database.
+
+## 11. Render test environment is not production
+
+`render.yaml`, `build.sh` and `Procfile` remain in the repository for the disposable Render synthetic-data path. That Render Free configuration must not be used for real salon operations. Do not copy its free-tier instructions into a production handover. The production target is the Fly.io application defined by `fly.toml`.
+
+## 12. Release gate
+
+Do not declare production ready until all of the following are evidenced:
+
+- [ ] Paid Fly hosting and paid managed PostgreSQL are active.
+- [ ] App and database are in a reviewed, low-latency region arrangement.
+- [ ] Production secrets are configured in Fly and no real secret is committed.
+- [ ] Production storage for product/service uploads is configured and tested.
+- [ ] SMTP password recovery is tested.
+- [ ] HTTPS, domain, host validation and CSRF settings are verified.
+- [ ] Django `check --deploy` passes on the actual Fly environment.
+- [ ] Migrations deploy successfully against the intended database.
+- [ ] At least two named owner/manager accounts exist.
+- [ ] Backups, off-provider copies and a restore rehearsal are complete.
+- [ ] Monitoring, alerting and operational ownership are documented.
+- [ ] The production smoke test passes and the business owner accepts the release.
