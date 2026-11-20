@@ -9,7 +9,7 @@ WORKDIR /code
 # Psycopg's binary wheel is installed from requirements.txt. Keep build tools
 # only in the image layer used to install dependencies.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev passwd \
+    && apt-get install -y --no-install-recommends passwd \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /tmp/requirements.txt
