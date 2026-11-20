@@ -2,7 +2,7 @@
 #
 # See https://docs.fly.io/reference/configuration for information about how to use this file.
 # Keep primary_region co-located with the production PostgreSQL database.
-# For Kenya, consider jnb for a new deployment only after the database is provisioned/migrated there.
+# Current app region is ams; keep it co-located with PostgreSQL. Fly Managed Postgres currently lists ams but not jnb.
 #
 
 app = 'lashpro-pos'
