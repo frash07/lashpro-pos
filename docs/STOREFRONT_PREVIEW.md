@@ -36,12 +36,19 @@ Under GitHub repository Settings → Secrets and variables → Actions, add thes
 
 | Secret | Value |
 |---|---|
-| `FLY_API_TOKEN` | The app-scoped token created in step 3 |
+| `FLY_API_TOKEN` | App-scoped deploy token for `lashpro-storefront-preview` (created in step 3) |
+| `FLY_STOREFRONT_API_TOKEN` | Separate app-scoped deploy token for the production `lashpro-storefront` app |
 | `PREVIEW_DATABASE_URL` | Connection URL for the separate, empty PostgreSQL database; use TLS (`sslmode=require`) |
 | `PREVIEW_DJANGO_SECRET_KEY` | A unique, strong Django secret key used only by the preview |
 | `PREVIEW_STAFF_PASSWORD` | A strong, test-only password for the synthetic staff users created by the seed command |
 
-No organization-wide Fly token is needed by the GitHub workflow. The `lashpro-storefront-preview` app must exist before the first deployment.
+No organization-wide Fly token is needed by the GitHub workflow. Keep the two app-scoped tokens separate. Create the production token with:
+
+```bash
+fly tokens create deploy -a lashpro-storefront -x 720h
+```
+
+Add its output as the GitHub Actions secret `FLY_STOREFRONT_API_TOKEN`. The `lashpro-storefront-preview` and `lashpro-storefront` apps must exist before their respective deployments.
 
 The existing Django CI workflow first runs dependency checks, Django checks, migration checks, static collection, tests, and a production Docker build. On pushes to `main`, it then deploys the isolated preview first when its secrets are configured, followed by the production storefront when `FLY_STOREFRONT_API_TOKEN` is configured. The preview uses `FLY_API_TOKEN` (scoped to the preview app); production uses a separate `FLY_STOREFRONT_API_TOKEN` (scoped to `lashpro-storefront`). If either token is missing, that deployment is skipped with a notice. The POS app continues to deploy separately using `fly.toml`.
 
@@ -58,3 +65,12 @@ Once the CI workflow passes and the configuration is complete:
 https://lashpro-storefront-preview.fly.dev
 
 The preview contains synthetic catalog data, not a copy of the live pilot catalogue. The storefront code reads products and services from the preview database, exactly as the production site will read from its own configured database. A later, separate task can add a controlled catalogue-only import for selected real product/service records, without copying customer or sales data.
+
+
+## Production storefront prerequisites
+
+Before adding `FLY_STOREFRONT_API_TOKEN`, configure the `lashpro-storefront` Fly app with its own production secrets, including `DJANGO_SECRET_KEY` and `DATABASE_URL`, plus the durable media-storage settings required by the application. Do not reuse the preview database or point the storefront at an empty or synthetic database.
+
+The GitHub workflow deploys the tested `main` commit with `fly.storefront.toml`. It does not set or overwrite Fly secrets. The Fly release command runs Django deployment checks, applies database migrations, and bootstraps the deployment owner, so verify the production database backup and credentials before enabling automatic deployment.
+
+The POS app remains separate and continues to use `fly.toml`. The isolated preview continues to use `fly.storefront-preview.toml`.
