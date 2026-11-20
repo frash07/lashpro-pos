@@ -278,9 +278,17 @@ if not (CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME) and MEDIA_STORAGE_BUCKET_NAME:
         },
     }
 
-if DJANGO_ENV == "production" and not (CLOUDINARY_URL or MEDIA_STORAGE_BUCKET_NAME):
+S3_MEDIA_CREDENTIALS_CONFIGURED = bool(
+    env("AWS_ACCESS_KEY_ID", default="").strip()
+    and env("AWS_SECRET_ACCESS_KEY", default="").strip()
+)
+DURABLE_MEDIA_CONFIGURED = bool(
+    CLOUDINARY_URL
+    or (MEDIA_STORAGE_BUCKET_NAME and S3_MEDIA_CREDENTIALS_CONFIGURED)
+)
+if DJANGO_ENV == "production" and not DURABLE_MEDIA_CONFIGURED:
     raise ImproperlyConfigured(
-        "Production requires durable media storage. Configure CLOUDINARY_URL or the S3-compatible BUCKET_NAME backend."
+        "Production requires durable media storage. Configure CLOUDINARY_URL or BUCKET_NAME with S3 access credentials."
     )
 
 # A production Fly deployment must never fall back to ephemeral local media
