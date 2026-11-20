@@ -8,7 +8,7 @@ Appointments, automated M-Pesa integration, a PWA, and multi-branch support are 
 
 ## Local stabilization status — 16 October 2026
 
-- Historical local baseline (16 October 2026, before the deployment compatibility pin): using Django 6.1.2, the local PostgreSQL database had pending Alpha migrations applied, system/dependency/migration checks passing, and 53 tests passing. The deployment branch now pins Django 6.0.9 to align with released WhiteNoise 6.12.0 support; rerun the new PostgreSQL CI workflow before treating the 6.0.9 baseline as verified.
+- Historical local baseline (16 October 2026, before the deployment compatibility pin): using Django 6.1.2, the local PostgreSQL database had pending Alpha migrations applied, system/dependency/migration checks passing, and 53 tests passing. The deployment branch pins Django 6.0.9 with WhiteNoise 6.12.0; the current PostgreSQL CI workflow must pass before release.
 - The one legacy pending cash entry was confirmed as a test/abandoned record by the user, cancelled with an immutable approval audit event, and retains its original reference. The current database has no pending payment rows.
 - A pre-change PostgreSQL backup was created and restored successfully into a separate temporary database; core migration and payment tables were verified, then the temporary restore database was removed. The backup is on this development machine and is not an off-site production backup.
 - The local `check --deploy` still reports six warnings: HSTS is unset, HTTPS redirect is off, the local secret is unsuitable for deployment, secure session and CSRF cookies are off, and `DEBUG=True`. Configure these against the real HTTPS host before Alpha deployment.
