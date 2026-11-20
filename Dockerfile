@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14.8-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -6,9 +6,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /code
 
-# Psycopg can use its binary wheel; libpq-dev and gcc also allow source builds.
+# Psycopg's binary wheel is installed from requirements.txt. Keep build tools
+# only in the image layer used to install dependencies.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && apt-get install -y --no-install-recommends gcc libpq-dev passwd \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /tmp/requirements.txt
@@ -22,6 +23,13 @@ COPY . /code
 RUN DJANGO_SECRET_KEY=build-only-not-a-runtime-secret \
     DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
     python manage.py collectstatic --noinput
+
+# Do not run the internet-facing WSGI process as root.
+RUN groupadd --system app \
+    && useradd --system --gid app --home-dir /home/app --create-home app \
+    && chown -R app:app /code
+
+USER app
 
 EXPOSE 8080
 
