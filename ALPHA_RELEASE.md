@@ -35,12 +35,12 @@ Appointments, automated M-Pesa integration, a PWA, and multi-branch support are 
 
 Run from the project directory with the Alpha environment loaded:
 
-    .\venv314\Scripts\python.exe manage.py check
-    .\venv314\Scripts\python.exe manage.py check --deploy
-    .\venv314\Scripts\python.exe manage.py makemigrations --check --dry-run
-    .\venv314\Scripts\python.exe -m pip check
-    .\venv314\Scripts\python.exe manage.py test
-    .\venv314\Scripts\python.exe manage.py collectstatic --noinput
+    python manage.py check
+    python manage.py check --deploy
+    python manage.py makemigrations --check --dry-run
+    python -m pip check
+    python manage.py test
+    python manage.py collectstatic --noinput
 
 Resolve every deployment warning that applies to the actual host. HSTS include-subdomains/preload warnings may remain while those settings are intentionally disabled; record the decision and do not enable them until the domain is ready.
 
