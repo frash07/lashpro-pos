@@ -1,4 +1,4 @@
-FROM python:3.14.8-slim
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -6,8 +6,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /code
 
-# Psycopg's binary wheel is installed from requirements.txt. Keep build tools
-# only in the image layer used to install dependencies.
+# Psycopg's binary wheel is installed from requirements.txt. Only install the
+# account-management utility needed to create the non-root runtime user.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends passwd \
     && rm -rf /var/lib/apt/lists/*
