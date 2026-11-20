@@ -1,6 +1,8 @@
 # fly.toml app configuration file generated for lashpro-pos on 2026-11-15T02:17:09Z
 #
 # See https://docs.fly.io/reference/configuration for information about how to use this file.
+# Keep primary_region co-located with the production PostgreSQL database.
+# For Kenya, consider jnb for a new deployment only after the database is provisioned/migrated there.
 #
 
 app = 'lashpro-pos'
@@ -38,7 +40,7 @@ primary_region = 'ams'
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 2
   processes = ['app']
 
   [[http_service.checks]]

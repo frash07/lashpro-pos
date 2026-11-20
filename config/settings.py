@@ -14,6 +14,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,6 +23,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
+DJANGO_ENV = env("DJANGO_ENV", default="development").strip().lower()
 
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
@@ -35,9 +37,6 @@ POS_BASE_URL = env(
     "POS_BASE_URL",
     default="https://lashpro-pos.fly.dev",
 ).strip().rstrip("/")
-RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME", default="").strip()
-if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Production defaults activate when DEBUG is off. Trust the forwarded HTTPS
 # header only when a proxy is configured to overwrite it on every request.
@@ -59,9 +58,6 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
-RENDER_EXTERNAL_URL = env("RENDER_EXTERNAL_URL", default="").strip().rstrip("/")
-if RENDER_EXTERNAL_URL and RENDER_EXTERNAL_URL not in CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS.append(RENDER_EXTERNAL_URL)
 SECURE_PROXY_SSL_HEADER = (
     ("HTTP_X_FORWARDED_PROTO", "https")
     if env.bool("TRUST_PROXY_SSL_HEADER", default=False)
@@ -281,6 +277,35 @@ if not (CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME) and MEDIA_STORAGE_BUCKET_NAME:
             "file_overwrite": False,
         },
     }
+
+S3_MEDIA_CREDENTIALS_CONFIGURED = bool(
+    env("AWS_ACCESS_KEY_ID", default="").strip()
+    and env("AWS_SECRET_ACCESS_KEY", default="").strip()
+)
+DURABLE_MEDIA_CONFIGURED = bool(
+    CLOUDINARY_URL
+    or (MEDIA_STORAGE_BUCKET_NAME and S3_MEDIA_CREDENTIALS_CONFIGURED)
+)
+if DJANGO_ENV == "production" and not DURABLE_MEDIA_CONFIGURED:
+    raise ImproperlyConfigured(
+        "Production requires durable media storage. Configure CLOUDINARY_URL or BUCKET_NAME with S3 access credentials."
+    )
+
+# A production Fly deployment must never fall back to ephemeral local media
+# storage or start with weak transport/session settings.
+if DJANGO_ENV == "production":
+    if DEBUG:
+        raise ImproperlyConfigured("DEBUG must be false when DJANGO_ENV=production.")
+    if not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS:
+        raise ImproperlyConfigured("Set explicit ALLOWED_HOSTS for production.")
+    if not CSRF_TRUSTED_ORIGINS:
+        raise ImproperlyConfigured("Set CSRF_TRUSTED_ORIGINS for production.")
+    if not SECURE_SSL_REDIRECT or not SESSION_COOKIE_SECURE or not CSRF_COOKIE_SECURE:
+        raise ImproperlyConfigured("Production requires HTTPS redirects and secure session/CSRF cookies.")
+    if not SECURE_PROXY_SSL_HEADER:
+        raise ImproperlyConfigured("Set TRUST_PROXY_SSL_HEADER=true behind the Fly proxy.")
+    if not POS_BASE_URL.startswith("https://"):
+        raise ImproperlyConfigured("POS_BASE_URL must be an HTTPS origin in production.")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

@@ -2,7 +2,7 @@
 # Fly.io release task. .gitattributes forces LF line endings on Windows checkouts.
 set -euo pipefail
 
-# Use Neon’s direct (unpooled) URL for schema changes when supplied.
+# Use the provider's direct/unpooled URL for schema changes when supplied.
 # The application Machines continue using DATABASE_URL (normally pooled).
 if [[ -n "${DATABASE_URL_DIRECT:-}" ]]; then
   export DATABASE_URL="$DATABASE_URL_DIRECT"
