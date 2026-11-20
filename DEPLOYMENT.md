@@ -27,7 +27,7 @@ Useful provider references:
 
 ## 2. What the repository does during deployment
 
-- `.python-version` pins Python 3.14.8. The Docker image uses the same Python patch version.
+- `.python-version` selects Python 3.13. The Docker image uses the same Python minor version.
 - `Dockerfile` installs the pinned dependencies, collects static assets, and runs Gunicorn as a non-root user.
 - `fly.toml` defines the app name, region, HTTPS routing, health check, machine resources and the release command.
 - `release.sh` runs `manage.py check --deploy`, applies migrations, and optionally creates the first owner account. The deploy is stopped if the release command fails.
