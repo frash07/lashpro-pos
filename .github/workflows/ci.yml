@@ -2,7 +2,7 @@ name: Django CI
 
 on:
   push:
-    branches: [main, "deployment/**", "flyio-new-files", "storefront"]
+    branches: [main, "deployment/**", "flyio-new-files"]
   pull_request:
   workflow_dispatch:
 
@@ -78,7 +78,7 @@ jobs:
       # Optional preview deployment. The pilot Fly app is never targeted here.
       # Configure the repository secrets/variable documented in docs/STOREFRONT_PREVIEW.md.
       - name: Check storefront preview configuration
-        if: github.ref == 'refs/heads/storefront'
+        if: github.ref == 'refs/heads/main'
         id: storefront-preview
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -127,3 +127,28 @@ jobs:
             SYNTHETIC_STAFF_PASSWORD="$PREVIEW_STAFF_PASSWORD"
 
           flyctl deploy --config fly.storefront-preview.toml --app "$APP" --remote-only --ha=false
+
+      # Production storefront deploys from main only after tests and the optional preview step pass.
+      # This uses a separate app-scoped token and does not modify the POS app or Fly secrets.
+      - name: Check production storefront deployment configuration
+        if: github.ref == 'refs/heads/main'
+        id: storefront-production
+        env:
+          FLY_STOREFRONT_API_TOKEN: ${{ secrets.FLY_STOREFRONT_API_TOKEN }}
+        run: |
+          if [[ -z "${FLY_STOREFRONT_API_TOKEN:-}" ]]; then
+            echo "::notice::Production storefront deployment skipped. Add the FLY_STOREFRONT_API_TOKEN repository secret."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install flyctl for production storefront
+        if: steps.storefront-production.outputs.configured == 'true'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy production storefront from main
+        if: steps.storefront-production.outputs.configured == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_STOREFRONT_API_TOKEN }}
+        run: flyctl deploy --config fly.storefront.toml --app lashpro-storefront --remote-only
