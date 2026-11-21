@@ -33,12 +33,24 @@ Useful provider references:
 - `Dockerfile` installs the pinned dependencies, collects static assets, and runs Gunicorn as a non-root user.
 - `fly.toml` defines the staff POS app; `fly.storefront.toml` defines the customer storefront app. Each sets its hostnames, HTTPS routing, health check, machine resources and release command.
 - Both apps must point to the same intended PostgreSQL database. Compare provider, host and database name safely; never assume separate app secrets already match.
-- Both app configs run `release.sh`, which checks deployment settings, applies migrations and optionally bootstraps the first owner. The production GitHub workflow deploys POS first and storefront second so these migration commands cannot race. Keep deployments serialized if they are run manually.
-- GitHub Actions serializes workflow runs for each branch, so two `main` production runs cannot overlap their release commands. Any manual Fly deployment must still be coordinated with the workflow and with other operators.
+- Both app configs run `release.sh`, which checks deployment settings, applies migrations and optionally bootstraps the first owner. The production GitHub workflow deploys POS first and storefront second so these migration commands cannot race.
+- Pushes to `main` and pull requests run CI; they do not release production. A production release requires a separate `workflow_dispatch` from `main` with `deploy_production=true`, after the backup, infrastructure and business release gates are approved. Both app-scoped Fly tokens must be configured.
+- GitHub Actions serializes workflow runs for the same ref. Manual Fly releases are outside that queue and must be coordinated with the workflow and every operator. Protect `main` in GitHub settings: require a pull request and the successful `Django CI / test` check, and disallow ordinary direct pushes.
 - `DATABASE_URL` is the runtime PostgreSQL connection for both apps. If the apps use separate credentials, verify that they still resolve to the same database host and database name.
 - `DATABASE_URL_DIRECT` is optional but recommended when the provider supplies a direct/unpooled connection for schema migrations. For Fly Managed Postgres, copy the Direct connection URL from the cluster's Connect tab into the Fly app secret `DATABASE_URL_DIRECT`. The release script temporarily uses it for migrations while web Machines use the pooled `DATABASE_URL` provided by `fly mpg attach`. Do not copy a password into Git or ChatGPT.
 - `CLOUDINARY_URL` configures POS product/service image uploads. The storefront needs the corresponding public Cloudinary name or matching S3-compatible media settings; never give the storefront a POS-only storage secret. Production mode refuses to start without durable media storage.
 - The app uses database-backed sessions and transaction records. Do not rely on a Machine's local filesystem for customer uploads or business data.
+
+### Controlled production release
+
+After the approved commit is on `main` and its CI run is successful:
+
+1. Open **GitHub → Actions → Django CI → Run workflow** and select the `main` branch.
+2. Leave `deploy_production` false for a CI-only run. Set it to true only for an approved production release.
+3. Confirm the workflow deploys `lashpro-pos` first and `lashpro-storefront` second.
+4. Record the exact commit SHA and successful Fly release for each app.
+
+Do not configure both production Fly tokens merely to make the CI run green. The tokens enable the explicitly requested production dispatch; they do not prove database, domain, backup or business readiness.
 
 ## 3. Pre-deployment decisions and safeguards
 
