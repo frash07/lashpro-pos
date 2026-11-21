@@ -58,6 +58,9 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "maxSellableQuantity")
         self.assertContains(response, "sessionStorage.setItem")
         self.assertContains(response, "PENDING_CHECKOUT_STORAGE_KEY")
+        self.assertContains(response, "catalog-snapshot")
+        self.assertContains(response, "window.setInterval(refreshCatalogSnapshot,30000)")
+        self.assertContains(response, "cache:'no-store'")
 
     def test_pos_catalog_uses_storefront_available_stock_after_online_reservations(self):
         create_storefront_order(
@@ -78,6 +81,35 @@ class CashierViewTests(TestCase):
         self.assertEqual(product_item["stock"], 7.0)
         self.assertContains(response, "Reserved online")
         self.assertContains(response, "available")
+
+    def test_catalog_snapshot_reflects_current_price_and_storefront_reservations(self):
+        create_storefront_order(
+            items={str(self.product.pk): 3},
+            customer_name="Snapshot customer",
+            customer_email="snapshot@example.test",
+            customer_phone="0712345678",
+            idempotency_key="55555555-5555-4555-8555-555555555555",
+        )
+        self.product.selling_price = Decimal("850.00")
+        self.product.save(update_fields=["selling_price"])
+
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("sales:catalog-snapshot"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("no-store", response.headers["Cache-Control"])
+        item = next(
+            row for row in response.json()["items"]
+            if row["id"] == f"product-{self.product.pk}"
+        )
+        self.assertEqual(item["price"], "850.00")
+        self.assertEqual(item["on_hand"], "10.000")
+        self.assertEqual(item["stock"], "7.000")
+        self.assertEqual(item["name"], "Lash Glue")
+
+    def test_catalog_snapshot_rejects_technician_users(self):
+        self.client.force_login(self.tech)
+        response = self.client.get(reverse("sales:catalog-snapshot"))
+        self.assertEqual(response.status_code, 403)
 
     def test_redesigned_checkout_uses_real_customer_and_manual_mpesa_fields(self):
         self.client.force_login(self.cashier)

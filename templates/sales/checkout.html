@@ -141,14 +141,14 @@
             <div class="subhead"><div><h3>Products &amp; reorder status</h3><p>Balances and reorder thresholds are read directly from the database.</p></div><a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a></div>
             <div class="table-shell"><table><thead><tr><th>SKU</th><th>Product</th><th>On hand</th><th>Reserved online</th><th>Available to sell</th><th>Reorder level</th><th>Stock status</th></tr></thead><tbody>
               {% for product in inventory_products %}
-              <tr>
+              <tr data-inventory-product-id="{{ product.pk }}" data-reorder-level="{{ product.reorder_level }}">
                 <td>{{ product.sku }}</td>
                 <td><strong>{{ product.name }}</strong></td>
-                <td>{{ product.on_hand|floatformat:3 }}</td>
-                <td>{{ product.reserved_online|floatformat:3 }}</td>
-                <td>{{ product.available_stock|floatformat:3 }}</td>
-                <td>{{ product.reorder_level|floatformat:3 }}</td>
-                <td>{% if product.reorder_level > 0 and product.available_stock <= product.reorder_level %}<span class="status-tag" style="color:var(--danger)">Low available stock</span>{% else %}<span class="status-tag ok">In stock</span>{% endif %}</td>
+                <td><span data-stock-field="on-hand">{{ product.on_hand|floatformat:3 }}</span></td>
+                <td><span data-stock-field="reserved">{{ product.reserved_online|floatformat:3 }}</span></td>
+                <td><span data-stock-field="available">{{ product.available_stock|floatformat:3 }}</span></td>
+                <td><span data-stock-field="reorder-level">{{ product.reorder_level|floatformat:3 }}</span></td>
+                <td>{% if product.reorder_level > 0 and product.available_stock <= product.reorder_level %}<span data-stock-field="status" class="status-tag" style="color:var(--danger)">Low available stock</span>{% else %}<span data-stock-field="status" class="status-tag ok">In stock</span>{% endif %}</td>
               </tr>
               {% empty %}
               <tr><td colspan="7">No active products are registered yet.</td></tr>
@@ -188,6 +188,7 @@
     const canDiscount = {{ can_discount|yesno:"true,false" }};
     const CHECKOUT_STATUS_KNOWN_FAILURE = {{ checkout_status_known_failure|yesno:"true,false" }};
     const catalogData = {{ catalog_data_json|safe }};
+    const CATALOG_SNAPSHOT_URL = "{% url 'sales:catalog-snapshot' %}";
     // Technician choices come from the rendered #staff-select options, whose values are real user primary
     // keys. Each service line in the cart keeps its own technicianId; products never carry one.
     const technicianOptions = Array.from(document.querySelectorAll('#staff-select option')).filter(o => o.value).map(o => ({ id: o.value, name: o.textContent.trim() }));
@@ -269,6 +270,7 @@
         const knownFailure = document.getElementById('checkout-status-known-failure');
         if (knownFailure) knownFailure.hidden = false;
       }
+      refreshCatalogSnapshot();
       if (pendingCheckout) {
         const warning = document.getElementById('checkout-status-unknown');
         if (warning) warning.hidden = false;
@@ -368,6 +370,7 @@
       const query=(search?search.value:'').trim().toLowerCase();
       const terms=query.split(/\s+/).filter(Boolean);
       const filtered=catalogData.filter(item=>{
+        if(item.active===false)return false;
         if(activeCategory!=='all'&&item.type!==activeCategory)return false;
         const searchable=String(item.search_text||[item.name,item.desc,item.sku,item.type].filter(Boolean).join(' ')).toLowerCase();
         return terms.every(term=>searchable.includes(term));
@@ -394,6 +397,83 @@
       }).join('');
       refreshIcons();
     }
+    let catalogRefreshInFlight=false;
+    async function refreshCatalogSnapshot(){
+      if(catalogRefreshInFlight||pendingCheckout||checkoutSubmitting||!navigator.onLine||document.visibilityState==='hidden')return;
+      catalogRefreshInFlight=true;
+      try{
+        const response=await fetch(CATALOG_SNAPSHOT_URL,{
+          method:'GET',
+          credentials:'same-origin',
+          headers:{'Accept':'application/json'},
+          cache:'no-store'
+        });
+        if(!response.ok)return;
+        const payload=await response.json();
+        const liveItems=new Map((payload.items||[]).map(item=>[item.id,item]));
+        const existingItems=new Map(catalogData.map(item=>[item.id,item]));
+        (payload.items||[]).forEach(live=>{
+          const current=existingItems.get(live.id);
+          if(current)Object.assign(current,live,{active:true});
+          else catalogData.push({...live,active:true});
+        });
+        catalogData.forEach(item=>{
+          if(!liveItems.has(item.id)){
+            item.active=false;
+            if(item.type==='product')item.stock=0;
+          }
+        });
+        const catalogById=new Map(catalogData.map(item=>[item.id,item]));
+        cart.forEach(item=>{
+          const latest=catalogById.get(item.id);
+          if(!latest){item.active=false;item.stock=0;return;}
+          item.active=latest.active;
+          item.name=latest.name;
+          item.desc=latest.desc;
+          item.search_text=latest.search_text;
+          item.price=Number(latest.price);
+          if(item.type==='product'){
+            item.sku=latest.sku;
+            item.stock=latest.stock;
+            item.on_hand=latest.on_hand;
+          }
+        });
+        if(adminSuite&&adminSuite.is_manager){
+          document.querySelectorAll('[data-inventory-product-id]').forEach(row=>{
+            const live=liveItems.get('product-'+row.dataset.inventoryProductId);
+            if(!live){row.remove();return;}
+            const onHand=Number(live.on_hand)||0;
+            const available=Number(live.stock)||0;
+            const reserved=Math.max(0,onHand-available);
+            const format=value=>value.toLocaleString('en-KE',{minimumFractionDigits:3,maximumFractionDigits:3});
+            const set=(field,value)=>{
+              const target=row.querySelector('[data-stock-field="'+field+'"]');
+              if(target)target.textContent=value;
+            };
+            set('on-hand',format(onHand));
+            set('reserved',format(reserved));
+            set('available',format(available));
+            const threshold=Number(row.dataset.reorderLevel)||0;
+            const status=row.querySelector('[data-stock-field="status"]');
+            if(status){
+              const low=threshold>0&&available<=threshold;
+              status.textContent=low?'Low available stock':'In stock';
+              status.className=low?'status-tag':'status-tag ok';
+              status.style.color=low?'var(--danger)':'';
+            }
+          });
+        }
+        renderCatalog();
+        renderCart();
+      }catch(error){
+        // Keep the last rendered catalogue; the next poll retries against the same database.
+      }finally{
+        catalogRefreshInFlight=false;
+      }
+    }
+    window.addEventListener('focus',refreshCatalogSnapshot);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshCatalogSnapshot();});
+    window.setInterval(refreshCatalogSnapshot,30000);
     function filterCategory(category,button){activeCategory=category;document.querySelectorAll('.cat-tab').forEach(el=>el.classList.toggle('active',el.dataset.category===category));renderCatalog();}
     function filterCatalog(){renderCatalog();}
     function defaultTechnicianId(){const el=document.getElementById('staff-select');return el?el.value:'';}
@@ -523,6 +603,22 @@
     }
     function triggerCheckout(method){
       if(!cart.length){alert('Your order is empty. Add at least one item before checkout.');return;}
+      const inactiveIssue=validCartItems().find(item=>item.active===false);
+      if(inactiveIssue){
+        alert(inactiveIssue.name+' is no longer active in the catalogue. Remove it before checkout.');
+        return;
+      }
+      const stockIssue=validCartItems().find(item=>{
+        if(item.type!=='product')return false;
+        const latest=catalogData.find(entry=>entry.id===item.id);
+        return item.qty>maxSellableQuantity(latest||item);
+      });
+      if(stockIssue){
+        const latest=catalogData.find(entry=>entry.id===stockIssue.id);
+        const maximum=maxSellableQuantity(latest||stockIssue);
+        alert('Only '+maximum+' unit(s) of '+stockIssue.name+' are currently available. Reduce the quantity before checkout.');
+        return;
+      }
       currentPaymentMethod=method;
       if(validCartItems().some(i=>i.type==='service'&&!i.technicianId)){
         alert('Assign a technician to every service before checkout.');

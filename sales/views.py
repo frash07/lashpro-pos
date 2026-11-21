@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_GET
 from accounts.models import User
 from catalog.models import Product, Service
 from customers.models import Customer
@@ -45,6 +46,54 @@ def customer_search(request):
             for c in qs
         ]
     return JsonResponse(results, safe=False)
+
+
+@login_required(login_url="login")
+@never_cache
+@require_GET
+def catalog_snapshot(request):
+    """Return the latest POS catalogue and reservation-aware stock from the shared DB."""
+    check_role(request.user)
+    products = list(Product.objects.filter(active=True).order_by("pk"))
+    available_by_product = available_stock_by_product(products)
+    sample_descriptions = {
+        "lashpro retention bond (10ml)": "Maximum Strength 1-Sec Lash Glue",
+        "silk cashmere trays 0.07": "Mixed Length C/D Curl Lash Trays",
+        "precision tweezers set": "Japanese Steel Isolation & Volume Tweezers",
+        "aftercare cleansing foam": "Oil-Free Lash Shampoo & Brush Kit",
+    }
+    items = []
+    for product in products:
+        description = sample_descriptions.get(product.name.strip().casefold(), product.name)
+        items.append({
+            "id": f"product-{product.pk}",
+            "type": "product",
+            "name": product.name,
+            "sku": product.sku,
+            "price": str(product.selling_price),
+            "stock": str(available_by_product[product.pk]),
+            "on_hand": str(product.on_hand),
+            "reorder_level": str(product.reorder_level),
+            "desc": description,
+            "icon": "package",
+            "search_text": " ".join((product.name, product.sku, description, "product")).casefold(),
+        })
+    for service in Service.objects.filter(active=True).order_by("pk"):
+        duration_label = f"{service.duration_minutes} minute session"
+        service_kind = service.get_kind_display()
+        items.append({
+            "id": f"service-{service.pk}",
+            "type": "service",
+            "name": service.name,
+            "price": str(service.price),
+            "desc": duration_label,
+            "icon": "sparkles",
+            "duration_minutes": service.duration_minutes,
+            "commission_eligible": service.commission_eligible,
+            "commission_rate": str(service.commission_rate),
+            "search_text": " ".join((service.name, duration_label, service_kind, "service")).casefold(),
+        })
+    return JsonResponse({"items": items})
 
 
 def _build_admin_suite_context(user):
