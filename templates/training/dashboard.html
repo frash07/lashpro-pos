@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Lash-tech training · LashPro{% endblock %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'training/training.css' %}">{% endblock %}
 
 {% block content %}
 <header>

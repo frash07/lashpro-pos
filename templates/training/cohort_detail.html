@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ cohort.name }} · LashPro training{% endblock %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'training/training.css' %}">{% endblock %}
 
 {% block content %}
 <header>{% if request.user.role == "TRAINER" %}<a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a>{% else %}<a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a>{% endif %}<a href="{% url 'training:dashboard' %}">All cohorts</a>{% if request.user.role != "TRAINER" %}<a href="{% url 'sales:checkout' %}">Checkout</a>{% endif %}{% if is_manager %}<a href="{% url 'training:enroll' %}">Enroll a student</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>

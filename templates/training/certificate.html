@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Certificate {{ certificate.certificate_number }} · LashPro{% endblock %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'training/training.css' %}">{% endblock %}
 
 {% block content %}
 <header class="no-print"><a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a><a href="{% url 'training:cohort' certificate.enrollment.cohort.pk %}">Back to cohort</a><button type="button" onclick="window.print()">Print certificate</button><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>

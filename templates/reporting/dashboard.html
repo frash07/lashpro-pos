@@ -60,8 +60,8 @@
       <span class="metric-caption trend-{{ executive.revenue_trend_class }}">{{ executive.revenue_trend }}</span>
     </article>
 
-    <article class="metric-card metric-mpesa" data-export-label="M-PESA Express volume" data-export-value="{{ executive.mpesa_display }}">
-      <span class="metric-label">M-PESA Express Volume</span>
+    <article class="metric-card metric-mpesa" data-export-label="M-PESA payment volume" data-export-value="{{ executive.mpesa_display }}">
+      <span class="metric-label">M-PESA Payment Volume</span>
       <svg class="metric-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="3" width="11" height="18" rx="2"/><path d="M10 17.5h4"/></svg>
       <strong class="metric-value">{{ executive.mpesa_display }}</strong>
       <span class="metric-caption">{{ executive.mpesa_share }}% of total payments</span>
@@ -91,7 +91,7 @@
     </div>
 
     <section class="dashboard-panel audit-panel" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit">
-      <div class="panel-heading"><div><span class="eyebrow">PAYMENTS &amp; RECONCILIATION</span><h2>M-PESA Express Reconciliation Audit Log</h2><p>Incoming manual M-PESA references recorded during the selected reporting period.</p></div><a class="section-link" href="{% url 'payments:reconciliation' %}">Review pending references <span aria-hidden="true">→</span></a></div>
+      <div class="panel-heading"><div><span class="eyebrow">PAYMENTS &amp; RECONCILIATION</span><h2>M-PESA Reconciliation Audit Log</h2><p>Incoming manual M-PESA references recorded during the selected reporting period.</p></div><a class="section-link" href="{% url 'payments:reconciliation' %}">Review pending references <span aria-hidden="true">→</span></a></div>
       <div class="table-scroll">
         <table class="executive-table" id="mpesa-audit-table">
           <thead><tr><th scope="col">Timestamp</th><th scope="col">Receipt code</th><th scope="col">Client phone</th><th scope="col">Amount (KES)</th><th scope="col">Status</th></tr></thead>
@@ -198,7 +198,7 @@
       const range = document.querySelector(".report-period-control summary strong")?.innerText.trim() || "";
       const rows = [["LashPro KE Executive Report", range], ["Metric", "Value"]];
       document.querySelectorAll("[data-export-label]").forEach((card) => rows.push([card.dataset.exportLabel, card.dataset.exportValue]));
-      rows.push([], ["M-PESA Express Reconciliation Audit Log"]);
+      rows.push([], ["M-PESA Reconciliation Audit Log"]);
       document.querySelectorAll("#mpesa-audit-table tr").forEach((row) => {
         rows.push(Array.from(row.cells, (cell) => cell.innerText.trim()));
       });

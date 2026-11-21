@@ -45,6 +45,11 @@
         {% if admin_suite.can_access_admin_suite %}
         <a id="nav-admin-btn" class="mode-btn" href="{% url 'admin_suite' %}" style="text-decoration:none"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></a>
         {% endif %}
+        {% if request.user.role == "CASHIER" %}
+        <a class="mode-btn" href="{% url 'training:enroll' %}" style="text-decoration:none"><i data-lucide="graduation-cap"></i><span>Enroll student</span></a>
+        {% elif admin_suite.is_manager %}
+        <a class="mode-btn" href="{% url 'training:dashboard' %}" style="text-decoration:none"><i data-lucide="graduation-cap"></i><span>Academy</span></a>
+        {% endif %}
       </nav>
       <div class="top-actions">
         <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
@@ -68,11 +73,10 @@
               <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
               <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="sparkles"></i> VIP studio</div></div>
             </div>
-            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a service, course or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search products by name or SKU, or find a service…" oninput="filterCatalog()" autocomplete="off"></label></div>
+            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a salon service or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search products by name or SKU, or find a service…" oninput="filterCatalog()" autocomplete="off"></label></div>
             <div class="category-tabs">
               <button type="button" class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
               <button type="button" class="cat-tab" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
-              <button type="button" class="cat-tab" data-category="academy" onclick="filterCategory('academy',this)"><i data-lucide="graduation-cap"></i> Academy</button>
               <button type="button" class="cat-tab" data-category="product" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail &amp; care</button>
               <span class="result-count" id="result-count">12 items</span>
             </div>

@@ -86,6 +86,7 @@ def daily_report(request):
     audit_transactions = PaymentTransaction.objects.filter(
         method=PaymentTransaction.Method.MPESA,
         created_at__date__range=(start, end),
+        stk_push__isnull=True,
     ).select_related(
         "reconciliation", "sale_allocation__sale__customer",
     ).order_by("-created_at", "-pk")[:20]

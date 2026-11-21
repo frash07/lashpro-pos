@@ -6,6 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Keep main releases serialized across workflow runs as well as within each run.
+# This protects the shared production database from overlapping migration steps.
+concurrency:
+  group: lashpro-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ubuntu-latest

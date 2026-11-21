@@ -1,0 +1,114 @@
+.inline-form {
+  display: flex;
+  min-width: 210px;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-form select {
+  min-height: 44px;
+}
+
+.inline-form button {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.training-certificate {
+  max-width: 950px;
+  min-height: 570px;
+  margin: 28px auto;
+  padding: 70px 48px;
+  border: 8px double #e6317d;
+  background: #fff;
+  color: #30202a;
+  text-align: center;
+  box-shadow: 0 8px 30px rgb(76 13 47 / 10%);
+}
+
+.training-certificate h1 {
+  margin: 18px 0 32px;
+  color: #a92f6b;
+  font-family: Georgia, serif;
+}
+
+.training-certificate h2 {
+  margin: 18px 0;
+  font-size: 28px;
+}
+
+.certificate-brand {
+  color: #e6317d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+
+.certificate-number {
+  margin-top: 36px;
+  font-weight: 700;
+}
+
+.certificate-signature {
+  margin-top: 44px;
+  color: #7b6874;
+}
+
+.certificate-revoked {
+  filter: grayscale(.6);
+}
+
+@media (max-width: 650px) {
+  .training-certificate {
+    min-height: 0;
+    margin: 16px 10px;
+    padding: 36px 20px;
+    border-width: 5px;
+  }
+
+  .training-certificate h2 {
+    font-size: 22px;
+  }
+
+  .inline-form {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+}
+
+@page {
+  size: A4 landscape;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    min-height: 0;
+    background: #fff !important;
+    color: #30202a !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .no-print,
+  .legal-footer-links {
+    display: none !important;
+  }
+
+  .page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .training-certificate {
+    max-width: none;
+    min-height: 170mm;
+    margin: 0;
+    padding: 20mm 16mm;
+    border-width: 7px;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}
