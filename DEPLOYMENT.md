@@ -15,16 +15,15 @@ This is the canonical production deployment guide for the LashPro POS and storef
 | Email | Authenticated SMTP provider | Staff password recovery and transactional email |
 | DNS/TLS | Customer-owned domain with Fly certificates | Branded HTTPS access |
 
-The repository currently sets `primary_region = "ams"` in both Fly app configs. Keep both apps close to the verified database region. **Amsterdam is an actively listed Fly Managed Postgres region**, so it is the lowest-risk same-region choice for this existing setup. Johannesburg (`jnb`) is a Fly Machines region, but it is **not** in Fly's currently published Managed Postgres region list; do not provision Fly Managed Postgres in `jnb` or move the apps there as part of this database setup. The managed-database region list can change; verify it at provisioning time.
+The repository currently sets `primary_region = "ams"` in both Fly app configs. Confirm the actual Neon project region and compare it with the Fly app region; the two settings are independent. Keep the database region as close to the application Machines as practical to reduce round-trip latency. Region choice affects performance, not whether the apps share data.
 
-Fly Managed Postgres provides automated backups and point-in-time recovery, high availability with automatic failover, monitoring and encryption. Its current published Basic plan is US$38/month plus storage at US$0.28 per provisioned GB/month; the published starting storage is 10 GB, so budget from approximately US$40.80/month before tax, egress or any app compute charges. The next published Starter plan is US$72/month plus storage. Confirm current pricing and availability in the Fly dashboard before provisioning. For this single-salon alpha, start with Basic and upgrade if measured CPU, memory, storage or connection demand requires it.
+**Neon is the selected production PostgreSQL provider.** Do not provision or attach a separate Fly Managed Postgres database for either production app. Both apps must use the same Neon project, production branch and database. Confirm Neon TLS, compute availability, connection limits, branch retention and restore controls in the Neon console. Do not point one app at a development/staging branch.
 
-An existing paid Neon or other managed PostgreSQL database may be retained instead. Verify its region, TLS, plan, backup retention, point-in-time recovery and restore process before production use. Do not replace or attach a new empty database until the current `DATABASE_URL` target and whether it contains business data are verified. Rehearse a complete dump/restore and financial-record reconciliation before cutover.
+Before production writes, verify the Neon backup/PITR history window configured for the project and rehearse restoring to a separate branch. Neon supports branching from a previous point in time, but the usable history window depends on the project configuration/plan; do not assume a particular retention period. Keep an encrypted off-provider export as an additional recovery path.
 
 Useful provider references:
-- [Fly.io Managed Postgres](https://fly.io/docs/mpg/)
-- [Fly.io regions and platform status](https://fly.io/docs/reference/regions/)
-- [Fly.io pricing](https://fly.io/docs/about/pricing/)
+- [Neon connection and pooling guidance](https://neon.com/docs/connect/connection-pooling)
+- [Neon branching and recovery guidance](https://neon.com/blog/practical-guide-to-database-branching)
 - [Fly.io custom domains and TLS](https://fly.io/docs/networking/custom-domain/)
 
 ## 2. What the repository does during deployment
@@ -41,6 +40,7 @@ Useful provider references:
 - `DATABASE_URL` is required in production and must use PostgreSQL TLS. Both apps must be configured with the same Neon pooled connection target: same Neon project, branch and database. Keep the connection URL in Fly secrets only; never put it in Git, build logs, tickets or chat.
 - `DATABASE_URL_DIRECT` is optional and is reserved for the POS release migration command when Neon provides a direct/unpooled endpoint. It must refer to the same Neon branch and database as the runtime URL. Do not configure the storefront to run migrations separately. Never expose either URL or its password.
 - On Neon, a pooler endpoint and a direct endpoint can have different hostnames and server addresses while reaching the same branch/database. Do not treat matching IP addresses as definitive proof. The cross-app disposable marker test below is the acceptance test for shared-database visibility.
+- Prefer a least-privileged runtime role for the shared app traffic. The storefront needs DML privileges for catalogue reads, customer orders and reservations, but it does not need schema ownership. Keep the DDL/migration role in the POS-only `DATABASE_URL_DIRECT` secret and test permissions on a non-production branch before changing production grants.
 - Production settings reject a missing `DATABASE_URL`, PostgreSQL TLS modes weaker than `require`, non-zero connection age, or server-side cursors enabled. These settings protect the production connection from silently falling back to legacy DB_* values or unsafe pooled-connection behaviour.
 - `CLOUDINARY_URL` configures POS product/service image uploads. The storefront needs the corresponding public Cloudinary name or matching S3-compatible media settings; never give the storefront a POS-only storage secret. Production mode refuses to start without durable media storage.
 - The app uses database-backed sessions and transaction records. Do not rely on a Machine's local filesystem for customer uploads or business data.
@@ -162,11 +162,12 @@ For Neon, select one production branch and database. Set the same pooled `DATABA
 
 ### New installation
 
-- Provision a paid managed PostgreSQL cluster with automated backups, point-in-time recovery and a tested restore path.
-- Place it in the same region as both Fly applications.
-- Configure `DATABASE_URL` on both apps to the same database.
-- Confirm TLS is enabled and the database allows connections from the Fly app.
-- Keep a separate encrypted backup outside the database provider's account for business continuity.
+- Provision one Neon project and choose one production branch and database for both apps.
+- Choose a Neon region close to the Fly application region where available.
+- Configure the same pooled `DATABASE_URL` on both Fly apps and require TLS with `sslmode=require`.
+- Keep runtime connection age at zero and server-side cursors disabled for PgBouncer pooling.
+- Use a dedicated, least-privileged runtime database role for application traffic. Keep schema-owner/migration privileges out of the storefront; use a POS-only direct/unpooled migration credential if needed.
+- Verify the configured Neon point-in-time history window, then keep a separate encrypted backup outside Neon for business continuity.
 
 ### Existing installation or database migration
 
@@ -186,7 +187,7 @@ For Neon, select one production branch and database. Set the same pooled `DATABA
 - Keep the database secret and encryption key backups under separate access controls.
 - Never test restoration over the live production database.
 
-For Fly Managed Postgres, the provider documents a rolling ten-day backup window and restore to a new cluster; verify the actual cluster's recovery window and restore behaviour in the dashboard before relying on it. For an external provider, use that provider's documented paid-plan backup and restore controls.
+For Neon, confirm the actual project's configured history-retention window and restore workflow in the Neon console. Neon can create a new branch from a selected point in the retained history; rehearse this against a separate branch and verify the restored schema and business totals before relying on it for recovery. See [Neon's point-in-time restore guidance](https://neon.com/blog/announcing-point-in-time-restore). Do not assume the default history window is sufficient for the business's recovery objectives.
 
 ## 7. Durable media storage
 
@@ -213,7 +214,7 @@ fly deploy --config fly.toml --app lashpro-pos --remote-only
 fly deploy --config fly.storefront.toml --app lashpro-storefront --remote-only
 ```
 
-Fly executes `release.sh` for each app before the new version receives traffic. The POS release command:
+Fly executes `release.sh` for the POS app before its new version receives traffic. The POS release command:
 - runs Django's production deployment checks;
 - applies the checked-in migrations to the shared Neon branch;
 - bootstraps the owner only when the three bootstrap secrets are present;
