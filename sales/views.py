@@ -283,10 +283,15 @@ def receipt_pdf(request, token):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.utils import simpleSplit
     from reportlab.pdfgen import canvas
-    sale = get_object_or_404(Sale.objects.select_related("customer", "cashier").prefetch_related("lines__technician", "payment_allocations__payment_transaction", "refunds__payout"), receipt_token=token)
+    sale = get_object_or_404(Sale.objects.select_related(
+        "customer", "cashier", "training_enrollment__cohort__course",
+    ).prefetch_related(
+        "lines__technician", "payment_allocations__payment_transaction", "refunds__payout",
+    ), receipt_token=token)
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4, pageCompression=1)
-    pdf.setTitle(f"LashPro receipt {sale.receipt_number}")
+    is_training_tuition = hasattr(sale, "training_enrollment")
+    pdf.setTitle(f"LashPro {'training tuition' if is_training_tuition else 'receipt'} {sale.receipt_number}")
     page_width, page_height = A4
     left, right = 44, page_width - 44
     y = page_height - 48
@@ -304,7 +309,7 @@ def receipt_pdf(request, token):
             y -= gap
 
     write("LASHPRO POS", bold=True, size=18, gap=24)
-    write("SALE RECEIPT", bold=True, size=12, gap=20)
+    write("TRAINING TUITION RECEIPT" if is_training_tuition else "SALE RECEIPT", bold=True, size=12, gap=20)
     write(f"Receipt: {sale.receipt_number}", bold=True)
     write(f"Date: {sale.created_at:%d %b %Y, %H:%M}")
     write(f"Customer: {sale.customer.name if sale.customer_id else 'Walk-in customer'}")
@@ -385,7 +390,11 @@ def receipt_pdf(request, token):
 
 @never_cache
 def receipt(request, token):
-    sale = get_object_or_404(Sale.objects.select_related("customer", "cashier").prefetch_related("lines", "payment_allocations__payment_transaction", "refunds__payout"), receipt_token=token)
+    sale = get_object_or_404(Sale.objects.select_related(
+        "customer", "cashier", "training_enrollment__cohort__course",
+    ).prefetch_related(
+        "lines", "payment_allocations__payment_transaction", "refunds__payout",
+    ), receipt_token=token)
     response = render(request, "sales/receipt.html", {"sale": sale})
     response["Referrer-Policy"] = "no-referrer"
     response["X-Robots-Tag"] = "noindex, nofollow"
@@ -399,7 +408,11 @@ def balance_payments(request):
     sales = Sale.objects.filter(status=Sale.Status.COMPLETED)
     if not is_manager:
         sales = sales.filter(cashier=request.user)
-    sales = sales.select_related("customer", "cashier").prefetch_related("lines", "payment_allocations__payment_transaction").order_by("-created_at")[:100]
+    sales = sales.select_related(
+        "customer", "cashier", "training_enrollment__cohort__course",
+    ).prefetch_related(
+        "lines", "payment_allocations__payment_transaction",
+    ).order_by("-created_at")[:100]
     for sale in sales:
         sale.available_for_collection = sale.available_to_collect
         sale.payment_form_key = uuid.uuid4()

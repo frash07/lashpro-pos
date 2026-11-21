@@ -7,8 +7,8 @@
 <main class="receipt-page">
   <section class="success-header no-print" aria-labelledby="success-title">
     <span class="success-check" aria-hidden="true">✓</span>
-    <p class="success-kicker">SALE COMPLETE</p>
-    <h1 id="success-title">Sale Completed!</h1>
+    <p class="success-kicker">{% if sale.training_enrollment %}TUITION PAYMENT{% else %}SALE COMPLETE{% endif %}</p>
+    <h1 id="success-title">{% if sale.training_enrollment %}Training tuition recorded{% else %}Sale Completed!{% endif %}</h1>
     <strong class="success-total">KSh {{ sale.total_amount|floatformat:"2g" }}</strong>
     {% with first_allocation=sale.payment_allocations.all|first %}
       {% if first_allocation.payment_transaction.method == "MPESA" and first_allocation.payment_transaction.status == "UNVERIFIED" %}
@@ -29,7 +29,7 @@
   <article class="receipt-card" aria-label="Sale receipt">
     <header class="receipt-card-header">
       <div class="receipt-brand"><img src="{% static 'img/logo-placeholder.svg' %}" alt=""><span><strong>Lashpro KE</strong><small>Beauty. Skills. Opportunities.</small></span></div>
-      <div class="receipt-meta"><span>Receipt number</span><strong>{{ sale.receipt_number }}</strong><span>{{ sale.created_at|date:"d M Y, H:i" }}</span>{% if sale.storefront_order %}<span>Online order {{ sale.storefront_order.reference }}</span>{% endif %}</div>
+      <div class="receipt-meta"><span>{% if sale.training_enrollment %}Tuition receipt{% else %}Receipt number{% endif %}</span><strong>{{ sale.receipt_number }}</strong><span>{{ sale.created_at|date:"d M Y, H:i" }}</span>{% if sale.storefront_order %}<span>Online order {{ sale.storefront_order.reference }}</span>{% endif %}{% if sale.training_enrollment %}<span>{{ sale.training_enrollment.cohort.course.name }} · {{ sale.training_enrollment.cohort.name }}</span>{% endif %}</div>
     </header>
     <div class="receipt-customer"><span>Client</span><strong>{% if sale.storefront_order %}{{ sale.storefront_order.customer_name }}{% else %}{{ sale.customer.name|default:"Walk-in customer" }}{% endif %}</strong></div>
 

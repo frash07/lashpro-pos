@@ -101,8 +101,10 @@ class Cohort(models.Model):
         super().clean()
         if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValidationError({"end_date": "The cohort end date must be on or after its start date."})
-        if self.trainer_id and self.trainer.role != "TRAINER":
-            raise ValidationError({"trainer": "Assign a staff account with the Trainer role."})
+        if not self.trainer_id:
+            raise ValidationError({"trainer": "Assign an active staff account with the Trainer role."})
+        if self.trainer.role != "TRAINER" or not self.trainer.is_active:
+            raise ValidationError({"trainer": "Assign an active staff account with the Trainer role."})
 
     @property
     def tuition_fee(self):

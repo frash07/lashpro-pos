@@ -91,6 +91,8 @@ class CohortForm(forms.ModelForm):
         self.fields["trainer"].queryset = User.objects.filter(
             role=User.Role.TRAINER, is_active=True
         ).order_by("first_name", "username")
+        self.fields["trainer"].required = True
+        self.fields["trainer"].empty_label = "Choose a trainer"
 
     def clean(self):
         data = super().clean()

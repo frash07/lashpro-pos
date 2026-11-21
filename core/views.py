@@ -20,7 +20,7 @@ from .models import IntegrationSettings
 def home(request):
     if request.user.role == User.Role.TRAINER and not request.user.is_superuser:
         return redirect("training:dashboard")
-    if request.user.role == User.Role.TECHNICIAN and not request.user.is_superuser:
+    if request.user.role == User.Role.TECHNICIAN:
         return redirect("sales:services")
     return redirect("sales:checkout")
 

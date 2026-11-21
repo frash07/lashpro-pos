@@ -14,6 +14,7 @@ from expenses.models import Expense
 from inventory.models import InventoryMovement
 from payments.models import CashSession, PaymentTransaction, RefundPayout, SalePayment
 from sales.models import Sale, SaleLine, SaleRefund
+from training.models import Certificate, Cohort, Enrollment
 from .forms import ReportDateFilterForm
 
 ZERO = Decimal("0.00")
@@ -108,6 +109,22 @@ def daily_report(request):
             "status_label": status_label,
             "status_class": status_class,
         })
+
+    week_start = today - timedelta(days=today.weekday())
+    active_students = Enrollment.objects.filter(status=Enrollment.Status.ENROLLED).count()
+    certified_this_week = Certificate.objects.filter(
+        status=Certificate.Status.ISSUED,
+        issued_at__date__range=(week_start, today),
+    ).count()
+    cohort_hub = Cohort.objects.select_related("course", "trainer").annotate(
+        enrolled_count=Count(
+            "enrollments",
+            filter=~Q(enrollments__status=Enrollment.Status.WITHDRAWN),
+            distinct=True,
+        ),
+    ).filter(
+        status__in=(Cohort.Status.ENROLLING, Cohort.Status.IN_PROGRESS, Cohort.Status.PLANNED),
+    ).order_by("start_date", "course__name", "name")[:8]
 
     period_length = (end - start).days + 1
     prior_start = start - timedelta(days=period_length)
@@ -229,6 +246,8 @@ def daily_report(request):
             "service_percent": service_percent,
             "retail_percent": retail_percent,
             "top_service": top_service["description"] if top_service else "No service sales yet",
-            "academy_connected": False,
+            "active_students": active_students,
+            "certified_this_week": certified_this_week,
         },
+        "cohort_hub": cohort_hub,
     })

@@ -1,7 +1,76 @@
-from django.test import TestCase
+import logging
+
+from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 
 from accounts.models import User
+from core.log_filters import RedactSensitiveDataFilter
+from core.views import health_check, home
+
+
+class HomeLandingTests(SimpleTestCase):
+    def test_technician_role_lands_on_services_even_if_superuser(self):
+        request = RequestFactory().get("/")
+        request.user = type("TestUser", (), {
+            "role": User.Role.TECHNICIAN,
+            "is_superuser": True,
+            "is_authenticated": True,
+        })()
+
+        response = home(request)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("sales:services"))
+
+
+class HealthCheckTests(SimpleTestCase):
+    def test_returns_minimal_uncached_success_response(self):
+        response = health_check(RequestFactory().get("/healthz"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"ok")
+        self.assertEqual(response["Content-Type"], "text/plain; charset=utf-8")
+        self.assertEqual(response["Cache-Control"], "no-store")
+        self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+
+
+class SensitiveLogFilterTests(SimpleTestCase):
+    def test_redacts_reset_receipt_and_sensitive_query_values(self):
+        record = logging.LogRecord(
+            "django.request",
+            logging.ERROR,
+            __file__,
+            1,
+            "Request failed at /accounts/password-reset/user-id/reset-token/ "
+            "and /sales/r/receipt-token/?reference=mpesa-secret",
+            (),
+            None,
+        )
+
+        RedactSensitiveDataFilter().filter(record)
+
+        message = record.getMessage()
+        for secret in ("reset-token", "receipt-token", "mpesa-secret"):
+            self.assertNotIn(secret, message)
+        self.assertIn("<redacted>", message)
+
+    def test_redacts_database_urls_and_secret_assignments(self):
+        record = logging.LogRecord(
+            "app",
+            logging.ERROR,
+            __file__,
+            1,
+            "DATABASE_URL=postgresql://salon:private-password@db.example.test/lashpro "
+            "DJANGO_SECRET_KEY=private-key",
+            (),
+            None,
+        )
+
+        RedactSensitiveDataFilter().filter(record)
+
+        message = record.getMessage()
+        for secret in ("private-password", "private-key", "db.example.test"):
+            self.assertNotIn(secret, message)
 
 
 class AdminSuiteAccessTests(TestCase):
