@@ -139,17 +139,19 @@
           <div class="admin-content-head"><div><div class="admin-content-title">Inventory on hand</div><div class="admin-content-subtitle">Read-only stock balances. Record all incoming stock using a supplier receipt.</div></div></div>
           <div class="admin-section">
             <div class="subhead"><div><h3>Products &amp; reorder status</h3><p>Balances and reorder thresholds are read directly from the database.</p></div><a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a></div>
-            <div class="table-shell"><table><thead><tr><th>SKU</th><th>Product</th><th>On hand</th><th>Reorder level</th><th>Stock status</th></tr></thead><tbody>
+            <div class="table-shell"><table><thead><tr><th>SKU</th><th>Product</th><th>On hand</th><th>Reserved online</th><th>Available to sell</th><th>Reorder level</th><th>Stock status</th></tr></thead><tbody>
               {% for product in inventory_products %}
               <tr>
                 <td>{{ product.sku }}</td>
                 <td><strong>{{ product.name }}</strong></td>
                 <td>{{ product.on_hand|floatformat:3 }}</td>
+                <td>{{ product.reserved_online|floatformat:3 }}</td>
+                <td>{{ product.available_stock|floatformat:3 }}</td>
                 <td>{{ product.reorder_level|floatformat:3 }}</td>
-                <td>{% if product.low_stock %}<span class="status-tag" style="color:var(--danger)">Low stock</span>{% else %}<span class="status-tag ok">In stock</span>{% endif %}</td>
+                <td>{% if product.reorder_level > 0 and product.available_stock <= product.reorder_level %}<span class="status-tag" style="color:var(--danger)">Low available stock</span>{% else %}<span class="status-tag ok">In stock</span>{% endif %}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="5">No active products are registered yet.</td></tr>
+              <tr><td colspan="7">No active products are registered yet.</td></tr>
               {% endfor %}
             </tbody></table></div>
           </div>
@@ -379,8 +381,13 @@
         const disabled=soldOut||locked;
         const stockValue=Number(item.stock)||0;
         const stockText=stockValue.toLocaleString('en-KE',{maximumFractionDigits:3});
+        const onHandValue=Number(item.on_hand);
+        const onHandText=Number.isFinite(onHandValue)?onHandValue.toLocaleString('en-KE',{maximumFractionDigits:3}):stockText;
+        const stockSummary=Number.isFinite(onHandValue)&&onHandValue>stockValue
+          ? stockText+' available · '+onHandText+' on hand'
+          : stockText+' available';
         const stockBadge=item.type==='product'
-          ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+(soldOut?(stockValue>0?stockText+' on hand · sold out':'Sold out'):stockText+' in stock')+'</span>'
+          ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+(soldOut?(onHandValue>0?onHandText+' on hand · reserved online':'Sold out'):stockSummary)+'</span>'
           : '';
         const activation=disabled?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
         return '<article class="catalog-card'+(soldOut?' is-sold-out':'')+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(disabled?'-1':'0')+'" aria-disabled="'+String(disabled)+'" aria-label="'+escapeHtml(item.name)+(soldOut?', sold out':locked?', checkout pending':', add to order')+'" '+activation+'><div class="card-image"><span>'+escapeHtml(item.icon||'✦')+'</span></div><div class="card-copy"><div class="card-head"><span class="card-tag">'+escapeHtml(typeLabel(item.type))+'</span><span class="card-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span></div><h3>'+escapeHtml(item.name)+'</h3><p>'+escapeHtml(item.desc)+'</p>'+stockBadge+'</div></article>';

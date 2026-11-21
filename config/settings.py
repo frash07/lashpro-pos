@@ -168,13 +168,20 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASE_URL = env("DATABASE_URL", default="").strip()
 DB_CONN_MAX_AGE = env.int("DB_CONN_MAX_AGE", default=0)
+DB_DISABLE_SERVER_SIDE_CURSORS = env.bool(
+    "DB_DISABLE_SERVER_SIDE_CURSORS", default=True
+)
+
+if DJANGO_ENV == "production" and not DATABASE_URL:
+    raise ImproperlyConfigured(
+        "Production must use DATABASE_URL for the shared Neon PostgreSQL database; "
+        "the legacy DB_* fallback is not permitted."
+    )
 
 if DATABASE_URL:
     default_database = env.db_url_config(DATABASE_URL)
     default_database["CONN_MAX_AGE"] = DB_CONN_MAX_AGE
-    default_database["DISABLE_SERVER_SIDE_CURSORS"] = env.bool(
-        "DB_DISABLE_SERVER_SIDE_CURSORS", default=True
-    )
+    default_database["DISABLE_SERVER_SIDE_CURSORS"] = DB_DISABLE_SERVER_SIDE_CURSORS
     default_database.setdefault("OPTIONS", {}).setdefault("sslmode", "require")
     DATABASES = {"default": default_database}
 else:
@@ -189,6 +196,23 @@ else:
             "CONN_MAX_AGE": DB_CONN_MAX_AGE,
         }
     }
+
+if DJANGO_ENV == "production":
+    database_options = DATABASES["default"].get("OPTIONS", {})
+    sslmode = str(database_options.get("sslmode", "require")).strip().lower()
+    if sslmode not in {"require", "verify-ca", "verify-full"}:
+        raise ImproperlyConfigured(
+            "Production DATABASE_URL must enforce PostgreSQL TLS "
+            "(sslmode=require, verify-ca, or verify-full)."
+        )
+    if DB_CONN_MAX_AGE != 0:
+        raise ImproperlyConfigured(
+            "Production Neon connections must use DB_CONN_MAX_AGE=0."
+        )
+    if not DB_DISABLE_SERVER_SIDE_CURSORS:
+        raise ImproperlyConfigured(
+            "Production Neon connections must set DB_DISABLE_SERVER_SIDE_CURSORS=true."
+        )
 
 
 # Password validation
