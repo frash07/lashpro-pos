@@ -367,7 +367,10 @@ def record_assessment_result(*, assessment, enrollment, score, feedback="", acto
 def issue_certificate(*, enrollment, actor):
     enrollment_id = enrollment.pk if isinstance(enrollment, Enrollment) else enrollment
     try:
-        locked = Enrollment.objects.select_for_update().select_related(
+        # Only lock the enrollment row. The cohort trainer is optional, so
+        # locking every selected related row makes PostgreSQL reject the
+        # query's LEFT OUTER JOIN side.
+        locked = Enrollment.objects.select_for_update(of=("self",)).select_related(
             "sale", "student", "cohort__course", "cohort__trainer"
         ).get(pk=enrollment_id)
     except (Enrollment.DoesNotExist, TypeError, ValueError):
