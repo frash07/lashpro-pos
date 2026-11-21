@@ -58,7 +58,7 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "maxSellableQuantity")
         self.assertContains(response, "sessionStorage.setItem")
         self.assertContains(response, "PENDING_CHECKOUT_STORAGE_KEY")
-        self.assertContains(response, "catalog-snapshot")
+        self.assertContains(response, "/sales/catalog/snapshot/")
         self.assertContains(response, "window.setInterval(refreshCatalogSnapshot,30000)")
         self.assertContains(response, "cache:'no-store'")
 
