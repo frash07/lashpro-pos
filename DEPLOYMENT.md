@@ -87,7 +87,7 @@ fly ssh console --app lashpro-pos -C "python manage.py shared_database_probe cre
 fly ssh console --app lashpro-storefront -C "python manage.py shared_database_probe verify --token <TOKEN_FROM_STEP_1>"
 ```
 
-A successful second command returns `"status": "verified"`, `"shared_record_visible": true` and `"probe_consumed": true`. The one-time row is deleted automatically after successful verification and expires after 30 minutes if not used. If verification fails, the apps do not share the same database; stop and reconcile the data sources before any live booking, order, stock or payment activity.
+A successful second command returns `"status": "verified"`, `"shared_record_visible": true` and `"probe_consumed": true`. The one-time row is deleted automatically after successful verification. Its token becomes invalid after 30 minutes; any expired row is removed the next time the create action is run. If verification fails, the apps do not share the same database; stop and reconcile the data sources before any live booking, order, stock or payment activity.
 
 The command reports the configured database host/name and the PostgreSQL server reached, but never prints credentials. Keep its output as handover evidence; do not copy connection strings or secret values into GitHub issues, logs or chat.
 
