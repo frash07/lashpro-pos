@@ -64,6 +64,18 @@ class StorefrontHomeTests(TestCase):
         self.assertEqual(response.context["product_count"], 1)
         self.assertEqual(response.context["service_count"], 1)
 
+    def test_service_card_links_directly_to_online_booking(self):
+        response = self.client.get(
+            reverse("storefront:home"),
+            HTTP_HOST="lashproke.co.ke",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'href="{reverse("appointments:book")}?service={self.service.pk}"',
+        )
+
     def test_empty_active_service_catalogue_has_clear_storefront_message(self):
         self.service.active = False
         self.service.save(update_fields=("active",))

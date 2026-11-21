@@ -1,6 +1,6 @@
 # Appointments and provider availability
 
-Appointments are available from the public storefront at `/appointments/`. The booking flow supports guest checkout and signed-in storefront customers. All dates and displayed times use the configured Django timezone (`Africa/Nairobi` in production).
+Appointments are available from the public storefront at `https://domain.ke/appointments/` (the path is also registered on the POS host). The booking flow supports guest checkout and signed-in storefront customers. All dates and displayed times use the configured Django timezone (`Africa/Nairobi` in production). The storefront service cards link directly to the selected service's booking page; the page must not be advertised as available until live services and provider hours have been published.
 
 ## Publish bookable services
 
@@ -24,6 +24,19 @@ The public booking calendar offers start times in 15-minute increments, for date
 The POS and storefront run as separate Fly.io applications but must use the same production PostgreSQL database (the same `DATABASE_URL`). The public catalogue, appointments, staff accounts and weekly availability are all read from that database. If a service appears in POS Admin but not on the storefront, first verify that both Fly apps have the same database host and database name in their `DATABASE_URL` secret. Do not point either pilot app at the isolated preview or synthetic-test database.
 
 The Admin dashboard includes direct links to the service catalogue, weekly staff availability and staff time off. The booking form is intentionally unavailable until at least one service is active; published provider hours are then required for appointment slots to appear.
+
+## Verify the live booking journey
+
+After the same reviewed application revision is running on both Fly apps:
+
+1. Open `https://domain.ke/appointments/` and confirm the page loads over HTTPS.
+2. Confirm each active service card's **Book now** link opens the booking page with that service preselected.
+3. Pick a date and confirm that published provider slots appear in East Africa Time.
+4. Submit a disposable guest request. Confirm the private reference page opens and the request appears in staff appointment management as **Awaiting confirmation**.
+5. Confirm the booking is visible in the POS. Cancel the disposable request and verify that its slot becomes available again.
+6. Test the availability endpoint at `/appointments/availability/?service=<service-id>&date=<YYYY-MM-DD>`; it must return only currently available slots.
+
+A working URL alone does not establish booking readiness. At least one active service and one active weekly availability row for an eligible provider are required for slots to appear. If there are no slots, check service activation, provider role/activity, weekday, opening/closing times, time off and existing bookings before changing code.
 
 ## Booking workflow
 

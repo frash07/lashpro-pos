@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import uuid
 
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
@@ -86,3 +87,19 @@ class PublicRateLimitBucket(models.Model):
     class Meta:
         indexes = [models.Index(fields=("updated_at",), name="core_rate_bucket_age_idx")]
 
+
+
+class SharedDatabaseProbe(models.Model):
+    """Short-lived marker used to prove the POS and storefront share one database."""
+
+    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=("expires_at",), name="core_db_probe_expiry_idx"),
+        ]
+
+    def __str__(self):
+        return "Temporary shared-database verification probe"

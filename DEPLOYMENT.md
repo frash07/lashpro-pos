@@ -76,13 +76,34 @@ fly secrets list --app lashpro-pos
 fly mpg list
 ```
 
-`fly secrets list` displays secret names, not values. Do not use `fly secrets show` or print the raw `DATABASE_URL` into a shared terminal/chat transcript. To identify the existing database provider without exposing credentials, inspect only the hostname and database name inside a running Machine:
+`fly secrets list` displays secret names, not values. Do not use `fly secrets show` or print the raw `DATABASE_URL` into a shared terminal/chat transcript.
+
+Run this read-only query once inside **each** app. It reports the configured host/database and the database server actually reached, without displaying a username, password or full connection URL:
 
 ```bash
-fly ssh console --app lashpro-pos -C "python -c 'import os; from urllib.parse import urlparse; u=urlparse(os.environ.get(\"DATABASE_URL\", \"\")); print(\"DATABASE_HOST=\"+(u.hostname or \"unset\")); print(\"DATABASE_NAME=\"+(u.path.lstrip(\"/\") or \"unset\")); print(\"FLY_REGION=\"+os.getenv(\"FLY_REGION\", \"unknown\"))'"
+fly ssh console --app lashpro-pos -C "python manage.py shell -c 'from django.db import connection; c=connection.cursor(); c.execute(\\"SELECT current_database(), inet_server_addr()::text, inet_server_port()\\"); row=c.fetchone(); d=connection.settings_dict; print(\\"DATABASE_HOST=\\"+str(d.get(\\"HOST\\"))); print(\\"DATABASE_PORT=\\"+str(d.get(\\"PORT\\"))); print(\\"CONFIGURED_DATABASE=\\"+str(d.get(\\"NAME\\"))); print(\\"CONNECTED_DATABASE=\\"+str(row[0])); print(\\"DATABASE_SERVER=\\"+str(row[1])+\\":\\"+str(row[2]))'"
+fly ssh console --app lashpro-storefront -C "python manage.py shell -c 'from django.db import connection; c=connection.cursor(); c.execute(\\"SELECT current_database(), inet_server_addr()::text, inet_server_port()\\"); row=c.fetchone(); d=connection.settings_dict; print(\\"DATABASE_HOST=\\"+str(d.get(\\"HOST\\"))); print(\\"DATABASE_PORT=\\"+str(d.get(\\"PORT\\"))); print(\\"CONFIGURED_DATABASE=\\"+str(d.get(\\"NAME\\"))); print(\\"CONNECTED_DATABASE=\\"+str(row[0])); print(\\"DATABASE_SERVER=\\"+str(row[1])+\\":\\"+str(row[2]))'"
 ```
 
-Record the database host/provider, app and database regions, database name, machine count and which secret names are present. This is a read-only inventory; it does not change the running app.
+The host/provider, port, configured database and connected database must agree with the intended production target. Treat any mismatch as a **stop**; do not attach a new database or run a release until the existing data source is understood. This is a read-only inventory.
+
+### Prove cross-app visibility with a disposable database probe
+
+After the reviewed code and its migration are installed on **both** apps, run the following in order:
+
+```bash
+# 1. Create a one-time marker in the POS app's connected database.
+fly ssh console --app lashpro-pos -C "python manage.py shared_database_probe create"
+
+# 2. Copy the token from the JSON output and verify it from the storefront app.
+fly ssh console --app lashpro-storefront -C "python manage.py shared_database_probe verify --token <TOKEN_FROM_STEP_1>"
+```
+
+A successful second command returns `"status": "verified"`, `"shared_record_visible": true` and `"probe_consumed": true`. The one-time row is deleted automatically after successful verification. Its token becomes invalid after 30 minutes; any expired row is removed the next time the create action is run. If verification fails, the apps do not share the same database; stop and reconcile the data sources before any live booking, order, stock or payment activity.
+
+The command reports the configured database host/name and the PostgreSQL server reached, but never prints credentials. Keep its output as handover evidence; do not copy connection strings or secret values into GitHub issues, logs or chat.
+
+Record the database host/provider, app and database regions, database name, machine count and which secret names are present. The probe is an explicit disposable write/read/delete check; the initial SQL query above is read-only.
 
 ## 5. Configure Fly application secrets
 
