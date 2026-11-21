@@ -31,13 +31,17 @@ Useful provider references:
 
 - `.python-version` selects Python 3.13. The Docker image uses the same Python minor version.
 - `Dockerfile` installs the pinned dependencies, collects static assets, and runs Gunicorn as a non-root user.
-- `fly.toml` defines the staff POS app; `fly.storefront.toml` defines the customer storefront app. Each sets its hostnames, HTTPS routing, health check, machine resources and release command.
-- Both apps must point to the same intended PostgreSQL database. Compare provider, host and database name safely; never assume separate app secrets already match.
-- Both app configs run `release.sh`, which checks deployment settings, applies migrations and optionally bootstraps the first owner. The production GitHub workflow deploys POS first and storefront second so these migration commands cannot race.
+- `fly.toml` defines the staff POS app and runs `release.sh`; `fly.storefront.toml` defines the customer storefront app and deliberately has no release command. The POS app is the sole production schema-migration runner.
+- Both apps must connect to the same Neon project, the same Neon branch and the same PostgreSQL database. Neon branches are isolated data environments; connecting one app to a staging/development branch and the other to production creates two separate data states even when both URLs belong to the same Neon project. See [Neon branching guidance](https://neon.com/blog/practical-guide-to-database-branching).
+- Configure the same Neon pooled `DATABASE_URL` on both Fly apps, including the same database name and branch endpoint; the pooled hostname commonly includes `-pooler`. Keep `DB_CONN_MAX_AGE=0` and `DB_DISABLE_SERVER_SIDE_CURSORS=true` for the Neon pooled runtime.
+- If Neon supplies a direct/unpooled URL for migrations, set `DATABASE_URL_DIRECT` only on the POS app and ensure it targets that exact same Neon branch and database. The release script uses it only for the POS migration process; application runtime continues to use the pooled `DATABASE_URL`.
+- The production GitHub workflow deploys POS first and storefront second. Only the POS release applies migrations; the storefront is deployed after the schema is ready. Do not run independent/manual migration commands against production while a release is in progress.
 - Pushes to `main` and pull requests run CI; they do not release production. A production release requires a separate `workflow_dispatch` from `main` with `deploy_production=true`, after the backup, infrastructure and business release gates are approved. Both app-scoped Fly tokens must be configured.
 - GitHub Actions serializes workflow runs for the same ref. Manual Fly releases are outside that queue and must be coordinated with the workflow and every operator. Protect `main` in GitHub settings: require a pull request and the successful `Django CI / test` check, and disallow ordinary direct pushes.
-- `DATABASE_URL` is the runtime PostgreSQL connection for both apps. If the apps use separate credentials, verify that they still resolve to the same database host and database name.
-- `DATABASE_URL_DIRECT` is optional but recommended when the provider supplies a direct/unpooled connection for schema migrations. For Fly Managed Postgres, copy the Direct connection URL from the cluster's Connect tab into the Fly app secret `DATABASE_URL_DIRECT`. The release script temporarily uses it for migrations while web Machines use the pooled `DATABASE_URL` provided by `fly mpg attach`. Do not copy a password into Git or ChatGPT.
+- `DATABASE_URL` is required in production and must use PostgreSQL TLS. Both apps must be configured with the same Neon pooled connection target: same Neon project, branch and database. Keep the connection URL in Fly secrets only; never put it in Git, build logs, tickets or chat.
+- `DATABASE_URL_DIRECT` is optional and is reserved for the POS release migration command when Neon provides a direct/unpooled endpoint. It must refer to the same Neon branch and database as the runtime URL. Do not configure the storefront to run migrations separately. Never expose either URL or its password.
+- On Neon, a pooler endpoint and a direct endpoint can have different hostnames and server addresses while reaching the same branch/database. Do not treat matching IP addresses as definitive proof. The cross-app disposable marker test below is the acceptance test for shared-database visibility.
+- Production settings reject a missing `DATABASE_URL`, PostgreSQL TLS modes weaker than `require`, non-zero connection age, or server-side cursors enabled. These settings protect the production connection from silently falling back to legacy DB_* values or unsafe pooled-connection behaviour.
 - `CLOUDINARY_URL` configures POS product/service image uploads. The storefront needs the corresponding public Cloudinary name or matching S3-compatible media settings; never give the storefront a POS-only storage secret. Production mode refuses to start without durable media storage.
 - The app uses database-backed sessions and transaction records. Do not rely on a Machine's local filesystem for customer uploads or business data.
 
@@ -85,7 +89,7 @@ fly ssh console --app lashpro-pos -C "python manage.py shell -c 'from django.db 
 fly ssh console --app lashpro-storefront -C "python manage.py shell -c 'from django.db import connection; c=connection.cursor(); c.execute(\\"SELECT current_database(), inet_server_addr()::text, inet_server_port()\\"); row=c.fetchone(); d=connection.settings_dict; print(\\"DATABASE_HOST=\\"+str(d.get(\\"HOST\\"))); print(\\"DATABASE_PORT=\\"+str(d.get(\\"PORT\\"))); print(\\"CONFIGURED_DATABASE=\\"+str(d.get(\\"NAME\\"))); print(\\"CONNECTED_DATABASE=\\"+str(row[0])); print(\\"DATABASE_SERVER=\\"+str(row[1])+\\":\\"+str(row[2]))'"
 ```
 
-The host/provider, port, configured database and connected database must agree with the intended production target. Treat any mismatch as a **stop**; do not attach a new database or run a release until the existing data source is understood. This is a read-only inventory.
+Use this query as a read-only diagnostic, not as the final proof. With Neon, a pooled endpoint and a direct endpoint may report different hosts or backend addresses. Confirm in Neon that both Fly app secrets resolve to the same project, branch and database, then run the disposable cross-app marker test below. If the probe fails, treat it as a **stop**; do not run a production release or switch either app to another branch until the configuration is corrected.
 
 ### Prove cross-app visibility with a disposable database probe
 
@@ -99,7 +103,7 @@ fly ssh console --app lashpro-pos -C "python manage.py shared_database_probe cre
 fly ssh console --app lashpro-storefront -C "python manage.py shared_database_probe verify --token <TOKEN_FROM_STEP_1>"
 ```
 
-A successful second command returns `"status": "verified"`, `"shared_record_visible": true` and `"probe_consumed": true`. The one-time row is deleted automatically after successful verification. Its token becomes invalid after 30 minutes; any expired row is removed the next time the create action is run. If verification fails, the apps do not share the same database; stop and reconcile the data sources before any live booking, order, stock or payment activity.
+A successful second command returns `"status": "verified"`, `"shared_record_visible": true` and `"probe_consumed": true`. The one-time row is deleted automatically after successful verification. Its token becomes invalid after 30 minutes; any expired row is removed the next time the create action is run. If verification fails, the apps do not share the same database; stop and reconcile the data sources before any live booking, order, stock or payment activity. Repeat the probe after any secret, Neon branch, endpoint or database change.
 
 The command reports the configured database host/name and the PostgreSQL server reached, but never prints credentials. Keep its output as handover evidence; do not copy connection strings or secret values into GitHub issues, logs or chat.
 
@@ -116,12 +120,12 @@ fly status --app lashpro-pos
 
 Set secrets in the Fly app. Do not commit real values to GitHub, place them in `.env.production.example`, or paste them into support tickets.
 
-Set the application secrets on both Fly apps. The database settings must target the same database. Keep each app's Django key stable; do not copy a secret into a repository file.
+Set the application secrets on both Fly apps. The database settings must target the same Neon project, branch and PostgreSQL database. Keep each app's Django key stable; do not copy a secret into a repository file.
 
 | Secret / variable | Requirement |
 |---|---|
 | `DJANGO_SECRET_KEY` | Unique, cryptographically random secret. Keep it stable and securely backed up; integration credentials are encrypted using it. |
-| `DATABASE_URL` | Set by `fly mpg attach` for Fly Managed Postgres, or set to the paid managed PostgreSQL connection string. Require TLS for an external database. |
+| `DATABASE_URL` | Same Neon pooled PostgreSQL URL on both apps, for the same project, branch and database; require `sslmode=require`. |
 | `CLOUDINARY_URL` | Full Cloudinary URL on the POS app for image uploads, unless S3-compatible storage is fully configured instead. The storefront only needs the public media name/settings. |
 | `EMAIL_HOST` | Authenticated SMTP host. |
 | `EMAIL_PORT` | Normally `587` for STARTTLS; use the provider's documented port. |
@@ -131,7 +135,7 @@ Set the application secrets on both Fly apps. The database settings must target 
 | `DEFAULT_FROM_EMAIL` | Verified sender address. |
 
 Optional:
-- `DATABASE_URL_DIRECT`: direct/unpooled database URL for migrations, if supplied by the provider. For Fly Managed Postgres, use the Direct URL shown in the cluster Connect tab.
+- `DATABASE_URL_DIRECT`: optional direct/unpooled Neon URL for POS migrations only. It must point to the same Neon project, branch and database as the runtime URL.
 - `EMAIL_TIMEOUT`: SMTP timeout in seconds; default is 10.
 - `DJANGO_BOOTSTRAP_OWNER_USERNAME`, `DJANGO_BOOTSTRAP_OWNER_EMAIL`, and `DJANGO_BOOTSTRAP_OWNER_PASSWORD`: use only for the first owner account, then remove all three secrets after confirming login.
 - `SYNTHETIC_DATA_ENABLED`: must stay `false` in production.
@@ -152,7 +156,7 @@ fly secrets set \
   --app lashpro-pos
 ```
 
-For a new Fly Managed Postgres database, create the cluster in the same region as both apps. Configure both app secrets to use the same database host and database name; do not create a second database for the storefront. For an existing paid external provider, set `DATABASE_URL` on both apps. Confirm the connection safely before deploying. Do not echo secrets into terminal logs or GitHub Actions logs.
+For Neon, select one production branch and database. Set the same pooled `DATABASE_URL` in both Fly apps and confirm the project/branch/database in the Neon console. If using `DATABASE_URL_DIRECT`, set it only on the POS app and use the direct endpoint for the same Neon branch. Do not create a second database or use a separate development branch for the storefront. Confirm shared visibility with the disposable marker test before live operations. Do not echo secrets into terminal logs or GitHub Actions logs.
 
 ## 6. Database provisioning, backups and migration safety
 
@@ -209,13 +213,13 @@ fly deploy --config fly.toml --app lashpro-pos --remote-only
 fly deploy --config fly.storefront.toml --app lashpro-storefront --remote-only
 ```
 
-Fly executes `release.sh` for each app before the new version receives traffic. The release command:
+Fly executes `release.sh` for each app before the new version receives traffic. The POS release command:
 - runs Django's production deployment checks;
-- applies the checked-in migrations;
+- applies the checked-in migrations to the shared Neon branch;
 - bootstraps the owner only when the three bootstrap secrets are present;
 - runs synthetic seeding only when explicitly enabled.
 
-A failed release command must be treated as a failed deployment. Do not bypass a failed migration or deployment check to force a release. Inspect the logs for both apps, fix the cause, and retry only after taking any required backup. Since both apps use one database, allow only one release command to run at a time.
+The storefront has no release command and does not apply migrations. A failed POS release command must be treated as a failed deployment. Do not bypass a failed migration or deployment check to force a release. Inspect the POS release logs, fix the cause, and retry only after taking any required backup. Deploy the storefront only after the POS release succeeds. Never run a second migration process against production concurrently.
 
 Once the first owner login is confirmed:
 - remove `DJANGO_BOOTSTRAP_OWNER_USERNAME`;

@@ -6,6 +6,7 @@ from catalog.models import Product, Service
 from customers.models import Customer
 from payments.models import CashSession, PaymentTransaction
 from sales.services import checkout_sale, issue_refund, request_sale_refund
+from storefront.services import create_storefront_order
 from .models import Sale
 
 
@@ -57,6 +58,26 @@ class CashierViewTests(TestCase):
         self.assertContains(response, "maxSellableQuantity")
         self.assertContains(response, "sessionStorage.setItem")
         self.assertContains(response, "PENDING_CHECKOUT_STORAGE_KEY")
+
+    def test_pos_catalog_uses_storefront_available_stock_after_online_reservations(self):
+        create_storefront_order(
+            items={str(self.product.pk): 3},
+            customer_name="Online customer",
+            customer_email="online@example.test",
+            customer_phone="0712345678",
+            idempotency_key="44444444-4444-4444-8444-444444444444",
+        )
+        self.client.force_login(self.cashier)
+        response = self.client.get(reverse("sales:checkout"))
+        product_item = next(
+            item for item in response.context["catalog_items"]
+            if item["id"] == f"product-{self.product.pk}"
+        )
+
+        self.assertEqual(product_item["on_hand"], 10.0)
+        self.assertEqual(product_item["stock"], 7.0)
+        self.assertContains(response, "Reserved online")
+        self.assertContains(response, "available")
 
     def test_redesigned_checkout_uses_real_customer_and_manual_mpesa_fields(self):
         self.client.force_login(self.cashier)

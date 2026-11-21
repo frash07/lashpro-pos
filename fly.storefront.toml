@@ -13,8 +13,8 @@ primary_region = 'ams'
 [build]
   dockerfile = 'Dockerfile'
 
-[deploy]
-  release_command = 'bash release.sh'
+# Schema migrations are run once by the POS release. The storefront must not
+# run a second independent migration command against the shared Neon branch.
 
 [env]
   ALLOWED_HOSTS = 'lashpro-storefront.fly.dev'

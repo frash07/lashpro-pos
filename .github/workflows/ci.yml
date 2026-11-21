@@ -76,6 +76,9 @@ jobs:
           CSRF_COOKIE_SECURE=true \
           TRUST_PROXY_SSL_HEADER=true \
           DJANGO_ENV=production \
+          DATABASE_URL=postgresql://ci:ci@ep-ci.neon.tech:5432/lashpro_ci?sslmode=require \
+          DB_CONN_MAX_AGE=0 \
+          DB_DISABLE_SERVER_SIDE_CURSORS=true \
           CLOUDINARY_URL=cloudinary://ci:ci@lashpro-ci \
           python manage.py check --deploy
       - name: Check migration drift

@@ -14,6 +14,7 @@ from django.views.decorators.cache import never_cache
 from accounts.models import User
 from catalog.models import Product, Service
 from customers.models import Customer
+from inventory.services import available_stock_by_product
 from .forms import BalancePaymentForm, CheckoutDetailsForm, LineFormSet, PaymentFormSet
 from .models import Sale, SaleLine, SaleRefund
 from .services import checkout_sale, issue_refund, record_sale_payment, reject_refund, request_sale_refund
@@ -205,6 +206,10 @@ def checkout(request):
         payments_formset = PaymentFormSet(prefix="payments")
 
     products = list(Product.objects.filter(active=True).order_by("name"))
+    available_by_product = available_stock_by_product(products)
+    for product in products:
+        product.available_stock = available_by_product[product.pk]
+        product.reserved_online = max(product.on_hand - product.available_stock, 0)
     sample_descriptions = {"lashpro retention bond (10ml)": "Maximum Strength 1-Sec Lash Glue", "silk cashmere trays 0.07": "Mixed Length C/D Curl Lash Trays", "precision tweezers set": "Japanese Steel Isolation & Volume Tweezers", "aftercare cleansing foam": "Oil-Free Lash Shampoo & Brush Kit"}
     for product in products:
         product.pos_description = sample_descriptions.get(product.name.strip().casefold(), "")
@@ -220,7 +225,8 @@ def checkout(request):
             "type": "product",
             "desc": description,
             "icon": "package",
-            "stock": float(product.on_hand),
+            "stock": float(product.available_stock),
+            "on_hand": float(product.on_hand),
             "sku": product.sku,
             "search_text": " ".join((product.name, product.sku, description, "product")).casefold(),
         })
@@ -242,7 +248,7 @@ def checkout(request):
     from payments.models import CashSession
     cash_session = CashSession.objects.filter(cashier=request.user, status=CashSession.Status.OPEN).first()
     admin_suite = _build_admin_suite_context(request.user)
-    inventory_products = Product.objects.filter(active=True).order_by("name") if admin_suite["is_manager"] else Product.objects.none()
+    inventory_products = products if admin_suite["is_manager"] else []
     technicians = list(User.objects.filter(role=User.Role.TECHNICIAN, is_active=True).order_by("first_name", "username"))
     default_technician_id = request.user.pk if getattr(request.user, "role", None) == User.Role.TECHNICIAN else None
     technician_payload = [{"id": technician.pk, "name": technician.get_full_name() or technician.username} for technician in technicians]
