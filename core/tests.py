@@ -1,10 +1,15 @@
+import json
 import logging
+from io import StringIO
 
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 
 from accounts.models import User
 from core.log_filters import RedactSensitiveDataFilter
+from core.models import SharedDatabaseProbe
 from core.views import health_check, home
 
 
@@ -245,3 +250,39 @@ class IntegrationSettingsAccessTests(TestCase):
         self.assertNotIn(secret, record.encrypted_config)
         self.assertEqual(record.get_config()["sms_api_key"], secret)
         self.assertNotContains(response, secret)
+
+
+
+class SharedDatabaseProbeCommandTests(TestCase):
+    def test_probe_can_be_created_verified_and_consumed(self):
+        created_output = StringIO()
+        call_command("shared_database_probe", "create", stdout=created_output)
+        created = json.loads(created_output.getvalue())
+
+        self.assertEqual(created["status"], "created")
+        self.assertEqual(SharedDatabaseProbe.objects.count(), 1)
+        self.assertTrue(created["database"]["connected_database"])
+
+        verified_output = StringIO()
+        call_command(
+            "shared_database_probe",
+            "verify",
+            "--token",
+            created["token"],
+            stdout=verified_output,
+        )
+        verified = json.loads(verified_output.getvalue())
+
+        self.assertEqual(verified["status"], "verified")
+        self.assertTrue(verified["shared_record_visible"])
+        self.assertTrue(verified["probe_consumed"])
+        self.assertEqual(SharedDatabaseProbe.objects.count(), 0)
+
+    def test_unknown_or_expired_probe_is_rejected(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "shared_database_probe",
+                "verify",
+                "--token",
+                "00000000-0000-0000-0000-000000000001",
+            )
