@@ -142,6 +142,57 @@ def restore_catalog_item_constraint(apps, schema_editor):
         ),
     )
 
+def add_line_type_constraint_if_missing(apps, schema_editor):
+    """Add the training-aware line constraint unless it is already present."""
+    SaleLine = apps.get_model("sales", "SaleLine")
+    constraint_name = "sales_line_matches_item_type"
+
+    with schema_editor.connection.cursor() as cursor:
+        constraints = schema_editor.connection.introspection.get_constraints(
+            cursor, SaleLine._meta.db_table
+        )
+
+    if constraint_name in constraints:
+        return
+
+    schema_editor.add_constraint(
+        SaleLine,
+        models.CheckConstraint(
+            condition=(
+                Q(line_type="PRODUCT", product__isnull=False, service__isnull=True)
+                | Q(line_type="SERVICE", product__isnull=True, service__isnull=False)
+                | Q(line_type="TRAINING", product__isnull=True, service__isnull=True)
+            ),
+            name=constraint_name,
+        ),
+    )
+
+
+def remove_line_type_constraint_if_present(apps, schema_editor):
+    """Remove the training-aware line constraint on migration rollback."""
+    SaleLine = apps.get_model("sales", "SaleLine")
+    constraint_name = "sales_line_matches_item_type"
+
+    with schema_editor.connection.cursor() as cursor:
+        constraints = schema_editor.connection.introspection.get_constraints(
+            cursor, SaleLine._meta.db_table
+        )
+
+    if constraint_name not in constraints:
+        return
+
+    schema_editor.remove_constraint(
+        SaleLine,
+        models.CheckConstraint(
+            condition=(
+                Q(line_type="PRODUCT", product__isnull=False, service__isnull=True)
+                | Q(line_type="SERVICE", product__isnull=True, service__isnull=False)
+                | Q(line_type="TRAINING", product__isnull=True, service__isnull=True)
+            ),
+            name=constraint_name,
+        ),
+    )
+
 class Migration(migrations.Migration):
     dependencies = [("sales", "0008_make_legacy_line_type_nullable")]
 
@@ -171,16 +222,26 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-        migrations.AddConstraint(
-            model_name="saleline",
-            constraint=models.CheckConstraint(
-                condition=(
-                    Q(line_type="PRODUCT", product__isnull=False, service__isnull=True)
-                    | Q(line_type="SERVICE", product__isnull=True, service__isnull=False)
-                    | Q(line_type="TRAINING", product__isnull=True, service__isnull=True)
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    add_line_type_constraint_if_missing,
+                    remove_line_type_constraint_if_present,
                 ),
-                name="sales_line_matches_item_type",
-            ),
+            ],
+            state_operations=[
+                migrations.AddConstraint(
+                    model_name="saleline",
+                    constraint=models.CheckConstraint(
+                        condition=(
+                            Q(line_type="PRODUCT", product__isnull=False, service__isnull=True)
+                            | Q(line_type="SERVICE", product__isnull=True, service__isnull=False)
+                            | Q(line_type="TRAINING", product__isnull=True, service__isnull=True)
+                        ),
+                        name="sales_line_matches_item_type",
+                    ),
+                ),
+            ],
         ),
         migrations.RunPython(install_line_guard, restore_line_guard),
     ]
