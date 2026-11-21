@@ -2,7 +2,7 @@ name: Django CI
 
 on:
   push:
-    branches: [main, "deployment/**", "flyio-new-files"]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -128,27 +128,40 @@ jobs:
 
           flyctl deploy --config fly.storefront-preview.toml --app "$APP" --remote-only --ha=false
 
-      # Production storefront deploys from main only after tests and the optional preview step pass.
-      # This uses a separate app-scoped token and does not modify the POS app or Fly secrets.
-      - name: Check production storefront deployment configuration
+      # Both production apps use one database. Require both app-scoped tokens so
+      # one tested main revision deploys POS first, then storefront, serially.
+      - name: Check production deployment configuration
         if: github.ref == 'refs/heads/main'
-        id: storefront-production
+        id: production-deployment
         env:
+          FLY_POS_API_TOKEN: ${{ secrets.FLY_POS_API_TOKEN }}
           FLY_STOREFRONT_API_TOKEN: ${{ secrets.FLY_STOREFRONT_API_TOKEN }}
         run: |
-          if [[ -z "${FLY_STOREFRONT_API_TOKEN:-}" ]]; then
-            echo "::notice::Production storefront deployment skipped. Add the FLY_STOREFRONT_API_TOKEN repository secret."
+          missing=()
+          for name in FLY_POS_API_TOKEN FLY_STOREFRONT_API_TOKEN; do
+            if [[ -z "${!name:-}" ]]; then
+              missing+=("$name")
+            fi
+          done
+          if (( ${#missing[@]} )); then
+            echo "::notice::Production POS and storefront deployments skipped. Add repository secrets: ${missing[*]}."
             echo "configured=false" >> "$GITHUB_OUTPUT"
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install flyctl for production storefront
-        if: steps.storefront-production.outputs.configured == 'true'
+      - name: Install flyctl for production
+        if: steps.production-deployment.outputs.configured == 'true'
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy production storefront from main
-        if: steps.storefront-production.outputs.configured == 'true'
+      - name: Deploy production POS, then storefront from main
+        if: steps.production-deployment.outputs.configured == 'true'
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_STOREFRONT_API_TOKEN }}
-        run: flyctl deploy --config fly.storefront.toml --app lashpro-storefront --remote-only
+          FLY_POS_API_TOKEN: ${{ secrets.FLY_POS_API_TOKEN }}
+          FLY_STOREFRONT_API_TOKEN: ${{ secrets.FLY_STOREFRONT_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          export FLY_API_TOKEN="$FLY_POS_API_TOKEN"
+          flyctl deploy --config fly.toml --app lashpro-pos --remote-only
+          export FLY_API_TOKEN="$FLY_STOREFRONT_API_TOKEN"
+          flyctl deploy --config fly.storefront.toml --app lashpro-storefront --remote-only

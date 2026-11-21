@@ -1,7 +1,9 @@
 import hashlib
 import json
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.http import require_GET
@@ -9,8 +11,27 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.shortcuts import redirect, render
 
+from accounts.models import User
 from .forms import IntegrationSettingsForm
 from .models import IntegrationSettings
+
+
+@login_required(login_url="login")
+def home(request):
+    if request.user.role == User.Role.TRAINER and not request.user.is_superuser:
+        return redirect("training:dashboard")
+    if request.user.role == User.Role.TECHNICIAN and not request.user.is_superuser:
+        return redirect("sales:services")
+    return redirect("sales:checkout")
+
+
+@require_GET
+def health_check(request):
+    """Expose a minimal liveness response for the hosting platform."""
+    response = HttpResponse("ok", content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @require_GET

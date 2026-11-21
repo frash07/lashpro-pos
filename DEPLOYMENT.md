@@ -1,21 +1,21 @@
 # LashPro POS production deployment — Fly.io
 
-This is the canonical production deployment guide for the `lashpro-pos` Fly.io application defined by `fly.toml`. It replaces the old Render Free + Neon Free instructions.
+This is the canonical production deployment guide for the LashPro POS and storefront Fly.io applications defined by `fly.toml` and `fly.storefront.toml`.
 
-**Production boundary:** Do not use the Render Free Blueprint (`render.yaml`) for live customer records, payments, inventory, or business-critical operations. It is retained only as a disposable synthetic-data test environment. Fly.io and the database provider must be on paid plans appropriate for production before live records are loaded.
+**Production boundary:** Both Fly apps must use paid hosting and the same approved, paid PostgreSQL database before live customer records, payments, inventory, or business-critical operations are entered.
 
 ## 1. Target architecture
 
 | Component | Production target | Purpose |
 |---|---|---|
-| Web application | Fly.io app `lashpro-pos` | Django + Gunicorn |
-| Database | Fly Managed Postgres, or an equivalent paid managed PostgreSQL service | Durable transactional data, automated backups, recovery |
+| Web applications | Fly.io apps `lashpro-pos` (staff POS) and `lashpro-storefront` (customer storefront) | Django + Gunicorn from the same repository |
+| Database | One paid PostgreSQL database configured for both apps | Shared catalogue, customers, bookings, orders, sales, payments and inventory |
 | Uploaded images | Cloudinary or another durable object-storage provider | Product/service images shared across machines |
 | Static assets | WhiteNoise manifest storage in the container image | Versioned CSS, JavaScript and static images |
 | Email | Authenticated SMTP provider | Staff password recovery and transactional email |
 | DNS/TLS | Customer-owned domain with Fly certificates | Branded HTTPS access |
 
-The repository currently sets `primary_region = "ams"` in `fly.toml`. Keep the existing app in Amsterdam until the actual database region and the current data source are verified. **Amsterdam is an actively listed Fly Managed Postgres region**, so it is the lowest-risk same-region choice for this existing app. Johannesburg (`jnb`) is a Fly Machines region, but it is **not** in Fly's currently published Managed Postgres region list; do not provision Fly Managed Postgres in `jnb` or move this app there as part of this database setup. The managed-database region list can change; verify it at provisioning time.
+The repository currently sets `primary_region = "ams"` in both Fly app configs. Keep both apps close to the verified database region. **Amsterdam is an actively listed Fly Managed Postgres region**, so it is the lowest-risk same-region choice for this existing setup. Johannesburg (`jnb`) is a Fly Machines region, but it is **not** in Fly's currently published Managed Postgres region list; do not provision Fly Managed Postgres in `jnb` or move the apps there as part of this database setup. The managed-database region list can change; verify it at provisioning time.
 
 Fly Managed Postgres provides automated backups and point-in-time recovery, high availability with automatic failover, monitoring and encryption. Its current published Basic plan is US$38/month plus storage at US$0.28 per provisioned GB/month; the published starting storage is 10 GB, so budget from approximately US$40.80/month before tax, egress or any app compute charges. The next published Starter plan is US$72/month plus storage. Confirm current pricing and availability in the Fly dashboard before provisioning. For this single-salon alpha, start with Basic and upgrade if measured CPU, memory, storage or connection demand requires it.
 
@@ -31,11 +31,12 @@ Useful provider references:
 
 - `.python-version` selects Python 3.13. The Docker image uses the same Python minor version.
 - `Dockerfile` installs the pinned dependencies, collects static assets, and runs Gunicorn as a non-root user.
-- `fly.toml` defines the app name, region, HTTPS routing, health check, machine resources and the release command.
-- `release.sh` runs `manage.py check --deploy`, applies migrations, and optionally creates the first owner account. The deploy is stopped if the release command fails.
-- `DATABASE_URL` is the runtime PostgreSQL connection. Fly Managed Postgres can set it when attached to the app.
+- `fly.toml` defines the staff POS app; `fly.storefront.toml` defines the customer storefront app. Each sets its hostnames, HTTPS routing, health check, machine resources and release command.
+- Both apps must point to the same intended PostgreSQL database. Compare provider, host and database name safely; never assume separate app secrets already match.
+- Both app configs run `release.sh`, which checks deployment settings, applies migrations and optionally bootstraps the first owner. The production GitHub workflow deploys POS first and storefront second so these migration commands cannot race. Keep deployments serialized if they are run manually.
+- `DATABASE_URL` is the runtime PostgreSQL connection for both apps. If the apps use separate credentials, verify that they still resolve to the same database host and database name.
 - `DATABASE_URL_DIRECT` is optional but recommended when the provider supplies a direct/unpooled connection for schema migrations. For Fly Managed Postgres, copy the Direct connection URL from the cluster's Connect tab into the Fly app secret `DATABASE_URL_DIRECT`. The release script temporarily uses it for migrations while web Machines use the pooled `DATABASE_URL` provided by `fly mpg attach`. Do not copy a password into Git or ChatGPT.
-- `CLOUDINARY_URL` configures durable product/service image uploads. Production mode now refuses to start without Cloudinary or the configured S3-compatible storage backend because Fly Machine filesystems are not a durable media store.
+- `CLOUDINARY_URL` configures POS product/service image uploads. The storefront needs the corresponding public Cloudinary name or matching S3-compatible media settings; never give the storefront a POS-only storage secret. Production mode refuses to start without durable media storage.
 - The app uses database-backed sessions and transaction records. Do not rely on a Machine's local filesystem for customer uploads or business data.
 
 ## 3. Pre-deployment decisions and safeguards
@@ -48,7 +49,7 @@ Complete these before the first live deployment:
 4. **Choose an owner for infrastructure and billing.** The business must own or explicitly approve the Fly, database, Cloudinary, domain/DNS and email-provider accounts.
 5. **Choose production support contacts.** At least one person must receive service alerts and one person must be authorised to restore the database.
 6. **Use independent owner/manager accounts.** At least two distinct people must be able to approve refunds and cash variances; do not share the deployment bootstrap account.
-7. **Keep synthetic seeding disabled.** `SYNTHETIC_DATA_ENABLED=false` must remain set on the production app.
+7. **Keep synthetic seeding disabled.** `SYNTHETIC_DATA_ENABLED=false` must remain set on both production apps.
 
 ## 4. Inspect the existing app before changing database secrets
 
@@ -81,13 +82,13 @@ fly status --app lashpro-pos
 
 Set secrets in the Fly app. Do not commit real values to GitHub, place them in `.env.production.example`, or paste them into support tickets.
 
-Required for the production application:
+Set the application secrets on both Fly apps. The database settings must target the same database. Keep each app's Django key stable; do not copy a secret into a repository file.
 
 | Secret / variable | Requirement |
 |---|---|
 | `DJANGO_SECRET_KEY` | Unique, cryptographically random secret. Keep it stable and securely backed up; integration credentials are encrypted using it. |
 | `DATABASE_URL` | Set by `fly mpg attach` for Fly Managed Postgres, or set to the paid managed PostgreSQL connection string. Require TLS for an external database. |
-| `CLOUDINARY_URL` | Full Cloudinary URL for the POS app's image uploads, unless the S3-compatible backend is fully configured instead. |
+| `CLOUDINARY_URL` | Full Cloudinary URL on the POS app for image uploads, unless S3-compatible storage is fully configured instead. The storefront only needs the public media name/settings. |
 | `EMAIL_HOST` | Authenticated SMTP host. |
 | `EMAIL_PORT` | Normally `587` for STARTTLS; use the provider's documented port. |
 | `EMAIL_HOST_USER` | SMTP username. |
@@ -117,15 +118,15 @@ fly secrets set \
   --app lashpro-pos
 ```
 
-For a new Fly Managed Postgres database, create the cluster in the same region as the app and attach it to `lashpro-pos` using the current Fly CLI instructions. Attachment normally provisions `DATABASE_URL` as an app secret. For an existing paid external provider, set `DATABASE_URL` yourself. Confirm that the connection works before deploying. Do not echo secrets into terminal logs or GitHub Actions logs.
+For a new Fly Managed Postgres database, create the cluster in the same region as both apps. Configure both app secrets to use the same database host and database name; do not create a second database for the storefront. For an existing paid external provider, set `DATABASE_URL` on both apps. Confirm the connection safely before deploying. Do not echo secrets into terminal logs or GitHub Actions logs.
 
 ## 6. Database provisioning, backups and migration safety
 
 ### New installation
 
 - Provision a paid managed PostgreSQL cluster with automated backups, point-in-time recovery and a tested restore path.
-- Place it in the same region as the Fly application.
-- Attach it to the app or configure `DATABASE_URL`.
+- Place it in the same region as both Fly applications.
+- Configure `DATABASE_URL` on both apps to the same database.
 - Confirm TLS is enabled and the database allows connections from the Fly app.
 - Keep a separate encrypted backup outside the database provider's account for business continuity.
 
@@ -167,17 +168,20 @@ See [FLY_MEDIA_STORAGE.md](FLY_MEDIA_STORAGE.md) for the Cloudinary configuratio
 
 Before deploying, confirm that the app secrets are present, the database is reachable, media storage is configured, and the production data source is correct.
 
+Deploy the POS first, then the storefront. The shared schema migration is applied from the POS release command; the storefront release follows only after POS deploy succeeds. Do not run these deploys concurrently.
+
 ```bash
-fly deploy --app lashpro-pos
+fly deploy --config fly.toml --app lashpro-pos --remote-only
+fly deploy --config fly.storefront.toml --app lashpro-storefront --remote-only
 ```
 
-Fly executes `release.sh` as the configured release command before the new version receives traffic. The release command:
+Fly executes `release.sh` for each app before the new version receives traffic. The release command:
 - runs Django's production deployment checks;
 - applies the checked-in migrations;
 - bootstraps the owner only when the three bootstrap secrets are present;
 - runs synthetic seeding only when explicitly enabled.
 
-A failed release command must be treated as a failed deployment. Do not bypass a failed migration or deployment check to force a release. Inspect `fly logs --app lashpro-pos`, fix the cause, and retry after taking any required backup.
+A failed release command must be treated as a failed deployment. Do not bypass a failed migration or deployment check to force a release. Inspect the logs for both apps, fix the cause, and retry only after taking any required backup. Since both apps use one database, allow only one release command to run at a time.
 
 Once the first owner login is confirmed:
 - remove `DJANGO_BOOTSTRAP_OWNER_USERNAME`;
@@ -187,27 +191,25 @@ Once the first owner login is confirmed:
 
 ## 9. Domain and TLS
 
-The current app has the Fly hostname `lashpro-pos.fly.dev`. For a branded POS hostname:
+The current apps have the Fly hostnames `lashpro-pos.fly.dev` and `lashpro-storefront.fly.dev`. For the branded hosts:
 
-1. Choose and register a domain/subdomain controlled by the business (for example, a dedicated POS subdomain).
-2. Add that hostname to `ALLOWED_HOSTS`.
-3. Add its full HTTPS origin to `CSRF_TRUSTED_ORIGINS`.
-4. Add the hostname to `POS_HOSTS` if its root path should open the staff POS.
-5. Set `POS_BASE_URL` to the canonical HTTPS POS origin; the appointment/payment callback URLs use this value.
-6. Add the certificate using `fly certs add` and publish exactly the DNS records Fly displays.
-7. Verify certificate issuance and renewal using the Fly dashboard/CLI, then test HTTP-to-HTTPS redirection and the application login.
-8. Keep `SECURE_HSTS_INCLUDE_SUBDOMAINS=false` and `SECURE_HSTS_PRELOAD=false` until every affected subdomain is HTTPS-only and the business deliberately approves the domain-wide commitment.
+1. Point `domain.ke` to `lashpro-storefront` and `pos.domain.ke` to `lashpro-pos`.
+2. Add each hostname to the corresponding app's `ALLOWED_HOSTS` and HTTPS origin to its `CSRF_TRUSTED_ORIGINS`.
+3. Add `pos.domain.ke` to `POS_HOSTS` and set `POS_BASE_URL=https://pos.domain.ke` on both apps so staff links and callbacks use the canonical POS origin.
+4. Add both certificates using `fly certs add` and publish the exact DNS records Fly displays.
+5. Verify certificate issuance/renewal, HTTP-to-HTTPS redirects, host validation, cross-app links, and CSRF-protected forms on both domains.
+6. Keep `SECURE_HSTS_INCLUDE_SUBDOMAINS=false` and `SECURE_HSTS_PRELOAD=false` until every affected subdomain is HTTPS-only and the business deliberately approves the domain-wide commitment.
 
 The Fly edge terminates TLS and forwards requests to the Machine. `TRUST_PROXY_SSL_HEADER=true` is configured for the Fly proxy; do not enable it on another host unless that proxy overwrites the forwarded-protocol header on every request.
 
 ## 10. Availability, machine sizing and monitoring
 
-The current machine definition is one shared CPU with 1 GB RAM. That is a starting size, not a measured capacity guarantee. The production configuration keeps two Machines running; Fly does not create the extra Machine from this setting alone.
+The current machine definition is one shared CPU with 1 GB RAM. That is a starting size, not a measured capacity guarantee. The POS config keeps two Machines running and the storefront config keeps one; Fly does not create the extra Machines from these settings alone.
 
 For a production service:
-- provision two application Machines in the chosen primary region (run `fly scale count 2 --app lashpro-pos`) so one Machine can fail without taking the web app offline;
-- keep the minimum running machine count aligned with the number of Machines actually provisioned;
-- confirm both Machines pass the configured `/accounts/login/` health check;
+- provision at least two POS Machines and the approved number of storefront Machines;
+- keep each app's minimum running machine count aligned with the Machines actually provisioned;
+- confirm every Machine passes its configured `/accounts/login/` health check;
 - monitor CPU, memory, restarts, request errors, response latency and database connections;
 - configure alerts to a named support contact;
 - retain application logs and investigate repeated errors;
@@ -247,11 +249,7 @@ After deployment, use separate named staff accounts and test with controlled tra
 
 Use synthetic data on a disposable database for this smoke test. Never run the synthetic seed command against the live business database.
 
-## 12. Render test environment is not production
-
-`render.yaml`, `build.sh` and `Procfile` remain in the repository for the disposable Render synthetic-data path. That Render Free configuration must not be used for real salon operations. Do not copy its free-tier instructions into a production handover. The production target is the Fly.io application defined by `fly.toml`.
-
-## 13. Release gate
+## 12. Release gate
 
 Do not declare production ready until all of the following are evidenced:
 

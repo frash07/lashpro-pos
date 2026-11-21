@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Enroll a student · LashPro{% endblock %}
+
+{% block content %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a>{% if request.user.role != "CASHIER" %}<a href="{% url 'training:dashboard' %}">Training cohorts</a>{% endif %}<a href="{% url 'sales:payments' %}">Collect tuition</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<main class="page">
+  <div class="heading"><div><small>NEW ENROLLMENT</small><h1>Enroll a student</h1><p>Select an existing LashPro customer and an open training cohort.</p></div></div>
+  {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  <section class="card"><form method="post">{% csrf_token %}{{ form.idempotency_key }}
+    <label>Open cohort {{ form.cohort }}{{ form.cohort.errors }}</label>
+    <label>Existing student {{ form.student }}{{ form.student.errors }}</label>
+    <p class="muted">Or add a new student to the shared customer directory:</p>
+    <label>Full name {{ form.student_name }}{{ form.student_name.errors }}</label>
+    <label>Phone {{ form.student_phone }}{{ form.student_phone.errors }}</label>
+    <p class="note">This creates a tuition invoice tied to the existing POS sale ledger. Collect cash or M‑Pesa from the balance-payment page; cash uses the active cash session, and manual M‑Pesa stays unverified until a manager reconciles it.</p>
+    <button type="submit">Create enrollment and tuition invoice</button>
+  </form></section>
+</main>
+{% endblock %}

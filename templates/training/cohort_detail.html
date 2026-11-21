@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cohort.name }} · LashPro training{% endblock %}
+
+{% block content %}
+<header>{% if request.user.role == "TRAINER" %}<a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a>{% else %}<a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a>{% endif %}<a href="{% url 'training:dashboard' %}">All cohorts</a>{% if request.user.role != "TRAINER" %}<a href="{% url 'sales:checkout' %}">Checkout</a>{% endif %}{% if is_manager %}<a href="{% url 'training:enroll' %}">Enroll a student</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<main class="page">
+  <div class="heading"><div><small>{{ cohort.course.code }} · {{ cohort.get_status_display }}</small><h1>{{ cohort.course.name }}</h1><p>{{ cohort.name }} · {{ cohort.start_date|date:"d M Y" }} – {{ cohort.end_date|date:"d M Y" }}{% if cohort.trainer %} · Trainer: {{ cohort.trainer.get_full_name|default:cohort.trainer.username }}{% endif %}</p><p>{{ cohort.course.description }}</p></div></div>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <section><h2>Student roster</h2><div class="import-table-wrap"><table class="import-table"><thead><tr><th>Student</th><th>Enrollment</th><th>Attendance</th>{% if is_manager %}<th>Tuition</th>{% endif %}<th>Certificate</th></tr></thead><tbody>
+    {% for enrollment in enrollments %}<tr><td>{{ enrollment.student.name }}{% if is_manager and enrollment.student.phone %}<br><small>{{ enrollment.student.phone }}</small>{% endif %}</td><td>{{ enrollment.get_status_display }}</td><td>{{ enrollment.attendance_percent }}%</td>{% if is_manager %}<td>KSh {{ enrollment.paid_amount|floatformat:2 }} paid · KSh {{ enrollment.balance_due|floatformat:2 }} due</td>{% endif %}<td>{% if enrollment.certificate %}<a href="{% url 'training:certificate' enrollment.certificate.pk %}">{{ enrollment.certificate.certificate_number }}</a>{% if enrollment.certificate.status == "REVOKED" %}<br>Revoked{% elif is_manager %}<form class="result-form" method="post" action="{% url 'training:revoke_certificate' enrollment.certificate.pk %}">{% csrf_token %}<label>Revocation reason<input name="reason" maxlength="500" required></label><button type="submit">Revoke</button></form>{% endif %}{% elif cohort.status == "COMPLETED" and enrollment.status == "ENROLLED" %}<form method="post" action="{% url 'training:issue_certificate' enrollment.pk %}">{% csrf_token %}<button type="submit">Issue certificate</button></form>{% else %}—{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="5">No students are enrolled in this cohort.</td></tr>{% endfor %}
+  </tbody></table></div></section>
+
+  <section><div class="section-head"><h2>Training sessions and attendance</h2></div>
+    <form class="card" method="post" action="{% url 'training:create_session' cohort.pk %}">{% csrf_token %}<h3>Schedule a session</h3>{{ session_form.as_p }}<button type="submit">Add session</button></form>
+    {% for session in sessions %}<article class="card"><h3>{{ session.title }}</h3><p>{{ session.starts_at|date:"D d M Y H:i" }}–{{ session.ends_at|date:"H:i" }}{% if session.location %} · {{ session.location }}{% endif %}</p>{% if session.notes %}<p>{{ session.notes }}</p>{% endif %}
+      <div class="import-table-wrap"><table class="import-table"><thead><tr><th>Student</th><th>Attendance</th></tr></thead><tbody>{% for row in session.roster_rows %}<tr><td>{{ row.enrollment.student.name }}</td><td>{% if row.enrollment.status == "ENROLLED" and session.ends_at <= now %}<form class="inline-form" method="post" action="{% url 'training:attendance' session.pk row.enrollment.pk %}">{% csrf_token %}{{ row.form.status }}<button type="submit">Save</button></form>{% elif row.attendance %}{{ row.attendance.get_status_display }}{% else %}<span class="muted">After the session ends</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="2">Enroll students to record attendance.</td></tr>{% endfor %}</tbody></table></div>
+    </article>{% empty %}<p>No sessions scheduled yet.</p>{% endfor %}
+  </section>
+
+  <section><div class="section-head"><h2>Assessments</h2></div>
+    <form class="card" method="post" action="{% url 'training:create_assessment' cohort.pk %}">{% csrf_token %}<h3>Add an assessment</h3>{{ assessment_form.as_p }}<button type="submit">Add assessment</button></form>
+    {% for assessment in assessments %}<article class="card"><h3>{{ assessment.title }}</h3><p>Pass {{ assessment.passing_score|floatformat:2 }} out of {{ assessment.max_score|floatformat:2 }}{% if assessment.due_at %} · Due {{ assessment.due_at|date:"d M Y H:i" }}{% endif %}</p>{% if assessment.description %}<p>{{ assessment.description }}</p>{% endif %}
+      <div class="import-table-wrap"><table class="import-table"><thead><tr><th>Student</th><th>Score and feedback</th></tr></thead><tbody>{% for row in assessment.roster_rows %}<tr><td>{{ row.enrollment.student.name }}{% if row.result %}<br><small>{% if row.result.passed %}Passed{% else %}Not yet passed{% endif %}</small>{% endif %}</td><td>{% if row.enrollment.status == "ENROLLED" %}<form class="result-form" method="post" action="{% url 'training:grade_assessment' assessment.pk row.enrollment.pk %}">{% csrf_token %}<label>Score {{ row.form.score }}</label><label>Feedback {{ row.form.feedback }}</label><button type="submit">Save grade</button></form>{% elif row.result %}{{ row.result.score|floatformat:2 }}{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="2">Enroll students to record results.</td></tr>{% endfor %}</tbody></table></div>
+    </article>{% empty %}<p>No assessments have been added yet.</p>{% endfor %}
+  </section>
+</main>
+{% endblock %}

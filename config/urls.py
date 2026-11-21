@@ -5,11 +5,12 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 
-from core.views import service_worker, admin_suite, integration_settings
+from core.views import service_worker, admin_suite, home, integration_settings
 from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
 urlpatterns = [
     path("sw.js", service_worker, name="service_worker"),
+    path("accounts/home/", home, name="home"),
 
     # LashPro Admin Suite
     path("admin-suite/integrations/", integration_settings, name="integrations-settings"),
@@ -20,7 +21,7 @@ urlpatterns = [
     path("accounts/login/", auth_views.LoginView.as_view(
         template_name="registration/login.html",
         authentication_form=StudioLoginForm,
-        next_page=reverse_lazy("sales:checkout")),
+        next_page=reverse_lazy("home")),
         name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("accounts/password-change/", auth_views.PasswordChangeView.as_view(
@@ -47,6 +48,7 @@ urlpatterns = [
         template_name="registration/password_reset_complete.html",
     ), name="password_reset_complete"),
     path("sales/", include("sales.urls")),
+    path("training/", include("training.urls")),
     path("payments/", include("payments.urls")),
     path("expenses/", include("expenses.urls")),
     path("appointments/", include("appointments.urls")),
