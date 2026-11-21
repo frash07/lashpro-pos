@@ -93,6 +93,55 @@ def restore_line_guard(apps, schema_editor):
     """)
 
 
+def remove_catalog_item_constraint_if_present(apps, schema_editor):
+    """Remove the pre-training line constraint when it exists in the database."""
+    SaleLine = apps.get_model("sales", "SaleLine")
+    constraint_name = "sales_line_exactly_one_catalog_item"
+
+    with schema_editor.connection.cursor() as cursor:
+        constraints = schema_editor.connection.introspection.get_constraints(
+            cursor, SaleLine._meta.db_table
+        )
+
+    if constraint_name not in constraints:
+        return
+
+    schema_editor.remove_constraint(
+        SaleLine,
+        models.CheckConstraint(
+            condition=(
+                Q(product__isnull=False, service__isnull=True)
+                | Q(product__isnull=True, service__isnull=False)
+            ),
+            name=constraint_name,
+        ),
+    )
+
+
+def restore_catalog_item_constraint(apps, schema_editor):
+    """Restore the pre-training line constraint when rolling this migration back."""
+    SaleLine = apps.get_model("sales", "SaleLine")
+    constraint_name = "sales_line_exactly_one_catalog_item"
+
+    with schema_editor.connection.cursor() as cursor:
+        constraints = schema_editor.connection.introspection.get_constraints(
+            cursor, SaleLine._meta.db_table
+        )
+
+    if constraint_name in constraints:
+        return
+
+    schema_editor.add_constraint(
+        SaleLine,
+        models.CheckConstraint(
+            condition=(
+                Q(product__isnull=False, service__isnull=True)
+                | Q(product__isnull=True, service__isnull=False)
+            ),
+            name=constraint_name,
+        ),
+    )
+
 class Migration(migrations.Migration):
     dependencies = [("sales", "0008_make_legacy_line_type_nullable")]
 
@@ -108,9 +157,19 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunPython(mark_existing_service_lines, migrations.RunPython.noop),
-        migrations.RemoveConstraint(
-            model_name="saleline",
-            name="sales_line_exactly_one_catalog_item",
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    remove_catalog_item_constraint_if_present,
+                    restore_catalog_item_constraint,
+                ),
+            ],
+            state_operations=[
+                migrations.RemoveConstraint(
+                    model_name="saleline",
+                    name="sales_line_exactly_one_catalog_item",
+                ),
+            ],
         ),
         migrations.AddConstraint(
             model_name="saleline",
