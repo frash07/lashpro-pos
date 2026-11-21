@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -94,6 +94,32 @@ class AppointmentBookingTests(TestCase):
         self.assertEqual(payload["service"], "Classic Lash Set")
         self.assertTrue(payload["slots"])
         self.assertIn("Nia Kamau", payload["slots"][0]["label"])
+
+    @override_settings(ALLOWED_HOSTS=["domain.ke", "pos.domain.ke"])
+    def test_booking_page_and_availability_route_on_both_canonical_hosts(self):
+        for host in ("domain.ke", "pos.domain.ke"):
+            page = self.client.get(
+                reverse("appointments:book"),
+                {
+                    "service": self.service.pk,
+                    "appointment_date": self.day.isoformat(),
+                },
+                HTTP_HOST=host,
+            )
+            self.assertEqual(page.status_code, 200, host)
+            self.assertContains(page, "Classic Lash Set")
+            self.assertContains(page, "Nia Kamau")
+
+            availability = self.client.get(
+                reverse("appointments:availability"),
+                {
+                    "service": self.service.pk,
+                    "date": self.day.isoformat(),
+                },
+                HTTP_HOST=host,
+            )
+            self.assertEqual(availability.status_code, 200, host)
+            self.assertTrue(availability.json()["slots"])
 
     def test_guest_can_book_and_open_private_confirmation(self):
         slot = self._first_slot()
