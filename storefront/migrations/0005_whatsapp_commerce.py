@@ -51,6 +51,7 @@ class Migration(migrations.Migration):
                 ("next_attempt_at", models.DateTimeField(db_index=True, default=django.utils.timezone.now)),
                 ("last_error", models.TextField(blank=True)),
                 ("received_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 ("processed_at", models.DateTimeField(blank=True, null=True)),
                 ("order", models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="whatsapp_imports", to="storefront.storefrontorder")),
             ],
