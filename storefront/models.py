@@ -121,7 +121,7 @@ class StorefrontOrder(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=("source_channel", "external_order_id"),
-                condition=~Q(external_order_id=""),
+                condition=Q(external_order_id__gt=""),
                 name="storefront_channel_order_unique",
             ),
         ]
