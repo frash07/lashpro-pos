@@ -126,6 +126,34 @@ class WhatsAppWebhookOrderImportTests(TestCase):
         self.assertEqual(line.unit_price, Decimal("650.00"))
         self.assertEqual(available_stock_for_product(self.product), Decimal("3.000"))
 
+    def test_existing_meta_content_id_maps_to_lashpro_product_without_changing_sku(self):
+        self.product.whatsapp_retailer_id = "META-CONTENT-007"
+        self.product.save(update_fields=("whatsapp_retailer_id",))
+        response = self._post_webhook(self._payload(sku="META-CONTENT-007"))
+        self.assertEqual(response.status_code, 200)
+
+        receipt = WhatsAppInboundOrder.objects.get(message_id="wamid.test-001")
+        self.assertEqual(receipt.status, WhatsAppInboundOrder.Status.IMPORTED)
+        line = receipt.order.lines.get()
+        self.assertEqual(line.sku_snapshot, "WA-CLASSIC-01")
+        self.assertEqual(line.product.whatsapp_retailer_id, "META-CONTENT-007")
+
+    def test_order_without_phone_sender_is_preserved_for_staff_review(self):
+        payload = self._payload()
+        message = payload["entry"][0]["changes"][0]["value"]["messages"][0]
+        message.pop("from")
+        message["from_user_id"] = "business-user-identifier"
+        payload["entry"][0]["changes"][0]["value"]["contacts"][0]["user_id"] = "business-user-identifier"
+        payload["entry"][0]["changes"][0]["value"]["contacts"][0].pop("wa_id")
+        response = self._post_webhook(payload)
+        self.assertEqual(response.status_code, 200)
+
+        receipt = WhatsAppInboundOrder.objects.get(message_id="wamid.test-001")
+        self.assertEqual(receipt.status, WhatsAppInboundOrder.Status.NEEDS_REVIEW)
+        self.assertIn("did not provide a phone-number", receipt.issue)
+        self.assertEqual(StorefrontOrder.objects.count(), 0)
+        self.assertEqual(available_stock_for_product(self.product), Decimal("5.000"))
+
     def test_duplicate_meta_delivery_does_not_create_a_second_order(self):
         payload = self._payload()
         first = self._post_webhook(payload)
