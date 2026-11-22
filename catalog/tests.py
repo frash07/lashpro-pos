@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -66,6 +67,20 @@ class CatalogAdminIntegrationTests(TestCase):
         product_admin = admin.site._registry[Product]
         self.assertIn("on_hand", product_admin.get_readonly_fields(None, self.product))
         self.assertIn("sku", product_admin.get_readonly_fields(None, self.product))
+
+    def test_existing_meta_retailer_id_can_be_mapped_before_publication(self):
+        product_admin = admin.site._registry[Product]
+        readonly = product_admin.get_readonly_fields(None, self.product)
+        self.assertNotIn("whatsapp_retailer_id", readonly)
+
+        self.product.whatsapp_retailer_id = "META-CONTENT-001"
+        self.product.save(update_fields=("whatsapp_retailer_id",))
+        self.assertEqual(self.product.whatsapp_retailer_id, "META-CONTENT-001")
+
+    def test_meta_retailer_id_cannot_collide_with_another_sku(self):
+        self.low_stock_product.whatsapp_retailer_id = self.product.sku
+        with self.assertRaises(ValidationError):
+            self.low_stock_product.save(update_fields=("whatsapp_retailer_id",))
 
     def test_service_admin_list_and_search_work(self):
         url = reverse("admin:catalog_service_changelist")
