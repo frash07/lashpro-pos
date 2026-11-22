@@ -44,19 +44,26 @@ def _integration_config():
 def queue_existing_whatsapp_catalog_sync():
     """Create unlinked mapping rows and queue already-mapped items; never guess existing Meta IDs."""
     created = 0
-    for product in Product.objects.filter(active=True).only("pk").iterator():
+    for product in Product.objects.only("pk").iterator():
         _, was_created = WhatsAppCatalogSync.objects.get_or_create(
             product_id=product.pk,
             defaults={"status": WhatsAppCatalogSync.Status.UNLINKED},
         )
         created += int(was_created)
 
-    queued = WhatsAppCatalogSync.objects.filter(catalog_linked=True).update(
-        status=WhatsAppCatalogSync.Status.PENDING,
-        attempt_count=0,
-        next_attempt_at=timezone.now(),
-        last_error="",
-    )
+    try:
+        config = _integration_config()
+    except WhatsAppCommerceError:
+        config = {}
+    enabled = bool(config.get("whatsapp_catalog_sync_enabled"))
+    queued = 0
+    if enabled:
+        queued = WhatsAppCatalogSync.objects.filter(catalog_linked=True).update(
+            status=WhatsAppCatalogSync.Status.PENDING,
+            attempt_count=0,
+            next_attempt_at=timezone.now(),
+            last_error="",
+        )
     return created, queued
 
 
