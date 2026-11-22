@@ -10,6 +10,8 @@
 .admin-dashboard-page .admin-kpi-card{min-height:174px}
 .admin-dashboard-page .admin-kpi-card h2{margin:14px 0 5px;color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:clamp(19px,2vw,25px);font-weight:700;letter-spacing:-.045em;line-height:1.2;font-variant-numeric:tabular-nums}
 .admin-dashboard-page .admin-kpi-card>p{flex:1;margin:0;color:var(--muted);font-size:10px;line-height:1.6}
+.admin-dashboard-page .admin-kpi-divider{padding:0 2px;color:var(--subtle);font-size:.7em;font-weight:500}
+.admin-dashboard-page .admin-kpi-unit{color:var(--muted);font-size:11px;font-weight:500;letter-spacing:0}
 .admin-dashboard-page .admin-kpi-foot{display:flex;align-items:center;gap:6px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line);color:var(--muted);font-size:9px;line-height:1.45}
 .admin-dashboard-page .admin-kpi-foot .positive{color:var(--green);font-weight:700}
 .admin-dashboard-page .admin-kpi-card .payments-hub-card-kicker{margin-left:auto}
