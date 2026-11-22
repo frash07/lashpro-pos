@@ -41,36 +41,30 @@
     </section>
 
     <section class="integration-card">
-      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp booking updates</h2><p>Meta WhatsApp Cloud API. Each template name must already be approved in WhatsApp Manager.</p></div><span class="integration-state">{% if config_status.whatsapp %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp Business App + Cloud API</h2><p>Keep the owner's existing WhatsApp Business App and number through Meta's coexistence onboarding. LashPro uses the Cloud API for catalogue updates and order webhooks.</p></div><span class="integration-state">{% if config_status.whatsapp_commerce %}Commerce credentials saved{% elif config_status.whatsapp %}Messaging credentials saved{% else %}Not configured{% endif %}</span></div>
       <div class="integration-grid">
-        <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste a permanent or long-lived system-user access token.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
+        <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste the access token issued after the number is connected through Meta coexistence onboarding.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_phone_number_id.label_tag }}{{ form.whatsapp_phone_number_id }}{{ form.whatsapp_phone_number_id.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_business_account_id.label_tag }}{{ form.whatsapp_business_account_id }}{{ form.whatsapp_business_account_id.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_catalog_id.label_tag }}{{ form.whatsapp_catalog_id }}{{ form.whatsapp_catalog_id.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_api_version.label_tag }}{{ form.whatsapp_api_version }}{{ form.whatsapp_api_version.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_app_secret.label_tag }}{{ form.whatsapp_app_secret }}<small>{% if form.initial.has_whatsapp_app_secret %}App secret saved. Leave blank to keep it.{% else %}Used to verify Meta webhook signatures.{% endif %}</small>{{ form.whatsapp_app_secret.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_webhook_verify_token.label_tag }}{{ form.whatsapp_webhook_verify_token }}<small>{% if form.initial.has_whatsapp_webhook_token %}Verification token saved. Leave blank to keep it.{% else %}Create a long random value and enter the same value in Meta Webhooks configuration.{% endif %}</small>{{ form.whatsapp_webhook_verify_token.errors }}</div>
+      </div>
+      <div class="integration-note">
+        **Meta webhook callback URL:** <code>{{ whatsapp_webhook_url }}</code><br>
+        Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field. Incoming catalogue carts are validated against LashPro SKUs and Neon prices; successful imports appear under Online Orders with their source marked WhatsApp.
+      </div>
+      <div class="integration-grid">
         <div class="integration-field">{{ form.whatsapp_language.label_tag }}{{ form.whatsapp_language }}{{ form.whatsapp_language.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_requested.label_tag }}{{ form.whatsapp_template_requested }}{{ form.whatsapp_template_requested.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_confirmed.label_tag }}{{ form.whatsapp_template_confirmed }}{{ form.whatsapp_template_confirmed.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_cancelled.label_tag }}{{ form.whatsapp_template_cancelled }}{{ form.whatsapp_template_cancelled.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_expired.label_tag }}{{ form.whatsapp_template_expired }}{{ form.whatsapp_template_expired.errors }}</div>
+        <div class="integration-field integration-check">{{ form.whatsapp_catalog_sync_enabled }}{{ form.whatsapp_catalog_sync_enabled.label_tag }}{{ form.whatsapp_catalog_sync_enabled.errors }}</div>
       </div>
-      <p class="integration-note">WhatsApp sends approved template messages with customer, service, date and provider details. Add the matching four text parameters to the body of each approved template.</p>
+      <p class="integration-note">Product SKU is used as the permanent Meta retailer ID. Price and stock availability are sourced from Neon. Products need a public product image before their first catalogue publication. Do not enable automatic synchronisation until the correct Meta catalogue is connected to this WhatsApp Business Account.</p>
       <label class="integration-clear">{{ form.clear_whatsapp }} {{ form.clear_whatsapp.label }}</label>
-    </section>
-
-    <section class="integration-card">
-      <div class="integration-card-heading"><div><p class="integration-kicker">04 · SAFARICOM DARAJA</p><h2>M-Pesa STK Push</h2><p>Enter your Daraja app credentials, Lipa Na M-Pesa passkey and business short code.</p></div><span class="integration-state">{% if config_status.mpesa %}Credentials saved{% else %}Not configured{% endif %}</span></div>
-      <div class="integration-grid">
-        <div class="integration-field">{{ form.mpesa_environment.label_tag }}{{ form.mpesa_environment }}{{ form.mpesa_environment.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_shortcode.label_tag }}{{ form.mpesa_shortcode }}{{ form.mpesa_shortcode.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_consumer_key.label_tag }}{{ form.mpesa_consumer_key }}{{ form.mpesa_consumer_key.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_consumer_secret.label_tag }}{{ form.mpesa_consumer_secret }}{{ form.mpesa_consumer_secret.errors }}</div>
-        <div class="integration-field wide">{{ form.mpesa_passkey.label_tag }}{{ form.mpesa_passkey }}{{ form.mpesa_passkey.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_transaction_type.label_tag }}{{ form.mpesa_transaction_type }}{{ form.mpesa_transaction_type.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_party_b.label_tag }}{{ form.mpesa_party_b }}<small>Usually the same as the short code; optional.</small>{{ form.mpesa_party_b.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_account_reference.label_tag }}{{ form.mpesa_account_reference }}{{ form.mpesa_account_reference.errors }}</div>
-        <div class="integration-field">{{ form.mpesa_transaction_description.label_tag }}{{ form.mpesa_transaction_description }}{{ form.mpesa_transaction_description.errors }}</div>
-      </div>
-      <p class="integration-note">Use sandbox credentials while testing. Switch to production only after Safaricom has approved the shortcode, passkey and callback domain. STK requests require whole-KSh amounts and a Kenyan mobile number.</p>
-      <label class="integration-clear">{{ form.clear_mpesa }} {{ form.clear_mpesa.label }}</label>
     </section>
 
     <section class="integration-card">
