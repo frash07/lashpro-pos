@@ -183,6 +183,7 @@ def admin_suite(request):
             "items": [
                 ("Products", "/admin/catalog/product/"),
                 ("Services", "/admin/catalog/service/"),
+                ("WhatsApp catalogue links", "/admin/catalog/whatsappcatalogsync/"),
             ],
         },
         {
@@ -252,6 +253,7 @@ def admin_suite(request):
             "icon": "plug-zap",
             "items": [
                 ("API & Payment Integrations", "/admin-suite/integrations/"),
+                ("WhatsApp order import inbox", "/admin/storefront/whatsapporderinbox/"),
             ],
         },
     ]
