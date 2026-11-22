@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models, transaction
 from django.db.models import F, Q
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 
@@ -123,3 +124,43 @@ class SKUReservation(models.Model):
     def __str__(self):
         return self.sku
 
+
+
+
+class WhatsAppCatalogSync(models.Model):
+    """Maps one LashPro product to a Meta catalogue retailer ID and sync state."""
+
+    class Status(models.TextChoices):
+        UNLINKED = "UNLINKED", "Needs Meta catalogue mapping"
+        PENDING = "PENDING", "Waiting to sync"
+        SYNCING = "SYNCING", "Synchronising"
+        SYNCED = "SYNCED", "Synchronised"
+        FAILED = "FAILED", "Sync failed"
+
+    product = models.OneToOneField(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="whatsapp_catalog_sync",
+    )
+    # Meta calls this the retailer_id / Content ID. Existing catalogue items
+    # must be linked to their LashPro product before updates are enabled.
+    retailer_id = models.CharField(max_length=100, null=True, blank=True, unique=True)
+    meta_product_item_id = models.CharField(max_length=100, blank=True)
+    catalog_linked = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.UNLINKED)
+    attempt_count = models.PositiveSmallIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now, db_index=True)
+    last_error = models.TextField(blank=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("product__name", "product__sku")
+
+    def clean(self):
+        super().clean()
+        if self.catalog_linked and not (self.retailer_id or "").strip():
+            raise ValidationError({"retailer_id": "Enter the matching Meta catalogue Content ID before enabling this link."})
+
+    def __str__(self):
+        return f"{self.product.sku} · {self.retailer_id or 'unlinked'}"
