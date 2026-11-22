@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import F, Q
 from .models import Product, Service
+from storefront.models import WhatsAppCatalogSync
 
 
 class LowStockFilter(admin.SimpleListFilter):
@@ -23,15 +24,16 @@ class LowStockFilter(admin.SimpleListFilter):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
-        "image_preview", "sku", "name", "selling_price",
+        "image_preview", "sku", "whatsapp_retailer_id", "name", "selling_price",
         "on_hand", "reorder_level", "low_stock", "active",
     )
     list_filter = ("active", LowStockFilter)
-    search_fields = ("sku", "name")
+    search_fields = ("sku", "whatsapp_retailer_id", "name")
     change_form_template = "admin/catalog/product/change_form.html"
     fieldsets = (
         ("Product details", {"fields": (("sku", "name"), "image", "image_preview")}),
         ("Pricing", {"fields": (("cost_price", "selling_price"),)}),
+        ("Sales channels", {"fields": ("whatsapp_retailer_id",)}),
         ("Inventory controls", {"fields": (("on_hand", "reorder_level"), "active")}),
     )
 
@@ -46,7 +48,12 @@ class ProductAdmin(admin.ModelAdmin):
         )
 
     def get_readonly_fields(self, request, obj=None):
-        return ("on_hand", "sku", "image_preview") if obj else ("on_hand", "image_preview")
+        readonly = ["on_hand", "image_preview"]
+        if obj:
+            readonly.append("sku")
+            if WhatsAppCatalogSync.objects.filter(product=obj).exists():
+                readonly.append("whatsapp_retailer_id")
+        return tuple(readonly)
 
 
 @admin.register(Service)
