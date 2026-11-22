@@ -63,8 +63,27 @@ class Product(models.Model):
             models.CheckConstraint(condition=Q(reorder_level__gte=0), name="catalog_product_reorder_nonnegative"),
         ]
 
+    def _validate_whatsapp_retailer_id(self):
+        self.whatsapp_retailer_id = (self.whatsapp_retailer_id or "").strip()
+        if self.whatsapp_retailer_id:
+            collision = type(self).objects.exclude(pk=self.pk).filter(
+                Q(sku=self.whatsapp_retailer_id)
+                | Q(whatsapp_retailer_id=self.whatsapp_retailer_id)
+            ).exists()
+            if collision:
+                raise ValidationError({
+                    "whatsapp_retailer_id": "This Meta retailer ID is already assigned to another product or SKU."
+                })
+        if type(self).objects.exclude(pk=self.pk).filter(
+            whatsapp_retailer_id=self.sku
+        ).exists():
+            raise ValidationError({
+                "sku": "This SKU is already used as another product's Meta retailer ID."
+            })
+
     @transaction.atomic
     def save(self, *args, **kwargs):
+        self._validate_whatsapp_retailer_id()
         if self._state.adding:
             result = super().save(*args, **kwargs)
             try:
