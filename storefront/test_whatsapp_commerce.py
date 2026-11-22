@@ -148,6 +148,18 @@ class WhatsAppWebhookOrderImportTests(TestCase):
         self.assertEqual(StorefrontOrder.objects.count(), 0)
         self.assertEqual(available_stock_for_product(self.product), Decimal("5.000"))
 
+    def test_non_kes_catalogue_order_is_sent_for_review(self):
+        payload = self._payload()
+        payload["entry"][0]["changes"][0]["value"]["messages"][0]["order"]["product_items"][0]["currency"] = "USD"
+        response = self._post_webhook(payload)
+        self.assertEqual(response.status_code, 200)
+
+        receipt = WhatsAppInboundOrder.objects.get(message_id="wamid.test-001")
+        self.assertEqual(receipt.status, WhatsAppInboundOrder.Status.NEEDS_REVIEW)
+        self.assertIn("not priced in KES", receipt.issue)
+        self.assertEqual(StorefrontOrder.objects.count(), 0)
+        self.assertEqual(available_stock_for_product(self.product), Decimal("5.000"))
+
     def test_insufficient_stock_is_sent_for_review_without_partial_order(self):
         response = self._post_webhook(self._payload(quantity=6))
         self.assertEqual(response.status_code, 200)
