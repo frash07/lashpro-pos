@@ -31,3 +31,8 @@ The owner form stores the taxpayer PIN, branch, device identifier, communication
 ## Deploying the branch
 
 Apply the migrations (core.0002_integrationsettings and payments.0009_mpesa_stk_push) as part of the normal release process, install the requirements, and verify the Fly callback URL and public POS_BASE_URL. Keep this branch in pilot until sandbox callbacks and all notification templates have been tested with real provider accounts.
+
+
+## WhatsApp catalogue commerce
+
+See [WHATSAPP_COMMERCE.md](WHATSAPP_COMMERCE.md) for the WhatsApp Business App coexistence onboarding, Meta catalogue credentials, webhook verification, automatic stock publication and inbound catalogue-order workflow. The existing WhatsApp booking-notification integration remains supported.
