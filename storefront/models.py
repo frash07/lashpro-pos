@@ -208,6 +208,7 @@ class WhatsAppOrderInbox(models.Model):
 
     class Status(models.TextChoices):
         PENDING = "PENDING", "Waiting to import"
+        PROCESSING = "PROCESSING", "Import in progress"
         IMPORTED = "IMPORTED", "Imported into online orders"
         FAILED = "FAILED", "Needs review"
 
