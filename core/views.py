@@ -301,6 +301,7 @@ def integration_settings(request):
     config = record.get_config()
     return render(request, "core/integrations.html", {
         "form": form,
+        "whatsapp_webhook_url": request.build_absolute_uri(reverse("whatsapp_webhook")),
         "config_status": {
             "email": bool(config.get("email_host") and config.get("email_from_email")),
             "email_password": bool(config.get("email_password")),
