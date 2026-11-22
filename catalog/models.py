@@ -37,6 +37,7 @@ class Service(models.Model):
 
 class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True)
+    whatsapp_retailer_id = models.CharField(max_length=50, blank=True, default="")
     name = models.CharField(max_length=100)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -53,6 +54,11 @@ class Product(models.Model):
 
     class Meta:
         constraints = [
+            models.UniqueConstraint(
+                fields=("whatsapp_retailer_id",),
+                condition=~Q(whatsapp_retailer_id=""),
+                name="catalog_product_whatsapp_retailer_uniq",
+            ),
             models.CheckConstraint(condition=Q(on_hand__gte=0), name="catalog_product_stock_nonnegative"),
             models.CheckConstraint(condition=Q(reorder_level__gte=0), name="catalog_product_reorder_nonnegative"),
         ]
