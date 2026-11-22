@@ -12,6 +12,13 @@ primary_region = 'ams'
 [deploy]
   release_command = 'bash release.sh'
 
+# The worker shares the POS app's environment and Neon database, but receives
+# no public HTTP traffic. Keep catalogue sync and webhook order imports off the
+# request-serving Gunicorn process.
+[processes]
+  app = "gunicorn config.wsgi:application --bind 0.0.0.0:8080 --workers 1 --threads 2 --access-logfile - --error-logfile -"
+  whatsapp_worker = "python manage.py whatsapp_commerce_worker --poll-seconds 5"
+
 [env]
   ALLOWED_HOSTS = 'lashpro-pos.fly.dev'
   AXES_IPWARE_PROXY_COUNT = '1'
