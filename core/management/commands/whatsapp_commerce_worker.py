@@ -10,6 +10,7 @@ from django.utils import timezone
 from catalog.models import WhatsAppCatalogSync
 from core.whatsapp_commerce import (
     WhatsAppCommerceError,
+    _integration_config,
     import_whatsapp_order,
     sync_whatsapp_catalog_item,
 )
@@ -107,6 +108,25 @@ def _work_once():
     return inbox_id is not None or link_id is not None
 
 
+def _queue_periodic_reconciliation():
+    try:
+        config = _integration_config()
+    except WhatsAppCommerceError:
+        return 0
+    if not config.get("whatsapp_catalog_sync_enabled"):
+        return 0
+    now = timezone.now()
+    return WhatsAppCatalogSync.objects.filter(
+        catalog_linked=True,
+        status__in=(WhatsAppCatalogSync.Status.SYNCED, WhatsAppCatalogSync.Status.FAILED),
+    ).update(
+        status=WhatsAppCatalogSync.Status.PENDING,
+        attempt_count=0,
+        next_attempt_at=now,
+        last_error="",
+    )
+
+
 class Command(BaseCommand):
     help = "Import WhatsApp catalogue orders and synchronise mapped Meta catalogue items."
 
@@ -122,15 +142,27 @@ class Command(BaseCommand):
             action="store_true",
             help="Process at most one pending WhatsApp order and one catalogue item, then exit.",
         )
+        parser.add_argument(
+            "--reconcile-minutes",
+            type=float,
+            default=30,
+            help="Queue a full refresh of linked catalogue items at this interval (5–1440 minutes).",
+        )
 
     def handle(self, *args, **options):
         poll_seconds = max(1.0, min(float(options["poll_seconds"]), 60.0))
         once = options["once"]
+        reconcile_minutes = max(5.0, min(float(options["reconcile_minutes"]), 1440.0))
+        next_reconcile = time.monotonic() + reconcile_minutes * 60
         self.stdout.write("LashPro WhatsApp commerce worker started.")
         try:
             while True:
                 close_old_connections()
                 try:
+                    if not once and time.monotonic() >= next_reconcile:
+                        queued = _queue_periodic_reconciliation()
+                        logger.info("Queued %s WhatsApp catalogue item(s) for periodic reconciliation.", queued)
+                        next_reconcile = time.monotonic() + reconcile_minutes * 60
                     did_work = _work_once()
                 finally:
                     close_old_connections()
