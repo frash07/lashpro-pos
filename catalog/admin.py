@@ -67,7 +67,7 @@ class WhatsAppCatalogSyncAdmin(admin.ModelAdmin):
     autocomplete_fields = ("product",)
     readonly_fields = ("meta_product_item_id", "status", "attempt_count", "next_attempt_at", "last_error", "last_synced_at", "updated_at")
     fields = (
-        "product", "retailer_id", "catalog_linked", "meta_product_item_id",
+        "product", "retailer_id", "catalog_linked", "allow_upsert", "meta_product_item_id",
         "status", "attempt_count", "next_attempt_at", "last_error",
         "last_synced_at", "updated_at",
     )
