@@ -10,7 +10,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.utils import timezone
 
 from catalog.models import Product
@@ -82,17 +82,11 @@ def _product_public_image(product):
     return image_url
 
 
-def _catalog_payload(product, retailer_id):
-    from inventory.services import available_stock_for_product
-
-    if not product.image:
+def _catalog_payload(product, retailer_id, *, require_image=True):
+    image_url = _product_public_image(product)
+    if require_image and not image_url:
         raise ValueError(
             f"{retailer_id}: upload a public product image before publishing it to WhatsApp."
-        )
-    image_url = _product_public_image(product)
-    if not image_url:
-        raise ValueError(
-            f"{retailer_id}: the product image must have a public HTTP(S) URL."
         )
 
     if product.active:
@@ -119,7 +113,7 @@ def _catalog_payload(product, retailer_id):
     except (InvalidOperation, TypeError, ValueError):
         raise ValueError(f"{retailer_id}: selling price is invalid.") from None
 
-    return {
+    payload = {
         "retailer_id": retailer_id,
         "name": product.name[:200],
         "description": f"{product.name} · LashPro SKU {retailer_id}"[:5000],
@@ -133,8 +127,10 @@ def _catalog_payload(product, retailer_id):
         "url": product_link,
         "brand": "LashPro",
         "product_type": "Beauty & personal care",
-        "allow_upsert": "true",
     }
+    if image_url:
+        payload["image_url"] = image_url
+    return payload
 
 
 def sync_catalog_record(record_id):
@@ -154,13 +150,16 @@ def sync_catalog_record(record_id):
         product = record.product
         if product is None:
             raise ValueError(f"{record.retailer_id}: the linked LashPro product no longer exists.")
-        payload = _catalog_payload(product, record.retailer_id)
-        version = (config.get("whatsapp_api_version") or "v27.0").strip()
-        endpoint = (
-            f"{record.remote_product_id}"
-            if record.remote_product_id
-            else f"{catalog_id}/products"
+        is_update = bool(record.remote_product_id)
+        payload = _catalog_payload(
+            product, record.retailer_id, require_image=not is_update
         )
+        version = (config.get("whatsapp_api_version") or "v27.0").strip()
+        endpoint = record.remote_product_id if is_update else f"{catalog_id}/products"
+        if is_update:
+            # retailer_id is an identifier on create, but Meta treats it as
+            # internal/read-only in the ProductItem update schema.
+            payload.pop("retailer_id", None)
         result = _graph_post(
             version=version,
             path=endpoint,
@@ -262,6 +261,9 @@ def _normalise_order_items(order_data):
             quantity = int(quantity_value)
         except (InvalidOperation, TypeError, ValueError, OverflowError):
             raise ValidationError("A WhatsApp order contains an invalid quantity.") from None
+        currency = str(item.get("currency") or "").strip().upper()
+        if currency != "KES":
+            raise ValidationError("The WhatsApp catalogue order is not priced in KES; send it for staff review.")
         if not sku or quantity_value != quantity or quantity < 1 or quantity > MAX_ORDER_QUANTITY:
             raise ValidationError("WhatsApp quantities must be whole numbers between 1 and 99.")
         quantities_by_sku[sku] = quantities_by_sku.get(sku, 0) + quantity
