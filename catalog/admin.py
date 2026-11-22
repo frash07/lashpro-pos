@@ -51,7 +51,7 @@ class ProductAdmin(admin.ModelAdmin):
         readonly = ["on_hand", "image_preview"]
         if obj:
             readonly.append("sku")
-            if WhatsAppCatalogSync.objects.filter(product=obj).exists():
+            if WhatsAppCatalogSync.objects.filter(product=obj, remote_product_id__gt="").exists():
                 readonly.append("whatsapp_retailer_id")
         return tuple(readonly)
 
