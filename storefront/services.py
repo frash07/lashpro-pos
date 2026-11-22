@@ -81,6 +81,8 @@ def create_storefront_order(
     account=None,
     customer=None,
     idempotency_key,
+    source_channel=StorefrontOrder.SourceChannel.STOREFRONT,
+    external_order_id="",
 ):
     """Create an unpaid collection request and reserve its stock atomically; no POS sale is created."""
     cleaned_items = _normalise_items(items)
@@ -89,6 +91,14 @@ def create_storefront_order(
     customer_email = str(customer_email or "").strip().lower()
     customer_phone = str(customer_phone or "").strip()
     notes = str(notes or "").strip()
+
+    external_order_id = str(external_order_id or "").strip()[:160]
+    if external_order_id:
+        existing_external = StorefrontOrder.objects.filter(
+            source_channel=source_channel, external_order_id=external_order_id
+        ).first()
+        if existing_external:
+            return existing_external
 
     existing = StorefrontOrder.objects.filter(idempotency_key=key).first()
     if existing:
@@ -164,6 +174,8 @@ def create_storefront_order(
         with transaction.atomic():
             order = StorefrontOrder.objects.create(
                 idempotency_key=key,
+                source_channel=source_channel,
+                external_order_id=external_order_id,
                 account=account,
                 customer=customer,
                 customer_name=customer_name,
@@ -184,7 +196,11 @@ def create_storefront_order(
                 )
     except IntegrityError:
         duplicate = StorefrontOrder.objects.filter(idempotency_key=key).first()
-        if duplicate and _matches_existing_order(
+        if duplicate is None and external_order_id:
+            duplicate = StorefrontOrder.objects.filter(
+                source_channel=source_channel, external_order_id=external_order_id
+            ).first()
+        if duplicate and duplicate.source_channel == source_channel and _matches_existing_order(
             duplicate,
             items=cleaned_items,
             customer_name=customer_name,
