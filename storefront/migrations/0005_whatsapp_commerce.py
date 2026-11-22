@@ -40,6 +40,7 @@ class Migration(migrations.Migration):
                 ("status", models.CharField(
                     choices=[
                         ("PENDING", "Waiting to import"),
+                        ("PROCESSING", "Import in progress"),
                         ("IMPORTED", "Imported into online orders"),
                         ("FAILED", "Needs review"),
                     ],
