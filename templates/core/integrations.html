@@ -41,19 +41,29 @@
     </section>
 
     <section class="integration-card">
-      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp booking updates</h2><p>Meta WhatsApp Cloud API. Each template name must already be approved in WhatsApp Manager.</p></div><span class="integration-state">{% if config_status.whatsapp %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp Business App + commerce</h2><p>Keep the existing WhatsApp Business App and number. Connect the eligible number to Meta Cloud API using Business App coexistence before enabling webhooks or catalogue sync.</p></div><span class="integration-state">{% if config_status.whatsapp %}API credentials saved{% else %}Not configured{% endif %}</span></div>
       <div class="integration-grid">
-        <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste a permanent or long-lived system-user access token.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
+        <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste a long-lived Meta system-user access token with WhatsApp and catalogue access.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_phone_number_id.label_tag }}{{ form.whatsapp_phone_number_id }}{{ form.whatsapp_phone_number_id.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_business_account_id.label_tag }}{{ form.whatsapp_business_account_id }}{{ form.whatsapp_business_account_id.errors }}</div>
+        <div class="integration-field">{{ form.whatsapp_catalog_id.label_tag }}{{ form.whatsapp_catalog_id }}{{ form.whatsapp_catalog_id.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_api_version.label_tag }}{{ form.whatsapp_api_version }}{{ form.whatsapp_api_version.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_language.label_tag }}{{ form.whatsapp_language }}{{ form.whatsapp_language.errors }}</div>
+        <div class="integration-field wide">{{ form.whatsapp_app_secret.label_tag }}{{ form.whatsapp_app_secret }}<small>{% if config_status.whatsapp_app_secret %}Meta app secret is saved. Leave blank to keep it.{% else %}Used to verify the SHA-256 signature on every inbound webhook.{% endif %}</small>{{ form.whatsapp_app_secret.errors }}</div>
+        <div class="integration-field wide">{{ form.whatsapp_webhook_verify_token.label_tag }}{{ form.whatsapp_webhook_verify_token }}<small>{% if config_status.whatsapp_verify_token %}Webhook verification token is saved. Leave blank to keep it.{% else %}Choose a long random value. Enter the same value in Meta Webhooks settings.{% endif %}</small>{{ form.whatsapp_webhook_verify_token.errors }}</div>
+        <div class="integration-field integration-check">{{ form.whatsapp_catalog_sync_enabled }}{{ form.whatsapp_catalog_sync_enabled.label_tag }}{{ form.whatsapp_catalog_sync_enabled.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_requested.label_tag }}{{ form.whatsapp_template_requested }}{{ form.whatsapp_template_requested.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_confirmed.label_tag }}{{ form.whatsapp_template_confirmed }}{{ form.whatsapp_template_confirmed.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_cancelled.label_tag }}{{ form.whatsapp_template_cancelled }}{{ form.whatsapp_template_cancelled.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_template_expired.label_tag }}{{ form.whatsapp_template_expired }}{{ form.whatsapp_template_expired.errors }}</div>
       </div>
-      <p class="integration-note">WhatsApp sends approved template messages with customer, service, date and provider details. Add the matching four text parameters to the body of each approved template.</p>
+      <p class="integration-note"><strong>Webhook callback URL:</strong> <code>{{ whatsapp_webhook_url }}</code><br>Subscribe the Meta app to the WhatsApp Business Account <code>messages</code> webhook field. Orders are imported as requests awaiting staff confirmation; no WhatsApp payment is treated as received.</p>
+      <p class="integration-note">For existing catalogue products, first match each Meta Content ID (retailer ID) to the correct LashPro SKU under Catalog → WhatsApp catalogue links. Leave “Allow upsert” off for new items; enable it only when the Meta ID has been verified against an existing catalogue entry. Products must have a public image URL before Meta can publish them.</p>
       <label class="integration-clear">{{ form.clear_whatsapp }} {{ form.clear_whatsapp.label }}</label>
+      <div class="integration-save-row">
+        <p>Webhook and catalogue endpoints will not activate until the Meta number has completed Business App coexistence onboarding.</p>
+        <button type="submit" class="integration-save" name="queue_whatsapp_sync" value="1">Prepare / queue catalogue sync</button>
+      </div>
     </section>
 
     <section class="integration-card">
