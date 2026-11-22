@@ -8,6 +8,8 @@ Do **not** use the normal Cloud API number-migration/registration flow for this 
 
 The coexistence onboarding flow is separate from the webhook and catalogue code in this repository. It must be completed using a Meta app/solution provider configured for WhatsApp Business App coexistence. Meta Embedded Signup apps generally need the relevant business verification, app review and advanced permissions; an approved BSP/Tech Provider that supports coexistence is an alternative. Confirm the exact app permissions and account eligibility in Meta's current developer dashboard before onboarding.
 
+The owner continues handling ordinary customer conversations in the WhatsApp Business App. LashPro subscribes to inbound message webhooks only to process catalogue-cart order messages; it does not import or display private chat history in the POS. Text enquiries and manually agreed orders remain conversations for the owner to handle and, where needed, enter as staff orders.
+
 The owner should:
 1. Keep the WhatsApp Business App installed and accessible on the primary phone.
 2. Start the coexistence onboarding from the approved Meta Embedded Signup/BSP flow.
