@@ -299,14 +299,40 @@ def import_whatsapp_order(message, contacts, *, configured_catalog_id):
     message_id = str(message.get("id") or "").strip()
     sender_id = "".join(ch for ch in str(message.get("from") or "") if ch.isdigit())
     order_data = message.get("order")
-    if not message_id or not sender_id or not isinstance(order_data, dict):
+    if not message_id or not isinstance(order_data, dict):
         return None
 
     profile_name = ""
     for contact in contacts or []:
-        if str(contact.get("wa_id") or "") == sender_id:
+        if (
+            str(contact.get("wa_id") or "") == sender_id
+            or (
+                not sender_id
+                and str(contact.get("user_id") or "") == str(message.get("from_user_id") or "")
+            )
+        ):
             profile_name = str((contact.get("profile") or {}).get("name") or "").strip()
             break
+
+    if not sender_id:
+        user_id = str(message.get("from_user_id") or "").strip()
+        if not user_id:
+            return None
+        receipt, created = WhatsAppInboundOrder.objects.get_or_create(
+            message_id=message_id,
+            defaults={
+                "sender_id": ("UID:" + user_id)[:32],
+                "customer_name": (profile_name or "WhatsApp customer")[:100],
+                "catalog_id": str(order_data.get("catalog_id") or "").strip(),
+                "status": WhatsAppInboundOrder.Status.NEEDS_REVIEW,
+            },
+        )
+        if not created:
+            return receipt
+        return _mark_receipt_for_review(
+            receipt,
+            "Meta did not provide a phone-number sender ID. Staff must match this WhatsApp user and enter the order manually.",
+        )
     customer_name = (profile_name or f"WhatsApp customer {sender_id}")[:100]
     catalog_id = str(order_data.get("catalog_id") or "").strip()
 
