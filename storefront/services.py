@@ -154,6 +154,8 @@ def create_storefront_order(
             notes=notes,
             account=account,
             customer=customer,
+            source_channel=source_channel,
+            external_reference=external_reference,
         ):
             return existing
         raise ValidationError({"idempotency_key": "This checkout key was already used. Start a fresh checkout."})
