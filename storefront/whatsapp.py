@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from catalog.models import Product
@@ -216,8 +217,9 @@ def enqueue_product_catalog_sync(product_id):
     except Product.DoesNotExist:
         return None
 
+    retailer_id = (product.whatsapp_retailer_id or product.sku).strip()
     record, _ = WhatsAppCatalogSync.objects.update_or_create(
-        retailer_id=product.sku,
+        retailer_id=retailer_id,
         defaults={
             "product": product,
             "status": WhatsAppCatalogSync.Status.PENDING,
@@ -328,22 +330,38 @@ def import_whatsapp_order(message, contacts, *, configured_catalog_id):
     except ValidationError as exc:
         return _mark_receipt_for_review(receipt, " ".join(exc.messages))
 
-    products = {
-        product.sku: product
-        for product in Product.objects.filter(
-            sku__in=list(quantities_by_sku), active=True
+    matched_products = Product.objects.filter(active=True).filter(
+        Q(sku__in=list(quantities_by_sku))
+        | Q(whatsapp_retailer_id__in=list(quantities_by_sku))
+    )
+    products = {}
+    ambiguous = set()
+    for product in matched_products:
+        for retailer_id in (product.sku, product.whatsapp_retailer_id):
+            if not retailer_id or retailer_id not in quantities_by_sku:
+                continue
+            if retailer_id in products and products[retailer_id].pk != product.pk:
+                ambiguous.add(retailer_id)
+            else:
+                products[retailer_id] = product
+    if ambiguous:
+        return _mark_receipt_for_review(
+            receipt, "Ambiguous LashPro product mapping(s): " + ", ".join(sorted(ambiguous)[:8])
         )
-    }
     missing = sorted(set(quantities_by_sku) - set(products))
     if missing:
         return _mark_receipt_for_review(
-            receipt, "Unknown or inactive LashPro SKU(s): " + ", ".join(missing[:8])
+            receipt, "Unknown or inactive LashPro catalogue ID(s): " + ", ".join(missing[:8])
         )
 
-    cart = {
-        str(products[sku].pk): quantity
-        for sku, quantity in quantities_by_sku.items()
-    }
+    cart = {}
+    for retailer_id, quantity in quantities_by_sku.items():
+        product_key = str(products[retailer_id].pk)
+        cart[product_key] = cart.get(product_key, 0) + quantity
+        if cart[product_key] > MAX_ORDER_QUANTITY:
+            return _mark_receipt_for_review(
+                receipt, "The combined quantity for a LashPro product exceeds 99."
+            )
     whatsapp_note = str(order_data.get("text") or "").strip()[:350]
     notes = "WhatsApp catalogue order"
     if whatsapp_note:
