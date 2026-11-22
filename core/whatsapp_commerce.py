@@ -289,6 +289,6 @@ def import_whatsapp_order(inbox_id):
     inbox.last_error = ""
     inbox.processed_at = timezone.now()
     inbox.save(update_fields=(
-        "order", "status", "attempt_count", "last_error", "processed_at",
+        "order", "status", "attempt_count", "last_error", "processed_at", "updated_at",
     ))
     return order
