@@ -60,6 +60,10 @@ class StorefrontOrder(models.Model):
     class PaymentMethod(models.TextChoices):
         PAY_AT_STUDIO = "PAY_AT_STUDIO", "Pay at studio"
 
+    class SourceChannel(models.TextChoices):
+        STOREFRONT = "STOREFRONT", "Online storefront"
+        WHATSAPP = "WHATSAPP", "WhatsApp"
+
     reference = models.CharField(
         max_length=20, unique=True, default=generate_order_reference, editable=False
     )
@@ -89,9 +93,15 @@ class StorefrontOrder(models.Model):
         related_name="storefront_order",
     )
     customer_name = models.CharField(max_length=100)
-    customer_email = models.EmailField(max_length=254)
+    customer_email = models.EmailField(max_length=254, blank=True)
     customer_phone = models.CharField(max_length=20)
     notes = models.CharField(max_length=500, blank=True)
+    source_channel = models.CharField(
+        max_length=20,
+        choices=SourceChannel.choices,
+        default=SourceChannel.STOREFRONT,
+    )
+    external_reference = models.CharField(max_length=128, null=True, blank=True, unique=True)
     status = models.CharField(
         max_length=12,
         choices=Status.choices,
@@ -190,3 +200,38 @@ class StorefrontStockReservation(models.Model):
 
     def __str__(self):
         return f"{self.quantity} × {self.product} · {self.get_status_display()}"
+
+
+
+class WhatsAppOrderInbox(models.Model):
+    """Durable inbox for deduplicated WhatsApp catalogue order webhooks."""
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Waiting to import"
+        IMPORTED = "IMPORTED", "Imported into online orders"
+        FAILED = "FAILED", "Needs review"
+
+    message_id = models.CharField(max_length=128, unique=True)
+    sender_phone = models.CharField(max_length=20)
+    customer_name = models.CharField(max_length=100, blank=True)
+    catalog_id = models.CharField(max_length=100)
+    order_payload = models.JSONField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    attempt_count = models.PositiveSmallIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now, db_index=True)
+    last_error = models.TextField(blank=True)
+    order = models.ForeignKey(
+        StorefrontOrder,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="whatsapp_imports",
+    )
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-received_at", "-pk")
+
+    def __str__(self):
+        return f"WhatsApp {self.message_id} · {self.get_status_display()}"
