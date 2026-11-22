@@ -32,7 +32,7 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
         "status", "pos_sale", "created_at", "expires_at",
     )
     list_filter = ("source_channel", "status", "created_at")
-    search_fields = ("reference", "customer_name", "customer_email", "customer_phone", "sale__receipt_number")
+    search_fields = ("reference", "external_reference", "customer_name", "customer_email", "customer_phone", "sale__receipt_number")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
     inlines = (StorefrontOrderLineInline,)
