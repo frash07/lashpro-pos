@@ -203,7 +203,9 @@ class WhatsAppCatalogSyncAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
+        # All fields are read-only; change permission is enabled only so the
+        # retry action is available to authorised staff.
+        return StorefrontOrderAdmin._can_review(self, request)
 
     def has_delete_permission(self, request, obj=None):
         return False
