@@ -176,6 +176,11 @@ def sync_catalog_record(record_id):
         if not remote_id and result.get("success") is not True:
             raise RuntimeError("Meta did not return a catalogue item ID or success status.")
         if not is_update:
+            # Persist the created Meta item ID before the stock update call.
+            # If the second call fails, a retry updates this item rather than
+            # creating a duplicate catalogue entry.
+            record.remote_product_id = remote_id
+            record.save(update_fields=("remote_product_id", "updated_at"))
             _graph_post(
                 version=version,
                 path=remote_id,
@@ -218,14 +223,29 @@ def enqueue_product_catalog_sync(product_id):
         return None
 
     retailer_id = (product.whatsapp_retailer_id or product.sku).strip()
-    record, _ = WhatsAppCatalogSync.objects.update_or_create(
-        retailer_id=retailer_id,
-        defaults={
-            "product": product,
-            "status": WhatsAppCatalogSync.Status.PENDING,
-            "last_error": "",
-        },
-    )
+    record = WhatsAppCatalogSync.objects.filter(product=product).first()
+    if record:
+        if record.remote_product_id and record.retailer_id != retailer_id:
+            record.status = WhatsAppCatalogSync.Status.FAILED
+            record.last_error = (
+                "The Meta retailer ID cannot be changed after publication. "
+                "Keep the original Content ID or remove/reconcile the Meta item manually."
+            )
+            record.save(update_fields=("status", "last_error", "updated_at"))
+            return record
+        record.retailer_id = retailer_id
+        record.status = WhatsAppCatalogSync.Status.PENDING
+        record.last_error = ""
+        record.save(update_fields=("retailer_id", "status", "last_error", "updated_at"))
+    else:
+        record, _ = WhatsAppCatalogSync.objects.update_or_create(
+            retailer_id=retailer_id,
+            defaults={
+                "product": product,
+                "status": WhatsAppCatalogSync.Status.PENDING,
+                "last_error": "",
+            },
+        )
     # Product and reservation signals only enqueue work. A scheduled worker
     # performs network I/O outside customer checkout and POS stock transactions.
     return record
