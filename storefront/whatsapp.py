@@ -154,12 +154,17 @@ def sync_catalog_record(record_id):
         payload = _catalog_payload(
             product, record.retailer_id, require_image=not is_update
         )
+        inventory = payload.pop("inventory")
         version = (config.get("whatsapp_api_version") or "v27.0").strip()
         endpoint = record.remote_product_id if is_update else f"{catalog_id}/products"
         if is_update:
             # retailer_id is an identifier on create, but Meta treats it as
             # internal/read-only in the ProductItem update schema.
             payload.pop("retailer_id", None)
+        else:
+            # Meta accepts price/availability at item creation; inventory is
+            # applied to the returned ProductItem ID in a second update call.
+            payload["allow_upsert"] = "true"
         result = _graph_post(
             version=version,
             path=endpoint,
@@ -169,6 +174,13 @@ def sync_catalog_record(record_id):
         remote_id = str(result.get("id") or record.remote_product_id or "")
         if not remote_id and result.get("success") is not True:
             raise RuntimeError("Meta did not return a catalogue item ID or success status.")
+        if not is_update:
+            _graph_post(
+                version=version,
+                path=remote_id,
+                token=token,
+                data={"inventory": inventory},
+            )
     except Exception as exc:
         record.status = WhatsAppCatalogSync.Status.FAILED
         record.last_error = str(exc)[:2000]
