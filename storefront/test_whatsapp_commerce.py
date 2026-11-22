@@ -205,9 +205,12 @@ class WhatsAppCatalogueSyncTests(TestCase):
         self.assertEqual(synced.status, WhatsAppCatalogSync.Status.SYNCED)
         self.assertEqual(synced.remote_product_id, "meta-item-456")
         self.assertEqual(synced.attempts, 1)
-        payload = graph_post.call_args.kwargs["data"]
-        self.assertEqual(payload["retailer_id"], "WA-SYNC-01")
-        self.assertEqual(payload["price"], 87550)
-        self.assertEqual(payload["currency"], "KES")
-        self.assertEqual(payload["inventory"], 8)
-        self.assertEqual(payload["availability"], "in stock")
+        self.assertEqual(graph_post.call_count, 2)
+        create_payload = graph_post.call_args_list[0].kwargs["data"]
+        inventory_payload = graph_post.call_args_list[1].kwargs["data"]
+        self.assertEqual(create_payload["retailer_id"], "WA-SYNC-01")
+        self.assertEqual(create_payload["price"], 87550)
+        self.assertEqual(create_payload["currency"], "KES")
+        self.assertNotIn("inventory", create_payload)
+        self.assertEqual(create_payload["availability"], "in stock")
+        self.assertEqual(inventory_payload, {"inventory": 8})
