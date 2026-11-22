@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
                 ("retailer_id", models.CharField(blank=True, max_length=100, null=True, unique=True)),
                 ("meta_product_item_id", models.CharField(blank=True, max_length=100)),
                 ("catalog_linked", models.BooleanField(default=False)),
+                ("allow_upsert", models.BooleanField(default=False, help_text="Enable only when this retailer ID has been verified as an existing Meta catalogue item.")),
                 ("status", models.CharField(
                     choices=[
                         ("UNLINKED", "Needs Meta catalogue mapping"),
