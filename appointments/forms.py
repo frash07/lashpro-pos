@@ -22,7 +22,10 @@ class AppointmentBookingForm(forms.Form):
     )
     appointment_date = forms.DateField(
         label="Appointment date",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(
+            attrs={"type": "date"},
+            format="%Y-%m-%d",
+        ),
     )
     slot = forms.ChoiceField(
         label="Available time",
