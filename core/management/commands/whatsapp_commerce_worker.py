@@ -46,7 +46,7 @@ def _claim_inbox_order():
         WhatsAppOrderInbox.objects.select_for_update(skip_locked=True)
         .filter(
             Q(status=WhatsAppOrderInbox.Status.PENDING, next_attempt_at__lte=now)
-            | Q(status=WhatsAppOrderInbox.Status.PROCESSING, received_at__lt=now - STALE_AFTER)
+            | Q(status=WhatsAppOrderInbox.Status.PROCESSING, updated_at__lt=now - STALE_AFTER)
         )
         .order_by("received_at", "pk")
         .first()
@@ -54,7 +54,7 @@ def _claim_inbox_order():
     if not inbox:
         return None
     inbox.status = WhatsAppOrderInbox.Status.PROCESSING
-    inbox.save(update_fields=("status",))
+    inbox.save(update_fields=("status", "updated_at"))
     return inbox.pk
 
 
