@@ -38,6 +38,11 @@ POS_BASE_URL = env(
     default="https://lashpro-pos.fly.dev",
 ).strip().rstrip("/")
 
+STOREFRONT_BASE_URL = env(
+    "STOREFRONT_BASE_URL",
+    default="https://lashpro-storefront.fly.dev",
+).strip().rstrip("/")
+
 # Production defaults activate when DEBUG is off. Trust the forwarded HTTPS
 # header only when a proxy is configured to overwrite it on every request.
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
