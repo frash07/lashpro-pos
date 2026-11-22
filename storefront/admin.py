@@ -164,7 +164,7 @@ class WhatsAppOrderInboxAdmin(admin.ModelAdmin):
     readonly_fields = (
         "message_id", "sender_phone", "customer_name", "catalog_id",
         "order_payload", "status", "attempt_count", "next_attempt_at",
-        "last_error", "order", "received_at", "processed_at",
+        "last_error", "order", "received_at", "updated_at", "processed_at",
     )
     fields = readonly_fields
     actions = ("retry_selected",)
