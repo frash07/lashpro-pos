@@ -209,7 +209,7 @@ def sync_catalog_record(record_id):
 
 
 def enqueue_product_catalog_sync(product_id):
-    """Create/update the product's outbox row and try to publish it immediately."""
+    """Create/update the product's durable Meta catalogue outbox row."""
     config = _integration_config()
     if not (
         config.get("whatsapp_catalog_sync_enabled")
