@@ -8,8 +8,10 @@ from django.urls import include, path, reverse_lazy
 from core.views import service_worker, admin_suite, home, integration_settings
 from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
+from storefront.whatsapp_views import whatsapp_webhook
 urlpatterns = [
     path("sw.js", service_worker, name="service_worker"),
+    path("webhooks/whatsapp/", whatsapp_webhook, name="whatsapp_webhook"),
     path("accounts/home/", home, name="home"),
 
     # LashPro Admin Suite

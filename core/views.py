@@ -199,6 +199,7 @@ def admin_suite(request):
             "icon": "receipt-text",
             "items": [
                 ("Sales Records", "/admin/sales/sale/"),
+                ("Online Store Orders", "/admin/storefront/storefrontorder/"),
                 ("Sale Line Items", "/admin/sales/saleline/"),
                 ("Refund Records", "/admin/sales/salerefund/"),
             ],
@@ -252,6 +253,8 @@ def admin_suite(request):
             "icon": "plug-zap",
             "items": [
                 ("API & Payment Integrations", "/admin-suite/integrations/"),
+                ("WhatsApp Inbound Orders", "/admin/storefront/whatsappinboundorder/"),
+                ("WhatsApp Catalogue Sync", "/admin/storefront/whatsappcatalogsync/"),
             ],
         },
     ]
@@ -301,11 +304,14 @@ def integration_settings(request):
     config = record.get_config()
     return render(request, "core/integrations.html", {
         "form": form,
+        "whatsapp_webhook_url": request.build_absolute_uri(reverse("whatsapp_webhook")),
         "config_status": {
             "email": bool(config.get("email_host") and config.get("email_from_email")),
             "email_password": bool(config.get("email_password")),
             "sms": bool(config.get("sms_provider") == "africastalking" and config.get("sms_username") and config.get("sms_api_key")),
             "whatsapp": bool(config.get("whatsapp_access_token") and config.get("whatsapp_phone_number_id")),
+            "whatsapp_commerce": bool(all(config.get(key) for key in ("whatsapp_access_token", "whatsapp_phone_number_id", "whatsapp_business_account_id", "whatsapp_catalog_id", "whatsapp_app_secret", "whatsapp_webhook_verify_token"))),
+            "whatsapp_catalog_sync": bool(config.get("whatsapp_catalog_sync_enabled") and config.get("whatsapp_access_token") and config.get("whatsapp_catalog_id")),
             "mpesa": bool(all(config.get(key) for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey", "mpesa_shortcode"))),
             "etims": bool(config.get("etims_taxpayer_pin") and config.get("etims_communication_key")),
         },

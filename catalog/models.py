@@ -37,6 +37,7 @@ class Service(models.Model):
 
 class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True)
+    whatsapp_retailer_id = models.CharField(max_length=50, blank=True, default="")
     name = models.CharField(max_length=100)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -53,12 +54,36 @@ class Product(models.Model):
 
     class Meta:
         constraints = [
+            models.UniqueConstraint(
+                fields=("whatsapp_retailer_id",),
+                condition=~Q(whatsapp_retailer_id=""),
+                name="catalog_product_whatsapp_retailer_uniq",
+            ),
             models.CheckConstraint(condition=Q(on_hand__gte=0), name="catalog_product_stock_nonnegative"),
             models.CheckConstraint(condition=Q(reorder_level__gte=0), name="catalog_product_reorder_nonnegative"),
         ]
 
+    def _validate_whatsapp_retailer_id(self):
+        self.whatsapp_retailer_id = (self.whatsapp_retailer_id or "").strip()
+        if self.whatsapp_retailer_id:
+            collision = type(self).objects.exclude(pk=self.pk).filter(
+                Q(sku=self.whatsapp_retailer_id)
+                | Q(whatsapp_retailer_id=self.whatsapp_retailer_id)
+            ).exists()
+            if collision:
+                raise ValidationError({
+                    "whatsapp_retailer_id": "This Meta retailer ID is already assigned to another product or SKU."
+                })
+        if type(self).objects.exclude(pk=self.pk).filter(
+            whatsapp_retailer_id=self.sku
+        ).exists():
+            raise ValidationError({
+                "sku": "This SKU is already used as another product's Meta retailer ID."
+            })
+
     @transaction.atomic
     def save(self, *args, **kwargs):
+        self._validate_whatsapp_retailer_id()
         if self._state.adding:
             result = super().save(*args, **kwargs)
             try:

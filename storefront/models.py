@@ -60,6 +60,10 @@ class StorefrontOrder(models.Model):
     class PaymentMethod(models.TextChoices):
         PAY_AT_STUDIO = "PAY_AT_STUDIO", "Pay at studio"
 
+    class SourceChannel(models.TextChoices):
+        STOREFRONT = "STOREFRONT", "Online storefront"
+        WHATSAPP = "WHATSAPP", "WhatsApp catalogue"
+
     reference = models.CharField(
         max_length=20, unique=True, default=generate_order_reference, editable=False
     )
@@ -67,6 +71,10 @@ class StorefrontOrder(models.Model):
         max_length=64, unique=True, default=generate_order_token, editable=False
     )
     idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    source_channel = models.CharField(
+        max_length=16, choices=SourceChannel.choices, default=SourceChannel.STOREFRONT, db_index=True
+    )
+    external_order_id = models.CharField(max_length=160, blank=True, default="")
     account = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -110,6 +118,13 @@ class StorefrontOrder(models.Model):
 
     class Meta:
         ordering = ("-created_at", "-pk")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("source_channel", "external_order_id"),
+                condition=Q(external_order_id__gt=""),
+                name="storefront_channel_order_unique",
+            ),
+        ]
 
     def __str__(self):
         return self.reference
@@ -190,3 +205,65 @@ class StorefrontStockReservation(models.Model):
 
     def __str__(self):
         return f"{self.quantity} × {self.product} · {self.get_status_display()}"
+
+
+
+class WhatsAppInboundOrder(models.Model):
+    """Idempotent receipt and review status for a WhatsApp catalogue order webhook."""
+
+    class Status(models.TextChoices):
+        IMPORTED = "IMPORTED", "Imported into online orders"
+        NEEDS_REVIEW = "NEEDS_REVIEW", "Needs staff review"
+
+    message_id = models.CharField(max_length=255, unique=True)
+    sender_id = models.CharField(max_length=32)
+    customer_name = models.CharField(max_length=100, blank=True)
+    catalog_id = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.NEEDS_REVIEW)
+    order = models.ForeignKey(
+        StorefrontOrder,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="whatsapp_imports",
+    )
+    issue = models.CharField(max_length=500, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-received_at", "-pk")
+
+    def __str__(self):
+        return f"WhatsApp order {self.message_id}"
+
+
+class WhatsAppCatalogSync(models.Model):
+    """Retryable outbox record for publishing one LashPro product to Meta Commerce."""
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        SYNCED = "SYNCED", "Synced"
+        FAILED = "FAILED", "Failed"
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="whatsapp_catalog_syncs",
+    )
+    retailer_id = models.CharField(max_length=50, unique=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
+    remote_product_id = models.CharField(max_length=100, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    last_error = models.TextField(blank=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("status", "updated_at", "pk")
+
+    def __str__(self):
+        return f"{self.retailer_id} · {self.get_status_display()}"
