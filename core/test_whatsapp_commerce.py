@@ -3,8 +3,8 @@ import hmac
 import json
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.utils import timezone
 
 from catalog.models import Product, WhatsAppCatalogSync
 from core.models import IntegrationSettings
@@ -181,7 +181,7 @@ class WhatsAppOrderImportTests(TestCase):
         payload["product_items"] = [dict(payload["product_items"][0], item_price="600.00")]
         self.inbox.order_payload = payload
         self.inbox.save(update_fields=("order_payload",))
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             import_whatsapp_order(self.inbox.pk)
         self.assertEqual(StorefrontOrder.objects.count(), 0)
         self.assertEqual(StorefrontStockReservation.objects.count(), 0)
