@@ -293,6 +293,17 @@ def integration_settings(request):
             record.updated_by = request.user
             record.save(update_fields=("encrypted_config", "updated_by", "updated_at"))
             messages.success(request, "Integration settings saved. Provider credentials are encrypted at rest.")
+            if request.POST.get("queue_whatsapp_sync") == "1":
+                from core.whatsapp_commerce import queue_existing_whatsapp_catalog_sync
+                try:
+                    created, queued = queue_existing_whatsapp_catalog_sync()
+                except Exception:
+                    messages.error(request, "The WhatsApp catalogue queue could not be prepared. Check the saved Meta settings.")
+                else:
+                    messages.success(
+                        request,
+                        f"Prepared {created} product mapping(s) and queued {queued} verified catalogue item(s). Match existing retailer IDs before enabling new links.",
+                    )
             return redirect("integrations-settings")
         messages.error(request, "Review the highlighted fields and try again.")
     else:
@@ -306,9 +317,13 @@ def integration_settings(request):
             "email_password": bool(config.get("email_password")),
             "sms": bool(config.get("sms_provider") == "africastalking" and config.get("sms_username") and config.get("sms_api_key")),
             "whatsapp": bool(config.get("whatsapp_access_token") and config.get("whatsapp_phone_number_id")),
+            "whatsapp_app_secret": bool(config.get("whatsapp_app_secret")),
+            "whatsapp_verify_token": bool(config.get("whatsapp_webhook_verify_token")),
+            "whatsapp_catalog": bool(config.get("whatsapp_catalog_id")),
             "mpesa": bool(all(config.get(key) for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey", "mpesa_shortcode"))),
             "etims": bool(config.get("etims_taxpayer_pin") and config.get("etims_communication_key")),
         },
         "updated_at": record.updated_at,
+        "whatsapp_webhook_url": request.build_absolute_uri(reverse("whatsapp-webhook")),
     })
 
