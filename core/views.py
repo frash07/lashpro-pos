@@ -199,6 +199,7 @@ def admin_suite(request):
             "icon": "receipt-text",
             "items": [
                 ("Sales Records", "/admin/sales/sale/"),
+                ("Online Store Orders", "/admin/storefront/storefrontorder/"),
                 ("Sale Line Items", "/admin/sales/saleline/"),
                 ("Refund Records", "/admin/sales/salerefund/"),
             ],
@@ -252,6 +253,8 @@ def admin_suite(request):
             "icon": "plug-zap",
             "items": [
                 ("API & Payment Integrations", "/admin-suite/integrations/"),
+                ("WhatsApp Inbound Orders", "/admin/storefront/whatsappinboundorder/"),
+                ("WhatsApp Catalogue Sync", "/admin/storefront/whatsappcatalogsync/"),
             ],
         },
     ]
