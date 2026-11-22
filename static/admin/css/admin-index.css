@@ -1,0 +1,124 @@
+/* LashPro admin dashboard — shares the Payments workspace design system. */
+.admin-dashboard-page{color:var(--text)}
+.admin-dashboard-page .payments-hub-main{max-width:1540px;padding-top:25px}
+.admin-dashboard-page .payments-hub-heading{align-items:flex-end;margin:5px 0 20px}
+.admin-dashboard-page .payments-hub-heading h1 em{color:var(--pink);font-style:italic;font-weight:400}
+.admin-dashboard-page .payments-hub-hero{margin-bottom:15px}
+.admin-dashboard-page .payments-hub-overview{margin-bottom:23px}
+.admin-dashboard-page .payments-hub-section-heading{margin-bottom:14px}
+.admin-dashboard-page .admin-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 25px}
+.admin-dashboard-page .admin-kpi-card{min-height:174px}
+.admin-dashboard-page .admin-kpi-card h2{margin:14px 0 5px;color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:clamp(19px,2vw,25px);font-weight:700;letter-spacing:-.045em;line-height:1.2;font-variant-numeric:tabular-nums}
+.admin-dashboard-page .admin-kpi-card>p{flex:1;margin:0;color:var(--muted);font-size:10px;line-height:1.6}
+.admin-dashboard-page .admin-kpi-foot{display:flex;align-items:center;gap:6px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line);color:var(--muted);font-size:9px;line-height:1.45}
+.admin-dashboard-page .admin-kpi-foot .positive{color:var(--green);font-weight:700}
+.admin-dashboard-page .admin-kpi-card .payments-hub-card-kicker{margin-left:auto}
+.admin-dashboard-page .admin-booking-grid,.admin-dashboard-page .admin-stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.admin-dashboard-page .admin-action-card{min-height:177px}
+.admin-dashboard-page .admin-action-card h2{margin-top:14px}
+.admin-dashboard-page .admin-action-card>p{flex:1}
+.admin-dashboard-page .admin-workspace{overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--surface);box-shadow:var(--shadow)}
+.admin-dashboard-page .admin-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:19px 21px}
+.admin-dashboard-page .admin-workspace-head h2{margin:0;color:var(--text);font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:500}
+.admin-dashboard-page .admin-workspace-head p{margin:4px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+.admin-dashboard-page .admin-dashboard-tabs{display:flex;gap:22px;overflow-x:auto;padding:0 21px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.admin-dashboard-page .admin-dashboard-tabs::-webkit-scrollbar{display:none}
+.admin-dashboard-page .admin-dashboard-tab{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 0 12px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer}
+.admin-dashboard-page .admin-dashboard-tab svg{width:15px;height:15px}
+.admin-dashboard-page .admin-dashboard-tab:hover,.admin-dashboard-page .admin-dashboard-tab[aria-selected="true"]{border-bottom-color:var(--pink);color:var(--pink)}
+.admin-dashboard-page .admin-section{padding:21px;border-top:1px solid var(--line)}
+.admin-dashboard-page .admin-section[hidden]{display:none!important}
+.admin-dashboard-page .admin-section .subhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
+.admin-dashboard-page .admin-section .subhead h3{margin:0;color:var(--text);font-size:12px;font-weight:700}
+.admin-dashboard-page .admin-section .subhead p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.55}
+.admin-dashboard-page .admin-stock-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:22px}
+.admin-dashboard-page .admin-action-card.compact{min-height:153px;padding:14px}
+.admin-dashboard-page .admin-action-card.compact .payments-hub-card-icon{width:34px;height:34px;flex-basis:34px}
+.admin-dashboard-page .admin-action-card.compact h2{margin:11px 0 5px;font-size:15px}
+.admin-dashboard-page .admin-action-card.compact>p{font-size:9px}
+.admin-dashboard-page .admin-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:21px 0 12px}
+.admin-dashboard-page .admin-section-heading h3{margin:0;color:var(--text);font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:500}
+.admin-dashboard-page .table-shell{overflow:auto;border:1px solid var(--line);border-radius:13px}
+.admin-dashboard-page .table-shell table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:10px}
+.admin-dashboard-page .table-shell th{padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg-2);color:var(--subtle);font-size:8px;font-weight:700;letter-spacing:.09em;text-align:left;text-transform:uppercase}
+.admin-dashboard-page .table-shell td{padding:13px 14px;border-bottom:1px solid var(--line);color:var(--muted)}
+.admin-dashboard-page .table-shell tbody tr:last-child td{border-bottom:0}
+.admin-dashboard-page .table-shell tbody tr:hover{background:var(--pink-wash)}
+.admin-dashboard-page .table-shell td strong{color:var(--text);font-weight:700}
+.admin-dashboard-page .table-shell a{color:var(--pink);font-weight:600;text-decoration:none}
+.admin-dashboard-page .table-shell a:hover{color:var(--pink-strong);text-decoration:underline}
+.admin-dashboard-page .empty-state{padding:20px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--muted);font-size:10px;text-align:center}
+.admin-dashboard-page .academy-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.admin-dashboard-page .course-card{display:flex;min-height:200px;flex-direction:column;padding:17px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
+.admin-dashboard-page .course-level{color:var(--pink);font-size:8px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
+.admin-dashboard-page .course-level.gold{color:var(--amber)}
+.admin-dashboard-page .course-level.blue{color:var(--blue)}
+.admin-dashboard-page .course-card h4{margin:12px 0 8px;color:var(--text);font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:500;line-height:1.25}
+.admin-dashboard-page .course-card>p{margin:0;color:var(--muted);font-size:10px;line-height:1.6}
+.admin-dashboard-page .course-foot{display:flex;justify-content:space-between;gap:8px;margin-top:auto;padding-top:13px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}
+.admin-dashboard-page .course-foot strong{color:var(--text)}
+.admin-dashboard-page .course-foot .next{color:var(--green)}
+.admin-dashboard-page .course-price{margin-top:12px!important;color:var(--pink)!important;font-weight:700}
+.admin-dashboard-page .course-price span{color:var(--muted);font-size:9px;font-weight:400}
+.admin-dashboard-page .commission-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}
+.admin-dashboard-page .summary-box{padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2)}
+.admin-dashboard-page .summary-box span{color:var(--muted);font-size:9px}
+.admin-dashboard-page .summary-box strong{display:block;margin-top:6px;color:var(--text);font-size:18px;font-variant-numeric:tabular-nums}
+.admin-dashboard-page .audit-ref{color:var(--pink);font-weight:700;letter-spacing:.03em}
+.admin-dashboard-page .status-tag{display:inline-flex;align-items:center;gap:5px;padding:6px 8px;border-radius:999px;font-size:8px;font-weight:700;letter-spacing:.035em;text-transform:uppercase}
+.admin-dashboard-page .status-tag:before{width:5px;height:5px;border-radius:50%;background:currentColor;content:""}
+.admin-dashboard-page .status-tag.ok{background:rgba(109,214,173,.1);color:var(--green)}
+.admin-dashboard-page .system-links-panel{margin-top:24px}
+.admin-dashboard-page .system-links-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+.admin-dashboard-page .system-links-header h2{margin:0;color:var(--text);font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:500}
+.admin-dashboard-page .system-links-header p{margin:4px 0 0;color:var(--muted);font-size:10px}
+.admin-dashboard-page .system-link-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.admin-dashboard-page .system-link-group{min-width:0;padding:16px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,var(--surface),var(--surface-2))}
+.admin-dashboard-page .system-link-group h3,.admin-dashboard-page .system-link-group h4{margin:0 0 11px;font-family:'Playfair Display',Georgia,serif;font-size:16px;font-weight:500}
+.admin-dashboard-page .system-link-group h3 a,.admin-dashboard-page .system-link-group h4 a{color:var(--text);text-decoration:none}
+.admin-dashboard-page .system-link-group h3 a:hover,.admin-dashboard-page .system-link-group h4 a:hover{color:var(--pink)}
+.admin-dashboard-page .system-link-group ul{display:grid;gap:0;margin:0;padding:0;list-style:none}
+.admin-dashboard-page .system-link-group li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);color:var(--muted);font-size:10px}
+.admin-dashboard-page .system-link-group li>a:first-child{min-width:0;color:var(--muted);text-decoration:none}
+.admin-dashboard-page .system-link-group li>a:first-child:hover{color:var(--pink)}
+.admin-dashboard-page .system-link-group .inline-add{flex:0 0 auto;padding:4px 7px;border:1px solid var(--line);border-radius:7px;color:var(--pink);font-size:8px;font-weight:700;text-decoration:none}
+.admin-dashboard-page .system-link-group .inline-add:hover{border-color:var(--pink);background:var(--pink-wash)}
+.admin-dashboard-page .admin-directory-note{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:9px}
+.admin-dashboard-page .admin-directory-note svg{width:13px;height:13px;color:var(--pink)}
+.admin-dashboard-page .payments-hub-footer{margin-top:21px}
+.admin-dashboard-page a:focus-visible,.admin-dashboard-page button:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+@media(max-width:1120px){
+  .admin-dashboard-page .admin-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-dashboard-page .admin-booking-grid,.admin-dashboard-page .admin-stock-grid,.admin-dashboard-page .system-link-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-dashboard-page .academy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .admin-dashboard-page .payments-hub-heading{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:620px){
+  .admin-dashboard-page .payments-hub-main{padding:19px 14px 28px}
+  .admin-dashboard-page .payments-hub-heading{gap:12px;margin-bottom:16px}
+  .admin-dashboard-page .payments-hub-heading h1{font-size:27px}
+  .admin-dashboard-page .payments-hub-heading .heading-actions{flex-wrap:wrap}
+  .admin-dashboard-page .payments-hub-hero{min-height:0;padding:22px 19px}
+  .admin-dashboard-page .payments-hub-hero h2{font-size:25px}
+  .admin-dashboard-page .payments-hub-hero-art{display:none}
+  .admin-dashboard-page .admin-kpi-grid{gap:9px}
+  .admin-dashboard-page .admin-kpi-card{min-height:160px;padding:14px}
+  .admin-dashboard-page .admin-kpi-card h2{font-size:19px}
+  .admin-dashboard-page .admin-kpi-card .payments-hub-card-kicker{font-size:7px}
+  .admin-dashboard-page .admin-booking-grid,.admin-dashboard-page .admin-stock-grid,.admin-dashboard-page .academy-grid,.admin-dashboard-page .system-link-grid{grid-template-columns:1fr;gap:10px}
+  .admin-dashboard-page .admin-action-card{min-height:160px}
+  .admin-dashboard-page .admin-workspace-head{align-items:flex-start;flex-direction:column;padding:16px}
+  .admin-dashboard-page .admin-dashboard-tabs{gap:17px;padding:0 16px}
+  .admin-dashboard-page .admin-dashboard-tab{font-size:9px}
+  .admin-dashboard-page .admin-section{padding:16px 13px}
+  .admin-dashboard-page .admin-section .subhead{align-items:flex-start;flex-direction:column}
+  .admin-dashboard-page .commission-summary{grid-template-columns:1fr;gap:8px}
+  .admin-dashboard-page .summary-box{display:flex;align-items:center;justify-content:space-between;padding:12px}
+  .admin-dashboard-page .summary-box strong{margin:0;font-size:16px}
+  .admin-dashboard-page .payments-hub-footer{flex-direction:column;gap:5px}
+}
+@media(max-width:390px){
+  .admin-dashboard-page .admin-kpi-grid{grid-template-columns:1fr}
+}
