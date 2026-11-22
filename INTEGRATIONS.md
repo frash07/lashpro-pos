@@ -96,7 +96,7 @@ New LashPro products created after catalogue synchronisation has been enabled ar
 - Sellable inventory is physical on-hand stock less active online-order reservations. A WhatsApp/web reservation therefore reduces displayed availability before physical stock is deducted.
 - POS stock sales, supplier receipts, approved adjustments, product edits and online reservation changes queue a catalogue refresh.
 - A separate `whatsapp_worker` Fly process handles catalogue calls and incoming order imports; the web request process does not wait for Meta.
-- Failed syncs are retried with backoff and visible on the WhatsApp catalogue mapping record. Items requiring a new retailer-ID match or missing product image must be corrected by an owner/manager.
+- Failed syncs are retried with backoff and visible on the WhatsApp catalogue mapping record. The worker also reconciles all linked items every 30 minutes to catch missed events. Items requiring a new retailer-ID match or missing product image must be corrected by an owner/manager.
 
 ### 5. WhatsApp catalogue orders
 
