@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from accounts.models import User
-from .models import StorefrontOrder, StorefrontOrderLine
+from .models import StorefrontOrder, StorefrontOrderLine, WhatsAppOrderInbox
 from .services import expire_due_storefront_orders, transition_storefront_order
 
 
@@ -28,10 +28,10 @@ class StorefrontOrderLineInline(admin.TabularInline):
 @admin.register(StorefrontOrder)
 class StorefrontOrderAdmin(admin.ModelAdmin):
     list_display = (
-        "reference", "customer_name", "customer_phone", "total_amount",
+        "reference", "source_channel", "customer_name", "customer_phone", "total_amount",
         "status", "pos_sale", "created_at", "expires_at",
     )
-    list_filter = ("status", "created_at")
+    list_filter = ("source_channel", "status", "created_at")
     search_fields = ("reference", "customer_name", "customer_email", "customer_phone", "sale__receipt_number")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
@@ -41,12 +41,12 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
         "fulfil_selected", "cancel_selected",
     )
     fields = (
-        "reference", "created_at", "updated_at", "expires_at", "expired_at",
+        "reference", "source_channel", "external_reference", "created_at", "updated_at", "expires_at", "expired_at",
         "customer_name", "customer_email", "customer_phone", "notes",
         "payment_method", "total_amount", "status", "pos_sale_link",
     )
     readonly_fields = (
-        "reference", "created_at", "updated_at", "expires_at", "expired_at",
+        "reference", "source_channel", "external_reference", "created_at", "updated_at", "expires_at", "expired_at",
         "customer_name", "customer_email", "customer_phone", "notes",
         "payment_method", "total_amount", "status", "pos_sale_link",
     )
@@ -150,3 +150,52 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     @admin.action(description="Cancel selected orders and release reserved stock")
     def cancel_selected(self, request, queryset):
         self._apply_transition(request, queryset, StorefrontOrder.Status.CANCELLED, "cancelled")
+
+
+
+@admin.register(WhatsAppOrderInbox)
+class WhatsAppOrderInboxAdmin(admin.ModelAdmin):
+    list_display = (
+        "message_id", "sender_phone", "customer_name", "catalog_id",
+        "status", "order", "received_at",
+    )
+    list_filter = ("status", "received_at")
+    search_fields = ("message_id", "sender_phone", "customer_name", "order__reference")
+    readonly_fields = (
+        "message_id", "sender_phone", "customer_name", "catalog_id",
+        "order_payload", "status", "attempt_count", "next_attempt_at",
+        "last_error", "order", "received_at", "processed_at",
+    )
+    fields = readonly_fields
+    actions = ("retry_selected",)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("order")
+
+    def has_module_permission(self, request):
+        return StorefrontOrderAdmin._can_review(self, request)
+
+    def has_view_permission(self, request, obj=None):
+        return StorefrontOrderAdmin._can_review(self, request)
+
+    def has_change_permission(self, request, obj=None):
+        return StorefrontOrderAdmin._can_review(self, request)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.action(description="Retry selected failed WhatsApp order imports")
+    def retry_selected(self, request, queryset):
+        from django.utils import timezone
+
+        count = queryset.filter(status=WhatsAppOrderInbox.Status.FAILED).update(
+            status=WhatsAppOrderInbox.Status.PENDING,
+            attempt_count=0,
+            next_attempt_at=timezone.now(),
+            last_error="",
+            processed_at=None,
+        )
+        self.message_user(request, f"{count} WhatsApp order import(s) queued for retry.", level=messages.SUCCESS)
