@@ -44,6 +44,12 @@ class AppointmentBookingTests(TestCase):
             end_time=time(13, 0),
         )
 
+    def test_booking_date_input_renders_html5_iso_date(self):
+        response = self.client.get(reverse("appointments:book"))
+        self.assertEqual(response.status_code, 200)
+        rendered_date = str(response.context["form"]["appointment_date"])
+        self.assertIn(f'value="{timezone.localdate().isoformat()}"', rendered_date)
+
     def _first_slot(self):
         slots = get_available_slots(service=self.service, day=self.day)
         self.assertTrue(slots)
