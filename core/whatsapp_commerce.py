@@ -111,6 +111,7 @@ def sync_whatsapp_catalog_item(link_id):
     if not link.catalog_linked or not (link.retailer_id or "").strip():
         raise WhatsAppCommerceError("This product has no verified WhatsApp catalogue Content ID / retailer ID.")
 
+    claimed_updated_at = link.updated_at
     product = link.product
     if not product.image:
         raise WhatsAppCommerceError(f"Upload a public product image for {product.name} before synchronising it.")
@@ -158,7 +159,15 @@ def sync_whatsapp_catalog_item(link_id):
         payload["allow_upsert"] = "true" if link.allow_upsert else "false"
         response = _graph_post(config, f"{catalog_id}/products", payload)
 
+    # A product or reservation may have changed while Meta was responding.
+    # Preserve that newer queue signal instead of marking stale data as synced.
+    link.refresh_from_db()
+    if link.status != WhatsAppCatalogSync.Status.SYNCING or link.updated_at != claimed_updated_at:
+        return link
+
     meta_id = str(response.get("id") or link.meta_product_item_id or "").strip()
+    if not meta_id:
+        raise WhatsAppCommerceError("Meta did not return a product item ID; the catalogue sync was not marked complete.")
     link.meta_product_item_id = meta_id
     link.status = WhatsAppCatalogSync.Status.SYNCED
     link.attempt_count = 0
