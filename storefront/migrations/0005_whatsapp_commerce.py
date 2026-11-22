@@ -4,7 +4,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("catalog", "0005_product_catalog_image_metadata"),
+        ("catalog", "0002_product_on_hand_product_reorder_level_and_more"),
         ("storefront", "0004_public_reservation_expiry"),
     ]
 
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="storefrontorder",
             constraint=models.UniqueConstraint(
-                condition=~models.Q(("external_order_id", "")),
+                condition=models.Q(("external_order_id__gt", "")),
                 fields=("source_channel", "external_order_id"),
                 name="storefront_channel_order_unique",
             ),
