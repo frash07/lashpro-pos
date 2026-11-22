@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import F, Q
-from .models import Product, Service
+from .models import Product, Service, WhatsAppCatalogSync
 
 
 class LowStockFilter(admin.SimpleListFilter):
@@ -54,3 +54,33 @@ class ServiceAdmin(admin.ModelAdmin):
     list_display = ("name", "price", "duration_minutes", "commission_eligible", "commission_rate", "active")
     list_filter = ("active", "commission_eligible")
     search_fields = ("name",)
+
+
+@admin.register(WhatsAppCatalogSync)
+class WhatsAppCatalogSyncAdmin(admin.ModelAdmin):
+    list_display = (
+        "product", "retailer_id", "catalog_linked", "status",
+        "attempt_count", "last_synced_at", "updated_at",
+    )
+    list_filter = ("catalog_linked", "status")
+    search_fields = ("product__sku", "product__name", "retailer_id", "meta_product_item_id")
+    autocomplete_fields = ("product",)
+    readonly_fields = ("meta_product_item_id", "status", "attempt_count", "next_attempt_at", "last_error", "last_synced_at", "updated_at")
+    fields = (
+        "product", "retailer_id", "catalog_linked", "meta_product_item_id",
+        "status", "attempt_count", "next_attempt_at", "last_error",
+        "last_synced_at", "updated_at",
+    )
+
+    def save_model(self, request, obj, form, change):
+        obj.retailer_id = (obj.retailer_id or "").strip() or None
+        if obj.catalog_linked:
+            if not obj.retailer_id:
+                from django.core.exceptions import ValidationError
+                raise ValidationError("Enter the matching Meta catalogue Content ID before enabling this link.")
+            from django.utils import timezone
+            obj.status = WhatsAppCatalogSync.Status.PENDING
+            obj.attempt_count = 0
+            obj.next_attempt_at = timezone.now()
+            obj.last_error = ""
+        super().save_model(request, obj, form, change)
