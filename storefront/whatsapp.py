@@ -219,15 +219,13 @@ def enqueue_product_catalog_sync(product_id):
 
 
 def retry_catalog_sync(*, all_products=False):
-    """Retry failed records, or queue and publish every product when requested."""
+    """Dispatch pending changes and optionally enqueue every product for a full sync."""
     if all_products:
         for product_id in Product.objects.order_by("pk").values_list("pk", flat=True).iterator():
             try:
                 enqueue_product_catalog_sync(product_id)
             except Exception:
                 logger.exception("Could not queue WhatsApp catalogue sync for product %s.", product_id)
-        return
-
     pending_ids = list(
         WhatsAppCatalogSync.objects.filter(
             status__in=(WhatsAppCatalogSync.Status.PENDING, WhatsAppCatalogSync.Status.FAILED)
