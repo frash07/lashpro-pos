@@ -34,6 +34,17 @@ class IntegrationSettingsForm(forms.Form):
         required=False, widget=forms.PasswordInput(render_value=False), label="WhatsApp access token",
     )
     whatsapp_phone_number_id = forms.CharField(max_length=100, required=False, label="WhatsApp phone number ID")
+    whatsapp_business_account_id = forms.CharField(max_length=100, required=False, label="WhatsApp Business Account ID")
+    whatsapp_catalog_id = forms.CharField(max_length=100, required=False, label="Meta Commerce catalogue ID")
+    whatsapp_app_secret = forms.CharField(
+        required=False, widget=forms.PasswordInput(render_value=False), label="Meta app secret",
+    )
+    whatsapp_webhook_verify_token = forms.CharField(
+        required=False, widget=forms.PasswordInput(render_value=False), label="Webhook verification token",
+    )
+    whatsapp_catalog_sync_enabled = forms.BooleanField(
+        required=False, initial=False, label="Enable automatic catalogue and stock synchronisation",
+    )
     whatsapp_api_version = forms.CharField(max_length=20, required=False, initial="v27.0", label="Graph API version")
     whatsapp_language = forms.CharField(max_length=20, required=False, initial="en", label="Template language")
     whatsapp_template_requested = forms.CharField(max_length=100, required=False, label="Booking request template")
@@ -86,14 +97,15 @@ class IntegrationSettingsForm(forms.Form):
     clear_etims = forms.BooleanField(required=False, label="Remove saved eTIMS credentials")
 
     SECRET_FIELDS = {
-        "email_password", "sms_api_key", "whatsapp_access_token",
+        "email_password", "sms_api_key", "whatsapp_access_token", "whatsapp_app_secret",
+        "whatsapp_webhook_verify_token",
         "mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey",
         "etims_taxpayer_pin", "etims_communication_key",
     }
     CLEAR_GROUPS = {
         "clear_email_password": ("email_password",),
         "clear_sms": ("sms_api_key",),
-        "clear_whatsapp": ("whatsapp_access_token",),
+        "clear_whatsapp": ("whatsapp_access_token", "whatsapp_app_secret", "whatsapp_webhook_verify_token"),
         "clear_mpesa": ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey"),
         "clear_etims": ("etims_taxpayer_pin", "etims_communication_key"),
     }
@@ -110,6 +122,8 @@ class IntegrationSettingsForm(forms.Form):
         self.initial["has_email_password"] = bool(self.existing_config.get("email_password"))
         self.initial["has_sms_api_key"] = bool(self.existing_config.get("sms_api_key"))
         self.initial["has_whatsapp_access_token"] = bool(self.existing_config.get("whatsapp_access_token"))
+        self.initial["has_whatsapp_app_secret"] = bool(self.existing_config.get("whatsapp_app_secret"))
+        self.initial["has_whatsapp_webhook_token"] = bool(self.existing_config.get("whatsapp_webhook_verify_token"))
         self.initial["has_mpesa_credentials"] = all(
             self.existing_config.get(key)
             for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey", "mpesa_shortcode")
