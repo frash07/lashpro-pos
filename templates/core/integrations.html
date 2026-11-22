@@ -52,7 +52,7 @@
         <div class="integration-field">{{ form.whatsapp_webhook_verify_token.label_tag }}{{ form.whatsapp_webhook_verify_token }}<small>{% if form.initial.has_whatsapp_webhook_token %}Verification token saved. Leave blank to keep it.{% else %}Create a long random value and enter the same value in Meta Webhooks configuration.{% endif %}</small>{{ form.whatsapp_webhook_verify_token.errors }}</div>
       </div>
       <div class="integration-note">
-        **Meta webhook callback URL:** <code>{{ whatsapp_webhook_url }}</code><br>
+        <strong>Meta webhook callback URL:</strong> <code>{{ whatsapp_webhook_url }}</code><br>
         Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field. Incoming catalogue carts are validated against LashPro SKUs and Neon prices; successful imports appear under Online Orders with their source marked WhatsApp.
       </div>
       <div class="integration-grid">
