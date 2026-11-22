@@ -190,7 +190,7 @@ class AdminSuiteAccessTests(TestCase):
         }
 
         self.assertEqual(len(destinations), 31)
-        self.assertEqual(len(set(destinations)), 28)
+        self.assertEqual(len(set(destinations)), 31)
         self.assertEqual(set(destinations), expected)
         self.assertContains(response, "Existing Django Admin Model Pages")
 
