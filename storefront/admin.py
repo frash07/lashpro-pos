@@ -155,7 +155,7 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
 
 @admin.register(WhatsAppInboundOrder)
 class WhatsAppInboundOrderAdmin(admin.ModelAdmin):
-    list_display = ("message_id", "customer_name", "sender_id", "status", "order", "received_at")
+    list_display = ("message_id", "customer_name", "sender_id", "status", "order", "issue", "received_at")
     list_filter = ("status", "received_at")
     search_fields = ("message_id", "customer_name", "sender_id", "issue", "order__reference")
     readonly_fields = (
