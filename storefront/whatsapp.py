@@ -146,23 +146,21 @@ def sync_catalog_record(record_id):
     if not token or not catalog_id:
         return record
 
-    product = record.product
-    if product is None:
-        raise ValueError(f"{record.retailer_id}: the linked LashPro product no longer exists.")
-
-    payload = _catalog_payload(product, record.retailer_id)
-    version = (config.get("whatsapp_api_version") or "v27.0").strip()
-    endpoint = (
-        f"{record.remote_product_id}"
-        if record.remote_product_id
-        else f"{catalog_id}/products"
-    )
-
     record.attempts += 1
     record.status = WhatsAppCatalogSync.Status.PENDING
     record.last_error = ""
     record.save(update_fields=("attempts", "status", "last_error", "updated_at"))
     try:
+        product = record.product
+        if product is None:
+            raise ValueError(f"{record.retailer_id}: the linked LashPro product no longer exists.")
+        payload = _catalog_payload(product, record.retailer_id)
+        version = (config.get("whatsapp_api_version") or "v27.0").strip()
+        endpoint = (
+            f"{record.remote_product_id}"
+            if record.remote_product_id
+            else f"{catalog_id}/products"
+        )
         result = _graph_post(
             version=version,
             path=endpoint,
@@ -215,7 +213,9 @@ def enqueue_product_catalog_sync(product_id):
             "last_error": "",
         },
     )
-    return sync_catalog_record(record.pk)
+    # Product and reservation signals only enqueue work. A scheduled worker
+    # performs network I/O outside customer checkout and POS stock transactions.
+    return record
 
 
 def retry_catalog_sync(*, all_products=False):
