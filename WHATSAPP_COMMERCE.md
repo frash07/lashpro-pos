@@ -48,12 +48,12 @@ Only messages of WhatsApp message type `order` (a customer-submitted catalogue c
 
 ## Product mapping and catalogue updates
 
-LashPro's permanent product SKU is the Meta catalogue `retailer_id`. Before the first full sync:
+LashPro maps the Meta catalogue `retailer_id` (shown as Content ID in Commerce Manager) to each product. In **POS → Catalog → Products**, use **WhatsApp retailer ID** to map an existing Meta Content ID when it differs from the POS SKU. If this field is blank, LashPro uses the POS SKU as the Meta retailer ID. The mapping becomes read-only after the product is added to the sync queue so the connected catalogue item ID remains stable. Before the first full sync:
 
-1. Ensure each active POS product has the correct permanent SKU.
-2. Upload a public product image to each product. Meta requires a public image URL when the catalogue item is first published.
-3. Confirm the selling price in the POS is correct and in KES.
-4. If products already exist in Meta Commerce Manager, set their retailer IDs to exactly the same SKUs. Do not create multiple Meta items for one LashPro SKU.
+1. Confirm each POS SKU is correct and permanent.
+2. For each product already in the Meta catalogue, copy its Content ID into the POS product's WhatsApp retailer ID field. This avoids publishing a duplicate item or changing the POS SKU.
+3. Upload a public product image to each product. Meta requires a public image URL when the catalogue item is first published.
+4. Confirm the selling price in the POS is correct and in KES.
 5. Connect the correct catalogue to the WABA and enable automatic sync in the integration settings.
 
 Product create/update and stock-reservation changes queue an outbox update in Neon. A scheduled GitHub Actions workflow runs the POS management command every five minutes and publishes pending updates to Meta. Catalogue item price, inventory count and in-stock/out-of-stock state are derived from the Neon price and **unreserved available stock**. Inactive products are staged/discontinued.
