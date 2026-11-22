@@ -139,7 +139,7 @@ def sync_catalog_record(record_id):
     config = _integration_config()
     token = (config.get("whatsapp_access_token") or "").strip()
     catalog_id = (config.get("whatsapp_catalog_id") or "").strip()
-    if not token or not catalog_id:
+    if not config.get("whatsapp_catalog_sync_enabled") or not token or not catalog_id:
         return record
 
     record.attempts += 1
@@ -231,6 +231,13 @@ def enqueue_product_catalog_sync(product_id):
 
 def retry_catalog_sync(*, all_products=False):
     """Dispatch pending changes and optionally enqueue every product for a full sync."""
+    config = _integration_config()
+    if not (
+        config.get("whatsapp_catalog_sync_enabled")
+        and config.get("whatsapp_access_token")
+        and config.get("whatsapp_catalog_id")
+    ):
+        return
     if all_products:
         for product_id in Product.objects.order_by("pk").values_list("pk", flat=True).iterator():
             try:
