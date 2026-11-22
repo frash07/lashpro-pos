@@ -1,267 +1,506 @@
 {% extends "admin/base_site.html" %}
-{% load i18n %}
+{% load i18n static %}
+
+{% block title %}Studio dashboard · LashPro KE{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/payments-app-index.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/admin-index.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="lashpro-dashboard">
-  <div class="admin-hero">
-    <div class="admin-hero-copy">
-      <div class="executive-tag"><i data-lucide="crown"></i> Executive suite · Owner access</div>
-      <h1 class="admin-title">The studio, <em>at a glance.</em></h1>
-      <div class="admin-subtitle">A considered view of revenue, inventory health, artist performance and academy momentum — all in one place.</div>
-    </div>
-    <div class="admin-hero-actions">
-      <a class="button-secondary" href="{% url 'admin:catalog_product_changelist' %}"><i data-lucide="file-down"></i> Stock overview</a>
-      <a class="button-primary" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Receive stock</a>
-    </div>
-  </div>
+<div class="admin-dashboard-page">
+  <header class="topbar payments-hub-topbar">
+    <a class="brand payments-hub-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
+      <span>
+        <span class="brand-name">LASHPRO <span>KE</span></span>
+        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+      </span>
+    </a>
 
-  <div class="admin-kpis">
-    <div class="kpi-card">
-      <div class="kpi-top"><span>Today's revenue</span><span class="kpi-icon green"><i data-lucide="trending-up"></i></span></div>
-      <div class="kpi-number">KES 142,500</div>
-      <div class="kpi-footer"><span class="up">↗ 18.4%</span><span>compared with yesterday</span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-top"><span>M-PESA volume</span><span class="kpi-icon green"><i data-lucide="smartphone"></i></span></div>
-      <div class="kpi-number">KES 118,000</div>
-      <div class="kpi-footer"><span>83% of collected payments</span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-top"><span>Service / retail mix</span><span class="kpi-icon"><i data-lucide="chart-no-axes-combined"></i></span></div>
-      <div class="kpi-number">65% <span style="color:var(--muted);font-size:14px;font-weight:500">/</span> 35%</div>
-      <div class="kpi-footer"><span>Top performer: Volume Hybrid Set</span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-top"><span>Academy enrolments</span><span class="kpi-icon amber"><i data-lucide="graduation-cap"></i></span></div>
-      <div class="kpi-number">14 <span style="color:var(--muted);font-size:12px;font-weight:500">active students</span></div>
-      <div class="kpi-footer"><span class="up">3 certified this week</span></div>
-    </div>
-  </div>
+    <nav class="mode-switch payments-hub-nav" aria-label="Application navigation">
+      <a class="mode-btn" href="{% url 'sales:checkout' %}">
+        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+      </a>
+      <a class="mode-btn active" href="{% url 'admin:index' %}" aria-current="page">
+        <i data-lucide="layout-dashboard"></i><span>Admin Suite</span>
+      </a>
+      <a class="mode-btn" href="{% url 'admin:app_list' app_label='payments' %}">
+        <i data-lucide="wallet-cards"></i><span>Payments</span>
+      </a>
+      <a class="mode-btn" href="{% url 'payments:cash-session' %}">
+        <i data-lucide="wallet"></i><span>Cash session</span>
+      </a>
+      <a class="mode-btn" href="{% url 'payments:reconciliation' %}">
+        <i data-lucide="file-check-2"></i><span>M-Pesa review</span>
+      </a>
+    </nav>
 
-  <div class="admin-content">
-    <div class="admin-content-head">
-      <div>
-        <div class="admin-content-title">Studio management</div>
-        <div class="admin-content-subtitle">Operational detail, neatly brought together.</div>
+    <div class="top-actions payments-hub-actions">
+      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
+      <button class="icon-button" id="admin-dashboard-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
+        <i data-lucide="sun-moon"></i>
+      </button>
+      <div class="profile">
+        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div class="profile-copy">
+          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="profile-role">{{ request.user.get_role_display|default:"STAFF WORKSPACE" }}</div>
+        </div>
       </div>
-      <div class="soft-pill"><i data-lucide="refresh-cw" style="width:12px;height:12px;color:var(--pink)"></i> Live workspace</div>
     </div>
+  </header>
 
-    <div class="booking-setup-panel">
-      <div class="subhead">
+  <main class="main payments-hub-main">
+    <section class="view">
+      <div class="page-heading payments-hub-heading">
         <div>
-          <h3>Online appointment booking</h3>
-          <p>Publish at least one active service and weekly provider hours before customers can book online.</p>
+          <div class="eyebrow">Studio workspace · Executive administration</div>
+          <h1>The studio <em>at a glance.</em></h1>
+          <p>One considered view of revenue, inventory health, artist performance and academy momentum.</p>
+        </div>
+        <div class="heading-actions">
+          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
+          <div class="soft-pill"><i data-lucide="shield-check"></i> Owner workspace</div>
         </div>
       </div>
-      <div class="quick-links-grid">
-        <a href="{% url 'admin:catalog_service_changelist' %}"><span>Service catalogue</span><small>Add or activate treatments, with the correct public price and duration.</small></a>
-        <a href="{% url 'admin:appointments_staffavailability_changelist' %}"><span>Weekly staff availability</span><small>Add one recurring working-hours row for each provider and weekday.</small></a>
-        <a href="{% url 'admin:appointments_stafftimeoff_changelist' %}"><span>Staff time off</span><small>Block leave, training and other dated exceptions.</small></a>
-      </div>
-    </div>
 
-    <div class="admin-tabs" aria-label="Management sections">
-      <button type="button" class="admin-tab active" data-tab="inventory"><i data-lucide="boxes"></i> Inventory & stock</button>
-      <button type="button" class="admin-tab" data-tab="academy"><i data-lucide="graduation-cap"></i> Academy hub</button>
-      <button type="button" class="admin-tab" data-tab="staff"><i data-lucide="users"></i> Artist commissions</button>
-      <button type="button" class="admin-tab" data-tab="reconciliation"><i data-lucide="file-check-2"></i> M-PESA audit</button>
-    </div>
-
-    <div class="admin-section" data-panel="inventory">
-      <div class="subhead">
-        <div>
-          <h3>Retail & professional supplies</h3>
-          <p>Keep your most-loved essentials in stock.</p>
-        </div>
-        <a class="button-primary" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Restock item</a>
-      </div>
-
-      <div class="quick-links-grid">
-        <a href="{% url 'admin:catalog_product_changelist' %}"><span>Products and stock levels</span><small>View current stock and reorder levels</small></a>
-        <a href="{% url 'inventory:receive' %}"><span>Receive stock</span><small>Record stock received from suppliers</small></a>
-        <a href="{% url 'admin:inventory_supplier_changelist' %}"><span>Suppliers</span><small>Maintain supplier contact details</small></a>
-        <a href="{% url 'inventory:receipts' %}"><span>Supplier receipt history</span><small>Review posted supplier documents and item lines</small></a>
-        <a href="{% url 'admin:inventory_inventorymovement_changelist' %}"><span>Inventory movement history</span><small>Review the stock ledger</small></a>
-        <a href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}"><span>Stock adjustment requests</span><small>Review adjustment approvals</small></a>
-        <a href="{% url 'admin:inventory_serviceconsumable_changelist' %}"><span>Service consumables</span><small>Manage products consumed by services</small></a>
-      </div>
-<h3>Low-stock alert</h3>
-      {% if admin_low_stock_count %}
-        <div class="table-shell">
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>On hand</th>
-                <th>Reorder level</th>
-                <th>Link</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for product in admin_low_stock_products %}
-                <tr>
-                  <td><strong><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></strong></td>
-                  <td>{{ product.on_hand }}</td>
-                  <td>{{ product.reorder_level }}</td>
-                  <td><a class="mini-link" href="{% url 'admin:catalog_product_change' product.pk %}">Open</a></td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="empty-state">No low-stock alerts for products with a configured reorder level.</div>
-      {% endif %}
-    </div>
-
-    <div class="admin-section hidden" data-panel="academy">
-      <div class="subhead">
-        <div>
-          <h3>Student certifications & cohorts</h3>
-          <p>Build the next generation of exceptional lash artists.</p>
-        </div>
-        <a class="button-primary" href="{% url 'admin:catalog_product_changelist' %}"><i data-lucide="user-plus"></i> Course list</a>
-      </div>
-
-      <div class="academy-grid">
-        <article class="course-card">
-          <span class="course-level gold">Beginner masterclass</span>
-          <h4>Classic Lash Fundamentals</h4>
-          <p>Three days of careful technique, client safety and foundational artistry.</p>
-          <div class="course-foot"><span><strong>6 students</strong> enrolled</span><span class="next">Next · Nov 3</span></div>
-          <p class="course-price">KES 25,000 <span>/ student</span></p>
-        </article>
-        <article class="course-card">
-          <span class="course-level">Advanced masterclass</span>
-          <h4>Mega Volume & Fan Artistry</h4>
-          <p>Advanced fan creation, texture, direction and retention principles.</p>
-          <div class="course-foot"><span><strong>5 students</strong> enrolled</span><span class="next">Next · Nov 8</span></div>
-          <p class="course-price">KES 18,000 <span>/ student</span></p>
-        </article>
-        <article class="course-card">
-          <span class="course-level blue">Specialist course</span>
-          <h4>Lash Lift & Keratin Tint</h4>
-          <p>A focused one-day intensive in natural lash enhancement and finishing.</p>
-          <div class="course-foot"><span><strong>3 students</strong> enrolled</span><span class="next">Next · Oct 29</span></div>
-          <p class="course-price">KES 12,000 <span>/ student</span></p>
-        </article>
-      </div>
-    </div>
-
-    <div class="admin-section hidden" data-panel="staff">
-      <div class="subhead">
-        <div>
-          <h3>Artist service commissions</h3>
-          <p>Current commission rate: 30% on eligible services.</p>
-        </div>
-        <a class="soft-pill" href="{% url 'commissions:dashboard' %}">Today's closeout</a>
-      </div>
-
-      <div class="commission-summary">
-        <div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div>
-        <div class="summary-box"><span>Commission payable</span><strong style="color:var(--pink)">KES 22,050</strong></div>
-        <div class="summary-box"><span>Artists on shift</span><strong>3 active</strong></div>
-      </div>
-
-      <div class="table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>Artist</th>
-              <th>Role</th>
-              <th>Services today</th>
-              <th>Gross revenue</th>
-              <th>Commission (KES)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
-            <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
-            <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="admin-section hidden" data-panel="reconciliation">
-      <div class="subhead">
-        <div>
-          <h3>M-PESA Express reconciliation</h3>
-          <p>Payment records are visible here and linked through the audit workspace.</p>
-        </div>
-        <span class="status-tag ok">Demo ledger</span>
-      </div>
-
-      <div class="table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Receipt reference</th>
-              <th>Client phone</th>
-              <th>Amount (KES)</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>10:42 AM</td><td><span class="audit-ref">QX892KL0P1</span></td><td>+254 712***678</td><td><strong>KES 6,000</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
-            <tr><td>09:15 AM</td><td><span class="audit-ref">QX891MM9X4</span></td><td>+254 722***102</td><td><strong>KES 25,000</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
-            <tr><td>08:50 AM</td><td><span class="audit-ref">QX890PP3L9</span></td><td>+254 701***992</td><td><strong>KES 4,500</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  {% if app_list %}
-    <div class="system-links-panel">
-      <div class="system-links-header">
-        <div>
-          <div class="admin-content-title">Admin links</div>
-          <div class="admin-content-subtitle">All key studio management links are available here.</div>
-        </div>
-      </div>
-      <div class="system-link-grid">
-        {% for app in app_list %}
-          <div class="system-link-group">
-            <h4><a href="{{ app.app_url }}">{{ app.name }}</a></h4>
-            <ul>
-              {% for model in app.models %}
-                <li>
-                  {% if model.admin_url %}
-                    <a href="{{ model.admin_url }}">{{ model.name }}</a>
-                  {% else %}
-                    <span>{{ model.name }}</span>
-                  {% endif %}
-                  {% if model.add_url %}
-                    <a class="inline-add" href="{{ model.add_url }}">Add</a>
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
+      <section class="payments-hub-hero admin-dashboard-hero" aria-labelledby="admin-dashboard-hero-title">
+        <div class="payments-hub-hero-copy">
+          <div class="payments-hub-kicker"><i data-lucide="crown"></i> EXECUTIVE STUDIO OVERVIEW</div>
+          <h2 id="admin-dashboard-hero-title">A beautiful studio,<br><em>working in harmony.</em></h2>
+          <p>Bring the day’s essential decisions together: keep supplies moving, appointments bookable, artists supported and every part of the studio connected.</p>
+          <div class="payments-hub-hero-actions">
+            <a class="payments-hub-primary" href="{% url 'admin:catalog_product_changelist' %}">
+              <i data-lucide="boxes"></i> Stock overview <i data-lucide="arrow-up-right"></i>
+            </a>
+            <a class="payments-hub-secondary" href="{% url 'inventory:receive' %}">
+              <i data-lucide="package-plus"></i> Receive stock
+            </a>
           </div>
-        {% endfor %}
+        </div>
+        <div class="payments-hub-hero-art" aria-hidden="true">
+          <div class="payments-hub-orbit payments-hub-orbit-one"></div>
+          <div class="payments-hub-orbit payments-hub-orbit-two"></div>
+          <div class="payments-hub-hero-icon"><i data-lucide="layout-dashboard"></i></div>
+          <span class="payments-hub-hero-caption">PLAN · OPERATE · GROW</span>
+        </div>
+      </section>
+
+      <section class="payments-hub-overview" aria-label="Administration overview">
+        <div class="payments-hub-overview-count">
+          <span class="payments-hub-overview-icon"><i data-lucide="grid-2x2"></i></span>
+          <span><strong>{{ app_list|length }}</strong><small>Admin categories</small></span>
+        </div>
+        <p>Quick access to the systems that keep the studio running, from products and bookings to payments, people and training.</p>
+        <a href="{% url 'reporting:dashboard' %}" class="payments-hub-overview-link">Open reports <i data-lucide="arrow-up-right"></i></a>
+      </section>
+
+      <div class="payments-hub-section-heading">
+        <div>
+          <div class="section-title">Studio performance</div>
+          <div class="section-caption">A snapshot of the studio’s key operating indicators.</div>
+        </div>
+        <span class="payments-hub-section-tag"><i data-lucide="calendar-check"></i> Today’s snapshot</span>
       </div>
-    </div>
-  {% endif %}
 
-  <div class="admin-footer"><span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span><span>Financial figures shown are sample data for interface preview.</span></div>
+      <section class="admin-kpi-grid" aria-label="Studio performance indicators">
+        <article class="payments-hub-card admin-kpi-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="trending-up"></i></span>
+            <span class="payments-hub-card-kicker">REVENUE</span>
+          </div>
+          <h2>KES 142,500</h2>
+          <p>Today's collected studio revenue.</p>
+          <div class="admin-kpi-foot"><span class="positive">↗ 18.4%</span><span>compared with yesterday</span></div>
+        </article>
+        <article class="payments-hub-card admin-kpi-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="smartphone"></i></span>
+            <span class="payments-hub-card-kicker">M-PESA</span>
+          </div>
+          <h2>KES 118,000</h2>
+          <p>83% of collected payments.</p>
+          <div class="admin-kpi-foot"><span>Mobile collections</span></div>
+        </article>
+        <article class="payments-hub-card admin-kpi-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="chart-no-axes-combined"></i></span>
+            <span class="payments-hub-card-kicker">SALES MIX</span>
+          </div>
+          <h2>65% <span class="admin-kpi-divider">/</span> 35%</h2>
+          <p>Service revenue compared with retail sales.</p>
+          <div class="admin-kpi-foot"><span>Top performer: Volume Hybrid Set</span></div>
+        </article>
+        <article class="payments-hub-card admin-kpi-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="graduation-cap"></i></span>
+            <span class="payments-hub-card-kicker">ACADEMY</span>
+          </div>
+          <h2>14 <span class="admin-kpi-unit">students</span></h2>
+          <p>Active academy enrolments.</p>
+          <div class="admin-kpi-foot"><span class="positive">3 certified this week</span></div>
+        </article>
+      </section>
+
+      <div class="payments-hub-section-heading">
+        <div>
+          <div class="section-title">Online appointment setup</div>
+          <div class="section-caption">Keep the essentials in place before customers book online.</div>
+        </div>
+        <span class="payments-hub-section-tag"><i data-lucide="calendar-clock"></i> Booking readiness</span>
+      </div>
+
+      <section class="admin-booking-grid" aria-label="Online appointment booking setup">
+        <article class="payments-hub-card admin-action-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="concierge-bell"></i></span>
+            <span class="payments-hub-card-kicker">SERVICE SETUP</span>
+          </div>
+          <h2>Service catalogue</h2>
+          <p>Add or activate treatments, with the correct public price and duration.</p>
+          <div class="payments-hub-card-footer">
+            <a class="payments-hub-open-link" href="{% url 'admin:catalog_service_changelist' %}">Manage services <i data-lucide="arrow-up-right"></i></a>
+          </div>
+        </article>
+        <article class="payments-hub-card admin-action-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="calendar-days"></i></span>
+            <span class="payments-hub-card-kicker">TEAM SCHEDULE</span>
+          </div>
+          <h2>Weekly staff availability</h2>
+          <p>Add recurring working hours for each provider and weekday.</p>
+          <div class="payments-hub-card-footer">
+            <a class="payments-hub-open-link" href="{% url 'admin:appointments_staffavailability_changelist' %}">Set availability <i data-lucide="arrow-up-right"></i></a>
+          </div>
+        </article>
+        <article class="payments-hub-card admin-action-card">
+          <div class="payments-hub-card-top">
+            <span class="payments-hub-card-icon"><i data-lucide="calendar-x"></i></span>
+            <span class="payments-hub-card-kicker">EXCEPTIONS</span>
+          </div>
+          <h2>Staff time off</h2>
+          <p>Block leave, training and other dated schedule exceptions.</p>
+          <div class="payments-hub-card-footer">
+            <a class="payments-hub-open-link" href="{% url 'admin:appointments_stafftimeoff_changelist' %}">Manage time off <i data-lucide="arrow-up-right"></i></a>
+          </div>
+        </article>
+      </section>
+
+      <div class="payments-hub-section-heading admin-management-heading">
+        <div>
+          <div class="section-title">Studio management</div>
+          <div class="section-caption">Operational detail, neatly brought together.</div>
+        </div>
+        <span class="payments-hub-section-tag"><i data-lucide="lock-keyhole"></i> Permission-aware access</span>
+      </div>
+
+      <section class="admin-workspace" aria-label="Studio management workspace">
+        <div class="admin-workspace-head">
+          <div>
+            <h2>Management workspace</h2>
+            <p>Choose an area to review its current information and available actions.</p>
+          </div>
+          <span class="status-pill"><span class="status-dot"></span><span>Live workspace</span></span>
+        </div>
+
+        <div class="admin-dashboard-tabs" role="tablist" aria-label="Management sections">
+          <button type="button" class="admin-dashboard-tab" id="admin-tab-inventory" role="tab" aria-selected="true" aria-controls="admin-panel-inventory" data-admin-tab="inventory">
+            <i data-lucide="boxes"></i> Inventory &amp; stock
+          </button>
+          <button type="button" class="admin-dashboard-tab" id="admin-tab-academy" role="tab" aria-selected="false" aria-controls="admin-panel-academy" data-admin-tab="academy" tabindex="-1">
+            <i data-lucide="graduation-cap"></i> Academy hub
+          </button>
+          <button type="button" class="admin-dashboard-tab" id="admin-tab-staff" role="tab" aria-selected="false" aria-controls="admin-panel-staff" data-admin-tab="staff" tabindex="-1">
+            <i data-lucide="users"></i> Artist commissions
+          </button>
+          <button type="button" class="admin-dashboard-tab" id="admin-tab-reconciliation" role="tab" aria-selected="false" aria-controls="admin-panel-reconciliation" data-admin-tab="reconciliation" tabindex="-1">
+            <i data-lucide="file-check-2"></i> M-PESA audit
+          </button>
+        </div>
+
+        <section class="admin-section" id="admin-panel-inventory" role="tabpanel" aria-labelledby="admin-tab-inventory" data-admin-panel="inventory">
+          <div class="subhead">
+            <div>
+              <h3>Retail &amp; professional supplies</h3>
+              <p>Keep your most-loved essentials in stock.</p>
+            </div>
+            <a class="payments-hub-primary" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Restock item</a>
+          </div>
+
+          <div class="admin-stock-grid">
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="package-search"></i></span><span class="payments-hub-card-kicker">CATALOGUE</span></div>
+              <h2>Products and stock levels</h2>
+              <p>View current stock and reorder levels.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'admin:catalog_product_changelist' %}">View products <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="package-plus"></i></span><span class="payments-hub-card-kicker">RECEIVING</span></div>
+              <h2>Receive stock</h2>
+              <p>Record stock received from suppliers.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'inventory:receive' %}">Record delivery <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="truck"></i></span><span class="payments-hub-card-kicker">SUPPLIERS</span></div>
+              <h2>Suppliers</h2>
+              <p>Maintain supplier contact details.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'admin:inventory_supplier_changelist' %}">View suppliers <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="clipboard-list"></i></span><span class="payments-hub-card-kicker">DOCUMENTS</span></div>
+              <h2>Supplier receipt history</h2>
+              <p>Review posted supplier documents and item lines.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'inventory:receipts' %}">View receipts <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="arrow-left-right"></i></span><span class="payments-hub-card-kicker">STOCK LEDGER</span></div>
+              <h2>Inventory movement history</h2>
+              <p>Review the stock ledger and movement records.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'admin:inventory_inventorymovement_changelist' %}">View movements <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="clipboard-check"></i></span><span class="payments-hub-card-kicker">APPROVALS</span></div>
+              <h2>Stock adjustment requests</h2>
+              <p>Review adjustment approvals and requests.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'admin:inventory_stockadjustmentrequest_changelist' %}">Review requests <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+            <article class="payments-hub-card admin-action-card compact">
+              <div class="payments-hub-card-top"><span class="payments-hub-card-icon"><i data-lucide="flask-conical"></i></span><span class="payments-hub-card-kicker">CONSUMABLES</span></div>
+              <h2>Service consumables</h2>
+              <p>Manage products consumed by services.</p>
+              <div class="payments-hub-card-footer"><a class="payments-hub-open-link" href="{% url 'admin:inventory_serviceconsumable_changelist' %}">Manage items <i data-lucide="arrow-up-right"></i></a></div>
+            </article>
+          </div>
+
+          <div class="admin-section-heading">
+            <h3>Low-stock alert</h3>
+            {% if admin_low_stock_count %}
+              <span class="status-tag low">{{ admin_low_stock_count }} items need attention</span>
+            {% else %}
+              <span class="status-tag ok">Stock levels healthy</span>
+            {% endif %}
+          </div>
+          {% if admin_low_stock_count %}
+            <div class="table-shell">
+              <table>
+                <thead><tr><th>Product</th><th>On hand</th><th>Reorder level</th><th>Link</th></tr></thead>
+                <tbody>
+                  {% for product in admin_low_stock_products %}
+                    <tr>
+                      <td><strong><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a></strong></td>
+                      <td>{{ product.on_hand }}</td>
+                      <td>{{ product.reorder_level }}</td>
+                      <td><a href="{% url 'admin:catalog_product_change' product.pk %}">Open record <i data-lucide="arrow-up-right"></i></a></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="empty-state">No low-stock alerts for products with a configured reorder level.</div>
+          {% endif %}
+        </section>
+
+        <section class="admin-section" id="admin-panel-academy" role="tabpanel" aria-labelledby="admin-tab-academy" data-admin-panel="academy" hidden>
+          <div class="subhead">
+            <div>
+              <h3>Student certifications &amp; cohorts</h3>
+              <p>Build the next generation of exceptional lash artists.</p>
+            </div>
+            <a class="payments-hub-secondary" href="{% url 'admin:training_course_changelist' %}"><i data-lucide="book-open"></i> Course list</a>
+          </div>
+
+          <div class="academy-grid">
+            <article class="course-card">
+              <span class="course-level gold">Beginner masterclass</span>
+              <h4>Classic Lash Fundamentals</h4>
+              <p>Three days of careful technique, client safety and foundational artistry.</p>
+              <div class="course-foot"><span><strong>6 students</strong> enrolled</span><span class="next">Next · Nov 3</span></div>
+              <p class="course-price">KES 25,000 <span>/ student</span></p>
+            </article>
+            <article class="course-card">
+              <span class="course-level">Advanced masterclass</span>
+              <h4>Mega Volume &amp; Fan Artistry</h4>
+              <p>Advanced fan creation, texture, direction and retention principles.</p>
+              <div class="course-foot"><span><strong>5 students</strong> enrolled</span><span class="next">Next · Nov 8</span></div>
+              <p class="course-price">KES 18,000 <span>/ student</span></p>
+            </article>
+            <article class="course-card">
+              <span class="course-level blue">Specialist course</span>
+              <h4>Lash Lift &amp; Keratin Tint</h4>
+              <p>A focused one-day intensive in natural lash enhancement and finishing.</p>
+              <div class="course-foot"><span><strong>3 students</strong> enrolled</span><span class="next">Next · Oct 29</span></div>
+              <p class="course-price">KES 12,000 <span>/ student</span></p>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-section" id="admin-panel-staff" role="tabpanel" aria-labelledby="admin-tab-staff" data-admin-panel="staff" hidden>
+          <div class="subhead">
+            <div>
+              <h3>Artist service commissions</h3>
+              <p>Current commission rate: 30% on eligible services.</p>
+            </div>
+            <a class="payments-hub-secondary" href="{% url 'commissions:dashboard' %}">Today's closeout <i data-lucide="arrow-up-right"></i></a>
+          </div>
+
+          <div class="commission-summary">
+            <div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div>
+            <div class="summary-box"><span>Commission payable</span><strong style="color:var(--pink)">KES 22,050</strong></div>
+            <div class="summary-box"><span>Artists on shift</span><strong>3 active</strong></div>
+          </div>
+
+          <div class="table-shell">
+            <table>
+              <thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
+                <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
+                <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="admin-panel-reconciliation" role="tabpanel" aria-labelledby="admin-tab-reconciliation" data-admin-panel="reconciliation" hidden>
+          <div class="subhead">
+            <div>
+              <h3>M-PESA Express reconciliation</h3>
+              <p>Payment records are linked through the audit workspace.</p>
+            </div>
+            <span class="status-tag ok">Demo ledger</span>
+          </div>
+
+          <div class="table-shell">
+            <table>
+              <thead><tr><th>Timestamp</th><th>Receipt reference</th><th>Client phone</th><th>Amount (KES)</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>10:42 AM</td><td><span class="audit-ref">QX892KL0P1</span></td><td>+254 712***678</td><td><strong>KES 6,000</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
+                <tr><td>09:15 AM</td><td><span class="audit-ref">QX891MM9X4</span></td><td>+254 722***102</td><td><strong>KES 25,000</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
+                <tr><td>08:50 AM</td><td><span class="audit-ref">QX890PP3L9</span></td><td>+254 701***992</td><td><strong>KES 4,500</strong></td><td><span class="status-tag ok">SUCCESS</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      {% if app_list %}
+        <section class="system-links-panel" aria-labelledby="admin-directory-title">
+          <div class="system-links-header">
+            <div>
+              <h2 id="admin-directory-title">Administration directory</h2>
+              <p>Browse every available model workspace and its existing Django Admin tools.</p>
+            </div>
+            <span class="admin-directory-note"><i data-lucide="shield-check"></i> Your existing permissions apply</span>
+          </div>
+          <div class="system-link-grid">
+            {% for app in app_list %}
+              <article class="system-link-group">
+                <h3><a href="{{ app.app_url }}">{{ app.name }}</a></h3>
+                <ul>
+                  {% for model in app.models %}
+                    <li>
+                      {% if model.admin_url %}
+                        <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                      {% else %}
+                        <span>{{ model.name }}</span>
+                      {% endif %}
+                      {% if model.add_url %}
+                        <a class="inline-add" href="{{ model.add_url }}">Add</a>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      <section class="payments-hub-guidance">
+        <span class="payments-hub-guidance-icon"><i data-lucide="shield-check"></i></span>
+        <div>
+          <strong>Keep every studio operation clear and accountable.</strong>
+          <p>Use the operational screens for stock receiving, bookings, commissions and payment reconciliation. The administration directory opens the underlying records with the permissions already assigned to your account.</p>
+        </div>
+      </section>
+
+      <footer class="payments-hub-footer">
+        <span class="payments-hub-footer-brand">LASHPRO KE</span>
+        <span>Private studio workspace · Financial figures shown are sample data for interface preview.</span>
+      </footer>
+    </section>
+  </main>
 </div>
+{% endblock %}
 
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const tabButtons = document.querySelectorAll('.admin-tab');
-    const sectionPanels = document.querySelectorAll('.admin-section');
+{% block footer %}
+  {{ block.super }}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const button = document.getElementById("admin-dashboard-theme-toggle");
 
-    tabButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        const target = button.dataset.tab;
-        tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
-        sectionPanels.forEach((panel) => {
-          panel.classList.toggle('hidden', panel.dataset.panel !== target);
+      function applyTheme(theme) {
+        root.dataset.theme = theme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#fff8fb");
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      try {
+        const saved = localStorage.getItem("lashpro-theme");
+        applyTheme(saved === "light" ? "light" : "dark");
+      } catch (error) {
+        applyTheme("dark");
+      }
+
+      if (button) {
+        button.addEventListener("click", function () {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next);
+          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+        });
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+
+      const tabs = Array.from(document.querySelectorAll("[data-admin-tab]"));
+      const panels = Array.from(document.querySelectorAll("[data-admin-panel]"));
+
+      function activateTab(selectedTab) {
+        const selectedPanel = selectedTab.dataset.adminTab;
+        tabs.forEach((tab) => {
+          const active = tab === selectedTab;
+          tab.classList.toggle("active", active);
+          tab.setAttribute("aria-selected", String(active));
+          tab.tabIndex = active ? 0 : -1;
+        });
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.adminPanel !== selectedPanel;
+        });
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => activateTab(tab));
+        tab.addEventListener("keydown", (event) => {
+          if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+          event.preventDefault();
+          const index = tabs.indexOf(tab);
+          const offset = event.key === "ArrowRight" ? 1 : -1;
+          const next = tabs[(index + offset + tabs.length) % tabs.length];
+          next.focus();
+          activateTab(next);
         });
       });
-    });
-  });
-</script>
+    })();
+  </script>
 {% endblock %}
