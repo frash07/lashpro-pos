@@ -105,7 +105,7 @@ def _catalog_payload(product, retailer_id, *, require_image=True):
     ).rstrip("/")
     product_link = storefront_base + "/?" + urllib.parse.urlencode({
         "kind": "products",
-        "q": retailer_id,
+        "q": product.sku,
     })
     try:
         price = int(
