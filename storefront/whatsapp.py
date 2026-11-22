@@ -317,7 +317,10 @@ def _normalise_order_items(order_data):
 def import_whatsapp_order(message, contacts, *, configured_catalog_id):
     """Convert an inbound Meta order message into a normal, stock-reserved LashPro order."""
     message_id = str(message.get("id") or "").strip()
-    sender_id = "".join(ch for ch in str(message.get("from") or "") if ch.isdigit())
+    raw_sender = str(message.get("from") or "").strip()
+    sender_id = "".join(ch for ch in raw_sender if ch.isdigit())
+    if not 8 <= len(sender_id) <= 15:
+        sender_id = ""
     order_data = message.get("order")
     if not message_id or not isinstance(order_data, dict):
         return None
@@ -335,7 +338,7 @@ def import_whatsapp_order(message, contacts, *, configured_catalog_id):
             break
 
     if not sender_id:
-        user_id = str(message.get("from_user_id") or "").strip()
+        user_id = str(message.get("from_user_id") or raw_sender).strip()
         if not user_id:
             return None
         receipt, created = WhatsAppInboundOrder.objects.get_or_create(
