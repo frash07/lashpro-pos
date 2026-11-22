@@ -229,6 +229,7 @@ class WhatsAppOrderInbox(models.Model):
         related_name="whatsapp_imports",
     )
     received_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     processed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
