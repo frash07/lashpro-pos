@@ -147,6 +147,10 @@ class WhatsAppCatalogSync(models.Model):
     retailer_id = models.CharField(max_length=100, null=True, blank=True, unique=True)
     meta_product_item_id = models.CharField(max_length=100, blank=True)
     catalog_linked = models.BooleanField(default=False)
+    allow_upsert = models.BooleanField(
+        default=False,
+        help_text="Enable only when this retailer ID has been verified as an existing Meta catalogue item.",
+    )
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.UNLINKED)
     attempt_count = models.PositiveSmallIntegerField(default=0)
     next_attempt_at = models.DateTimeField(default=timezone.now, db_index=True)
