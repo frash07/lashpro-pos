@@ -306,6 +306,8 @@ def integration_settings(request):
             "email_password": bool(config.get("email_password")),
             "sms": bool(config.get("sms_provider") == "africastalking" and config.get("sms_username") and config.get("sms_api_key")),
             "whatsapp": bool(config.get("whatsapp_access_token") and config.get("whatsapp_phone_number_id")),
+            "whatsapp_commerce": bool(all(config.get(key) for key in ("whatsapp_access_token", "whatsapp_phone_number_id", "whatsapp_business_account_id", "whatsapp_catalog_id", "whatsapp_app_secret", "whatsapp_webhook_verify_token"))),
+            "whatsapp_catalog_sync": bool(config.get("whatsapp_catalog_sync_enabled") and config.get("whatsapp_access_token") and config.get("whatsapp_catalog_id")),
             "mpesa": bool(all(config.get(key) for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey", "mpesa_shortcode"))),
             "etims": bool(config.get("etims_taxpayer_pin") and config.get("etims_communication_key")),
         },
