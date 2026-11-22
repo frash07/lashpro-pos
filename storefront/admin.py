@@ -197,5 +197,6 @@ class WhatsAppOrderInboxAdmin(admin.ModelAdmin):
             next_attempt_at=timezone.now(),
             last_error="",
             processed_at=None,
+            updated_at=timezone.now(),
         )
         self.message_user(request, f"{count} WhatsApp order import(s) queued for retry.", level=messages.SUCCESS)
