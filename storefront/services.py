@@ -54,7 +54,7 @@ def _normalise_key(value):
         raise ValidationError({"idempotency_key": "Refresh checkout and try again."}) from None
 
 
-def _matches_existing_order(order, *, items, customer_name, customer_email, customer_phone, notes, account, customer):
+def _matches_existing_order(order, *, items, customer_name, customer_email, customer_phone, notes, account, customer, source_channel, external_reference):
     existing_items = {
         str(line.product_id): line.quantity
         for line in order.lines.all()
@@ -67,6 +67,8 @@ def _matches_existing_order(order, *, items, customer_name, customer_email, cust
         and order.notes == notes
         and order.account_id == getattr(account, "pk", None)
         and order.customer_id == getattr(customer, "pk", None)
+        and order.source_channel == source_channel
+        and order.external_reference == external_reference
     )
 
 
@@ -81,6 +83,8 @@ def create_storefront_order(
     account=None,
     customer=None,
     idempotency_key,
+    source_channel=StorefrontOrder.SourceChannel.STOREFRONT,
+    external_reference=None,
 ):
     """Create an unpaid collection request and reserve its stock atomically; no POS sale is created."""
     cleaned_items = _normalise_items(items)
@@ -89,6 +93,27 @@ def create_storefront_order(
     customer_email = str(customer_email or "").strip().lower()
     customer_phone = str(customer_phone or "").strip()
     notes = str(notes or "").strip()
+    external_reference = str(external_reference or "").strip() or None
+    if source_channel not in StorefrontOrder.SourceChannel.values:
+        raise ValidationError({"source_channel": "Choose a supported order source."})
+
+    if external_reference:
+        external_order = StorefrontOrder.objects.filter(external_reference=external_reference).first()
+        if external_order:
+            if _matches_existing_order(
+                external_order,
+                items=cleaned_items,
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                notes=notes,
+                account=account,
+                customer=customer,
+                source_channel=source_channel,
+                external_reference=external_reference,
+            ):
+                return external_order
+            raise ValidationError({"external_reference": "This external order has already been imported."})
 
     existing = StorefrontOrder.objects.filter(idempotency_key=key).first()
     if existing:
@@ -101,6 +126,8 @@ def create_storefront_order(
             notes=notes,
             account=account,
             customer=customer,
+            source_channel=source_channel,
+            external_reference=external_reference,
         ):
             return existing
         raise ValidationError({"idempotency_key": "This checkout key was already used. Start a fresh checkout."})
@@ -170,6 +197,8 @@ def create_storefront_order(
                 customer_email=customer_email,
                 customer_phone=customer_phone,
                 notes=notes,
+                source_channel=source_channel,
+                external_reference=external_reference,
                 total_amount=total.quantize(CENT),
                 expires_at=timezone.now() + timedelta(minutes=settings.PUBLIC_ORDER_RESERVATION_MINUTES),
             )
@@ -193,6 +222,8 @@ def create_storefront_order(
             notes=notes,
             account=account,
             customer=customer,
+            source_channel=source_channel,
+            external_reference=external_reference,
         ):
             return duplicate
         raise ValidationError({"idempotency_key": "This checkout was already submitted. Review your order status."}) from None
