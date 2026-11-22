@@ -68,6 +68,23 @@
     </section>
 
     <section class="integration-card">
+      <div class="integration-card-heading"><div><p class="integration-kicker">04 · SAFARICOM DARAJA</p><h2>M-Pesa STK Push</h2><p>Enter your Daraja app credentials, Lipa Na M-Pesa passkey and business short code.</p></div><span class="integration-state">{% if config_status.mpesa %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-grid">
+        <div class="integration-field">{{ form.mpesa_environment.label_tag }}{{ form.mpesa_environment }}{{ form.mpesa_environment.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_shortcode.label_tag }}{{ form.mpesa_shortcode }}{{ form.mpesa_shortcode.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_consumer_key.label_tag }}{{ form.mpesa_consumer_key }}{{ form.mpesa_consumer_key.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_consumer_secret.label_tag }}{{ form.mpesa_consumer_secret }}{{ form.mpesa_consumer_secret.errors }}</div>
+        <div class="integration-field wide">{{ form.mpesa_passkey.label_tag }}{{ form.mpesa_passkey }}{{ form.mpesa_passkey.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_transaction_type.label_tag }}{{ form.mpesa_transaction_type }}{{ form.mpesa_transaction_type.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_party_b.label_tag }}{{ form.mpesa_party_b }}<small>Usually the same as the short code; optional.</small>{{ form.mpesa_party_b.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_account_reference.label_tag }}{{ form.mpesa_account_reference }}{{ form.mpesa_account_reference.errors }}</div>
+        <div class="integration-field">{{ form.mpesa_transaction_description.label_tag }}{{ form.mpesa_transaction_description }}{{ form.mpesa_transaction_description.errors }}</div>
+      </div>
+      <p class="integration-note">Use sandbox credentials while testing. Switch to production only after Safaricom has approved the shortcode, passkey and callback domain. STK requests require whole-KSh amounts and a Kenyan mobile number.</p>
+      <label class="integration-clear">{{ form.clear_mpesa }} {{ form.clear_mpesa.label }}</label>
+    </section>
+
+    <section class="integration-card">
       <div class="integration-card-heading"><div><p class="integration-kicker">05 · KRA eTIMS</p><h2>eTIMS connection setup</h2><p>Save the taxpayer and device connection details for the later OSCU/VSCU rollout.</p></div><span class="integration-state">{% if config_status.etims %}Credentials saved{% else %}Not configured{% endif %}</span></div>
       <div class="integration-warning"><strong>Setup only — invoice submission is not enabled.</strong> KRA requires the chosen OSCU/VSCU system integration to be tested and vetted/certified, and the taxpayer/device to be activated. These fields do not by themselves make eTIMS live or compliant.</div>
       <div class="integration-grid">
