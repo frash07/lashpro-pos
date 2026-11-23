@@ -25,7 +25,7 @@ html[data-theme="dark"] .checkout-main .cat-tab.active{border-color:var(--rose-6
 .checkout-main .card-copy{min-width:0;padding:13px 15px 15px}.checkout-main .card-head{gap:7px;margin-bottom:9px}
 .checkout-main .card-tag{border:1px solid var(--rose-150);border-radius: var(--lp-compat-radius-c13a0039);background:var(--rose-50);color:var(--rose-700);font-size:8px;font-weight:800}
 .checkout-main .card-price{color:var(--rose-700);font-size:10px;font-weight:800}
-.checkout-main .card-copy h3{margin:0 0 6px;color:var(--ink);font:600 16px/1.25 'Playfair Display',Georgia,serif}
+.checkout-main .card-copy h3{margin:0 0 6px;color:var(--ink);font:600 16px/1.25 var(--lp-font-display)}
 .checkout-main .card-copy p{min-height:30px;margin:0;color:var(--muted);font-size:9px;line-height:1.5}
 .checkout-main .stock-badge{margin-top:10px;border-color:rgba(var(--success-rgb), .22);background:var(--green-bg);color:var(--green);font-size:8px}
 .checkout-main .stock-badge.is-sold-out{border-color:rgba(var(--danger-rgb), .22);background:var(--danger-bg);color:var(--danger)}
@@ -37,7 +37,7 @@ html[data-theme="dark"] .checkout-main .stock-badge{background:var(--green-bg);c
 html[data-theme="dark"] .checkout-main .stock-badge.is-sold-out{background:var(--danger-bg);color:var(--danger)}
 .checkout-panel{position:sticky;top:0;z-index:12;display:flex;width:100%;height:100vh;min-height:680px;max-height:100vh;flex-direction:column;overflow:auto;border:0;border-left:1px solid var(--line);border-radius:0;background:var(--paper);box-shadow:-12px 0 32px rgba(var(--shadow-rgb), .025)}
 .checkout-panel .checkout-head{padding:27px 24px 19px;border-bottom:1px solid var(--line);background:linear-gradient(145deg,var(--surface-3),var(--paper) 72%)}
-.checkout-panel .checkout-title{color:var(--ink);font:500 24px/1 'Playfair Display',Georgia,serif}
+.checkout-panel .checkout-title{color:var(--ink);font:500 24px/1 var(--lp-font-display)}
 .checkout-panel .client-fields{grid-template-columns:1fr 1fr;gap:9px;margin:14px 21px 0;padding:12px;border:1px solid var(--line);border-radius: var(--lp-compat-radius-a5bea61d);background:var(--surface-2)}
 .checkout-panel .field label{color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.09em}
 .checkout-panel .field input,.checkout-panel .field select{min-width:0;min-height:37px;padding:8px;border-color:var(--line2);border-radius: var(--lp-compat-radius-05011417);background:var(--paper);color:var(--ink);font-size:9px}
@@ -123,7 +123,7 @@ html[data-theme="dark"] .checkout-panel .pay-secondary button{border-color:var(-
 .checkout-main .art-word{
   position:relative;z-index:1;max-width:calc(100% - 46px);
   overflow:hidden;color:var(--rose-800);
-  font:italic 21px/1.08 'Playfair Display',Georgia,serif;
+  font:italic 21px/1.08 var(--lp-font-display);
   text-overflow:ellipsis;white-space:nowrap
 }
 .checkout-main .art-symbol{
@@ -167,7 +167,7 @@ html[data-theme="dark"] .checkout-panel .pay-secondary button{border-color:var(-
 .checkout-main .tile-duration svg{width:11px;height:11px}
 .checkout-main .tile-title{
   margin:10px 0 5px;color:var(--ink);
-  font:600 16px/1.18 'Playfair Display',Georgia,serif
+  font:600 16px/1.18 var(--lp-font-display)
 }
 .checkout-main .tile-description{
   min-height:28px;margin:0;color:var(--muted);
