@@ -38,6 +38,10 @@
   --field-border: #D5DBE3;
   --focus-ring: rgba(200, 75, 125, .25);
   --r: 18px;
+  --receipt-paper: #FFFFFF;
+  --receipt-ink: #20232B;
+  --receipt-border: #E3E7ED;
+  --receipt-muted: #5F6672;
 
   /* Compatibility aliases used by legacy checkout component rules. */
   --pink: var(--rose-600);
