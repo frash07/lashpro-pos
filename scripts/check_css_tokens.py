@@ -83,18 +83,18 @@ def theme_value_counts(source: str) -> collections.Counter[str]:
     source = re.sub(r"/\*[\s\S]*?\*/", "", source)
 
     # Count hex values only within declaration blocks, not selectors like #content.
-        depth = 0
-        for line in source.splitlines():
-            depth_before_char = depth
-            for match in HEX_COLOUR.finditer(line):
-                before = line[:match.start()]
-                local_depth = depth_before_char + before.count("{") - before.count("}")
-                if local_depth > 0:
-                    counts[f"colour {match.group(0).lower()}"] += 1
-            depth += line.count("{") - line.count("}")
+    depth = 0
+    for line in source.splitlines():
+        depth_before_char = depth
+        for match in HEX_COLOUR.finditer(line):
+            before = line[:match.start()]
+            local_depth = depth_before_char + before.count("{") - before.count("}")
+            if local_depth > 0:
+                counts[f"colour {match.group(0).lower()}"] += 1
+        depth += line.count("{") - line.count("}")
 
-        for match in RAW_COLOUR_FUNCTION.finditer(source):
-            counts[f"colour function {match.group(0).lower()}"] += 1
+    for match in RAW_COLOUR_FUNCTION.finditer(source):
+        counts[f"colour function {match.group(0).lower()}"] += 1
 
     for value in declaration_values(source, DECLARATION["border-radius"]):
         if is_literal_radius(value):
