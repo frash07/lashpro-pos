@@ -241,7 +241,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .category-count { color: var(--muted2); font-size: 9px; font-weight: 800; white-space: nowrap; }
 
 .admin-nav-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; align-items: start; }
-.admin-nav-group { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: var(--paper); box-shadow: 0 8px 22px rgba(72, 35, 49, .035); transition: transform .18s, border-color .18s, box-shadow .18s, background .18s; }
+.admin-nav-group { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: var(--paper); box-shadow: 0 8px 22px rgba(45, 37, 41, .035); transition: transform .18s, border-color .18s, box-shadow .18s, background .18s; }
 .admin-nav-group:hover { transform: translateY(-2px); border-color: var(--rose-200); box-shadow: var(--shadow); }
 .admin-nav-group[open] { border-color: var(--rose-200); background: var(--surface-2); }
 .admin-nav-group summary { position: relative; display: flex; min-height: 130px; align-items: center; gap: 13px; padding: 15px; cursor: pointer; list-style: none; }
@@ -279,7 +279,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 /* Right-side workspace panel takes the place of the checkout ticket. */
 .admin-right-rail { position: sticky; top: 0; display: flex; min-width: 0; height: 100vh; flex-direction: column; gap: 16px; overflow: auto; padding: 22px 20px; border-left: 1px solid var(--line); background: var(--paper); }
 .admin-rail-card { overflow: hidden; border: 1px solid var(--line); border-radius: 19px; background: var(--paper); box-shadow: var(--shadow); }
-.rail-card-header { padding: 22px 20px 18px; border-bottom: 1px solid var(--line); background: linear-gradient(145deg, #fff8fa, #fff 75%); }
+.rail-card-header { padding: 22px 20px 18px; border-bottom: 1px solid var(--line); background: linear-gradient(145deg, var(--surface-3), var(--paper) 75%); }
 .rail-eyebrow { color: var(--rose-600); font-size: 8px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
 .rail-title { margin-top: 9px; color: var(--ink); font: 500 25px/1.1 'Playfair Display', serif; }
 .rail-card-header p { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
@@ -334,7 +334,7 @@ html[data-theme="dark"] .rail-link strong,
 html[data-theme="dark"] .admin-model-note h2,
 html[data-theme="dark"] .rail-account strong { color: var(--ink); }
 html[data-theme="dark"] .studio-card,
-html[data-theme="dark"] .admin-model-note { border-color: var(--line); background: linear-gradient(145deg, #2d222e, #261d28); }
+html[data-theme="dark"] .admin-model-note { border-color: var(--line); background: linear-gradient(145deg, var(--surface-3), var(--surface-2)); }
 html[data-theme="dark"] .studio-card p,
 html[data-theme="dark"] .welcome p,
 html[data-theme="dark"] .section-heading p,
@@ -347,7 +347,7 @@ html[data-theme="dark"] .topbar { border-color: var(--line); }
 html[data-theme="dark"] .icon-action { border-color: var(--line2); background: var(--surface-3); color: var(--rose-400); }
 html[data-theme="dark"] .welcome { border-color: var(--rose-200); background: linear-gradient(108deg, var(--hero-start) 0%, var(--hero-mid) 56%, var(--hero-end) 100%); }
 html[data-theme="dark"] .welcome::before { border-color: rgba(var(--rose-rgb), .22); box-shadow: 0 0 0 25px rgba(var(--rose-rgb), .045), 0 0 0 52px rgba(var(--rose-rgb), .025); }
-html[data-theme="dark"] .welcome-aside { border-color: rgba(255,220,235,.12); background: rgba(38,27,39,.72); }
+html[data-theme="dark"] .welcome-aside { border-color: color-mix(in srgb, var(--rose-200) 12%, transparent); background: color-mix(in srgb, var(--paper) 72%, transparent); }
 html[data-theme="dark"] .date-mark { background: var(--rose-100); color: var(--rose-700); }
 html[data-theme="dark"] .stat-card,
 html[data-theme="dark"] .admin-nav-group,
@@ -358,22 +358,22 @@ html[data-theme="dark"] .rail-link-icon,
 html[data-theme="dark"] .model-note-icon { background: var(--rose-100); color: var(--rose-400); }
 html[data-theme="dark"] .search-box { border-color: var(--line2); background: var(--field-bg); color: var(--muted); }
 html[data-theme="dark"] .search-box input { color: var(--ink); }
-html[data-theme="dark"] .search-box input::placeholder { color: #cbb8c3; }
-html[data-theme="dark"] .admin-card-art { background: linear-gradient(135deg, #503044, #392735); }
+html[data-theme="dark"] .search-box input::placeholder { color: var(--muted2); }
+html[data-theme="dark"] .admin-card-art { background: linear-gradient(135deg, var(--rose-100), var(--surface-3)); }
 html[data-theme="dark"] .admin-card-art::before { border-color: rgba(var(--rose-rgb), .18); box-shadow: 0 0 0 12px rgba(255,255,255,.035), 0 0 0 25px rgba(255,255,255,.02); }
-html[data-theme="dark"] .admin-group-icon { border-color: rgba(var(--rose-rgb), .22); background: rgba(37,25,36,.62); color: var(--rose-700); }
-html[data-theme="dark"] .admin-card-count { background: rgba(37,25,36,.86); color: var(--rose-700); }
-html[data-theme="dark"] .admin-nav-group[open] { border-color: var(--rose-400); background: #2a202c; }
+html[data-theme="dark"] .admin-group-icon { border-color: rgba(var(--rose-rgb), .22); background: color-mix(in srgb, var(--paper) 62%, transparent); color: var(--rose-700); }
+html[data-theme="dark"] .admin-card-count { background: color-mix(in srgb, var(--paper) 86%, transparent); color: var(--rose-700); }
+html[data-theme="dark"] .admin-nav-group[open] { border-color: var(--rose-400); background: var(--rose-50); }
 html[data-theme="dark"] .admin-expand { border-color: var(--line2); background: var(--surface-3); color: var(--muted); }
-html[data-theme="dark"] .admin-group-panel { background: #2a202c; }
+html[data-theme="dark"] .admin-group-panel { background: var(--rose-50); }
 html[data-theme="dark"] .admin-group-links a { border-color: var(--line); background: var(--surface-3); color: var(--ink); }
 html[data-theme="dark"] .admin-group-links a:hover { border-color: var(--rose-600); background: var(--rose-100); color: var(--ink); }
 html[data-theme="dark"] .admin-group-links a svg { color: var(--rose-700); }
-html[data-theme="dark"] .rail-card-header { border-color: var(--line); background: linear-gradient(145deg, #30212d, #241b27 70%); }
+html[data-theme="dark"] .rail-card-header { border-color: var(--line); background: linear-gradient(145deg, var(--surface-3), var(--paper) 70%); }
 html[data-theme="dark"] .rail-link { border-color: var(--line); background: var(--surface-3); }
 html[data-theme="dark"] .rail-link:hover { border-color: var(--rose-400); background: var(--rose-100); }
-html[data-theme="dark"] .rail-footer-note { border-color: rgba(133,215,180,.22); background: rgba(32,55,47,.75); color: var(--green); }
-html[data-theme="dark"] .admin-model-note { background: linear-gradient(145deg, #2d222e, #261d28); }
+html[data-theme="dark"] .rail-footer-note { border-color: color-mix(in srgb, var(--green) 22%, transparent); background: color-mix(in srgb, var(--green-bg) 75%, transparent); color: var(--green); }
+html[data-theme="dark"] .admin-model-note { background: linear-gradient(145deg, var(--surface-3), var(--surface-2)); }
 html[data-theme="dark"] .rail-account { border-color: var(--line); }
 html[data-theme="dark"] .account-avatar { background: var(--rose-100); color: var(--rose-700); }
 
