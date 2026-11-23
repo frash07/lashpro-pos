@@ -43,7 +43,11 @@
 {% if admin_suite.can_access_admin_suite %}
 <a class="side-link" href="/admin/appointments/"><i data-lucide="calendar-days"></i><span class="nav-text">Appointments</span></a>
 <a class="side-link" href="/admin/customers/"><i data-lucide="users"></i><span class="nav-text">Clients</span></a>
+{% endif %}
+{% if admin_suite.is_manager %}
 <button id="nav-admin-btn" class="side-link" type="button" onclick="switchMode('admin')"><i data-lucide="package"></i><span class="nav-text">Inventory</span></button>
+{% endif %}
+{% if admin_suite.can_access_admin_suite %}
 <a class="side-link" href="{% url 'reporting:dashboard' %}"><i data-lucide="chart-no-axes-combined"></i><span class="nav-text">Reports</span></a>
 <a class="side-link" href="{% url 'admin_suite' %}"><i data-lucide="settings"></i><span class="nav-text">Admin Suite</span></a>
 {% endif %}
