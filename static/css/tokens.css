@@ -312,7 +312,7 @@ html[data-theme="dark"] {
   --hero-gradient: linear-gradient(135deg, var(--ui-surface-muted), var(--ui-surface), var(--ui-canvas));
   --payment-mpesa-gradient: linear-gradient(135deg, #11B780, #0B8C61);
 
-  --on-accent: #1B1017;
+  --on-accent: #0B0B0F;
   --lp-btn-primary-text: var(--on-accent);
   --receipt-paper: #FFFFFF;
   --receipt-ink: #26232A;
