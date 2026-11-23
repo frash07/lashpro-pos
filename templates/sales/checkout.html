@@ -401,7 +401,7 @@
           ? (onHandValue>0?onHandText+' on hand · reserved online':'Sold out')
           : stockSummary;
         const stockBadge=isProduct
-          ? '<span class="stock-badge'+(soldOut?' is-sold-out':'')+'">'+escapeHtml(stockLabel)+'</span>'
+          ? '<span class="stock-badge retail-stock-status'+(soldOut?' is-sold-out':'')+'">'+escapeHtml(stockLabel)+'</span>'
           : '';
         const durationMatch=isService?String(item.desc||'').match(/\b(\d+)\s*(?:minutes?|mins?)\b/i):null;
         const duration=durationMatch
@@ -417,7 +417,7 @@
         const art=isService
           ? '<div class="tile-art service-art"><span class="art-word">'+escapeHtml(artLabel)+'</span><span class="art-symbol"><i data-lucide="sparkles" aria-hidden="true"></i></span></div>'
           : '<div class="tile-art retail-art"><span class="retail-art-icon"><i data-lucide="'+escapeHtml(iconName)+'" aria-hidden="true"></i></span><span class="retail-art-label">'+escapeHtml(artLabel)+'</span></div>';
-        const tag=isService?'Lash service':typeLabel(item.type);
+        const tag=isService?'Lash service':isProduct?'Retail & care':typeLabel(item.type);
         const activation=disabled?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
         const ariaState=soldOut?', sold out':locked?', checkout pending':', add to order';
         const actionLabel=soldOut?'Unavailable':locked?'Locked':'<i data-lucide="plus" aria-hidden="true"></i> Add';
