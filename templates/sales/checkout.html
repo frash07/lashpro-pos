@@ -1,37 +1,26 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#171016">
+  <meta name="theme-color" content="#fbf4f6">
   <title>Lashpro KE — Luxury Salon Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+<link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
+<link rel="stylesheet" href="{% static 'sales/checkout-workspace.css' %}">
   <link rel="stylesheet" href="{% static 'css/legal.css' %}">
 </head>
-<body>
+<body class="admin-suite-body checkout-page">
   <form id="pos-form" method="post" novalidate>
     {% csrf_token %}
     {{ details.idempotency_key }}
     <input type="hidden" name="checkout_payment_mode" id="checkout-payment-mode" value="">
     <input type="hidden" name="mpesa_stk_phone" id="mpesa-stk-phone" value="">
-    <div id="checkout-status-unknown" class="checkout-status-unknown" role="alert" hidden>
-      A previous checkout may have completed, but its response was not confirmed. Check Sales before retrying.
-      This tab retains the original cart and checkout key. Only retry the original checkout if no sale is listed.
-      <p><button id="retry-pending-checkout" type="button" hidden>Retry original checkout</button></p>
-    </div>
-    <div id="checkout-status-known-failure" class="checkout-status-unknown" role="alert" hidden>
-      The server confirmed that the previous checkout was not recorded. Review any error messages, correct the order, and submit again. Your original checkout key is retained.
-    </div>
-    {% if messages %}
-      <div class="checkout-status-unknown" role="alert">
-        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-      </div>
-    {% endif %}
     {{ lines.management_form }}
     {{ payments.management_form }}
 
@@ -46,76 +35,67 @@
         <a id="nav-admin-btn" class="mode-btn" href="{% url 'admin_suite' %}" style="text-decoration:none"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></a>
         {% endif %}
         {% if request.user.role == "CASHIER" %}
-        <a class="mode-btn" href="{% url 'training:enroll' %}" style="text-decoration:none"><i data-lucide="graduation-cap"></i><span>Enroll student</span></a>
-        {% elif admin_suite.is_manager %}
-        <a class="mode-btn" href="{% url 'training:dashboard' %}" style="text-decoration:none"><i data-lucide="graduation-cap"></i><span>Academy</span></a>
-        {% endif %}
-      </nav>
-      <div class="top-actions">
-        <div id="connection-status" class="status-pill"><span class="status-dot"></span><span>Online</span></div>
-        <button class="icon-button" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
-        <button id="pwa-install-btn" class="icon-button hidden" type="button" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
-        <div class="profile">
-          <div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div>
-          <div class="profile-copy">
-            <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-            <div class="profile-role">{{ request.user.get_role_display|upper }}</div>
-          </div>
-        </div>
+        <a class="mode-btn" href="{% url 'training:enroll' %}" style="text-decoration:none"><i da<div class="app-shell admin-app-shell checkout-app-shell">
+<aside class="sidebar checkout-sidebar" aria-label="Main navigation">
+<a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout"><span class="brand-mark"><i data-lucide="sparkles"></i></span><span class="brand-copy"><span class="brand-name">LASHPRO <small>KE</small></span><span class="brand-caption">Premier lash &amp; academy</span></span></a>
+<div class="side-label">Workspace</div><nav class="side-nav" aria-label="Workspace navigation">
+<button id="nav-pos-btn" class="side-link active" type="button" onclick="switchMode('pos')" aria-current="page"><i data-lucide="grid-2x2"></i><span class="nav-text">Checkout</span></button>
+{% if admin_suite.can_access_admin_suite %}
+<a class="side-link" href="/admin/appointments/"><i data-lucide="calendar-days"></i><span class="nav-text">Appointments</span></a>
+<a class="side-link" href="/admin/customers/"><i data-lucide="users"></i><span class="nav-text">Clients</span></a>
+<button id="nav-admin-btn" class="side-link" type="button" onclick="switchMode('admin')"><i data-lucide="package"></i><span class="nav-text">Inventory</span></button>
+<a class="side-link" href="{% url 'reporting:dashboard' %}"><i data-lucide="chart-no-axes-combined"></i><span class="nav-text">Reports</span></a>
+<a class="side-link" href="{% url 'admin_suite' %}"><i data-lucide="settings"></i><span class="nav-text">Admin Suite</span></a>
+{% endif %}
+{% if request.user.role == "CASHIER" %}
+<a class="side-link" href="{% url 'training:enroll' %}"><i data-lucide="graduation-cap"></i><span class="nav-text">Enroll student</span></a>
+{% elif admin_suite.is_manager %}
+<a class="side-link" href="{% url 'training:dashboard' %}"><i data-lucide="graduation-cap"></i><span class="nav-text">Academy</span></a>
+{% endif %}
+</nav><div class="sidebar-spacer"></div>
+<div class="studio-card"><div class="studio-top"><strong>Nairobi Studio</strong><span class="studio-status"><i class="dot"></i> Active</span></div><p>Salon register<br>Kenyan Shilling · KES</p></div>
+<div class="staff-mini"><div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div><div class="staff-copy"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|upper }}</small></div></div>
+</aside>
+<main class="main-area checkout-main-area">
+<header class="topbar"><div class="breadcrumbs"><span>Studio</span><i data-lucide="chevron-right"></i><strong id="workspace-breadcrumb">Checkout</strong></div><div class="topbar-right">
+<span id="connection-status" class="online-pill"><i class="dot"></i><span>Online</span></span>
+<button class="icon-action" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark theme" title="Switch to dark theme" aria-pressed="false"><i data-lucide="moon"></i><span class="sr-only">Switch theme</span></button>
+<button id="pwa-install-btn" class="icon-action hidden" type="button" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
+<div class="profile"><div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div><div class="profile-copy"><div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div><div class="profile-role">{{ request.user.get_role_display|upper }}</div></div></div>
+</div></header>
+<div class="checkout-alert-stack">    <div id="checkout-status-unknown" class="checkout-status-unknown" role="alert" hidden>
+      A previous checkout may have completed, but its response was not confirmed. Check Sales before retrying.
+      This tab retains the original cart and checkout key. Only retry the original checkout if no sale is listed.
+      <p><button id="retry-pending-checkout" type="button" hidden>Retry original checkout</button></p>
+    </div>
+    <div id="checkout-status-known-failure" class="checkout-status-unknown" role="alert" hidden>
+      The server confirmed that the previous checkout was not recorded. Review any error messages, correct the order, and submit again. Your original checkout key is retained.
+    </div>
+    {% if messages %}
+      <div class="checkout-status-unknown" role="alert">
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
       </div>
-    </header>
-
-    <main class="main">
-      <section id="pos-mode-view" class="view">
+    {% endif %}</div>
+    <div class="main checkout-main">
+      <section id="pos-mode-view" class="view"><section class="quick-stats checkout-stats" aria-label="Checkout information">
+<article class="stat-card"><span class="stat-icon"><i data-lucide="layers"></i></span><span><small>Matching catalogue items</small><strong id="result-count">12 items</strong></span></article>
+<article class="stat-card"><span class="stat-icon"><i data-lucide="wallet-cards"></i></span><span><small>Payment methods</small><strong>M-Pesa · Cash · Card</strong></span></article>
+<article class="stat-card"><span class="stat-icon"><i data-lucide="receipt"></i></span><span><small>Tax treatment</small><strong>16% VAT included</strong></span></article></section>
         <div class="pos-layout">
           <div class="workspace">
-            <div class="page-heading">
-              <div><div class="eyebrow">Salon register</div><h1>Make every visit <em style="font-weight:400;color:var(--pink)">beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
-              <div class="heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span id="today-date">Thursday, 29 October 2026</span></div><div class="soft-pill"><i data-lucide="sparkles"></i> VIP studio</div></div>
-            </div>
-            <div class="catalog-toolbar"><div><div class="section-title">Studio menu</div><div class="section-caption">Select a salon service or retail essential to add it to the order.</div></div><label class="catalog-search" aria-label="Search catalog"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search products by name or SKU, or find a service…" oninput="filterCatalog()" autocomplete="off"></label></div>
-            <div class="category-tabs">
-              <button type="button" class="cat-tab active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
-              <button type="button" class="cat-tab" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
-              <button type="button" class="cat-tab" data-category="product" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail &amp; care</button>
-              <span class="result-count" id="result-count">12 items</span>
-            </div>
+            <section class="welcome" aria-labelledby="checkout-welcome-title">
+              <div class="welcome-copy"><div class="eyebrow">Salon register</div><h1 id="checkout-welcome-title">Make every visit <em>beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
+              <div class="welcome-aside"><span class="date-mark"><i data-lucide="calendar-days" aria-hidden="true"></i></span><span class="date-copy"><small>Today at the studio</small><strong id="today-date">Monday, 23 November 2026</strong></span></div>
+            </section>
+<div class="section-heading"><div><div class="section-kicker">Curated for your clients</div><h2>Studio menu</h2><p>Select a salon service or retail essential to add it to today's visit.</p></div></div>
+<div class="catalog-controls"><label class="search-box" aria-label="Search catalogue"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search products by name, SKU or service…" oninput="filterCatalog()" autocomplete="off"></label></div>
+<div class="category-tabs filter-chips" role="group" aria-label="Filter catalogue">
+<button type="button" class="cat-tab filter-chip active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
+<button type="button" class="cat-tab filter-chip" data-category="service" onclick="filterCategory('service',this)"><i data-lucide="sparkles"></i> Lash services</button>
+<button type="button" class="cat-tab filter-chip" data-category="product" onclick="filterCategory('product',this)"><i data-lucide="package"></i> Retail &amp; care</button></div>
             <div id="catalog-grid" class="catalog-grid"></div>
           </div>
-          <aside class="checkout-panel">
-            <div class="checkout-head">
-              <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Ready to close</span></div>
-              <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New transaction</div></div></div>
-            </div>
-            <div class="client-fields">
-              <div class="field"><label for="staff-select">ARTIST / TRAINER</label>
-                {# Real technician primary keys from the backend queryset (active users with the TECHNICIAN role). This is the default for newly added services; each service line keeps its own technician. #}
-                <select id="staff-select" aria-describedby="staff-select-help">
-                  <option value="">Choose technician</option>
-                  {% for technician in technicians %}
-                  <option value="{{ technician.pk }}"{% if technician.pk == default_technician_id %} selected{% endif %}>{{ technician.get_full_name|default:technician.username }}</option>
-                  {% endfor %}
-                </select>
-                <span id="staff-select-help" class="field-hint">Default for services you add next</span>
-              </div>
-              <div class="field"><label for="id_customer">CLIENT / STUDENT</label>{{ details.customer }}</div>
-            </div>
-            <p class="legal-staff-notice">Use customer details only to identify and serve the client. See the customer <a href="{% url 'storefront:privacy' %}">Privacy Policy</a>, <a href="{% url 'storefront:terms' %}">Terms</a> and <a href="{% url 'storefront:returns' %}">Returns Policy</a>.</p>
-            <div id="cart-items-container" class="cart-items"></div>
-            <div class="checkout-bottom">
-              <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button type="button" class="btn-small" onclick="applyDiscount()">Apply</button></div>
-              <div class="financials">
-                <div id="gross-row" class="financial-row hidden"><span>Items (VAT incl.)</span><span id="summary-gross">KES 0</span></div>
-                <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
-                <div class="financial-row"><span>Net subtotal</span><span id="summary-subtotal">KES 0</span></div>
-                <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
-                <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
-              </div>
-              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Record M-Pesa payment</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
-              <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
-              <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
-            </div>
-          </aside>
+
         </div>
       </section>
 
@@ -157,8 +137,44 @@
           </div>
         </div>
       </section>
-    </main>
-
+    </div>
+<footer class="legal-footer-links checkout-legal-footer" aria-label="Customer legal policies"><a href="{% url 'storefront:privacy' %}">Privacy policy</a><a href="{% url 'storefront:terms' %}">Terms of service</a><a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a></footer>
+</main>
+          <aside class="checkout-panel">
+            <div class="checkout-head">
+              <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Ready to close</span></div>
+              <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New transaction</div></div></div>
+            </div>
+            <div class="client-fields">
+              <div class="field"><label for="staff-select">ARTIST / TRAINER</label>
+                {# Real technician primary keys from the backend queryset (active users with the TECHNICIAN role). This is the default for newly added services; each service line keeps its own technician. #}
+                <select id="staff-select" aria-describedby="staff-select-help">
+                  <option value="">Choose technician</option>
+                  {% for technician in technicians %}
+                  <option value="{{ technician.pk }}"{% if technician.pk == default_technician_id %} selected{% endif %}>{{ technician.get_full_name|default:technician.username }}</option>
+                  {% endfor %}
+                </select>
+                <span id="staff-select-help" class="field-hint">Default for services you add next</span>
+              </div>
+              <div class="field"><label for="id_customer">CLIENT / STUDENT</label>{{ details.customer }}</div>
+            </div>
+            <p class="legal-staff-notice">Use customer details only to identify and serve the client. See the customer <a href="{% url 'storefront:privacy' %}">Privacy Policy</a>, <a href="{% url 'storefront:terms' %}">Terms</a> and <a href="{% url 'storefront:returns' %}">Returns Policy</a>.</p>
+            <div id="cart-items-container" class="cart-items"></div>
+            <div class="checkout-bottom">
+              <div class="promo-row"><input id="discount-code" type="text" placeholder="Promo or student code"><button type="button" class="btn-small" onclick="applyDiscount()">Apply</button></div>
+              <div class="financials">
+                <div id="gross-row" class="financial-row hidden"><span>Items (VAT incl.)</span><span id="summary-gross">KES 0</span></div>
+                <div id="discount-row" class="financial-row discount-line hidden"><span>Discount applied</span><span id="summary-discount">−KES 0</span></div>
+                <div class="financial-row"><span>Net subtotal</span><span id="summary-subtotal">KES 0</span></div>
+                <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
+                <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
+              </div>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Record M-Pesa payment</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
+              <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
+              <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
+            </div>
+          </aside>
+</div>
     <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-head"><h3 id="mpesa-title">M-Pesa payment</h3><button type="button" class="icon-button" onclick="closeModal('mpesa-modal')" aria-label="Close">×</button></div>
@@ -176,12 +192,8 @@
 
     <div id="receipt-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="receipt-title" onclick="backdropClose(event,'receipt-modal')"><div class="modal narrow" onclick="event.stopPropagation()"><div class="modal-head"><h3 id="receipt-title">Payment receipt</h3><button type="button" class="icon-button" onclick="closeModal('receipt-modal')" aria-label="Close">×</button></div><div class="modal-body receipt-body"><div class="receipt-meta"><span id="rcpt-ref">REF-0001</span><span id="rcpt-client">Wanjiku Njuguna</span></div><div id="rcpt-items" class="receipt-items"></div><div class="receipt-total"><span>Total</span><strong id="rcpt-total">KES 0</strong></div></div><div class="modal-actions"><button type="button" class="button-secondary" onclick="printReceipt()">Print</button><button type="button" class="button-primary" onclick="closeModal('receipt-modal')">Done</button></div></div></div>
 
+
   </form>
-  <footer class="legal-footer-links" aria-label="Customer legal policies">
-    <a href="{% url 'storefront:privacy' %}">Privacy policy</a>
-    <a href="{% url 'storefront:terms' %}">Terms of service</a>
-    <a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a>
-  </footer>
 
   <script>
     const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
@@ -555,6 +567,9 @@
       document.getElementById('nav-pos-btn').classList.toggle('active',mode==='pos');
       const adminBtn=document.getElementById('nav-admin-btn');
       if(adminBtn) adminBtn.classList.toggle('active',mode==='admin');
+      const panel=document.querySelector('.checkout-panel');if(panel)panel.classList.toggle('hidden',mode!=='pos');
+      const shell=document.querySelector('.admin-app-shell');if(shell)shell.classList.toggle('inventory-mode',mode==='admin');
+      const crumb=document.getElementById('workspace-breadcrumb');if(crumb)crumb.textContent=mode==='admin'?'Inventory':'Checkout';
     }
     function toggleMobileMode(){
       if(!(adminSuite && adminSuite.is_manager)){switchMode('pos');return;}
@@ -647,8 +662,13 @@
     function printReceipt(){window.print();}
     function sendSMSReceipt(){alert('SMS delivery is a UI simulation. Connect your SMS provider before using this in production.');}
 
-    function toggleTheme(){const root=document.documentElement,theme=root.dataset.theme==='dark'?'light':'dark';root.dataset.theme=theme;document.querySelector('meta[name="theme-color"]').setAttribute('content',theme==='dark'?'#171016':'#f7f3f5');try{localStorage.setItem('lashpro-theme',theme);}catch(e){}} 
-    (function restoreTheme(){try{const saved=localStorage.getItem('lashpro-theme');if(saved==='light'||saved==='dark'){document.documentElement.dataset.theme=saved;}}catch(e){}})();
+    function toggleTheme(){
+      const root=document.documentElement,theme=root.dataset.theme==='dark'?'light':'dark';root.dataset.theme=theme;root.style.colorScheme=theme;
+      const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#211922':'#fbf4f6');
+      const btn=document.getElementById('theme-toggle');if(btn){btn.innerHTML='<i data-lucide="'+(theme==='dark'?'sun':'moon')+'"></i><span class="sr-only">Switch theme</span>';btn.setAttribute('aria-label',theme==='dark'?'Switch to light theme':'Switch to dark theme');btn.setAttribute('title',theme==='dark'?'Switch to light theme':'Switch to dark theme');btn.setAttribute('aria-pressed',String(theme==='dark'));refreshIcons();}
+      try{localStorage.setItem('lashpro-checkout-theme',theme);localStorage.setItem('lashpro-theme',theme);}catch(e){}
+    }
+    (function restoreTheme(){try{const saved=localStorage.getItem('lashpro-checkout-theme')||localStorage.getItem('lashpro-theme');if(saved==='light'||saved==='dark')document.documentElement.dataset.theme=saved;}catch(e){}})();
     function setupPWA(){window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('pwa-install-btn').classList.remove('hidden');});window.addEventListener('appinstalled',()=>{document.getElementById('pwa-install-btn').classList.add('hidden');});}
     async function installPWA(){if(!deferredPrompt){alert('To install this preview, use your browser menu and choose “Install app” or “Add to Home Screen” when available.');return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('pwa-install-btn').classList.add('hidden');}
     function updateOnlineStatus(){const badge=document.getElementById('connection-status');if(navigator.onLine){badge.innerHTML='<span class="status-dot"></span><span>Online</span>';badge.style.borderColor='rgba(122, 220, 183, 0.28)';badge.style.color='var(--green)';}else{badge.innerHTML='<span class="status-dot"></span><span>Offline</span>';badge.style.borderColor='rgba(255,160,170,0.28)';badge.style.color='var(--danger)';}}
