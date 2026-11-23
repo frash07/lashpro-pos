@@ -1,43 +1,93 @@
+/* LashPro POS design system
+   Canonical palette, typography, radii and elevation live here.
+   Feature stylesheets consume semantic tokens; compatibility aliases below
+   are intentionally centralised until their remaining consumers are retired. */
+
 :root,
 html[data-theme="light"] {
   color-scheme: light;
-  --brand: #BE2875;
-  --brand-hover: #9D174D;
-  --brand-soft: #FCE7F3;
-  --brand-rgb: 190, 40, 117;
 
-  --ui-canvas: #F5F7FB;
-  --ui-surface: #FFFFFF;
-  --ui-surface-muted: #F8FAFC;
-  --ui-border: #E2E8F0;
-  --ui-border-strong: #CBD5E1;
-  --ui-text: #111827;
-  --ui-muted: #667085;
-  --ui-subtle: #98A2B3;
+  /* Premium brand palette */
+  --premium-blush: #A33B62;
+  --premium-blush-hover: #84304F;
+  --premium-blush-soft: #F7E8ED;
+  --premium-petal: #F2B3C6;
+  --premium-petal-soft: #FBEFF3;
+  --premium-ivory: #F8F3EE;
+  --premium-ivory-light: #FFFCF9;
+  --premium-wine: #24171D;
 
-  --success: #16845B;
-  --success-soft: #E8F7EF;
-  --warning: #D97706;
-  --warning-soft: #FFF7ED;
-  --danger: #D92D4B;
-  --danger-soft: #FFF0F2;
-  --info: #2563EB;
-  --info-soft: #EFF6FF;
+  /* Semantic colour roles */
+  --brand: var(--premium-blush);
+  --brand-hover: var(--premium-blush-hover);
+  --brand-soft: var(--premium-blush-soft);
+  --brand-rgb: 163, 59, 98;
 
-  --shadow-sm: 0 4px 12px rgba(15, 23, 42, .05);
-  --shadow-md: 0 12px 28px rgba(15, 23, 42, .08);
-  --shadow-lg: 0 24px 56px rgba(15, 23, 42, .12);
+  --ui-canvas: var(--premium-ivory);
+  --ui-surface: var(--premium-ivory-light);
+  --ui-surface-muted: #F2EAE4;
+  --ui-surface-raised: #FFFFFF;
+  --ui-border: #E8DCE0;
+  --ui-border-strong: #D7C2C8;
+  --ui-text: var(--premium-wine);
+  --ui-text-rgb: 36, 23, 29;
+  --ui-muted: #796970;
+  --ui-subtle: #A3959B;
+  --ui-surface-rgb: 255, 252, 249;
+  --contrast-rgb: 255, 255, 255;
+  --shadow-rgb: 36, 23, 29;
+  --overlay-rgb: 18, 10, 14;
 
+  --success: #287A5B;
+  --success-rgb: 40, 122, 91;
+  --success-soft: #EAF4ED;
+  --warning: #A96B2D;
+  --warning-rgb: 169, 107, 45;
+  --warning-soft: #F8F0E4;
+  --danger: #B7475A;
+  --danger-rgb: 183, 71, 90;
+  --danger-soft: #F9EAED;
+  --info: #486F9D;
+  --info-rgb: 72, 111, 157;
+  --info-soft: #EAF0F7;
+
+  /* Theme-aware focus, elevation and component primitives */
+  --lp-focus: rgba(var(--brand-rgb), .28);
+  --shadow-sm: 0 4px 12px rgba(var(--shadow-rgb), .055);
+  --shadow-md: 0 12px 28px rgba(var(--shadow-rgb), .085);
+  --shadow-lg: 0 24px 56px rgba(var(--shadow-rgb), .13);
+  --shadow-card: var(--shadow-sm);
+  --bg-gradient: linear-gradient(180deg, var(--ui-surface), var(--ui-canvas));
+  --hero-gradient: linear-gradient(135deg, var(--premium-petal-soft), var(--ui-surface), var(--ui-surface-muted));
+  --payment-mpesa-gradient: linear-gradient(135deg, #11B780, #0B8C61);
+
+  --lp-radius-xs: 6px;
+  --lp-radius-sm: 10px;
+  --lp-radius-md: 14px;
+  --lp-radius-lg: 18px;
+  --lp-radius-xl: 24px;
+  --lp-radius-receipt: 20px;
+  --lp-radius-receipt-mobile: 15px;
+  --lp-radius-pill: 999px;
+  --radius: var(--lp-radius-lg);
+  --radius-sm: 13px;
+
+  --lp-font-ui: "Inter", "Segoe UI", sans-serif;
+  --lp-font-display: "Playfair Display", Georgia, serif;
+  --font-ui: var(--lp-font-ui);
+  --font-display: var(--lp-font-display);
+
+  /* Compatibility aliases: keep old component names mapped to semantic roles. */
   --lp-pink-50: var(--brand-soft);
-  --lp-pink-100: #FBCFE8;
-  --lp-pink-200: #F9A8D4;
-  --lp-pink-300: #F472B6;
-  --lp-pink-400: #EC4899;
+  --lp-pink-100: var(--premium-petal-soft);
+  --lp-pink-200: var(--premium-petal);
+  --lp-pink-300: var(--premium-petal);
+  --lp-pink-400: var(--premium-blush);
   --lp-pink-500: var(--brand);
   --lp-pink-600: var(--brand);
   --lp-pink-700: var(--brand-hover);
-  --lp-pink-800: #831843;
-  --lp-pink-900: #500724;
+  --lp-pink-800: var(--brand-hover);
+  --lp-pink-900: var(--premium-wine);
 
   --lp-neutral-0: var(--ui-surface);
   --lp-neutral-50: var(--ui-canvas);
@@ -46,10 +96,10 @@ html[data-theme="light"] {
   --lp-neutral-300: var(--ui-border-strong);
   --lp-neutral-400: var(--ui-subtle);
   --lp-neutral-500: var(--ui-muted);
-  --lp-neutral-600: #475467;
-  --lp-neutral-700: #344054;
+  --lp-neutral-600: var(--ui-muted);
+  --lp-neutral-700: var(--ui-text);
   --lp-neutral-800: var(--ui-text);
-  --lp-neutral-900: #101828;
+  --lp-neutral-900: var(--ui-text);
 
   --lp-success: var(--success);
   --lp-success-soft: var(--success-soft);
@@ -62,13 +112,6 @@ html[data-theme="light"] {
   --lp-shadow-sm: var(--shadow-sm);
   --lp-shadow-md: var(--shadow-md);
   --lp-shadow-lg: var(--shadow-lg);
-  --lp-radius-sm: 10px;
-  --lp-radius-md: 14px;
-  --lp-radius-lg: 18px;
-  --lp-radius-pill: 999px;
-  --lp-font-display: "Playfair Display", Georgia, serif;
-  --lp-font-ui: "Inter", "Segoe UI", sans-serif;
-
   --lp-surface: var(--ui-surface);
   --lp-surface-alt: var(--ui-surface-muted);
   --lp-surface-strong: var(--ui-surface-muted);
@@ -77,44 +120,33 @@ html[data-theme="light"] {
   --lp-border-strong: var(--ui-border-strong);
   --lp-text: var(--ui-text);
   --lp-text-muted: var(--ui-muted);
-  --lp-focus: rgba(var(--brand-rgb), .28);
-
   --lp-btn-primary-bg: var(--brand);
-  --lp-btn-primary-text: #FFFFFF;
+  --lp-btn-primary-text: var(--on-accent);
   --lp-btn-primary-hover: var(--brand-hover);
 
-  /* Backwards-compatible aliases. Remove only after every consumer is migrated. */
+  /* Legacy naming bridge */
   --pink-50: var(--lp-pink-50);
   --pink-100: var(--lp-pink-100);
+  --pink-200: var(--lp-pink-200);
   --pink-600: var(--lp-pink-600);
   --pink-700: var(--lp-pink-700);
   --ink-500: var(--ui-muted);
   --ink-700: var(--ui-text);
-  --ink-900: #101828;
-  --line: var(--ui-border);
-  --green-100: var(--success-soft);
-  --green-600: var(--success);
-  --red-100: var(--danger-soft);
-  --red-600: var(--danger);
-  --amber-100: var(--warning-soft);
-  --amber-600: var(--warning);
-  --font-ui: var(--lp-font-ui);
-  --font-display: var(--lp-font-display);
-  --shadow-card: var(--shadow-sm);
-  --bg-gradient: linear-gradient(180deg, #FFFFFF, var(--ui-canvas));
-
-  /* Legacy component aliases retained during the migration. */
+  --ink-900: var(--ui-text);
   --ink: var(--ui-text);
   --surface: var(--ui-surface);
-  --surface-raised: var(--ui-surface);
+  --surface-raised: var(--ui-surface-raised);
   --surface-soft: var(--brand-soft);
   --text: var(--ui-text);
   --muted: var(--ui-muted);
-  --muted-bright: #475467;
+  --muted-bright: var(--ui-muted);
+  --subtle: var(--ui-subtle);
   --border: var(--ui-border);
   --border-strong: var(--ui-border-strong);
+  --line: var(--ui-border);
+  --line-strong: var(--ui-border-strong);
   --rose: var(--brand);
-  --rose-light: var(--brand);
+  --rose-light: var(--premium-petal);
   --rose-deep: var(--brand-hover);
   --rose-wash: var(--brand-soft);
   --gold: var(--warning);
@@ -124,61 +156,171 @@ html[data-theme="light"] {
   --bg: var(--ui-canvas);
   --bg-2: var(--ui-surface-muted);
   --surface-2: var(--ui-surface-muted);
-  --surface-3: #EEF2F6;
-  --subtle: var(--ui-subtle);
-  --line-strong: var(--ui-border-strong);
-  --red: var(--danger);
-  --amber: var(--warning);
-  --blue: var(--info);
+  --surface-3: var(--ui-surface-raised);
   --green: var(--success);
   --green-bg: var(--success-soft);
-  --radius: 18px;
-  --radius-sm: 13px;
+  --green-100: var(--success-soft);
+  --green-600: var(--success);
+  --amber: var(--warning);
+  --amber-100: var(--warning-soft);
+  --amber-600: var(--warning);
+  --red: var(--danger);
+  --red-100: var(--danger-soft);
+  --red-600: var(--danger);
+  --blue: var(--info);
+
+  /* Admin-suite compatibility names; values still originate from this file. */
+  --rose-rgb: var(--brand-rgb);
+  --rose-25: var(--ui-surface);
+  --rose-50: var(--ui-surface-muted);
+  --rose-100: var(--brand-soft);
+  --rose-150: var(--ui-border);
+  --rose-200: var(--ui-border-strong);
+  --rose-300: var(--brand);
+  --rose-400: var(--brand);
+  --rose-500: var(--brand);
+  --rose-600: var(--brand);
+  --rose-700: var(--brand-hover);
+  --rose-800: var(--brand-hover);
+  --muted2: var(--ui-subtle);
+  --paper: var(--ui-surface);
+  --canvas: var(--ui-canvas);
+  --line2: var(--ui-border-strong);
+  --gold-bg: var(--warning-soft);
+  --shadow: var(--shadow-md);
+  --surface-1: var(--ui-surface);
+  --hero-start: var(--premium-petal-soft);
+  --hero-mid: var(--ui-surface);
+  --hero-end: var(--ui-surface-muted);
+  --field-bg: var(--ui-surface);
+  --field-border: var(--ui-border-strong);
+  --focus-ring: var(--lp-focus);
+  --r: var(--lp-radius-lg);
+  --receipt-paper: #FFFFFF;
+  --receipt-ink: #24171D;
+  --receipt-border: var(--ui-border);
+  --receipt-muted: var(--ui-muted);
+  --pink: var(--brand);
+  --pink-strong: var(--brand-hover);
+  --pink-deep: var(--brand-hover);
+  --pink-soft: var(--brand-soft);
+  --pink-wash: var(--brand-soft);
+  --on-accent: #FFFFFF;
+
+  /* Compatibility values centralised during the stylesheet migration. */
+  --lp-compat-color-c4ae0b53: var(--on-accent);
+  --lp-compat-radius-9d70d420: 14px;
+  --lp-compat-radius-c8900c27: 11px;
+  --lp-compat-radius-61f9253f: 19px;
+  --lp-compat-radius-37275922: 12px;
+  --lp-compat-radius-c945281f: 9px!important;
+  --lp-compat-radius-555f3b2f: 10px!important;
+  --lp-compat-radius-a5bea61d: 13px;
+  --lp-compat-radius-50284a3e: 7px;
+  --lp-compat-radius-d1bd337b: 14px!important;
+  --lp-compat-shadow-bb8ad084: none!important;
+  --lp-compat-color-fdc06201: rgba(var(--success-rgb), .1);
+  --lp-compat-radius-89905e7f: 20px;
+  --lp-compat-radius-7d19d716: 16px;
+  --lp-compat-radius-7e291c02: 999px;
+  --lp-compat-radius-2098915f: 50%;
+  --lp-compat-color-3e627bcc: rgba(var(--brand-rgb), .18);
+  --lp-compat-radius-59f8bf2c: 10px;
+  --lp-compat-shadow-e704f960: 0 5px 16px var(--lp-compat-color-3e627bcc);
+  --lp-compat-radius-0e828a1b: 15px;
+  --lp-compat-radius-3e5e555b: 14px !important;
+  --lp-compat-radius-bd7fef27: 10px !important;
+  --lp-compat-radius-a43c7e37: 9px !important;
+  --lp-compat-radius-05011417: 8px;
+  --lp-compat-color-00472a63: rgba(var(--brand-rgb), .12);
+  --lp-compat-radius-eb617231: 17px;
+  --lp-compat-radius-9669c71c: 9px;
+  --lp-compat-color-5ea69147: rgba(var(--shadow-rgb), .18);
+  --lp-compat-color-ec38005d: rgba(var(--brand-rgb), .18);
+  --lp-compat-radius-1af91184: 21px;
+  --lp-compat-radius-f361d844: 18px;
+  --lp-compat-shadow-15a73667: 0 8px 28px var(--lp-compat-color-5ea69147);
+  --lp-compat-shadow-37a436bb: 0 0 0 4px var(--pink-wash);
+
+  /* Compatibility values centralised during the stylesheet migration. */
+  --lp-compat-radius-c13a0039: 6px;
+  --lp-compat-radius-fa52629a: 23px;
+  --lp-compat-radius-609a4a98: 25px;
+  --lp-compat-radius-68e9af95: 22px;
+  --lp-compat-radius-2cddb8f7: 9px 9px 0 0;
+
+  /* Compatibility values centralised during the stylesheet migration. */
+  --lp-compat-radius-ac61c489: 26px;
+
+  /* Compatibility values centralised during the stylesheet migration. */
+  --lp-compat-radius-72f9b048: 5px;
+  --lp-compat-radius-663973be: 30px;
+
+  /* Compatibility values centralised during the stylesheet migration. */
+  --lp-compat-shadow-cca471f0: 0 0 0 3px color-mix(in srgb,currentColor 16%,transparent);
 }
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --brand: #F472B6;
-  --brand-hover: #FB8BC8;
-  --brand-soft: rgba(244, 114, 182, .12);
-  --brand-rgb: 244, 114, 182;
 
-  --ui-canvas: #0B1220;
-  --ui-surface: #111827;
-  --ui-surface-muted: #1F2937;
-  --ui-border: #344054;
-  --ui-border-strong: #475467;
-  --ui-text: #F8FAFC;
-  --ui-muted: #AAB4C3;
-  --ui-subtle: #7D8999;
+  --premium-blush: #F0A6BC;
+  --premium-blush-hover: #F7C2D0;
+  --premium-blush-soft: rgba(240, 166, 188, .14);
+  --premium-petal: #F2B3C6;
+  --premium-petal-soft: rgba(242, 179, 198, .10);
+  --premium-ivory: #171116;
+  --premium-ivory-light: #211920;
+  --premium-wine: #F5EAF0;
 
-  --success: #4ADE80;
-  --success-soft: rgba(74, 222, 128, .12);
-  --warning: #FBBF24;
-  --warning-soft: rgba(251, 191, 36, .12);
-  --danger: #FB7185;
-  --danger-soft: rgba(251, 113, 133, .12);
-  --info: #60A5FA;
-  --info-soft: rgba(96, 165, 250, .12);
+  --brand: var(--premium-blush);
+  --brand-hover: var(--premium-blush-hover);
+  --brand-soft: var(--premium-blush-soft);
+  --brand-rgb: 240, 166, 188;
 
-  --lp-pink-800: #F9A8D4;
-  --lp-pink-900: #FCE7F3;
-  --lp-neutral-600: #CBD5E1;
-  --lp-neutral-700: #E2E8F0;
-  --lp-neutral-900: #F8FAFC;
-  --lp-focus: rgba(244, 114, 182, .34);
+  --ui-canvas: #171116;
+  --ui-surface: #211920;
+  --ui-surface-muted: #2C2028;
+  --ui-surface-raised: #352730;
+  --ui-border: #493640;
+  --ui-border-strong: #604652;
+  --ui-text: #F5EAF0;
+  --ui-text-rgb: 245, 234, 240;
+  --ui-muted: #C6B5BE;
+  --ui-subtle: #9E8994;
+  --ui-surface-rgb: 33, 25, 32;
+  --shadow-rgb: 0, 0, 0;
+  --overlay-rgb: 0, 0, 0;
+
+  --success: #76C69D;
+  --success-rgb: 118, 198, 157;
+  --success-soft: rgba(118, 198, 157, .14);
+  --warning: #E0B16F;
+  --warning-rgb: 224, 177, 111;
+  --warning-soft: rgba(224, 177, 111, .14);
+  --danger: #E58A9A;
+  --danger-rgb: 229, 138, 154;
+  --danger-soft: rgba(229, 138, 154, .14);
+  --info: #91B5DD;
+  --info-rgb: 145, 181, 221;
+  --info-soft: rgba(145, 181, 221, .14);
+
+  --lp-focus: rgba(var(--brand-rgb), .38);
+  --shadow-sm: 0 4px 12px rgba(var(--shadow-rgb), .24);
+  --shadow-md: 0 12px 28px rgba(var(--shadow-rgb), .34);
+  --shadow-lg: 0 24px 56px rgba(var(--shadow-rgb), .48);
   --bg-gradient: linear-gradient(180deg, var(--ui-canvas), var(--ui-surface));
-  --muted-bright: #D0D5DD;
-  --surface-3: #293548;
-  --muted: var(--ui-muted);
-  --subtle: var(--ui-subtle);
-  --green-bg: var(--success-soft);
+  --hero-gradient: linear-gradient(135deg, var(--ui-surface-muted), var(--ui-surface), var(--ui-canvas));
+  --payment-mpesa-gradient: linear-gradient(135deg, #11B780, #0B8C61);
+
+  --on-accent: #24171D;
+  --lp-btn-primary-text: var(--on-accent);
+  --receipt-paper: #FFFFFF;
+  --receipt-ink: #24171D;
+  --receipt-border: #D7C2C8;
+  --receipt-muted: #796970;
 }
 
-html {
-  font-size: 16px;
-}
-
+html { font-size: 16px; }
 body {
   margin: 0;
   background: var(--ui-canvas);
@@ -187,14 +329,10 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-
 * { box-sizing: border-box; }
 img { max-width: 100%; }
 a { color: var(--brand); text-decoration: none; }
 a:hover { color: var(--brand-hover); }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
-:focus-visible {
-  outline: 3px solid var(--lp-focus);
-  outline-offset: 2px;
-}
+:focus-visible { outline: 3px solid var(--lp-focus); outline-offset: 2px; }

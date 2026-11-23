@@ -1,10 +1,9 @@
 /* Django admin theme mapped to the shared LashPro POS design tokens. */
 :root {
-  color-scheme: light;
   --primary: var(--brand);
   --secondary: var(--ui-surface-muted);
   --accent: var(--brand);
-  --primary-fg: #FFFFFF;
+  --primary-fg: var(--on-accent);
   --header-bg: var(--ui-surface);
   --header-color: var(--ui-text);
   --body-bg: var(--ui-canvas);
@@ -51,7 +50,7 @@ div.breadcrumbs a:link, div.breadcrumbs a:visited { color: var(--brand); }
 .module, #content-related, #changelist-filter, .inline-group, .dashboard .module {
   overflow: hidden;
   border: 1px solid var(--ui-border);
-  border-radius: 12px;
+  border-radius: var(--lp-compat-radius-37275922);
   background: var(--ui-surface);
   box-shadow: var(--shadow-sm);
 }
@@ -74,9 +73,9 @@ div.breadcrumbs a:link, div.breadcrumbs a:visited { color: var(--brand); }
 #toolbar, .paginator, .submit-row { border-color: var(--ui-border); background: var(--ui-surface); }
 .button, input[type="submit"], input[type="button"], .submit-row input, a.button, .object-tools a {
   border: 1px solid var(--brand);
-  border-radius: 7px;
+  border-radius: var(--lp-compat-radius-50284a3e);
   background: var(--brand);
-  color: #FFFFFF !important;
+  color: var(--on-accent) !important;
   font-weight: 700;
 }
 .button:hover, input[type="submit"]:hover, input[type="button"]:hover,
@@ -89,11 +88,11 @@ div.breadcrumbs a:link, div.breadcrumbs a:visited { color: var(--brand); }
 a.deletelink, .deletelink-box a {
   border-color: var(--danger);
   background: var(--danger);
-  color: #FFFFFF !important;
+  color: var(--on-accent) !important;
 }
 input, select, textarea {
   border-color: var(--ui-border-strong);
-  border-radius: 6px;
+  border-radius: var(--lp-compat-radius-c13a0039);
   background: var(--ui-surface);
   color: var(--ui-text);
 }
@@ -103,14 +102,14 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
   border-color: var(--brand);
 }
 .help, p.help, form .help, div.help, .quiet { color: var(--ui-muted); }
-.messagelist li { border-radius: 7px; }
+.messagelist li { border-radius: var(--lp-compat-radius-50284a3e); }
 .messagelist li.success { background: var(--success-soft); color: var(--success); }
 .messagelist li.warning { background: var(--warning-soft); color: var(--warning); }
 .messagelist li.error { background: var(--danger-soft); color: var(--danger); }
 .selector-chosen h2 { background: var(--ui-surface-muted); }
 .calendar td.selected a, .calendar td a:focus, .clockbox h2 {
   background: var(--brand);
-  color: #FFFFFF;
+  color: var(--on-accent);
 }
 hr { border-color: var(--ui-border); }
 @media (max-width: 767px) {

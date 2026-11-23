@@ -14,8 +14,8 @@
   padding: 27px 31px;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: 22px;
-  background: radial-gradient(ellipse at 84% 25%,rgba(241,125,182,.19),transparent 36%),linear-gradient(110deg,var(--surface),var(--surface-2));
+  border-radius: var(--lp-compat-radius-68e9af95);
+  background: radial-gradient(ellipse at 84% 25%,rgba(var(--brand-rgb), .19),transparent 36%),linear-gradient(110deg,var(--surface),var(--surface-2));
   box-shadow: var(--shadow);
 }
 .sales-refunds-hero:after {
@@ -24,7 +24,7 @@
   right: 24%;
   top: -65px;
   color: var(--pink);
-  font: 205px/1 'Playfair Display',Georgia,serif;
+  font: 205px/1 var(--lp-font-display),Georgia,serif;
   opacity: .035;
   pointer-events: none;
 }
@@ -35,7 +35,7 @@
   gap: 8px;
   padding: 7px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border-radius: var(--lp-compat-radius-7e291c02);
   background: var(--pink-wash);
   color: var(--pink);
   font-size: 9px;
@@ -46,7 +46,7 @@
 .sales-refunds-hero h2 {
   margin: 14px 0 8px;
   color: var(--text);
-  font: 500 29px/1.15 'Playfair Display',Georgia,serif;
+  font: 500 29px/1.15 var(--lp-font-display),Georgia,serif;
   letter-spacing: -.025em;
 }
 .sales-refunds-hero h2 em { color: var(--pink); font-weight: 400; }
@@ -66,14 +66,14 @@
   min-height: 38px;
   padding: 10px 13px;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: var(--lp-compat-radius-59f8bf2c);
   font-size: 10px;
   font-weight: 700;
   text-decoration: none !important;
   transition: transform .18s,border-color .18s,background .18s;
 }
-.sales-refunds-primary { border-color: var(--pink); background: var(--pink); color: #fff !important; }
-.sales-refunds-primary:hover { transform: translateY(-1px); background: var(--pink-strong); color: #fff !important; }
+.sales-refunds-primary { border-color: var(--pink); background: var(--pink); color: var(--on-accent) !important; }
+.sales-refunds-primary:hover { transform: translateY(-1px); background: var(--pink-strong); color: var(--on-accent) !important; }
 .sales-refunds-secondary { background: var(--surface); color: var(--text) !important; }
 .sales-refunds-secondary:hover { border-color: var(--pink); background: var(--pink-wash); color: var(--pink) !important; }
 .sales-refunds-primary svg,.sales-refunds-secondary svg { width: 14px; height: 14px; }
@@ -106,7 +106,7 @@
   gap: 6px;
   padding: 7px 9px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--lp-compat-radius-7e291c02);
   background: var(--surface);
   color: var(--muted);
   font-size: 9px;
@@ -116,7 +116,7 @@
 .sales-refunds-content {
   padding: 17px;
   border: 1px solid var(--line);
-  border-radius: 19px;
+  border-radius: var(--lp-compat-radius-61f9253f);
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -127,7 +127,7 @@
   margin: 19px 0 0;
   padding: 15px 17px;
   border: 1px solid var(--line);
-  border-radius: 15px;
+  border-radius: var(--lp-compat-radius-0e828a1b);
   background: var(--surface);
 }
 .sales-refunds-guidance-icon {
@@ -136,8 +136,8 @@
   height: 34px;
   flex: 0 0 34px;
   place-items: center;
-  border-radius: 11px;
-  background: rgba(109,214,173,.10);
+  border-radius: var(--lp-compat-radius-c8900c27);
+  background: rgba(var(--success-rgb), .10);
   color: var(--green);
 }
 .sales-refunds-guidance-icon svg { width: 17px; height: 17px; }
@@ -161,8 +161,8 @@
 /* Django changelist remains fully functional inside the branded register surface. */
 .sales-refunds-content #changelist { margin: 0; }
 .sales-refunds-content #changelist-form { overflow-x: auto; }
-.sales-refunds-content #changelist-filter { border-radius: 12px; }
-.sales-refunds-content #toolbar { border-radius: 10px; }
+.sales-refunds-content #changelist-filter { border-radius: var(--lp-compat-radius-37275922); }
+.sales-refunds-content #toolbar { border-radius: var(--lp-compat-radius-59f8bf2c); }
 .sales-refunds-content .results { min-width: 720px; }
 .sales-refunds-content .paginator { padding: 12px 4px; }
 
@@ -186,12 +186,12 @@
   .sales-refunds-heading { gap: 12px; margin-bottom: 16px; }
   .sales-refunds-heading h1 { font-size: 26px; }
   .sales-refunds-heading .heading-actions { flex-wrap: wrap; }
-  .sales-refunds-hero { min-height: 0; padding: 21px 18px; border-radius: 17px; }
+  .sales-refunds-hero { min-height: 0; padding: 21px 18px; border-radius: var(--lp-compat-radius-eb617231); }
   .sales-refunds-hero h2 { font-size: 24px; }
   .sales-refunds-hero-actions { flex-direction: column; align-items: stretch; }
   .sales-refunds-primary,.sales-refunds-secondary { justify-content: center; }
   .sales-refunds-register-heading { align-items: flex-start; flex-direction: column; }
-  .sales-refunds-content { padding: 10px; border-radius: 14px; }
+  .sales-refunds-content { padding: 10px; border-radius: var(--lp-compat-radius-9d70d420); }
   .sales-refunds-guidance { padding: 13px; }
   .sales-refunds-footer { flex-direction: column; gap: 5px; }
 }
