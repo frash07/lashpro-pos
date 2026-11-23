@@ -4,9 +4,9 @@
 
 `static/css/tokens.css` is the single source of truth for the POS design system:
 
-- Premium brand: blush `#A33B62`, petal `#F2B3C6`, ivory surfaces, and wine text.
+- Premium brand: vivid pink `#E94F9B` with petal highlights, cool neutral light surfaces, and true obsidian dark surfaces (`#0B0B0F` canvas).
 - Semantic roles for surfaces, borders, text, brand, success, warning, danger, and info.
-- Light and dark theme values under `html[data-theme]`.
+- Light and dark theme values under `html[data-theme]`; the dark palette uses neutral obsidian/charcoal values and must not introduce brown, beige, taupe, or wine casts.
 - UI/display fonts, radii, focus treatment, shadows, and reusable gradients.
 - Compatibility aliases for older POS/admin component names. These are defined only in this file and should be retired as consumers are modernised.
 
