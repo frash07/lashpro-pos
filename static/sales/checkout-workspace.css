@@ -284,3 +284,15 @@ html[data-theme="dark"] .checkout-main .retail-row.is-sold-out{opacity:.96}
 @media(prefers-reduced-motion:reduce){
   .checkout-main .service-card,.checkout-main .retail-row{transition:none}
 }
+
+
+/* Keep the legacy stock-badge hook for existing POS tests/integrations while
+   rendering the stock state as restrained inline metadata in the new tile. */
+.checkout-main .retail-price small.stock-badge{
+  display:block;max-width:132px;margin:4px 0 0;padding:0;border:0;border-radius:0;
+  background:transparent;color:var(--green);font-size:8px;font-weight:700;
+  letter-spacing:0;line-height:1.35;text-align:right;white-space:normal
+}
+.checkout-main .retail-price small.stock-badge.is-sold-out{color:#a52b51}
+html[data-theme="dark"] .checkout-main .retail-price small.stock-badge.is-sold-out{color:#ffd6e1}
+@media(max-width:600px){.checkout-main .retail-price small.stock-badge{max-width:105px}}
