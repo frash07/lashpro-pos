@@ -383,75 +383,54 @@
       document.getElementById('result-count').textContent=filtered.length+' '+(filtered.length===1?'item':'items');
       if(!filtered.length){grid.innerHTML='<div class="no-results">No items match your search. Try another name or category.</div>';return;}
 
-      const services=filtered.filter(item=>item.type==='service');
-      const products=filtered.filter(item=>item.type==='product');
-      const otherItems=filtered.filter(item=>item.type!=='service'&&item.type!=='product');
       const locked=Boolean(pendingCheckout);
-      let markup='';
-
-      if(services.length){
-        const cards=services.map(item=>{
-          const durationMatch=String(item.desc||'').match(/\b(\d+)\s*(?:minutes?|mins?)\b/i);
-          const duration=durationMatch
-            ? '<span class="duration"><i data-lucide="clock" aria-hidden="true"></i>'+escapeHtml(durationMatch[1])+' min</span>'
-            : '';
-          const artLabel=String(item.name||'Lash service').replace(/\bLashes\b/i,'Set');
-          const description=item.desc&&!durationMatch?'<p>'+escapeHtml(item.desc)+'</p>':'';
-          const activation=locked?'':'onclick="addToCart(\''+escapeHtml(item.id)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+escapeHtml(item.id)+'\');}"';
-          const label=escapeHtml(item.name)+(durationMatch?', '+durationMatch[1]+' minute session':'')+(locked?', checkout pending':', add lash service');
-          return '<article class="catalog-card service-card'+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(locked?'-1':'0')+'" aria-disabled="'+String(locked)+'" aria-label="'+label+'" '+activation+'>'+
-            '<div class="service-art"><span class="art-word">'+escapeHtml(artLabel)+'</span><span class="art-symbol"><i data-lucide="sparkles" aria-hidden="true"></i></span></div>'+
-            '<div class="service-body"><div class="service-meta"><span class="tag">Lash service</span>'+duration+'</div>'+
-            '<h3>'+escapeHtml(item.name)+'</h3>'+description+
-            '<div class="service-bottom"><span class="price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span><span class="add-button" aria-hidden="true"><i data-lucide="plus"></i> Add</span></div></div></article>';
-        }).join('');
-        markup+='<section class="catalog-collection"><div class="collection-label">Signature treatments <span>'+services.length+'</span></div><div class="service-grid">'+cards+'</div></section>';
-      }
-
-      if(products.length){
-        const rows=products.map(item=>{
-          const available=maxSellableQuantity(item);
-          const soldOut=available<1;
-          const disabled=soldOut||locked;
-          const stockValue=Number(item.stock)||0;
-          const stockText=stockValue.toLocaleString('en-KE',{maximumFractionDigits:3});
-          const onHandValue=Number(item.on_hand);
-          const onHandText=Number.isFinite(onHandValue)?onHandValue.toLocaleString('en-KE',{maximumFractionDigits:3}):stockText;
-          const stockSummary=Number.isFinite(onHandValue)&&onHandValue>stockValue
-            ? stockText+' available · '+onHandText+' on hand'
-            : stockText+' available';
-          const stockLabel=soldOut
-            ? (onHandValue>0?onHandText+' on hand · reserved online':'Sold out')
-            : stockSummary;
-          const stockClass=soldOut?'out-of-stock':'available';
-          const iconName=/^[a-z0-9-]+$/i.test(String(item.icon||''))?String(item.icon):'package';
-          const description=item.desc||item.sku||'Retail & care essential';
-          const activation=disabled?'':'onclick="addToCart(\''+escapeHtml(item.id)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+escapeHtml(item.id)+'\');}"';
-          const label=escapeHtml(item.name)+', KES '+Number(item.price||0).toLocaleString('en-KE')+', '+stockLabel+(locked?', checkout pending':disabled?'':', add to order');
-          return '<article class="catalog-card retail-row'+(soldOut?' is-sold-out':'')+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(disabled?'-1':'0')+'" aria-disabled="'+String(disabled)+'" aria-label="'+escapeHtml(label)+'" '+activation+'>'+
-            '<span class="retail-thumb"><i data-lucide="'+escapeHtml(iconName)+'" aria-hidden="true"></i></span>'+
-            '<span class="retail-copy"><strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(description)+'</small></span>'+
-            '<span class="retail-price"><strong>KES '+Number(item.price||0).toLocaleString('en-KE')+'</strong><small class="stock-badge retail-stock-status '+stockClass+(soldOut?' is-sold-out':'')+'">'+escapeHtml(stockLabel)+'</small></span>'+
-            (disabled?'':'<span class="retail-add-indicator" aria-hidden="true"><i data-lucide="plus"></i></span>')+
-            '</article>';
-        }).join('');
-        markup+='<section class="catalog-collection"><div class="collection-label">Retail &amp; care essentials <span>Live stock</span></div><div class="retail-grid">'+rows+'</div></section>';
-      }
-
-      if(otherItems.length){
-        const cards=otherItems.map(item=>{
-          const disabled=locked;
-          const iconName=/^[a-z0-9-]+$/i.test(String(item.icon||''))?String(item.icon):'sparkles';
-          const activation=disabled?'':'onclick="addToCart(\''+escapeHtml(item.id)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+escapeHtml(item.id)+'\');}"';
-          return '<article class="catalog-card legacy-catalog-card'+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(locked?'-1':'0')+'" aria-disabled="'+String(locked)+'" '+activation+'>'+
-            '<div class="card-top"><span class="item-icon"><i data-lucide="'+escapeHtml(iconName)+'"></i></span><span class="type-tag">'+escapeHtml(typeLabel(item.type))+'</span></div>'+
-            '<div class="item-name">'+escapeHtml(item.name)+'</div><p class="item-desc">'+escapeHtml(item.desc)+'</p>'+
-            '<div class="card-bottom"><span class="item-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span><span class="add-item" aria-hidden="true"><i data-lucide="plus"></i></span></div></article>';
-        }).join('');
-        markup+='<section class="catalog-collection"><div class="collection-label">Additional items <span>'+otherItems.length+'</span></div><div class="legacy-grid">'+cards+'</div></section>';
-      }
-
-      grid.innerHTML=markup;
+      grid.innerHTML=filtered.map(item=>{
+        const isService=item.type==='service';
+        const isProduct=item.type==='product';
+        const available=maxSellableQuantity(item);
+        const soldOut=isProduct&&available<1;
+        const disabled=soldOut||locked;
+        const stockValue=Number(item.stock)||0;
+        const stockText=stockValue.toLocaleString('en-KE',{maximumFractionDigits:3});
+        const onHandValue=Number(item.on_hand);
+        const onHandText=Number.isFinite(onHandValue)?onHandValue.toLocaleString('en-KE',{maximumFractionDigits:3}):stockText;
+        const stockSummary=Number.isFinite(onHandValue)&&onHandValue>stockValue
+          ? stockText+' available · '+onHandText+' on hand'
+          : stockText+' available';
+        const stockLabel=soldOut
+          ? (onHandValue>0?onHandText+' on hand · reserved online':'Sold out')
+          : stockSummary;
+        const stockBadge=isProduct
+          ? '<span class="stock-badge retail-stock-status'+(soldOut?' is-sold-out':'')+'">'+escapeHtml(stockLabel)+'</span>'
+          : '';
+        const durationMatch=isService?String(item.desc||'').match(/\b(\d+)\s*(?:minutes?|mins?)\b/i):null;
+        const duration=durationMatch
+          ? '<span class="tile-duration"><i data-lucide="clock" aria-hidden="true"></i>'+escapeHtml(durationMatch[1])+' min</span>'
+          : '';
+        const description=isService
+          ? String(item.desc||'').replace(/\b\d+\s*(?:minutes?|mins?)\b/i,'').replace(/^[\s·,–-]+|[\s·,–-]+$/g,'').trim()
+          : String(item.desc||item.sku||'');
+        const iconName=/^[a-z0-9-]+$/i.test(String(item.icon||''))?String(item.icon):'package';
+        const artLabel=isService
+          ? String(item.name||'Lash service').replace(/\bLashes\b/i,'Set')
+          : (isProduct?'Retail & care':'Studio essential');
+        const art=isService
+          ? '<div class="tile-art service-art"><span class="art-word">'+escapeHtml(artLabel)+'</span><span class="art-symbol"><i data-lucide="sparkles" aria-hidden="true"></i></span></div>'
+          : '<div class="tile-art retail-art"><span class="retail-art-icon"><i data-lucide="'+escapeHtml(iconName)+'" aria-hidden="true"></i></span><span class="retail-art-label">'+escapeHtml(artLabel)+'</span></div>';
+        const tag=isService?'Lash service':isProduct?'Retail & care':typeLabel(item.type);
+        const activation=disabled?'':'onclick="addToCart(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToCart(\''+item.id+'\');}"';
+        const ariaState=soldOut?', sold out':locked?', checkout pending':', add to order';
+        const actionLabel=soldOut?'Unavailable':locked?'Locked':'<i data-lucide="plus" aria-hidden="true"></i> Add';
+        const actionMarkup=disabled
+          ? '<span class="tile-add is-disabled" aria-hidden="true">'+actionLabel+'</span>'
+          : '<span class="tile-add" aria-hidden="true">'+actionLabel+'</span>';
+        return '<article class="catalog-card premium-tile'+(isService?' service-card':isProduct?' retail-card':' other-card')+(soldOut?' is-sold-out':'')+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(disabled?'-1':'0')+'" aria-disabled="'+String(disabled)+'" aria-label="'+escapeHtml(item.name)+(isService&&durationMatch?', '+durationMatch[1]+' minute session':'')+ariaState+'" '+activation+'>'+
+          art+
+          '<div class="tile-body"><div class="tile-meta"><span class="tile-tag">'+escapeHtml(tag)+'</span>'+(isService?duration:stockBadge)+'</div>'+
+          '<h3 class="tile-title">'+escapeHtml(item.name)+'</h3>'+
+          (description?'<p class="tile-description">'+escapeHtml(description)+'</p>':'<p class="tile-description tile-description-empty"></p>')+
+          '<div class="tile-bottom"><span class="tile-price">KES '+Number(item.price||0).toLocaleString('en-KE')+'</span>'+actionMarkup+'</div></div></article>';
+      }).join('');
       refreshIcons();
     }
     let catalogRefreshInFlight=false;
