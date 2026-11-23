@@ -1,6 +1,4 @@
 /* Checkout workspace overrides — shares the Admin Suite theme */
-:root,html[data-theme="light"]{--pink:var(--rose-600);--pink-strong:var(--rose-700);--pink-deep:var(--rose-700);--pink-soft:var(--rose-100);--pink-wash:rgba(var(--rose-rgb),.09);--bg:var(--canvas);--bg-2:var(--rose-50);--surface:var(--paper);--surface-2:var(--surface-3);--surface-3:var(--rose-100);--text:var(--ink);--subtle:var(--muted2);--line-strong:var(--line2);--danger:#B74455;--red:var(--danger);--amber:var(--gold);--blue:#526cbb}
-html[data-theme="dark"]{--pink:var(--rose-600);--pink-strong:var(--rose-700);--pink-deep:var(--rose-700);--pink-soft:var(--rose-100);--pink-wash:rgba(var(--rose-rgb),.16);--bg:var(--canvas);--bg-2:var(--rose-50);--surface:var(--paper);--surface-2:var(--surface-3);--surface-3:var(--rose-100);--text:var(--ink);--subtle:var(--muted2);--line-strong:var(--line2);--danger:#F0A5AD;--red:var(--danger);--amber:var(--gold);--blue:#a3bafa}
 body.admin-suite-body.checkout-page{min-height:100vh;background:var(--canvas);color:var(--ink)}
 .checkout-sidebar .side-link{width:100%}
 .checkout-sidebar button.side-link{border:0;background:transparent;font:inherit;text-align:left;cursor:pointer}
@@ -12,8 +10,8 @@ html[data-theme="dark"] .checkout-sidebar button.side-link:hover{background:var(
 .checkout-main .welcome{margin-top:27px}.checkout-main .quick-stats{margin-bottom:25px}
 .checkout-main .section-heading{margin:0 0 14px}.checkout-main .section-heading h2{color:var(--ink)}.checkout-main .section-heading p{color:var(--muted)}
 .checkout-alert-stack{display:grid;gap:8px}.checkout-alert-stack>[hidden]{display:none!important}
-.checkout-alert-stack .checkout-status-unknown{margin:12px 0 0;padding:13px 16px;border:1px solid rgba(201,138,53,.28);border-radius:12px;background:var(--gold-bg);color:var(--ink);font-size:10px;line-height:1.55}
-html[data-theme="dark"] .checkout-alert-stack .checkout-status-unknown{border-color:rgba(228,189,131,.35);background:var(--gold-bg);color:#f6dfbb}
+.checkout-alert-stack .checkout-status-unknown{margin:12px 0 0;padding:13px 16px;border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);border-radius:12px;background:var(--gold-bg);color:var(--ink);font-size:10px;line-height:1.55}
+html[data-theme="dark"] .checkout-alert-stack .checkout-status-unknown{border-color:color-mix(in srgb,var(--gold) 36%,transparent);background:var(--gold-bg);color:var(--ink)}
 .checkout-main .catalog-controls{margin:0 0 13px}.checkout-main .search-box{min-width:0;max-width:520px;height:43px}.checkout-main .search-box input{min-height:0}
 .checkout-main .category-tabs{display:flex;gap:7px;overflow-x:auto;margin:0 0 17px;padding:0 0 2px;border:0;scrollbar-width:none}
 .checkout-main .cat-tab{display:inline-flex;min-height:38px;align-items:center;justify-content:center;gap:7px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--muted);font-size:9px;font-weight:800;white-space:nowrap}
@@ -21,7 +19,7 @@ html[data-theme="dark"] .checkout-alert-stack .checkout-status-unknown{border-co
 html[data-theme="dark"] .checkout-main .cat-tab{border-color:var(--line);background:var(--surface-2);color:var(--muted)}
 html[data-theme="dark"] .checkout-main .cat-tab.active{border-color:var(--rose-600);background:var(--rose-600);color:#fff}
 .checkout-main .catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;align-items:stretch}
-.checkout-main .catalog-card{min-width:0;min-height:215px;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--paper);box-shadow:0 7px 20px rgba(45,37,41,.035)}
+.checkout-main .catalog-card{min-width:0;min-height:215px;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--paper);box-shadow:0 7px 20px rgba(31, 37, 48,.035)}
 .checkout-main .card-image{min-height:66px;padding:11px 15px;border-bottom:1px solid var(--line);background:linear-gradient(115deg,var(--rose-50),var(--rose-100))}
 .checkout-main .card-image span{width:40px;height:40px;border:1px solid var(--line2);border-radius:12px;background:rgba(255,255,255,.62);color:var(--rose-700);font-size:19px}
 .checkout-main .card-copy{min-width:0;padding:13px 15px 15px}.checkout-main .card-head{gap:7px;margin-bottom:9px}
@@ -32,12 +30,12 @@ html[data-theme="dark"] .checkout-main .cat-tab.active{border-color:var(--rose-6
 .checkout-main .stock-badge{margin-top:10px;border-color:rgba(43,135,107,.22);background:var(--green-bg);color:var(--green);font-size:8px}
 .checkout-main .stock-badge.is-sold-out{border-color:rgba(199,55,99,.22);background:var(--danger-bg);color:var(--danger)}
 html[data-theme="dark"] .checkout-main .catalog-card{border-color:var(--line);background:var(--surface-2)}
-html[data-theme="dark"] .checkout-main .card-image{border-color:var(--line);background:linear-gradient(115deg,#382634,#302330)}
+html[data-theme="dark"] .checkout-main .card-image{border-color:var(--line);background:linear-gradient(115deg,var(--surface-3),var(--surface-2))}
 html[data-theme="dark"] .checkout-main .card-copy p{color:var(--muted)}
 html[data-theme="dark"] .checkout-main .card-price{color:var(--rose-700)}
-html[data-theme="dark"] .checkout-main .stock-badge{background:var(--green-bg);color:#bcebd6}
+html[data-theme="dark"] .checkout-main .stock-badge{background:var(--green-bg);color:var(--green)}
 html[data-theme="dark"] .checkout-main .stock-badge.is-sold-out{background:var(--danger-bg);color:var(--danger)}
-.checkout-panel{position:sticky;top:0;z-index:12;display:flex;width:100%;height:100vh;min-height:680px;max-height:100vh;flex-direction:column;overflow:auto;border:0;border-left:1px solid var(--line);border-radius:0;background:var(--paper);box-shadow:-12px 0 32px rgba(45,37,41,.025)}
+.checkout-panel{position:sticky;top:0;z-index:12;display:flex;width:100%;height:100vh;min-height:680px;max-height:100vh;flex-direction:column;overflow:auto;border:0;border-left:1px solid var(--line);border-radius:0;background:var(--paper);box-shadow:-12px 0 32px rgba(31, 37, 48,.025)}
 .checkout-panel .checkout-head{padding:27px 24px 19px;border-bottom:1px solid var(--line);background:linear-gradient(145deg,var(--surface-3),var(--paper) 72%)}
 .checkout-panel .checkout-title{color:var(--ink);font:500 24px/1 'Playfair Display',Georgia,serif}
 .checkout-panel .client-fields{grid-template-columns:1fr 1fr;gap:9px;margin:14px 21px 0;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2)}
@@ -58,12 +56,12 @@ html[data-theme="dark"] .checkout-main .stock-badge.is-sold-out{background:var(-
 .checkout-panel .pay-primary{min-height:46px;margin-top:14px;border-radius:10px;background:var(--rose-600);color:#fff;box-shadow:0 8px 18px rgba(var(--rose-rgb),.17);font-size:10px}
 .checkout-panel .pay-secondary button{min-height:43px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font-size:8px}
 html[data-theme="dark"] .checkout-panel{border-color:var(--line);background:var(--paper)}
-html[data-theme="dark"] .checkout-panel .checkout-head{border-color:var(--line);background:linear-gradient(145deg,#30212d,#211922 78%)}
+html[data-theme="dark"] .checkout-panel .checkout-head{border-color:var(--line);background:linear-gradient(145deg,var(--surface-3),var(--paper) 78%)}
 html[data-theme="dark"] .checkout-panel .client-fields,html[data-theme="dark"] .checkout-panel .cart-row{border-color:var(--line);background:var(--surface-2)}
 html[data-theme="dark"] .checkout-panel .field input,html[data-theme="dark"] .checkout-panel .field select,html[data-theme="dark"] .checkout-panel .promo-row input{border-color:var(--line2);background:var(--field-bg);color:var(--ink)}
-html[data-theme="dark"] .checkout-panel .btn-small{border-color:var(--line2);background:var(--surface-3);color:#f5bfd2}
+html[data-theme="dark"] .checkout-panel .btn-small{border-color:var(--line2);background:var(--surface-3);color:var(--rose-700)}
 html[data-theme="dark"] .checkout-panel .financial-total span:first-child,html[data-theme="dark"] .checkout-panel .financial-total span:last-child{color:var(--rose-700)}
-html[data-theme="dark"] .checkout-panel .pay-secondary button{border-color:var(--line);background:#302431;color:var(--ink)}
+html[data-theme="dark"] .checkout-panel .pay-secondary button{border-color:var(--line);background:var(--surface-2);color:var(--ink)}
 .checkout-legal-footer{margin-top:auto;padding:17px 0 0;border-top:1px solid var(--line);background:transparent}
 .checkout-page .icon-action{width:40px;height:40px}.checkout-page .profile{border-color:var(--line)}
 .checkout-page .profile-name{color:var(--ink)}.checkout-page .profile-role{color:var(--rose-700)}
@@ -81,15 +79,6 @@ html[data-theme="dark"] .checkout-panel .pay-secondary button{border-color:var(-
    Services and retail remain vertical cards in the same responsive layout.
    Palette follows the supplied LashPro blush / rose mock-up in both themes.
    ------------------------------------------------------------------------- */
-:root,html[data-theme="light"]{
-  --muted:#665a60;
-  --muted2:#786d73;
-}
-html[data-theme="dark"]{
-  --muted:#e4d9de;
-  --muted2:#d0c2c9;
-}
-
 .checkout-main .catalog-grid{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
   gap:13px;align-items:stretch
@@ -98,13 +87,13 @@ html[data-theme="dark"]{
   position:relative;display:flex;min-width:0;min-height:252px;
   flex-direction:column;overflow:hidden;padding:0;
   border:1px solid var(--line);border-radius:18px;
-  background:var(--paper);box-shadow:0 8px 24px rgba(72,35,49,.055);
+  background:var(--paper);box-shadow:0 8px 24px rgba(31, 37, 48,.055);
   text-align:left;cursor:pointer;
   transition:transform .2s,border-color .2s,box-shadow .2s
 }
 .checkout-main .catalog-card.premium-tile:hover{
   transform:translateY(-3px);border-color:var(--rose-200);
-  box-shadow:0 15px 34px rgba(45,37,41,.08)
+  box-shadow:0 15px 34px rgba(31, 37, 48,.08)
 }
 .checkout-main .catalog-card.premium-tile:focus-visible{
   outline:3px solid rgba(var(--rose-rgb),.38);outline-offset:3px
@@ -113,7 +102,7 @@ html[data-theme="dark"]{
 .checkout-main .catalog-card.premium-tile.is-checkout-locked{opacity:.76;cursor:not-allowed}
 .checkout-main .catalog-card.premium-tile.is-checkout-locked:hover,
 .checkout-main .catalog-card.premium-tile.is-sold-out:hover{
-  transform:none;box-shadow:0 8px 24px rgba(72,35,49,.055)
+  transform:none;box-shadow:0 8px 24px rgba(31, 37, 48,.055)
 }
 
 .checkout-main .tile-art{
@@ -286,376 +275,8 @@ html[data-theme="dark"] .checkout-main .tile-meta .stock-badge.is-sold-out{color
 }
 
 
-/* -------------------------------------------------------------------------
-   Color-only checkout refinement — obsidian, charcoal and berry rose.
-   Layout, component geometry, typography and font sizing remain unchanged.
-   ------------------------------------------------------------------------- */
-:root,html[data-theme="light"]{
-  --rose-25:#fffafc;
-  --rose-50:#fff3f7;
-  --rose-100:#f9e8ef;
-  --rose-150:#f0d1dd;
-  --rose-200:#e7b6c9;
-  --rose-400:#d97398;
-  --rose-500:#cf5a86;
-  --rose-600:#c84b7d;
-  --rose-700:#9b315c;
-  --rose-800:#6f2243;
-  --ink:#241a20;
-  --muted:#625963;
-  --muted2:#7d737d;
-  --paper:#fffefd;
-  --canvas:#faf8f8;
-  --line:#ebe4e8;
-  --line2:#ddd2d9;
-  --green:#24775d;
-  --green-bg:#eaf5ef;
-  --gold:#a67a43;
-  --gold-bg:#f8f0e4;
-  --surface-1:#fffefd;
-  --surface-2:#fffafb;
-  --surface-3:#f8eef2;
-  --hero-start:#fff4f7;
-  --hero-mid:#fff9fb;
-  --hero-end:#f7eaf0;
-  --field-bg:#fffefd;
-  --field-border:#ddd2d9;
-  --focus-ring:rgba(200,75,125,.24);
-  --pink:var(--rose-600);
-  --pink-strong:var(--rose-700);
-  --pink-deep:var(--rose-700);
-  --pink-soft:var(--rose-100);
-  --pink-wash:rgba(200,75,125,.09);
-  --bg:var(--canvas);
-  --bg-2:var(--rose-50);
-  --surface:var(--paper);
-  --surface-2:#fffafb;
-  --surface-3:#f8eef2;
-  --text:var(--ink);
-  --subtle:var(--muted2);
-  --line-strong:var(--line2);
-  --danger:#b8375e;
-  --red:#b8375e;
-  --amber:var(--gold);
-  --blue:#526cbb;
-}
-html[data-theme="dark"]{
-  --rose-25:#17191c;
-  --rose-50:#252329;
-  --rose-100:#25292e;
-  --rose-150:#34383e;
-  --rose-200:#4a3d47;
-  --rose-400:#f08cad;
-  --rose-500:#ea79a0;
-  --rose-600:#e56b9a;
-  --rose-700:#f2a8c2;
-  --rose-800:#f9dce5;
-  --ink:#f5f2ef;
-  --muted:#bac1c9;
-  --muted2:#9fa8b2;
-  --paper:#1b1e22;
-  --canvas:#101114;
-  --line:#343a42;
-  --line2:#48505a;
-  --green:#a9ebcb;
-  --green-bg:#173429;
-  --gold:#eac78e;
-  --gold-bg:#352d22;
-  --surface-1:#191c20;
-  --surface-2:#202328;
-  --surface-3:#262a30;
-  --hero-start:#1b1d22;
-  --hero-mid:#202328;
-  --hero-end:#27242b;
-  --field-bg:#15191d;
-  --field-border:#454b54;
-  --focus-ring:rgba(229,107,154,.32);
-  --pink:var(--rose-600);
-  --pink-strong:var(--rose-700);
-  --pink-deep:var(--rose-700);
-  --pink-soft:var(--rose-100);
-  --pink-wash:rgba(229,107,154,.13);
-  --bg:var(--canvas);
-  --bg-2:var(--rose-50);
-  --surface:var(--paper);
-  --surface-2:#202328;
-  --surface-3:#262a30;
-  --text:var(--ink);
-  --subtle:var(--muted2);
-  --line-strong:var(--line2);
-  --danger:#F0A5AD;
-  --red:var(--danger);
-  --amber:var(--gold);
-  --blue:#a3bafa;
-}
+/* Main workspace: neutral surfaces with a restrained rose accent. */
 
-/* Workspace canvas, navigation and summary surfaces. */
-.checkout-page{background:var(--canvas);color:var(--ink)}
-.checkout-sidebar{border-color:var(--line);background:var(--paper)}
-.checkout-sidebar .side-link{color:var(--muted)}
-.checkout-sidebar button.side-link:hover{background:var(--rose-50);color:var(--rose-700)}
-.checkout-sidebar .side-link.active{background:var(--rose-100);color:var(--rose-800);box-shadow:inset 3px 0 0 var(--rose-600)}
-.brand-caption,.side-label,.staff-copy small,.breadcrumbs,.date-copy small,.stat-card small{color:var(--muted2)}
-.checkout-page .profile{border-color:var(--line)}
-.checkout-page .profile-role{color:var(--rose-700)}
-.checkout-page .icon-action{border-color:var(--line2);background:var(--surface-2);color:var(--rose-700)}
-.checkout-page .icon-action:hover{border-color:var(--rose-500);background:var(--rose-50);color:var(--rose-800)}
-.studio-card{border-color:var(--line);background:linear-gradient(145deg,var(--paper),var(--surface-3))}
-.studio-card p,.welcome p,.section-heading p{color:var(--muted)}
-.welcome{border-color:var(--line2);background:linear-gradient(108deg,var(--hero-start) 0%,var(--hero-mid) 56%,var(--hero-end) 100%)}
-.welcome::before{border-color:rgba(200,75,125,.16);box-shadow:0 0 0 25px rgba(200,75,125,.035),0 0 0 52px rgba(200,75,125,.025)}
-.welcome h1 em{color:var(--rose-600)}
-.welcome-aside{border-color:var(--line2);background:rgba(255,255,255,.72)}
-.date-mark{background:var(--rose-100);color:var(--rose-700)}
-.date-copy small{color:var(--muted2)}
-.stat-card{border-color:var(--line);background:var(--surface)}
-.stat-card small{color:var(--muted2)}
-.stat-card strong,.section-heading h2{color:var(--ink)}
-.stat-icon{background:var(--rose-50);color:var(--rose-600)}
-.checkout-main .search-box{border-color:var(--line2);background:var(--field-bg);color:var(--muted)}
-.checkout-main .search-box input{background:transparent;color:var(--ink)}
-.checkout-main .search-box input::placeholder{color:var(--muted2)}
-.checkout-main .search-box:focus-within{border-color:var(--rose-500);box-shadow:0 0 0 3px var(--pink-wash)}
-.checkout-main .cat-tab{border-color:var(--line2);background:var(--surface-2);color:var(--muted)}
-.checkout-main .cat-tab:hover{border-color:var(--rose-200);background:var(--pink-wash);color:var(--rose-700)}
-.checkout-main .cat-tab.active{border-color:rgba(200,75,125,.32);background:rgba(200,75,125,.10);color:var(--rose-700)}
-
-/* Catalogue tile colors only; shared grid and tile geometry are untouched. */
-.checkout-main .catalog-card.premium-tile{border-color:var(--line);background:var(--paper);box-shadow:0 8px 24px rgba(43,27,35,.045)}
-.checkout-main .catalog-card.premium-tile:hover{border-color:var(--rose-200);box-shadow:0 15px 34px rgba(92,37,61,.09)}
-.checkout-main .catalog-card.premium-tile:focus-visible{outline-color:rgba(200,75,125,.4)}
-.checkout-main .tile-art{background:linear-gradient(128deg,#fff5f8 0%,#f8e7ee 58%,#f2dce6 100%);border-bottom-color:rgba(185,91,128,.14)}
-.checkout-main .tile-art::before{border-color:rgba(159,57,97,.16);box-shadow:0 0 0 16px rgba(255,255,255,.2),0 0 0 34px rgba(255,255,255,.13)}
-.checkout-main .tile-art::after{border-color:rgba(159,57,97,.11)}
-.checkout-main .art-word{color:#8d3159}
-.checkout-main .art-symbol,.checkout-main .retail-art-icon{border-color:rgba(var(--rose-rgb),.20);background:rgba(255,255,255,.78);color:#a53866}
-.checkout-main .retail-art-label{color:var(--rose-700)}
-.checkout-main .tile-tag{border-color:var(--rose-150);background:var(--rose-50);color:var(--rose-700)}
-.checkout-main .tile-title{color:var(--ink)}
-.checkout-main .tile-description{color:var(--muted)}
-.checkout-main .tile-bottom{border-top-color:var(--line)}
-.checkout-main .tile-price{color:var(--rose-700)}
-.checkout-main .tile-add{border-color:var(--rose-200);background:var(--rose-50);color:var(--rose-700)}
-.checkout-main .catalog-card.premium-tile:hover .tile-add{border-color:var(--rose-600);background:var(--rose-600);color:#fff}
-.checkout-main .tile-add.is-disabled{border-color:var(--line);background:var(--surface-2);color:var(--muted2)}
-.checkout-main .tile-meta .stock-badge{color:var(--green)}
-.checkout-main .tile-meta .stock-badge.is-sold-out{color:var(--danger)}
-.checkout-main .stock-badge{border-color:rgba(36,119,93,.22);background:var(--green-bg);color:var(--green)}
-.checkout-main .stock-badge.is-sold-out{border-color:rgba(184,55,94,.22);background:#fbeaf0;color:var(--danger)}
-
-/* Order panel, framed inputs and financial/payment emphasis. */
-.checkout-panel{border-color:var(--line);background:var(--paper);box-shadow:-12px 0 32px rgba(25,20,24,.035)}
-.checkout-panel .checkout-head{border-color:var(--line);background:linear-gradient(145deg,var(--surface-3),var(--paper) 72%)}
-.checkout-panel .checkout-title,.checkout-panel .cart-item-name,.checkout-panel .qty-row strong{color:var(--ink)}
-.checkout-panel .client-fields,.checkout-panel .cart-row{border-color:var(--line);background:var(--surface-2)}
-.checkout-panel .field label{color:var(--muted2)}
-.checkout-panel .field input,.checkout-panel .field select,.checkout-panel .promo-row input{border-color:var(--field-border);background:var(--field-bg);color:var(--ink)}
-.checkout-panel .field input::placeholder,.checkout-panel .promo-row input::placeholder{color:var(--muted2)}
-.checkout-panel .field input:focus,.checkout-panel .field select:focus,.checkout-panel .promo-row input:focus{border-color:var(--rose-500)}
-.checkout-panel .field-hint,.checkout-panel .legal-staff-notice,.checkout-panel .order-label,.checkout-panel .secure-note{color:var(--muted2)}
-.checkout-panel .legal-staff-notice a,.checkout-panel .row-action,.checkout-panel .qty-btn{color:var(--rose-700)}
-.checkout-panel .cart-item-price{color:var(--muted2)}
-.checkout-panel .qty-btn{border-color:var(--line);background:var(--paper)}
-.checkout-panel .checkout-bottom{border-top-color:var(--line);background:var(--paper)}
-.checkout-panel .btn-small{border-color:var(--rose-200);background:var(--rose-50);color:var(--rose-700)}
-.checkout-panel .financial-row{color:var(--muted)}
-.checkout-panel .financial-row span:last-child{color:var(--ink)}
-.checkout-panel .financial-total{border-top-color:var(--line)}
-.checkout-panel .financial-total span:first-child,.checkout-panel .financial-total span:last-child{color:var(--ink)}
-.checkout-panel .pay-primary{background:linear-gradient(105deg,#d85b8b,#e56b9a);color:#21151b;box-shadow:0 8px 18px rgba(200,75,125,.2)}
-.checkout-panel .pay-secondary button{border-color:var(--line);background:var(--surface-2);color:var(--ink)}
-.checkout-panel .pay-secondary button:hover{border-color:var(--rose-300,var(--rose-200));background:var(--pink-wash)}
-.checkout-page .online-pill{border-color:rgba(36,119,93,.2);background:var(--green-bg);color:var(--green)}
-.checkout-page .online-pill .dot{background:currentColor;box-shadow:0 0 0 3px rgba(36,119,93,.12)}
-.checkout-alert-stack .checkout-status-unknown{border-color:rgba(166,122,67,.3);background:#fff7e9;color:var(--ink)}
-
-/* Dark theme: neutral obsidian surfaces, silver secondary text, berry-rose accents. */
-html[data-theme="dark"] .admin-app-shell{background:var(--paper)}
-html[data-theme="dark"] .checkout-sidebar{border-color:var(--line);background:#171a1e}
-html[data-theme="dark"] .checkout-sidebar .side-link{color:var(--muted)}
-html[data-theme="dark"] .checkout-sidebar .side-link:hover{background:rgba(229,107,154,.10);color:var(--rose-700)}
-html[data-theme="dark"] .checkout-sidebar .side-link.active{background:rgba(229,107,154,.14);color:#f7bfd1;box-shadow:inset 3px 0 0 var(--rose-500)}
-html[data-theme="dark"] .brand-caption,html[data-theme="dark"] .side-label,html[data-theme="dark"] .staff-copy small,html[data-theme="dark"] .breadcrumbs,html[data-theme="dark"] .date-copy small,html[data-theme="dark"] .stat-card small{color:var(--muted2)}
-html[data-theme="dark"] .studio-card{border-color:var(--line);background:linear-gradient(145deg,#202328,#191c20)}
-html[data-theme="dark"] .studio-card p,html[data-theme="dark"] .welcome p,html[data-theme="dark"] .section-heading p{color:var(--muted)}
-html[data-theme="dark"] .checkout-page .icon-action{border-color:var(--line2);background:var(--surface-2);color:var(--rose-700)}
-html[data-theme="dark"] .checkout-page .icon-action:hover{border-color:var(--rose-500);background:rgba(229,107,154,.1);color:var(--rose-800)}
-html[data-theme="dark"] .welcome{border-color:var(--line2);background:linear-gradient(108deg,var(--hero-start) 0%,var(--hero-mid) 56%,var(--hero-end) 100%)}
-html[data-theme="dark"] .welcome::before{border-color:rgba(229,107,154,.2);box-shadow:0 0 0 25px rgba(229,107,154,.04),0 0 0 52px rgba(229,107,154,.02)}
-html[data-theme="dark"] .welcome h1 em{color:var(--rose-500)}
-html[data-theme="dark"] .welcome-aside{border-color:var(--line2);background:rgba(37,41,46,.82)}
-html[data-theme="dark"] .date-mark{background:#342a33;color:#f4b3ca}
-html[data-theme="dark"] .stat-card{border-color:var(--line);background:var(--surface-2)}
-html[data-theme="dark"] .stat-icon{background:rgba(229,107,154,.13);color:var(--rose-500)}
-html[data-theme="dark"] .checkout-main .search-box{border-color:var(--line2);background:var(--field-bg);color:var(--muted)}
-html[data-theme="dark"] .checkout-main .search-box input{background:transparent;color:var(--ink)}
-html[data-theme="dark"] .checkout-main .search-box input::placeholder{color:var(--muted2)}
-html[data-theme="dark"] .checkout-main .cat-tab{border-color:var(--line2);background:var(--surface-2);color:var(--muted)}
-html[data-theme="dark"] .checkout-main .cat-tab:hover{border-color:rgba(229,107,154,.4);background:rgba(229,107,154,.09);color:#f2b1c9}
-html[data-theme="dark"] .checkout-main .cat-tab.active{border-color:rgba(229,107,154,.45);background:rgba(229,107,154,.14);color:#f5b6cc}
-html[data-theme="dark"] .checkout-main .catalog-card.premium-tile{border-color:var(--line);background:var(--surface-2);box-shadow:0 9px 25px rgba(0,0,0,.22)}
-html[data-theme="dark"] .checkout-main .catalog-card.premium-tile:hover{border-color:#805064}
-html[data-theme="dark"] .checkout-main .tile-art{background:linear-gradient(128deg,#30272f 0%,#29262d 58%,#22252b 100%);border-bottom-color:rgba(240,174,198,.12)}
-html[data-theme="dark"] .checkout-main .tile-art::before{border-color:rgba(240,174,198,.18);box-shadow:0 0 0 16px rgba(255,255,255,.035),0 0 0 34px rgba(255,255,255,.02)}
-html[data-theme="dark"] .checkout-main .tile-art::after{border-color:rgba(240,174,198,.1)}
-html[data-theme="dark"] .checkout-main .art-word{color:#f4c5d6}
-html[data-theme="dark"] .checkout-main .art-symbol,html[data-theme="dark"] .checkout-main .retail-art-icon{border-color:rgba(240,174,198,.22);background:rgba(22,24,28,.72);color:#f2a7c1}
-html[data-theme="dark"] .checkout-main .retail-art-label{color:#f2b4cb}
-html[data-theme="dark"] .checkout-main .tile-tag{border-color:#51404b;background:#302a31;color:#f3bfd1}
-html[data-theme="dark"] .checkout-main .tile-title{color:var(--ink)}
-html[data-theme="dark"] .checkout-main .tile-description{color:var(--muted)}
-html[data-theme="dark"] .checkout-main .tile-bottom{border-top-color:var(--line)}
-html[data-theme="dark"] .checkout-main .tile-price{color:#f0a4be}
-html[data-theme="dark"] .checkout-main .tile-add{border-color:#604453;background:#2b292f;color:#f2b4cb}
-html[data-theme="dark"] .checkout-main .catalog-card.premium-tile:hover .tile-add{border-color:var(--rose-600);background:var(--rose-600);color:#21151b}
-html[data-theme="dark"] .checkout-main .tile-add.is-disabled{border-color:var(--line);background:#25282d;color:var(--muted2)}
-html[data-theme="dark"] .checkout-main .tile-meta .stock-badge{color:#a9e9c8}
-html[data-theme="dark"] .checkout-main .tile-meta .stock-badge.is-sold-out{color:#ffb4c5}
-html[data-theme="dark"] .checkout-main .stock-badge{border-color:rgba(169,235,203,.18);background:var(--green-bg);color:#a9e9c8}
-html[data-theme="dark"] .checkout-main .stock-badge.is-sold-out{border-color:rgba(255,155,184,.2);background:#39242c;color:#ffc0cf}
-html[data-theme="dark"] .checkout-panel{border-color:var(--line);background:var(--paper);box-shadow:-12px 0 32px rgba(0,0,0,.2)}
-html[data-theme="dark"] .checkout-panel .checkout-head{border-color:var(--line);background:linear-gradient(145deg,#25282e,#1b1e22 72%)}
-html[data-theme="dark"] .checkout-panel .client-fields,html[data-theme="dark"] .checkout-panel .cart-row{border-color:var(--line);background:var(--surface-2)}
-html[data-theme="dark"] .checkout-panel .field label{color:var(--muted)}
-html[data-theme="dark"] .checkout-panel .field input,html[data-theme="dark"] .checkout-panel .field select,html[data-theme="dark"] .checkout-panel .promo-row input{border-color:var(--line2);background:var(--field-bg);color:var(--ink)}
-html[data-theme="dark"] .checkout-panel .field input::placeholder,html[data-theme="dark"] .checkout-panel .promo-row input::placeholder{color:var(--muted2)}
-html[data-theme="dark"] .checkout-panel .field-hint,html[data-theme="dark"] .checkout-panel .legal-staff-notice,html[data-theme="dark"] .checkout-panel .order-label,html[data-theme="dark"] .checkout-panel .secure-note{color:var(--muted2)}
-html[data-theme="dark"] .checkout-panel .legal-staff-notice a,html[data-theme="dark"] .checkout-panel .row-action,html[data-theme="dark"] .checkout-panel .qty-btn{color:var(--rose-700)}
-html[data-theme="dark"] .checkout-panel .cart-item-price{color:var(--muted2)}
-html[data-theme="dark"] .checkout-panel .qty-btn{border-color:var(--line);background:var(--paper)}
-html[data-theme="dark"] .checkout-panel .checkout-bottom{border-color:var(--line);background:var(--paper)}
-html[data-theme="dark"] .checkout-panel .btn-small{border-color:var(--line2);background:rgba(229,107,154,.12);color:#f3b4cb}
-html[data-theme="dark"] .checkout-panel .financial-row{color:var(--muted)}
-html[data-theme="dark"] .checkout-panel .financial-row span:last-child{color:var(--ink)}
-html[data-theme="dark"] .checkout-panel .financial-total{border-top-color:var(--line)}
-html[data-theme="dark"] .checkout-panel .financial-total span:first-child{color:var(--muted)}
-html[data-theme="dark"] .checkout-panel .financial-total span:last-child{color:var(--ink)}
-html[data-theme="dark"] .checkout-panel .pay-primary{background:linear-gradient(105deg,#d85b8b,#e56b9a);color:#21151b;box-shadow:0 8px 18px rgba(229,107,154,.2)}
-html[data-theme="dark"] .checkout-panel .pay-secondary button{border-color:var(--line);background:var(--surface-2);color:var(--ink)}
-html[data-theme="dark"] .checkout-panel .pay-secondary button:hover{border-color:var(--rose-500);background:rgba(229,107,154,.1)}
-html[data-theme="dark"] .checkout-page .online-pill{border-color:rgba(169,235,203,.2);background:var(--green-bg);color:#b7f0d0}
-html[data-theme="dark"] .checkout-page .online-pill .dot{background:currentColor;box-shadow:0 0 0 3px rgba(169,235,203,.12)}
-html[data-theme="dark"] .checkout-alert-stack .checkout-status-unknown{border-color:rgba(234,199,142,.32);background:#302a22;color:#f0d9ae}
-
-
-/* -------------------------------------------------------------------------
-   LashPro Rosewood & Pearl — unified colour system.
-   Colour-only refinement: layout, spacing and typography are intentionally
-   preserved. All brand, surface and state colours resolve from these tokens.
-   ------------------------------------------------------------------------- */
-:root, html[data-theme="light"] {
-  --rose-rgb: 164, 81, 106;
-  --rose-25: #FFFEFC;
-  --rose-50: #FAF6F3;
-  --rose-100: #F2E3E8;
-  --rose-150: #EAD4DC;
-  --rose-200: #DDBAC7;
-  --rose-300: #D4A0B1;
-  --rose-400: #B86F87;
-  --rose-500: #A95D77;
-  --rose-600: #A4516A;
-  --rose-700: #843F56;
-  --rose-800: #60303F;
-  --ink: #2D2529;
-  --muted: #70666A;
-  --muted2: #8C8185;
-  --paper: #FFFEFC;
-  --canvas: #F7F4F1;
-  --line: #EAE2DE;
-  --line2: #DDD1CA;
-  --green: #2F8065;
-  --green-bg: #EAF4EE;
-  --gold: #B69A70;
-  --gold-bg: #F5EFE6;
-  --danger: #B74455;
-  --danger-bg: #F9E9E9;
-  --shadow: 0 14px 40px rgba(45,37,41,.07);
-  --shadow-lg: 0 24px 70px rgba(45,37,41,.12);
-  --surface-1: #FFFEFC;
-  --surface-2: #FBF8F6;
-  --surface-3: #F5ECE9;
-  --hero-start: #FBF4F4;
-  --hero-mid: #FFFEFC;
-  --hero-end: #F2E3E8;
-  --field-bg: #FFFEFC;
-  --field-border: #DED5D0;
-  --focus-ring: rgba(164,81,106,.28);
-  --pink: var(--rose-600);
-  --pink-strong: var(--rose-700);
-  --pink-deep: var(--rose-800);
-  --pink-soft: var(--rose-100);
-  --pink-wash: rgba(var(--rose-rgb),.09);
-  --bg: var(--canvas);
-  --bg-2: var(--rose-50);
-  --surface: var(--paper);
-  --surface-2: #FBF8F6;
-  --surface-3: #F5ECE9;
-  --text: var(--ink);
-  --subtle: var(--muted2);
-  --line-strong: var(--line2);
-  --red: var(--danger);
-  --amber: var(--gold);
-  --blue: #5D78A8;
-  --on-accent: #FFFFFF;
-}
-
-html[data-theme="dark"] {
-  --rose-rgb: 164, 81, 106;
-  --rose-25: #1C1719;
-  --rose-50: #2A2025;
-  --rose-100: #392831;
-  --rose-150: #4A323D;
-  --rose-200: #67404F;
-  --rose-300: #87566A;
-  --rose-400: #C17B92;
-  --rose-500: #B96D86;
-  --rose-600: #A4516A;
-  --rose-700: #E0B3C1;
-  --rose-800: #F1D9E0;
-  --ink: #F3EDE9;
-  --muted: #D1C5C1;
-  --muted2: #AC9EA0;
-  --paper: #211B1D;
-  --canvas: #171315;
-  --line: #3C3033;
-  --line2: #524247;
-  --green: #A5D9BE;
-  --green-bg: #23392F;
-  --gold: #D2B58A;
-  --gold-bg: #3A3024;
-  --danger: #F0A5AD;
-  --danger-bg: #40262B;
-  --shadow: 0 16px 42px rgba(0,0,0,.24);
-  --shadow-lg: 0 24px 70px rgba(0,0,0,.38);
-  --surface-1: #211B1D;
-  --surface-2: #2A2225;
-  --surface-3: #33272B;
-  --hero-start: #2B2025;
-  --hero-mid: #211B1D;
-  --hero-end: #392831;
-  --field-bg: #251E21;
-  --field-border: #57474A;
-  --focus-ring: rgba(193,123,146,.35);
-  --pink: var(--rose-600);
-  --pink-strong: #843F56;
-  --pink-deep: var(--rose-700);
-  --pink-soft: var(--rose-100);
-  --pink-wash: rgba(var(--rose-rgb),.16);
-  --bg: var(--canvas);
-  --bg-2: var(--rose-50);
-  --surface: var(--paper);
-  --surface-2: #2A2225;
-  --surface-3: #33272B;
-  --text: var(--ink);
-  --subtle: var(--muted2);
-  --line-strong: var(--line2);
-  --red: var(--danger);
-  --amber: var(--gold);
-  --blue: #A3B8E4;
-  --on-accent: #FFFFFF;
-}
-
-/* Main workspace: warm pearl canvas, porcelain panels and restrained rosewood accents. */
 body.admin-suite-body.checkout-page,
 .checkout-page { background: var(--canvas); color: var(--ink); }
 .app-shell.admin-app-shell.checkout-app-shell { background: var(--paper); }
@@ -696,9 +317,9 @@ body.admin-suite-body.checkout-page,
 
 /* Catalogue tiles: neutral product surfaces with a soft blush art treatment. */
 .checkout-main .catalog-card,
-.checkout-main .catalog-card.premium-tile { border-color: var(--line); background: var(--paper); box-shadow: 0 8px 24px rgba(45,37,41,.045); }
+.checkout-main .catalog-card.premium-tile { border-color: var(--line); background: var(--paper); box-shadow: 0 8px 24px rgba(31, 37, 48,.045); }
 .checkout-main .catalog-card:hover,
-.checkout-main .catalog-card.premium-tile:hover { border-color: var(--rose-200); box-shadow: 0 15px 34px rgba(45,37,41,.08); }
+.checkout-main .catalog-card.premium-tile:hover { border-color: var(--rose-200); box-shadow: 0 15px 34px rgba(31, 37, 48,.08); }
 .checkout-main .tile-art,
 .checkout-main .card-image { background: linear-gradient(128deg, var(--hero-start), var(--rose-50) 58%, var(--rose-100)); border-bottom-color: var(--line); }
 .checkout-main .tile-art::before,
@@ -720,7 +341,7 @@ body.admin-suite-body.checkout-page,
 .checkout-main .tile-meta .stock-badge.is-sold-out, .checkout-main .stock-badge.is-sold-out { border-color: color-mix(in srgb, var(--danger) 24%, transparent); background: var(--danger-bg); color: var(--danger); }
 
 /* Checkout panel and controls. */
-.checkout-panel { border-color: var(--line); background: var(--paper); box-shadow: -12px 0 32px rgba(45,37,41,.035); }
+.checkout-panel { border-color: var(--line); background: var(--paper); box-shadow: -12px 0 32px rgba(31, 37, 48,.035); }
 .checkout-panel .checkout-head { border-color: var(--line); background: linear-gradient(145deg, var(--surface-3), var(--paper) 72%); }
 .checkout-panel .checkout-title, .checkout-panel .cart-item-name, .checkout-panel .qty-row strong { color: var(--ink); }
 .checkout-panel .client-fields, .checkout-panel .cart-row { border-color: var(--line); background: var(--surface-2); }
@@ -746,7 +367,7 @@ body.admin-suite-body.checkout-page,
 .checkout-page .online-pill .dot { background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 12%, transparent); }
 .checkout-alert-stack .checkout-status-unknown { border-color: color-mix(in srgb, var(--gold) 36%, transparent); background: var(--gold-bg); color: var(--ink); }
 
-/* Dark mode uses warm charcoal and restrained rosewood rather than a plum-heavy pink wash. */
+/* Dark mode uses cool charcoal surfaces and the same rose accent tokens. */
 html[data-theme="dark"] .checkout-sidebar { background: var(--paper); }
 html[data-theme="dark"] .checkout-sidebar .side-link { color: var(--muted); }
 html[data-theme="dark"] .checkout-sidebar .side-link:hover { background: var(--rose-50); color: var(--rose-700); }
