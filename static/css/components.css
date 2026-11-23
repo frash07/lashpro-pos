@@ -49,7 +49,7 @@ button.primary:hover {
 }
 
 .btn-mpesa {
-  background: linear-gradient(135deg, #11b780, #0b8c61);
+  background: var(--payment-mpesa-gradient);
   color: var(--lp-neutral-0);
 }
 
@@ -88,7 +88,7 @@ article,
 .catalog-filter.is-active,
 .mode-link.is-active {
   background: var(--lp-pink-50);
-  border-color: rgba(230, 49, 125, 0.22);
+  border-color: rgba(var(--brand-rgb), 0.22);
   color: var(--lp-pink-700);
 }
 
@@ -146,7 +146,7 @@ textarea::placeholder {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: rgba(230, 49, 125, 0.45);
+  border-color: rgba(var(--brand-rgb), 0.45);
   box-shadow: 0 0 0 4px var(--lp-focus);
   outline: none;
 }

@@ -1,57 +1,8 @@
-/* Premium Lashpro KE login — dark/light theme matching the studio mockup */
-
-:root {
-  /* Authentication screens inherit the shared POS palette. */
-  color-scheme: inherit;
-  --pink: var(--brand);
-  --pink-strong: var(--brand-hover);
-  --pink-deep: var(--brand-hover);
-  --pink-soft: var(--brand-soft);
-  --pink-wash: var(--brand-soft);
-  --bg: var(--ui-canvas);
-  --bg-2: var(--ui-surface-muted);
-  --surface: var(--ui-surface);
-  --surface-2: var(--ui-surface-muted);
-  --surface-3: var(--brand-soft);
-  --text: var(--ui-text);
-  --muted: var(--ui-muted);
-  --subtle: var(--ui-subtle);
-  --line: var(--ui-border);
-  --line-strong: var(--ui-border-strong);
-  --shadow: var(--shadow-lg);
-  --green: var(--success);
-  --radius: 24px;
-}
-
-html[data-theme="light"] {
-  color-scheme: light;
-  --pink: var(--brand);
-  --pink-strong: var(--brand-hover);
-  --pink-deep: var(--brand-hover);
-  --pink-soft: var(--brand-soft);
-  --pink-wash: var(--brand-soft);
-  --bg: var(--ui-canvas);
-  --bg-2: var(--ui-surface-muted);
-  --surface: var(--ui-surface);
-  --surface-2: var(--ui-surface-muted);
-  --surface-3: var(--brand-soft);
-  --text: var(--ui-text);
-  --muted: var(--ui-muted);
-  --subtle: var(--ui-subtle);
-  --line: var(--ui-border);
-  --line-strong: var(--ui-border-strong);
-  --shadow: var(--shadow-lg);
-  --green: var(--success);
-  --radius: 24px;
-}
-
-
-
-/* Override base tokens for the auth page */
+/* Authentication uses the canonical LashPro theme tokens. */
 body.auth-page {
   margin: 0;
   min-height: 100%;
-  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  font-family: var(--lp-font-ui), -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   transition: background 0.25s ease, color 0.25s ease;
@@ -91,7 +42,7 @@ body.auth-page a:focus-visible {
   position: absolute;
   z-index: -1;
   pointer-events: none;
-  border-radius: 50%;
+  border-radius: var(--lp-compat-radius-2098915f);
   filter: blur(2px);
 }
 
@@ -100,7 +51,7 @@ body.auth-page a:focus-visible {
   height: 680px;
   top: -390px;
   left: -210px;
-  background: radial-gradient(circle, rgba(243, 75, 157, 0.19), rgba(243, 75, 157, 0) 68%);
+  background: radial-gradient(circle, rgba(var(--brand-rgb), 0.19), rgba(var(--brand-rgb), 0) 68%);
 }
 
 .ambient.two {
@@ -108,7 +59,7 @@ body.auth-page a:focus-visible {
   height: 760px;
   right: -390px;
   bottom: -460px;
-  background: radial-gradient(circle, rgba(187, 57, 126, 0.18), rgba(187, 57, 126, 0) 68%);
+  background: radial-gradient(circle, rgba(var(--brand-rgb), 0.18), rgba(var(--brand-rgb), 0) 68%);
 }
 
 .topbar {
@@ -136,12 +87,12 @@ body.auth-page a:focus-visible {
 .brand-mark {
   width: 44px;
   height: 44px;
-  border-radius: 15px;
+  border-radius: var(--lp-compat-radius-0e828a1b);
   display: grid;
   place-items: center;
-  color: #fff;
-  background: linear-gradient(145deg, #ffc4df, var(--pink-strong) 60%, #ad2e70);
-  box-shadow: 0 9px 28px rgba(232, 75, 151, 0.25);
+  color: var(--on-accent);
+  background: linear-gradient(145deg, var(--premium-petal), var(--pink-strong) 60%, var(--brand-hover));
+  box-shadow: 0 9px 28px rgba(var(--brand-rgb), 0.25);
   position: relative;
 }
 
@@ -149,8 +100,8 @@ body.auth-page a:focus-visible {
   content: "";
   position: absolute;
   inset: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 11px;
+  border: 1px solid rgba(var(--contrast-rgb), 0.45);
+  border-radius: var(--lp-compat-radius-c8900c27);
 }
 
 .brand-mark svg {
@@ -159,7 +110,7 @@ body.auth-page a:focus-visible {
 }
 
 .brand-name {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--lp-font-display);
   font-size: 21px;
   font-weight: 600;
   letter-spacing: 0.065em;
@@ -167,12 +118,12 @@ body.auth-page a:focus-visible {
 }
 
 .brand-name span {
-  font: 700 9px "DM Sans", sans-serif;
+  font: 700 9px var(--lp-font-ui);
   letter-spacing: 0.14em;
   vertical-align: middle;
   margin-left: 5px;
   padding: 4px 6px;
-  border-radius: 6px;
+  border-radius: var(--lp-compat-radius-c13a0039);
   color: var(--pink);
   background: var(--pink-wash);
   border: 1px solid var(--line-strong);
@@ -212,7 +163,7 @@ body.auth-page a:focus-visible {
   height: 39px;
   width: 39px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--lp-compat-radius-a5bea61d);
   background: var(--surface-2);
   color: var(--pink);
   display: grid;
@@ -266,7 +217,7 @@ body.auth-page a:focus-visible {
 }
 
 .intro h1 {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--lp-font-display);
   font-weight: 400;
   font-size: clamp(42px, 5.2vw, 68px);
   letter-spacing: -0.045em;
@@ -311,7 +262,7 @@ body.auth-page a:focus-visible {
   width: 31px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--lp-compat-radius-59f8bf2c);
   color: var(--pink);
   background: var(--pink-wash);
   border: 1px solid var(--line);
@@ -328,7 +279,7 @@ body.auth-page a:focus-visible {
   max-width: 480px;
   margin-top: 43px;
   border: 1px solid var(--line);
-  border-radius: 23px;
+  border-radius: var(--lp-compat-radius-fa52629a);
   background: linear-gradient(
     115deg,
     var(--surface) 0%,
@@ -343,7 +294,7 @@ body.auth-page a:focus-visible {
   content: "";
   position: absolute;
   border: 1px solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: var(--lp-compat-radius-2098915f);
   transform: rotate(-23deg);
 }
 
@@ -368,8 +319,8 @@ body.auth-page a:focus-visible {
   height: 260px;
   right: 22px;
   top: -85px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(241, 125, 182, 0.2), rgba(241, 125, 182, 0) 68%);
+  border-radius: var(--lp-compat-radius-2098915f);
+  background: radial-gradient(circle, rgba(var(--brand-rgb), 0.2), rgba(var(--brand-rgb), 0) 68%);
 }
 
 .stage-content {
@@ -388,7 +339,7 @@ body.auth-page a:focus-visible {
 }
 
 .stage-title {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--lp-font-display);
   font-size: 24px;
   line-height: 1.18;
   margin-top: 11px;
@@ -409,7 +360,7 @@ body.auth-page a:focus-visible {
   top: 38px;
   width: 116px;
   height: 116px;
-  border-radius: 50%;
+  border-radius: var(--lp-compat-radius-2098915f);
   border: 1px solid var(--line-strong);
   display: grid;
   place-items: center;
@@ -423,7 +374,7 @@ body.auth-page a:focus-visible {
   position: absolute;
   inset: 7px;
   border: 1px dashed var(--line-strong);
-  border-radius: 50%;
+  border-radius: var(--lp-compat-radius-2098915f);
 }
 
 .seal-inner {
@@ -453,7 +404,7 @@ body.auth-page a:focus-visible {
 
 .login-card {
   padding: 37px 37px 30px;
-  border-radius: 26px;
+  border-radius: var(--lp-compat-radius-ac61c489);
   border: 1px solid var(--line-strong);
   background: linear-gradient(
     145deg,
@@ -486,7 +437,7 @@ body.auth-page a:focus-visible {
   height: 49px;
   margin: 0 auto 17px;
   border: 1px solid var(--line-strong);
-  border-radius: 16px;
+  border-radius: var(--lp-compat-radius-7d19d716);
   background: var(--pink-wash);
   display: grid;
   place-items: center;
@@ -507,7 +458,7 @@ body.auth-page a:focus-visible {
 }
 
 .card-header h2 {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: var(--lp-font-display);
   font-weight: 500;
   font-size: 29px;
   letter-spacing: -0.025em;
@@ -564,7 +515,7 @@ body.auth-page a:focus-visible {
 .field input[type="email"] {
   width: 100%;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--lp-compat-radius-37275922);
   border: 1px solid var(--line-strong);
   background: var(--bg-2);
   color: var(--text);
@@ -591,7 +542,7 @@ body.auth-page a:focus-visible {
   height: 32px;
   width: 32px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--lp-compat-radius-05011417);
   background: transparent;
   color: var(--subtle);
   display: grid;
@@ -649,9 +600,9 @@ body.auth-page a:focus-visible {
   width: 100%;
   height: 49px;
   border: 0;
-  border-radius: 12px;
-  background: linear-gradient(105deg, var(--pink-strong), var(--pink) 58%, #f5a1ca);
-  color: #fff;
+  border-radius: var(--lp-compat-radius-37275922);
+  background: linear-gradient(105deg, var(--pink-strong), var(--pink) 58%, var(--premium-petal));
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -660,14 +611,14 @@ body.auth-page a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 10px 24px rgba(217, 54, 134, 0.24);
+  box-shadow: 0 10px 24px rgba(var(--brand-rgb), 0.24);
   transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
 }
 
 .submit-btn:hover {
   transform: translateY(-2px);
   filter: saturate(1.08);
-  box-shadow: 0 14px 28px rgba(217, 54, 134, 0.3);
+  box-shadow: 0 14px 28px rgba(var(--brand-rgb), 0.3);
 }
 
 .submit-btn:active {
@@ -754,28 +705,28 @@ body.auth-page a:focus-visible {
 .message {
   margin: 0 0 14px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--lp-compat-radius-59f8bf2c);
   font-size: 12px;
   text-align: center;
 }
 
 .message.error,
 .message.errorlist {
-  background: rgba(215, 74, 93, 0.12);
-  border: 1px solid rgba(215, 74, 93, 0.35);
-  color: #f5a3ad;
+  background: rgba(var(--danger-rgb), 0.12);
+  border: 1px solid rgba(var(--danger-rgb), 0.35);
+  color: var(--danger);
 }
 
 html[data-theme="light"] .message.error,
 html[data-theme="light"] .message.errorlist {
-  background: #fde5e8;
-  border-color: #f5b8c0;
-  color: #b4233a;
+  background: var(--danger-soft);
+  border-color: var(--danger-soft);
+  color: var(--danger);
 }
 
 .message.success {
-  background: rgba(109, 214, 173, 0.12);
-  border: 1px solid rgba(109, 214, 173, 0.35);
+  background: rgba(var(--success-rgb), 0.12);
+  border: 1px solid rgba(var(--success-rgb), 0.35);
   color: var(--green);
 }
 

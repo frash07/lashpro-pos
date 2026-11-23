@@ -23,13 +23,13 @@
   background: var(--ui-surface);
   color: var(--ui-text);
   text-align: center;
-  box-shadow: 0 8px 30px rgb(76 13 47 / 10%);
+  box-shadow: 0 8px 30px rgba(var(--shadow-rgb), .12);
 }
 
 .training-certificate h1 {
   margin: 18px 0 32px;
   color: var(--brand-hover);
-  font-family: Georgia, serif;
+  font-family: var(--lp-font-display);
 }
 
 .training-certificate h2 {

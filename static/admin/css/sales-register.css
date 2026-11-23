@@ -4,8 +4,8 @@ body.model-sale.change-list #container,
 body.model-sale.change-list #main,
 body.model-sale.change-list #content-start {
   min-height: 100vh;
-  background: var(--bg-gradient, #fff7fa) !important;
-  color: var(--lp-text, #201a1c) !important;
+  background: var(--bg-gradient, var(--ui-surface)) !important;
+  color: var(--lp-text, var(--ui-text)) !important;
   font-family: var(--lp-font-ui, Inter, sans-serif);
 }
 
@@ -29,12 +29,12 @@ body.model-sale.change-list #content-start {
 body.model-sale.change-list #content {
   margin: 0;
   padding: 0;
-  color: var(--lp-text, #201a1c);
+  color: var(--lp-text, var(--ui-text));
 }
 body.model-sale.change-list #content h1,
 body.model-sale.change-list #content h2,
 body.model-sale.change-list #content h3 {
-  color: var(--lp-text, #201a1c);
+  color: var(--lp-text, var(--ui-text));
 }
 
 .sales-reference-header {
@@ -47,24 +47,24 @@ body.model-sale.change-list #content h3 {
   justify-content: space-between;
   gap: 20px;
   padding: 12px max(24px, calc((100vw - 1160px) / 2));
-  border-bottom: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  background: rgba(255,255,255,.96);
-  box-shadow: 0 4px 18px rgba(27,22,24,.05);
+  border-bottom: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  background: rgba(var(--contrast-rgb), .96);
+  box-shadow: 0 4px 18px rgba(var(--shadow-rgb), .05);
   backdrop-filter: blur(12px);
 }
 .sales-reference-brand {
   display: inline-flex;
   align-items: baseline;
   gap: 7px;
-  color: var(--lp-neutral-800, #201a1c) !important;
-  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--lp-neutral-800, var(--ui-text)) !important;
+  font-family: var(--lp-font-display), Georgia, serif;
   font-size: 22px;
   font-weight: 700;
   text-decoration: none !important;
 }
 .sales-reference-brand small {
-  color: var(--lp-pink-700, #c9246a);
-  font-family: Inter, sans-serif;
+  color: var(--lp-pink-700, var(--brand));
+  font-family: var(--lp-font-ui);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .06em;
@@ -80,18 +80,18 @@ body.model-sale.change-list #content h3 {
   min-height: 38px;
   align-items: center;
   padding: 8px 12px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 10px;
-  background: #fff;
-  color: var(--lp-text-muted, #524246) !important;
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-59f8bf2c);
+  background: var(--ui-surface);
+  color: var(--lp-text-muted, var(--ui-muted)) !important;
   font-size: 12px;
   font-weight: 600;
   text-decoration: none !important;
 }
 .sales-reference-header nav a:hover {
-  border-color: rgba(230,49,125,.28);
-  background: var(--lp-pink-50, #fff1f6);
-  color: var(--lp-pink-700, #c9246a) !important;
+  border-color: rgba(var(--brand-rgb), .28);
+  background: var(--lp-pink-50, var(--ui-surface-muted));
+  color: var(--lp-pink-700, var(--brand)) !important;
 }
 
 .sales-reference-page {
@@ -109,7 +109,7 @@ body.model-sale.change-list #content h3 {
 .sales-reference-eyebrow {
   display: inline-block;
   margin-bottom: 8px;
-  color: var(--lp-pink-700, #c9246a);
+  color: var(--lp-pink-700, var(--brand));
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .13em;
@@ -117,8 +117,8 @@ body.model-sale.change-list #content h3 {
 }
 .sales-reference-intro h1 {
   margin: 0 0 7px !important;
-  color: var(--lp-neutral-800, #201a1c) !important;
-  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--lp-neutral-800, var(--ui-text)) !important;
+  font-family: var(--lp-font-display), Georgia, serif;
   font-size: clamp(29px, 4vw, 37px);
   font-weight: 600;
   line-height: 1.15;
@@ -126,7 +126,7 @@ body.model-sale.change-list #content h3 {
 .sales-reference-intro p {
   max-width: 690px;
   margin: 0;
-  color: var(--lp-text-muted, #524246);
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 13px;
   line-height: 1.7;
 }
@@ -135,35 +135,35 @@ body.model-sale.change-list #content h3 {
   min-width: 140px;
   justify-items: start;
   padding: 13px 16px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: var(--lp-shadow-sm, 0 8px 18px rgba(20,13,16,.08));
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-9d70d420);
+  background: var(--ui-surface);
+  box-shadow: var(--lp-shadow-sm, 0 8px 18px rgba(var(--shadow-rgb), .08));
 }
 .sales-reference-count strong {
-  color: var(--lp-pink-700, #c9246a);
+  color: var(--lp-pink-700, var(--brand));
   font-size: 25px;
   line-height: 1.1;
 }
 .sales-reference-count span {
   margin-top: 3px;
-  color: var(--lp-text, #201a1c);
+  color: var(--lp-text, var(--ui-text));
   font-size: 11px;
   font-weight: 700;
 }
 .sales-reference-count small {
   margin-top: 3px;
-  color: var(--lp-text-muted, #524246);
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 10px;
 }
 
 .sales-reference-section {
   margin: 0 0 20px;
   padding: 21px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: var(--lp-shadow-sm, 0 8px 18px rgba(20,13,16,.08));
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-f361d844);
+  background: var(--ui-surface);
+  box-shadow: var(--lp-shadow-sm, 0 8px 18px rgba(var(--shadow-rgb), .08));
 }
 .sales-reference-section-heading {
   display: flex;
@@ -174,24 +174,24 @@ body.model-sale.change-list #content h3 {
 }
 .sales-reference-section-heading h2 {
   margin: 0 0 5px !important;
-  color: var(--lp-neutral-800, #201a1c) !important;
-  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--lp-neutral-800, var(--ui-text)) !important;
+  font-family: var(--lp-font-display), Georgia, serif;
   font-size: 22px;
   font-weight: 600;
 }
 .sales-reference-section-heading p {
   margin: 0;
-  color: var(--lp-text-muted, #524246);
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 12px;
   line-height: 1.6;
 }
 .sales-reference-section-tag {
   flex: 0 0 auto;
   padding: 7px 10px;
-  border: 1px solid rgba(47,158,120,.2);
-  border-radius: 999px;
-  background: var(--lp-success-soft, #dff7ee);
-  color: #247b5e;
+  border: 1px solid rgba(var(--success-rgb), .2);
+  border-radius: var(--lp-compat-radius-7e291c02);
+  background: var(--lp-success-soft, var(--ui-surface-muted));
+  color: var(--success);
   font-size: 10px;
   font-weight: 700;
 }
@@ -199,9 +199,9 @@ body.model-sale.change-list #content h3 {
 .sales-reference-register-card {
   min-width: 0;
   padding: 14px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 14px;
-  background: #fff;
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-9d70d420);
+  background: var(--ui-surface);
 }
 .sales-reference-register-card #content-main {
   float: none;
@@ -227,9 +227,9 @@ body.model-sale.change-list #content h3 {
   grid-area: toolbar;
   min-width: 0;
   padding: 11px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 10px;
-  background: #fff9fb;
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-59f8bf2c);
+  background: var(--ui-surface);
 }
 .sales-reference-register-card #toolbar form {
   display: flex;
@@ -242,10 +242,10 @@ body.model-sale.change-list #content h3 {
   width: min(100%, 320px);
   min-height: 40px;
   margin: 0;
-  border: 1px solid var(--lp-border-strong, rgba(28,18,23,.18));
-  border-radius: 9px;
-  background: #fff;
-  color: var(--lp-text, #201a1c);
+  border: 1px solid var(--lp-border-strong, rgba(var(--shadow-rgb), .18));
+  border-radius: var(--lp-compat-radius-9669c71c);
+  background: var(--ui-surface);
+  color: var(--lp-text, var(--ui-text));
 }
 .sales-reference-register-card #changelist-form {
   grid-area: form;
@@ -260,22 +260,22 @@ body.model-sale.change-list #content h3 {
   width: auto;
   margin: 0;
   padding: 0 0 10px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 10px;
-  background: #fff;
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-59f8bf2c);
+  background: var(--ui-surface);
   box-shadow: none;
 }
 .sales-reference-register-card #changelist-filter h2 {
   margin: 0 0 8px;
   padding: 11px 12px;
-  border-radius: 9px 9px 0 0;
-  background: #fff1f6;
-  color: var(--lp-pink-700, #c9246a) !important;
+  border-radius: var(--lp-compat-radius-2cddb8f7);
+  background: var(--ui-surface-muted);
+  color: var(--lp-pink-700, var(--brand)) !important;
   font-size: 12px;
 }
 .sales-reference-register-card #changelist-filter h3 {
   margin: 11px 12px 5px;
-  color: var(--lp-text, #201a1c) !important;
+  color: var(--lp-text, var(--ui-text)) !important;
   font-size: 11px;
 }
 .sales-reference-register-card #changelist-filter ul {
@@ -287,7 +287,7 @@ body.model-sale.change-list #content h3 {
   font-size: 11px;
 }
 .sales-reference-register-card #changelist-filter a {
-  color: var(--lp-pink-700, #c9246a);
+  color: var(--lp-pink-700, var(--brand));
 }
 .sales-reference-register-card #changelist-form .actions {
   display: flex;
@@ -296,9 +296,9 @@ body.model-sale.change-list #content h3 {
   gap: 7px;
   margin: 0 0 10px;
   padding: 9px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 9px;
-  background: #fff9fb;
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-9669c71c);
+  background: var(--ui-surface);
 }
 .sales-reference-register-card #changelist-form .actions select {
   width: auto;
@@ -312,13 +312,13 @@ body.model-sale.change-list #content h3 {
   width: 100%;
   min-width: 650px;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--ui-surface);
 }
 .sales-reference-register-card #changelist table thead th {
   padding: 11px 10px;
-  border-bottom: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  background: #f8f4f5;
-  color: var(--lp-text-muted, #524246);
+  border-bottom: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  background: var(--ui-surface-muted);
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 10px;
   font-weight: 700;
   text-align: left;
@@ -327,19 +327,19 @@ body.model-sale.change-list #content h3 {
 }
 .sales-reference-register-card #changelist table tbody td {
   padding: 11px 10px;
-  border-bottom: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  color: var(--lp-text, #201a1c);
+  border-bottom: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  color: var(--lp-text, var(--ui-text));
   font-size: 12px;
   vertical-align: middle;
 }
 .sales-reference-register-card #changelist table tbody tr:nth-child(even) {
-  background: #fffafd;
+  background: var(--ui-surface);
 }
 .sales-reference-register-card #changelist table tbody tr:hover {
-  background: #fff1f6;
+  background: var(--ui-surface-muted);
 }
 .sales-reference-register-card #changelist table a {
-  color: var(--lp-pink-700, #c9246a);
+  color: var(--lp-pink-700, var(--brand));
   font-weight: 600;
 }
 .sales-reference-register-card #changelist table input[type="checkbox"],
@@ -349,46 +349,46 @@ body.model-sale.change-list #content h3 {
 }
 .sales-reference-register-card #changelist-form .paginator {
   padding: 12px 3px 3px;
-  color: var(--lp-text-muted, #524246);
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 11px;
 }
 .sales-reference-register-card #changelist-form .paginator a {
   padding: 4px 7px;
-  border: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  border-radius: var(--lp-compat-radius-c13a0039);
+  background: var(--ui-surface);
 }
 
 .sales-reference-register-card input,
 .sales-reference-register-card select,
 .sales-reference-register-card textarea {
   max-width: 100%;
-  color: var(--lp-text, #201a1c);
+  color: var(--lp-text, var(--ui-text));
 }
 .sales-reference-register-card input[type="submit"],
 .sales-reference-register-card button,
 .sales-reference-register-card .button {
   min-height: 38px;
   padding: 8px 12px;
-  border: 1px solid var(--lp-pink-600, #e6317d);
-  border-radius: 9px;
-  background: var(--lp-pink-600, #e6317d);
-  color: #fff !important;
+  border: 1px solid var(--lp-pink-600, var(--brand));
+  border-radius: var(--lp-compat-radius-9669c71c);
+  background: var(--lp-pink-600, var(--brand));
+  color: var(--on-accent) !important;
   font-size: 11px;
   font-weight: 700;
 }
 .sales-reference-register-card input[type="submit"]:hover,
 .sales-reference-register-card button:hover,
 .sales-reference-register-card .button:hover {
-  background: var(--lp-pink-700, #c9246a);
+  background: var(--lp-pink-700, var(--brand));
 }
 .sales-reference-register-card #changelist .paginator {
-  border-top: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  background: #fff;
+  border-top: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  background: var(--ui-surface);
 }
 .sales-reference-register-card #changelist .paginator a,
 .sales-reference-register-card #changelist .paginator span {
-  color: var(--lp-pink-700, #c9246a);
+  color: var(--lp-pink-700, var(--brand));
 }
 
 .sales-reference-guidance {
@@ -397,9 +397,9 @@ body.model-sale.change-list #content h3 {
   gap: 12px;
   margin: 20px 0 0;
   padding: 16px 18px;
-  border: 1px solid rgba(47,158,120,.18);
-  border-radius: 14px;
-  background: #f5fcf8;
+  border: 1px solid rgba(var(--success-rgb), .18);
+  border-radius: var(--lp-compat-radius-9d70d420);
+  background: var(--ui-surface);
 }
 .sales-reference-guidance-mark {
   display: grid;
@@ -407,21 +407,21 @@ body.model-sale.change-list #content h3 {
   height: 30px;
   flex: 0 0 30px;
   place-items: center;
-  border-radius: 50%;
-  background: var(--lp-success-soft, #dff7ee);
-  color: #247b5e;
+  border-radius: var(--lp-compat-radius-2098915f);
+  background: var(--lp-success-soft, var(--ui-surface-muted));
+  color: var(--success);
   font-size: 15px;
   font-weight: 700;
 }
 .sales-reference-guidance h2 {
   margin: 1px 0 5px !important;
-  color: var(--lp-neutral-800, #201a1c) !important;
+  color: var(--lp-neutral-800, var(--ui-text)) !important;
   font-size: 13px;
   font-weight: 700;
 }
 .sales-reference-guidance p {
   margin: 0;
-  color: var(--lp-text-muted, #524246);
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 11px;
   line-height: 1.7;
 }
@@ -431,12 +431,12 @@ body.model-sale.change-list #content h3 {
   gap: 12px;
   margin-top: 18px;
   padding-top: 13px;
-  border-top: 1px solid var(--lp-border, rgba(28,18,23,.1));
-  color: var(--lp-text-muted, #7e666d);
+  border-top: 1px solid var(--lp-border, rgba(var(--shadow-rgb), .1));
+  color: var(--lp-text-muted, var(--ui-muted));
   font-size: 10px;
 }
 .sales-reference-footer strong {
-  color: var(--lp-pink-700, #c9246a);
+  color: var(--lp-pink-700, var(--brand));
   letter-spacing: .08em;
 }
 
@@ -446,14 +446,14 @@ body.model-sale.change-list .messagelist {
   padding: 0 24px;
 }
 body.model-sale.change-list .messagelist li {
-  border-radius: 9px;
+  border-radius: var(--lp-compat-radius-9669c71c);
 }
 
 body.model-sale.change-list a:focus-visible,
 body.model-sale.change-list button:focus-visible,
 body.model-sale.change-list input:focus-visible,
 body.model-sale.change-list select:focus-visible {
-  outline: 3px solid rgba(230,49,125,.25);
+  outline: 3px solid rgba(var(--brand-rgb), .25);
   outline-offset: 2px;
 }
 

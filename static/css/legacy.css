@@ -1,30 +1,4 @@
 /* Compatibility layer for older POS templates. All colour values come from tokens.css. */
-:root {
-  --ink: var(--ui-text);
-  --surface: var(--ui-surface);
-  --surface-raised: var(--ui-surface);
-  --surface-soft: var(--brand-soft);
-  --text: var(--ui-text);
-  --muted: var(--ui-muted);
-  --muted-bright: var(--ui-muted);
-  --border: var(--ui-border);
-  --border-strong: var(--ui-border-strong);
-  --rose: var(--brand);
-  --rose-light: var(--brand);
-  --rose-deep: var(--brand-hover);
-  --rose-wash: var(--brand-soft);
-  --gold: var(--warning);
-  --success-bg: var(--success-soft);
-  --danger-bg: var(--danger-soft);
-  --warning-bg: var(--warning-soft);
-  --bg: var(--ui-canvas);
-  --bg-2: var(--ui-surface-muted);
-  --green: var(--success);
-  --green-bg: var(--success-soft);
-  --amber: var(--warning);
-  --red: var(--danger);
-  --blue: var(--info);
-}
 body { background: var(--ui-canvas); color: var(--ui-text); font-family: var(--font-ui); }
 a { color: var(--brand); }
 a:hover { color: var(--brand-hover); }
@@ -47,17 +21,17 @@ input, select, textarea {
 .submit, .button-primary, button[type=submit] {
   border-color: transparent;
   background: var(--brand);
-  color: #fff;
+  color: var(--on-accent);
 }
 .submit:hover, .button-primary:hover, button[type=submit]:hover {
   background: var(--brand-hover);
-  color: #fff;
+  color: var(--on-accent);
 }
 .button-quiet {
   min-height: 40px;
   padding: 8px 13px;
   border: 1px solid var(--ui-border);
-  border-radius: 10px;
+  border-radius: var(--lp-compat-radius-59f8bf2c);
   background: var(--ui-surface);
   color: var(--ui-text);
   font-weight: 650;
@@ -83,7 +57,7 @@ input, select, textarea {
   background: var(--danger-soft);
   color: var(--danger);
 }
-.status-badge { border-radius: 999px; }
+.status-badge { border-radius: var(--lp-compat-radius-7e291c02); }
 .status-success { border-color: var(--success); background: var(--success-soft); color: var(--success); }
 .status-warning { border-color: var(--warning); background: var(--warning-soft); color: var(--warning); }
 .status-danger { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
@@ -91,4 +65,4 @@ input, select, textarea {
 .table-scroll, .table-wrap { border-color: var(--ui-border); background: var(--ui-surface); }
 table th { color: var(--ui-muted); border-color: var(--ui-border); }
 table td { color: var(--ui-muted); border-color: var(--ui-border); }
-@media print { body { background: #fff; color: #111; } }
+@media print { body { background: var(--ui-surface); color: var(--ui-text); } }
