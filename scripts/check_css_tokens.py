@@ -28,6 +28,7 @@ DECLARATION = {
     "border-radius": re.compile(r"border-radius\s*:\s*([^;}]+)", re.IGNORECASE),
     "box-shadow": re.compile(r"box-shadow\s*:\s*([^;}]+)", re.IGNORECASE),
     "font-family": re.compile(r"font-family\s*:\s*([^;}]+)", re.IGNORECASE),
+    "font": re.compile(r"\bfont\s*:\s*([^;}]+)", re.IGNORECASE),
 }
 
 
@@ -70,18 +71,18 @@ def is_literal_shadow(value: str) -> bool:
 
 
 def is_literal_font(value: str) -> bool:
-    return "var(" not in value and value.lower() not in {
-        "inherit", "initial", "unset", "revert", "monospace"
-    }
+    return "var(" not in value and not re.search(
+        r"\b(?:inherit|initial|unset|revert|monospace)\b",
+        value,
+        re.IGNORECASE,
+    )
 
 
-def theme_value_counts(source: str, *, include_colors: bool = True) -> collections.Counter[str]:
+def theme_value_counts(source: str) -> collections.Counter[str]:
     counts: collections.Counter[str] = collections.Counter()
+    source = re.sub(r"/\*[\s\S]*?\*/", "", source)
 
-    if include_colors:
-        # Ignore comments, then count hex values only within declaration blocks,
-        # not selectors like #content.
-        source = re.sub(r"/\*[\s\S]*?\*/", "", source)
+    # Count hex values only within declaration blocks, not selectors like #content.
         depth = 0
         for line in source.splitlines():
             depth_before_char = depth
@@ -103,9 +104,10 @@ def theme_value_counts(source: str, *, include_colors: bool = True) -> collectio
         if is_literal_shadow(value):
             counts[f"box-shadow: {value}"] += 1
 
-    for value in declaration_values(source, DECLARATION["font-family"]):
-        if is_literal_font(value):
-            counts[f"font-family: {value}"] += 1
+    for property_name in ("font-family", "font"):
+        for value in declaration_values(source, DECLARATION[property_name]):
+            if is_literal_font(value):
+                counts[f"{property_name}: {value}"] += 1
 
     return counts
 
