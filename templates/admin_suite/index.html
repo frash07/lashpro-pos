@@ -1,113 +1,284 @@
 {% load static %}
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!doctype html>
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#171016">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf4f6">
   <title>LashPro KE — Admin Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark"><i data-lucide="sparkles"></i></div>
-      <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</div></div>
-    </div>
-    <nav class="mode-switch" aria-label="Application navigation">
-      <a class="mode-btn" href="{% url 'sales:checkout' %}"><i data-lucide="shopping-bag"></i><span>Salon POS</span></a>
-      <a class="mode-btn active" href="{% url 'admin_suite' %}" aria-current="page"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></a>
-    </nav>
-    <div class="top-actions">
-      <button class="icon-button" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch color theme" title="Switch theme"><i data-lucide="sun-moon"></i></button>
-      <div class="profile">
+<body class="admin-suite-body">
+  <div class="app-shell admin-app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro home">
+        <span class="brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
+        <span class="brand-copy">
+          <span class="brand-name">LASHPRO <small>KE</small></span>
+          <span class="brand-caption">Premier lash &amp; academy</span>
+        </span>
+      </a>
+
+      <div class="side-label">Workspace</div>
+      <nav class="side-nav">
+        <a class="side-link" href="{% url 'sales:checkout' %}" title="Checkout" aria-label="Checkout">
+          <i data-lucide="grid-2x2" aria-hidden="true"></i><span class="nav-text">Checkout</span>
+        </a>
+        <a class="side-link" href="{% url 'admin:app_list' app_label='appointments' %}" title="Appointments" aria-label="Appointments">
+          <i data-lucide="calendar-days" aria-hidden="true"></i><span class="nav-text">Appointments</span>
+        </a>
+        <a class="side-link" href="{% url 'admin:app_list' app_label='customers' %}" title="Clients" aria-label="Clients">
+          <i data-lucide="users" aria-hidden="true"></i><span class="nav-text">Clients</span>
+        </a>
+        <a class="side-link" href="{% url 'admin:app_list' app_label='inventory' %}" title="Inventory" aria-label="Inventory">
+          <i data-lucide="package" aria-hidden="true"></i><span class="nav-text">Inventory</span>
+        </a>
+        <a class="side-link" href="{% url 'reporting:dashboard' %}" title="Reports" aria-label="Reports">
+          <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span class="nav-text">Reports</span>
+        </a>
+        <a class="side-link active" href="{% url 'admin_suite' %}" title="Admin Suite" aria-label="Admin Suite" aria-current="page">
+          <i data-lucide="settings" aria-hidden="true"></i><span class="nav-text">Admin Suite</span>
+        </a>
+        <a class="side-link" href="{% url 'training:dashboard' %}" title="Academy" aria-label="Academy">
+          <i data-lucide="graduation-cap" aria-hidden="true"></i><span class="nav-text">Academy</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <div class="studio-card">
+        <div class="studio-top"><strong>Admin workspace</strong><span class="studio-status"><i class="dot" aria-hidden="true"></i> Active</span></div>
+        <p>Central studio controls<br>Management links retain their existing access rules.</p>
+      </div>
+      <div class="staff-mini">
         <div class="avatar">{{ request.user.get_full_name|default:request.user.username|first|upper }}</div>
-        <div class="profile-copy">
-          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="profile-role">{{ request.user.get_role_display|default:"STUDIO ADMIN"|upper }}</div>
+        <div class="staff-copy">
+          <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+          <small>{{ request.user.get_role_display|default:"STUDIO ADMIN"|upper }}</small>
         </div>
       </div>
-    </div>
-  </header>
+    </aside>
 
-  <main class="main admin-suite-page">
-    <section class="admin-flow-intro" aria-labelledby="admin-dashboard-title">
-      <div class="executive-tag"><i data-lucide="layout-dashboard"></i> Central administration</div>
-      <h1 class="admin-title" id="admin-dashboard-title">Admin Suite Dashboard</h1>
-      <p class="admin-subtitle">Central administration landing page</p>
-      <a class="admin-report-link" href="{% url 'reporting:dashboard' %}"><i data-lucide="chart-no-axes-combined"></i> Open full reports</a>
-    </section>
-
-    <div class="admin-flow-arrow" aria-hidden="true"><i data-lucide="arrow-down"></i></div>
-
-    <section class="admin-content admin-navigation-content" aria-labelledby="admin-categories-title">
-      <div class="admin-content-head">
-        <div>
-          <div class="admin-content-title" id="admin-categories-title">Administration Categories</div>
-          <div class="admin-content-subtitle">Select a category to reveal its existing management pages.</div>
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Studio</span><i data-lucide="chevron-right" aria-hidden="true"></i><strong>Admin Suite</strong></div>
+        <div class="topbar-right">
+          <span class="online-pill"><i class="dot" aria-hidden="true"></i> Workspace ready</span>
+          <button class="icon-action theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme" aria-pressed="false">
+            <i data-lucide="moon" aria-hidden="true"></i><span class="sr-only">Switch theme</span>
+          </button>
+          <div class="avatar top-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|first|upper }}</div>
         </div>
-        <span class="admin-navigation-note"><i data-lucide="lock-keyhole"></i> Staff access</span>
-      </div>
-      <div class="admin-nav-grid">
-        {% for group in groups %}
-        <details class="admin-nav-group">
-          <summary>
-            <span class="admin-group-icon"><i data-lucide="{{ group.icon }}"></i></span>
-            <span class="admin-group-copy"><strong>{{ group.name }}</strong></span>
-          </summary>
-          <div class="admin-group-panel">
-            <p class="admin-group-description">{{ group.description }}</p>
-            <nav class="admin-group-links" aria-label="{{ group.name }} model pages">
-              {% for item in group.items %}
-              <a href="{{ item.url }}">
-                <span>{{ item.label }}</span>
-                <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-              </a>
-              {% endfor %}
-            </nav>
+      </header>
+
+      <section class="welcome" aria-labelledby="welcome-title">
+        <div class="welcome-copy">
+          <div class="eyebrow">Central administration · Admin Suite Dashboard</div>
+          <h1 id="welcome-title">Bring every operation <em>together.</em></h1>
+          <p>Manage your studio's people, appointments, inventory, reports and training from one workspace.</p>
+        </div>
+        <div class="welcome-aside">
+          <span class="date-mark"><i data-lucide="calendar-days" aria-hidden="true"></i></span>
+          <span class="date-copy"><small>Today at the studio</small><strong id="today">—</strong></span>
+        </div>
+      </section>
+
+      <section class="quick-stats" aria-label="Workspace summary">
+        <article class="stat-card">
+          <span class="stat-icon"><i data-lucide="layers" aria-hidden="true"></i></span>
+          <span><small>Management categories</small><strong>{{ groups|length }} available</strong></span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span>
+          <span><small>Workspace access</small><strong>Staff managed</strong></span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-icon"><i data-lucide="workflow" aria-hidden="true"></i></span>
+          <span><small>Management pages</small><strong>Existing admin tools</strong></span>
+        </article>
+      </section>
+
+      <section class="catalog-section" aria-labelledby="categories-title">
+        <div class="section-heading">
+          <div>
+            <div class="section-kicker">Your studio controls</div>
+            <h2 id="categories-title">Administration categories</h2>
+            <p>Choose a category to open its existing management pages.</p>
           </div>
-        </details>
-        {% endfor %}
+          <a class="view-link" href="{% url 'reporting:dashboard' %}">Open full reports <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+
+        <div class="catalog-controls">
+          <label class="search-box" for="admin-category-search">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input id="admin-category-search" type="search" placeholder="Search categories or management pages…" autocomplete="off">
+          </label>
+          <span class="category-count" id="category-count">{{ groups|length }} categories</span>
+        </div>
+
+        <div class="admin-nav-grid" id="admin-nav-grid">
+          {% for group in groups %}
+          <details class="admin-nav-group">
+            <summary>
+              <span class="admin-card-art">
+                <span class="admin-group-icon"><i data-lucide="{{ group.icon }}" aria-hidden="true"></i></span>
+                <span class="admin-card-count">{{ group.items|length }} page{{ group.items|length|pluralize }}</span>
+              </span>
+              <span class="admin-group-copy">
+                <span class="tag">Workspace category</span>
+                <strong>{{ group.name }}</strong>
+                <span class="admin-group-description">{{ group.description }}</span>
+              </span>
+              <span class="admin-expand" aria-hidden="true"><i data-lucide="plus"></i></span>
+            </summary>
+            <div class="admin-group-panel">
+              <div class="admin-group-panel-heading">Available destinations</div>
+              <nav class="admin-group-links" aria-label="{{ group.name }} model pages">
+                {% for item in group.items %}
+                <a href="{{ item.url }}">
+                  <span>{{ item.label }}</span>
+                  <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                </a>
+                {% endfor %}
+              </nav>
+            </div>
+          </details>
+          {% empty %}
+          <div class="empty-state">No administration categories are available for this account.</div>
+          {% endfor %}
+        </div>
+        <p class="empty-state search-empty" id="search-empty" hidden>No categories match that search.</p>
+      </section>
+
+      <footer class="admin-footer">
+        <span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span>
+        <a href="{% url 'sales:checkout' %}">Return to Checkout <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+      </footer>
+    </main>
+
+    <aside class="admin-right-rail" aria-label="Workspace shortcuts">
+      <section class="admin-rail-card">
+        <div class="rail-card-header">
+          <div class="rail-eyebrow">Your workspace</div>
+          <div class="rail-title">Quick access</div>
+          <p>Jump to another part of LashPro without losing your place.</p>
+        </div>
+        <nav class="rail-links" aria-label="Quick access links">
+          <a class="rail-link" href="{% url 'reporting:dashboard' %}">
+            <span class="rail-link-icon"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i></span>
+            <span><strong>Reports</strong><small>Studio performance &amp; insights</small></span>
+            <i class="rail-arrow" data-lucide="arrow-up-right" aria-hidden="true"></i>
+          </a>
+          <a class="rail-link" href="{% url 'training:dashboard' %}">
+            <span class="rail-link-icon"><i data-lucide="graduation-cap" aria-hidden="true"></i></span>
+            <span><strong>Academy</strong><small>Courses, cohorts &amp; training</small></span>
+            <i class="rail-arrow" data-lucide="arrow-up-right" aria-hidden="true"></i>
+          </a>
+          <a class="rail-link" href="{% url 'sales:checkout' %}">
+            <span class="rail-link-icon"><i data-lucide="shopping-bag" aria-hidden="true"></i></span>
+            <span><strong>Checkout</strong><small>Return to the studio register</small></span>
+            <i class="rail-arrow" data-lucide="arrow-up-right" aria-hidden="true"></i>
+          </a>
+        </nav>
+        <div class="rail-footer-note"><i data-lucide="shield-check" aria-hidden="true"></i><span>Each destination continues to use its existing route and permission checks.</span></div>
+      </section>
+
+      <section class="admin-model-note">
+        <span class="model-note-icon"><i data-lucide="folder-cog" aria-hidden="true"></i></span>
+        <div class="section-kicker">Management system</div>
+        <h2>Existing Django Admin Model Pages</h2>
+        <p>Category links open their original Django Admin destinations, retaining the established forms, permissions, filters and actions.</p>
+      </section>
+
+      <div class="rail-account">
+        <span class="account-avatar">{{ request.user.get_full_name|default:request.user.username|first|upper }}</span>
+        <span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|default:"STUDIO ADMIN"|upper }}</small></span>
       </div>
-    </section>
+    </aside>
+  </div>
 
-    <div class="admin-flow-arrow admin-flow-arrow-end" aria-hidden="true"><i data-lucide="arrow-down"></i></div>
-
-    <section class="admin-model-pages" aria-labelledby="admin-model-pages-title">
-      <h2 id="admin-model-pages-title">Existing Django Admin Model Pages</h2>
-      <p>Each destination opens its original Django Admin page, retaining the established forms, permissions, filters and actions.</p>
-    </section>
-
-    <footer class="admin-footer">
-      <span><span class="footer-brand">LASHPRO KE</span> · Private studio workspace</span>
-      <span><a href="{% url 'sales:checkout' %}">Return to Salon POS</a></span>
-    </footer>
-  </main>
   <script>
-    function toggleTheme() {
+    (() => {
       const root = document.documentElement;
-      const theme = root.dataset.theme === "dark" ? "light" : "dark";
-      root.dataset.theme = theme;
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", theme === "dark" ? "#171016" : "#f7f3f5");
-      try { localStorage.setItem("lashpro-theme", theme); } catch (error) { /* Storage may be unavailable. */ }
+      const toggle = document.getElementById('theme-toggle');
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+      const storageKey = 'lashpro-checkout-theme';
+
+      function readPreference() {
+        try {
+          return localStorage.getItem(storageKey) || localStorage.getItem('lashpro-theme');
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function applyTheme(theme, persist = false) {
+        const dark = theme === 'dark';
+        root.dataset.theme = dark ? 'dark' : 'light';
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        if (themeColor) themeColor.setAttribute('content', dark ? '#211922' : '#fbf4f6');
+        if (toggle) {
+          toggle.innerHTML = `<i data-lucide="${dark ? 'sun' : 'moon'}" aria-hidden="true"></i><span class="sr-only">Switch theme</span>`;
+          toggle.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+          toggle.setAttribute('title', dark ? 'Switch to light theme' : 'Switch to dark theme');
+          toggle.setAttribute('aria-pressed', String(dark));
+        }
+        if (persist) {
+          try {
+            localStorage.setItem(storageKey, dark ? 'dark' : 'light');
+            localStorage.setItem('lashpro-theme', dark ? 'dark' : 'light');
+          } catch (error) {
+            // The selected theme remains active for this page when storage is unavailable.
+          }
+        }
+        refreshIcons();
+      }
+
+      function refreshIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        }
+      }
+
+      const savedTheme = readPreference();
+      applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
+      if (toggle) {
+        toggle.addEventListener('click', () => {
+          applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark', true);
+        });
+      }
+
+      const dateNode = document.getElementById('today');
+      if (dateNode) {
+        dateNode.textContent = new Date().toLocaleDateString('en-GB', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+      }
+
+      const search = document.getElementById('admin-category-search');
+      const cards = Array.from(document.querySelectorAll('.admin-nav-group'));
+      const count = document.getElementById('category-count');
+      const empty = document.getElementById('search-empty');
+      if (search) {
+        search.addEventListener('input', () => {
+          const query = search.value.trim().toLocaleLowerCase();
+          let visible = 0;
+          cards.forEach(card => {
+            const match = card.textContent.toLocaleLowerCase().includes(query);
+            card.hidden = !match;
+            if (match) visible += 1;
+          });
+          if (count) count.textContent = query ? `${visible} of ${cards.length} categories` : `${cards.length} categories`;
+          if (empty) empty.hidden = visible > 0 || !query;
+        });
+      }
+
+      window.addEventListener('DOMContentLoaded', refreshIcons);
       refreshIcons();
-    }
-    function refreshIcons() {
-      if (window.lucide && typeof window.lucide.createIcons === "function") window.lucide.createIcons();
-    }
-    (function restoreTheme() {
-      try {
-        const saved = localStorage.getItem("lashpro-theme");
-        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
-      } catch (error) { /* Keep the server-rendered default theme. */ }
     })();
-    window.addEventListener("DOMContentLoaded", refreshIcons);
   </script>
 </body>
 </html>
