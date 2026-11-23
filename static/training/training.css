@@ -29,7 +29,7 @@
 .training-certificate h1 {
   margin: 18px 0 32px;
   color: var(--brand-hover);
-  font-family: var(--lp-font-ui);
+  font-family: var(--lp-font-display);
 }
 
 .training-certificate h2 {
