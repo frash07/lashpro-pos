@@ -315,7 +315,7 @@ html[data-theme="dark"] {
   --on-accent: #1B1017;
   --lp-btn-primary-text: var(--on-accent);
   --receipt-paper: #FFFFFF;
-  --receipt-ink: #24171D;
+  --receipt-ink: #26232A;
   --receipt-border: #CCCCD6;
   --receipt-muted: #706D78;
 }
