@@ -118,7 +118,7 @@ body.auth-page a:focus-visible {
 }
 
 .brand-name span {
-  font: 700 9px "DM Sans", sans-serif;
+  font: 700 9px var(--lp-font-ui);
   letter-spacing: 0.14em;
   vertical-align: middle;
   margin-left: 5px;
