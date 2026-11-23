@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#F7F4F1">
+  <meta name="theme-color" content="#F5F7FA">
   <title>Lashpro KE — Luxury Salon Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -688,7 +688,7 @@
 
     function toggleTheme(){
       const root=document.documentElement,theme=root.dataset.theme==='dark'?'light':'dark';root.dataset.theme=theme;root.style.colorScheme=theme;
-      const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#101114':'#faf8f8');
+      const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',getComputedStyle(root).getPropertyValue('--canvas').trim());
       const btn=document.getElementById('theme-toggle');if(btn){btn.innerHTML='<i data-lucide="'+(theme==='dark'?'sun':'moon')+'"></i><span class="sr-only">Switch theme</span>';btn.setAttribute('aria-label',theme==='dark'?'Switch to light theme':'Switch to dark theme');btn.setAttribute('title',theme==='dark'?'Switch to light theme':'Switch to dark theme');btn.setAttribute('aria-pressed',String(theme==='dark'));refreshIcons();}
       try{localStorage.setItem('lashpro-checkout-theme',theme);localStorage.setItem('lashpro-theme',theme);}catch(e){}
     }
