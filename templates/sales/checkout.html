@@ -431,7 +431,7 @@
           return '<article class="catalog-card retail-row'+(soldOut?' is-sold-out':'')+(locked?' is-checkout-locked':'')+'" role="button" tabindex="'+(disabled?'-1':'0')+'" aria-disabled="'+String(disabled)+'" aria-label="'+escapeHtml(label)+'" '+activation+'>'+
             '<span class="retail-thumb"><i data-lucide="'+escapeHtml(iconName)+'" aria-hidden="true"></i></span>'+
             '<span class="retail-copy"><strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(description)+'</small></span>'+
-            '<span class="retail-price"><strong>KES '+Number(item.price||0).toLocaleString('en-KE')+'</strong><small class="'+stockClass+'">'+escapeHtml(stockLabel)+'</small></span>'+
+            '<span class="retail-price"><strong>KES '+Number(item.price||0).toLocaleString('en-KE')+'</strong><small class="stock-badge retail-stock-status '+stockClass+(soldOut?' is-sold-out':'')+'">'+escapeHtml(stockLabel)+'</small></span>'+
             (disabled?'':'<span class="retail-add-indicator" aria-hidden="true"><i data-lucide="plus"></i></span>')+
             '</article>';
         }).join('');
