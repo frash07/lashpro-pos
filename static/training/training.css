@@ -19,16 +19,16 @@
   min-height: 570px;
   margin: 28px auto;
   padding: 70px 48px;
-  border: 8px double #e6317d;
-  background: #fff;
-  color: #30202a;
+  border: 8px double var(--brand);
+  background: var(--ui-surface);
+  color: var(--ui-text);
   text-align: center;
   box-shadow: 0 8px 30px rgb(76 13 47 / 10%);
 }
 
 .training-certificate h1 {
   margin: 18px 0 32px;
-  color: #a92f6b;
+  color: var(--brand-hover);
   font-family: Georgia, serif;
 }
 
@@ -38,7 +38,7 @@
 }
 
 .certificate-brand {
-  color: #e6317d;
+  color: var(--brand);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: .2em;
@@ -51,7 +51,7 @@
 
 .certificate-signature {
   margin-top: 44px;
-  color: #7b6874;
+  color: var(--ui-muted);
 }
 
 .certificate-revoked {
@@ -85,8 +85,8 @@
   html,
   body {
     min-height: 0;
-    background: #fff !important;
-    color: #30202a !important;
+    background: var(--ui-surface) !important;
+    color: var(--ui-text) !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }

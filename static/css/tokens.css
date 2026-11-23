@@ -1,120 +1,199 @@
-:root {
-  --lp-pink-50: #fff1f6;
-  --lp-pink-100: #ffe1ee;
-  --lp-pink-200: #ffc7df;
-  --lp-pink-300: #ff9fc3;
-  --lp-pink-400: #ff72b1;
-  --lp-pink-500: #f34e96;
-  --lp-pink-600: #e6317d;
-  --lp-pink-700: #c9246a;
-  --lp-pink-800: #9d1d59;
-  --lp-pink-900: #6d153f;
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+  --brand: #BE2875;
+  --brand-hover: #9D174D;
+  --brand-soft: #FCE7F3;
+  --brand-rgb: 190, 40, 117;
 
-  --lp-neutral-0: #ffffff;
-  --lp-neutral-50: #f8f4f5;
-  --lp-neutral-100: #f1e7ea;
-  --lp-neutral-200: #e7d9dd;
-  --lp-neutral-300: #d6c2c8;
-  --lp-neutral-400: #b0989f;
-  --lp-neutral-500: #7e666d;
-  --lp-neutral-600: #524246;
-  --lp-neutral-700: #2c2023;
-  --lp-neutral-800: #201a1c;
-  --lp-neutral-900: #140d10;
+  --ui-canvas: #F5F7FB;
+  --ui-surface: #FFFFFF;
+  --ui-surface-muted: #F8FAFC;
+  --ui-border: #E2E8F0;
+  --ui-border-strong: #CBD5E1;
+  --ui-text: #111827;
+  --ui-muted: #667085;
+  --ui-subtle: #98A2B3;
 
-  --lp-success: #2f9e78;
-  --lp-success-soft: #dff7ee;
-  --lp-warning: #d28b17;
-  --lp-warning-soft: #fff1d9;
-  --lp-danger: #d74a5d;
-  --lp-danger-soft: #fde5e8;
-  --lp-info: #1e6fd6;
+  --success: #16845B;
+  --success-soft: #E8F7EF;
+  --warning: #D97706;
+  --warning-soft: #FFF7ED;
+  --danger: #D92D4B;
+  --danger-soft: #FFF0F2;
+  --info: #2563EB;
+  --info-soft: #EFF6FF;
 
-  --lp-shadow-sm: 0 8px 18px rgba(20, 13, 16, 0.08);
-  --lp-shadow-md: 0 18px 32px rgba(20, 13, 16, 0.14);
-  --lp-shadow-lg: 0 32px 64px rgba(20, 13, 16, 0.18);
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, .05);
+  --shadow-md: 0 12px 28px rgba(15, 23, 42, .08);
+  --shadow-lg: 0 24px 56px rgba(15, 23, 42, .12);
 
+  --lp-pink-50: var(--brand-soft);
+  --lp-pink-100: #FBCFE8;
+  --lp-pink-200: #F9A8D4;
+  --lp-pink-300: #F472B6;
+  --lp-pink-400: #EC4899;
+  --lp-pink-500: var(--brand);
+  --lp-pink-600: var(--brand);
+  --lp-pink-700: var(--brand-hover);
+  --lp-pink-800: #831843;
+  --lp-pink-900: #500724;
+
+  --lp-neutral-0: var(--ui-surface);
+  --lp-neutral-50: var(--ui-canvas);
+  --lp-neutral-100: var(--ui-surface-muted);
+  --lp-neutral-200: var(--ui-border);
+  --lp-neutral-300: var(--ui-border-strong);
+  --lp-neutral-400: var(--ui-subtle);
+  --lp-neutral-500: var(--ui-muted);
+  --lp-neutral-600: #475467;
+  --lp-neutral-700: #344054;
+  --lp-neutral-800: var(--ui-text);
+  --lp-neutral-900: #101828;
+
+  --lp-success: var(--success);
+  --lp-success-soft: var(--success-soft);
+  --lp-warning: var(--warning);
+  --lp-warning-soft: var(--warning-soft);
+  --lp-danger: var(--danger);
+  --lp-danger-soft: var(--danger-soft);
+  --lp-info: var(--info);
+
+  --lp-shadow-sm: var(--shadow-sm);
+  --lp-shadow-md: var(--shadow-md);
+  --lp-shadow-lg: var(--shadow-lg);
   --lp-radius-sm: 10px;
   --lp-radius-md: 14px;
   --lp-radius-lg: 18px;
   --lp-radius-pill: 999px;
-
   --lp-font-display: "Playfair Display", Georgia, serif;
   --lp-font-ui: "Inter", "Segoe UI", sans-serif;
 
-  --lp-surface: var(--lp-neutral-0);
-  --lp-surface-alt: #fff9fb;
-  --lp-surface-strong: var(--lp-neutral-50);
-  --lp-surface-ink: var(--lp-neutral-900);
-  --lp-border: rgba(28, 18, 23, 0.1);
-  --lp-border-strong: rgba(28, 18, 23, 0.18);
-  --lp-text: var(--lp-neutral-800);
-  --lp-text-muted: var(--lp-neutral-600);
-  --lp-focus: rgba(230, 49, 125, 0.28);
+  --lp-surface: var(--ui-surface);
+  --lp-surface-alt: var(--ui-surface-muted);
+  --lp-surface-strong: var(--ui-surface-muted);
+  --lp-surface-ink: var(--ui-text);
+  --lp-border: var(--ui-border);
+  --lp-border-strong: var(--ui-border-strong);
+  --lp-text: var(--ui-text);
+  --lp-text-muted: var(--ui-muted);
+  --lp-focus: rgba(var(--brand-rgb), .28);
 
-  --lp-btn-primary-bg: linear-gradient(135deg, var(--lp-pink-500), var(--lp-pink-700));
-  --lp-btn-primary-text: var(--lp-neutral-0);
-  --lp-btn-primary-hover: linear-gradient(135deg, var(--lp-pink-600), var(--lp-pink-800));
+  --lp-btn-primary-bg: var(--brand);
+  --lp-btn-primary-text: #FFFFFF;
+  --lp-btn-primary-hover: var(--brand-hover);
 
+  /* Backwards-compatible aliases. Remove only after every consumer is migrated. */
   --pink-50: var(--lp-pink-50);
   --pink-100: var(--lp-pink-100);
   --pink-600: var(--lp-pink-600);
   --pink-700: var(--lp-pink-700);
-  --ink-500: var(--lp-neutral-500);
-  --ink-700: var(--lp-neutral-700);
-  --ink-900: var(--lp-neutral-900);
-  --line: var(--lp-border-strong);
-  --green-100: var(--lp-success-soft);
-  --green-600: var(--lp-success);
-  --red-100: var(--lp-danger-soft);
-  --red-600: var(--lp-danger);
-  --amber-100: var(--lp-warning-soft);
-  --amber-600: var(--lp-warning);
+  --ink-500: var(--ui-muted);
+  --ink-700: var(--ui-text);
+  --ink-900: #101828;
+  --line: var(--ui-border);
+  --green-100: var(--success-soft);
+  --green-600: var(--success);
+  --red-100: var(--danger-soft);
+  --red-600: var(--danger);
+  --amber-100: var(--warning-soft);
+  --amber-600: var(--warning);
   --font-ui: var(--lp-font-ui);
   --font-display: var(--lp-font-display);
-  --shadow-card: var(--lp-shadow-sm);
-  --bg-gradient: linear-gradient(180deg, #fff7fa, var(--lp-neutral-50));
+  --shadow-card: var(--shadow-sm);
+  --bg-gradient: linear-gradient(180deg, #FFFFFF, var(--ui-canvas));
+
+  /* Legacy component aliases retained during the migration. */
+  --ink: var(--ui-text);
+  --surface: var(--ui-surface);
+  --surface-raised: var(--ui-surface);
+  --surface-soft: var(--brand-soft);
+  --text: var(--ui-text);
+  --muted: var(--ui-muted);
+  --muted-bright: #475467;
+  --border: var(--ui-border);
+  --border-strong: var(--ui-border-strong);
+  --rose: var(--brand);
+  --rose-light: var(--brand);
+  --rose-deep: var(--brand-hover);
+  --rose-wash: var(--brand-soft);
+  --gold: var(--warning);
+  --success-bg: var(--success-soft);
+  --danger-bg: var(--danger-soft);
+  --warning-bg: var(--warning-soft);
+  --bg: var(--ui-canvas);
+  --bg-2: var(--ui-surface-muted);
+  --surface-2: var(--ui-surface-muted);
+  --surface-3: #EEF2F6;
+  --subtle: var(--ui-subtle);
+  --line-strong: var(--ui-border-strong);
+  --red: var(--danger);
+  --amber: var(--warning);
+  --blue: var(--info);
+  --green: var(--success);
+  --green-bg: var(--success-soft);
+  --radius: 18px;
+  --radius-sm: 13px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --brand: #F472B6;
+  --brand-hover: #FB8BC8;
+  --brand-soft: rgba(244, 114, 182, .12);
+  --brand-rgb: 244, 114, 182;
+
+  --ui-canvas: #0B1220;
+  --ui-surface: #111827;
+  --ui-surface-muted: #1F2937;
+  --ui-border: #344054;
+  --ui-border-strong: #475467;
+  --ui-text: #F8FAFC;
+  --ui-muted: #AAB4C3;
+  --ui-subtle: #7D8999;
+
+  --success: #4ADE80;
+  --success-soft: rgba(74, 222, 128, .12);
+  --warning: #FBBF24;
+  --warning-soft: rgba(251, 191, 36, .12);
+  --danger: #FB7185;
+  --danger-soft: rgba(251, 113, 133, .12);
+  --info: #60A5FA;
+  --info-soft: rgba(96, 165, 250, .12);
+
+  --lp-pink-800: #F9A8D4;
+  --lp-pink-900: #FCE7F3;
+  --lp-neutral-600: #CBD5E1;
+  --lp-neutral-700: #E2E8F0;
+  --lp-neutral-900: #F8FAFC;
+  --lp-focus: rgba(244, 114, 182, .34);
+  --bg-gradient: linear-gradient(180deg, var(--ui-canvas), var(--ui-surface));
+  --muted-bright: #D0D5DD;
+  --surface-3: #293548;
+  --muted: var(--ui-muted);
+  --subtle: var(--ui-subtle);
+  --green-bg: var(--success-soft);
 }
 
 html {
-  color-scheme: light;
   font-size: 16px;
 }
 
 body {
   margin: 0;
-  background: var(--lp-neutral-50);
-  color: var(--lp-text);
+  background: var(--ui-canvas);
+  color: var(--ui-text);
   font-family: var(--lp-font-ui);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-img {
-  max-width: 100%;
-}
-
-a {
-  color: var(--lp-pink-700);
-  text-decoration: none;
-}
-
-a:hover {
-  color: var(--lp-pink-800);
-}
-
-button, input, select, textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
+* { box-sizing: border-box; }
+img { max-width: 100%; }
+a { color: var(--brand); text-decoration: none; }
+a:hover { color: var(--brand-hover); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
 :focus-visible {
   outline: 3px solid var(--lp-focus);
   outline-offset: 2px;

@@ -6,11 +6,12 @@
 {% endblock %}
 {% block extrastyle %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'css/tokens.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/lashpro-admin.css' %}">
 {% endblock %}
 {% block extrahead %}
 {{ block.super }}
-<meta name="theme-color" content="#100e0d">
+<meta name="theme-color" content="#F5F7FB">
 <link rel="manifest" href="{% static 'pwa/manifest.webmanifest' %}">
 <link rel="icon" type="image/png" sizes="48x48" href="{% static 'pwa/favicon-48.png' %}">
 <link rel="icon" type="image/png" sizes="32x32" href="{% static 'pwa/favicon-32.png' %}">

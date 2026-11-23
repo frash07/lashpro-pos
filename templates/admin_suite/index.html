@@ -4,12 +4,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#fbf4f6">
+  <meta name="theme-color" content="#F5F7FB">
   <title>LashPro KE — Admin Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
 </head>
 <body class="admin-suite-body">
@@ -219,7 +220,7 @@
         const dark = theme === 'dark';
         root.dataset.theme = dark ? 'dark' : 'light';
         root.style.colorScheme = dark ? 'dark' : 'light';
-        if (themeColor) themeColor.setAttribute('content', dark ? '#211922' : '#fbf4f6');
+        if (themeColor) themeColor.setAttribute('content', getComputedStyle(root).getPropertyValue('--canvas').trim());
         if (toggle) {
           toggle.innerHTML = `<i data-lucide="${dark ? 'sun' : 'moon'}" aria-hidden="true"></i><span class="sr-only">Switch theme</span>`;
           toggle.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');

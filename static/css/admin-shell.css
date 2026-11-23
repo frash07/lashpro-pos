@@ -3,7 +3,7 @@
   grid-template-columns: 248px minmax(0, 1fr);
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--lp-neutral-50);
+  background: var(--ui-canvas);
 }
 
 .admin-sidebar {
@@ -11,8 +11,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 18px 14px 16px;
-  background: #140d10;
-  color: #fff;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  border-right: 1px solid var(--ui-border);
 }
 
 .admin-brand {
@@ -20,13 +21,13 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
-  color: #fff;
+  color: var(--ui-text);
   text-decoration: none;
 }
 
 .admin-brand img { width: 36px; height: 36px; }
 .admin-brand strong { font-family: var(--lp-font-display); font-size: 1.25rem; }
-.admin-brand small { display: block; color: rgba(255,255,255,0.62); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.admin-brand small { display: block; color: var(--ui-muted); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 
 .admin-nav { display: grid; gap: 4px; }
 .admin-nav a {
@@ -35,12 +36,15 @@
   align-items: center;
   padding: 0 12px;
   border-radius: 10px;
-  color: rgba(255,255,255,0.78);
+  color: var(--ui-muted);
   font-size: 14px;
   font-weight: 650;
   text-decoration: none;
 }
-.admin-nav a:hover, .admin-nav a[aria-current="page"] { background: rgba(230, 49, 125, 0.22); color: #fff; }
+.admin-nav a:hover, .admin-nav a[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
 
 .admin-user {
   margin-top: auto;
@@ -48,7 +52,7 @@
   align-items: center;
   gap: 10px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--ui-border);
 }
 .admin-user span {
   display: grid;
@@ -56,13 +60,21 @@
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  background: #e6317d;
+  background: var(--brand);
+  color: #FFFFFF;
   font-weight: 800;
 }
 .admin-user strong { display: block; font-size: 13px; }
-.admin-user small { color: rgba(255,255,255,0.62); }
+.admin-user small { color: var(--ui-muted); }
 .admin-user form { margin-left: auto; }
-.admin-user button { min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: rgba(255,255,255,0.08); color: #fff; }
+.admin-user button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text);
+}
 
 .admin-main { min-width: 0; padding: 18px; }
 .admin-main .page, .admin-main .report-page { max-width: 1200px; margin: 0 auto; }

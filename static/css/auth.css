@@ -1,47 +1,51 @@
 /* Premium Lashpro KE login — dark/light theme matching the studio mockup */
 
 :root {
-  color-scheme: dark;
-  --pink: #f17db6;
-  --pink-strong: #f34b9d;
-  --pink-deep: #bb397e;
-  --pink-soft: #54263f;
-  --pink-wash: rgba(241, 125, 182, 0.13);
-  --bg: #171016;
-  --bg-2: #201720;
-  --surface: #241b23;
-  --surface-2: #2b202a;
-  --surface-3: #332430;
-  --text: #fbf3f7;
-  --muted: #b9a6b2;
-  --subtle: #8f7a88;
-  --line: rgba(241, 125, 182, 0.17);
-  --line-strong: rgba(241, 125, 182, 0.33);
-  --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
-  --green: #6dd6ad;
+  /* Authentication screens inherit the shared POS palette. */
+  color-scheme: inherit;
+  --pink: var(--brand);
+  --pink-strong: var(--brand-hover);
+  --pink-deep: var(--brand-hover);
+  --pink-soft: var(--brand-soft);
+  --pink-wash: var(--brand-soft);
+  --bg: var(--ui-canvas);
+  --bg-2: var(--ui-surface-muted);
+  --surface: var(--ui-surface);
+  --surface-2: var(--ui-surface-muted);
+  --surface-3: var(--brand-soft);
+  --text: var(--ui-text);
+  --muted: var(--ui-muted);
+  --subtle: var(--ui-subtle);
+  --line: var(--ui-border);
+  --line-strong: var(--ui-border-strong);
+  --shadow: var(--shadow-lg);
+  --green: var(--success);
   --radius: 24px;
 }
 
 html[data-theme="light"] {
   color-scheme: light;
-  --pink: #df4f95;
-  --pink-strong: #d93686;
-  --pink-deep: #a92f6b;
-  --pink-soft: #ffe1ef;
-  --pink-wash: rgba(217, 54, 134, 0.08);
-  --bg: #fff8fb;
-  --bg-2: #fff1f7;
-  --surface: #fffdfd;
-  --surface-2: #fff6fa;
-  --surface-3: #ffebf4;
-  --text: #30202a;
-  --muted: #7b6874;
-  --subtle: #a18b98;
-  --line: rgba(191, 60, 122, 0.15);
-  --line-strong: rgba(191, 60, 122, 0.28);
-  --shadow: 0 24px 65px rgba(126, 58, 91, 0.12);
-  --green: #238a69;
+  --pink: var(--brand);
+  --pink-strong: var(--brand-hover);
+  --pink-deep: var(--brand-hover);
+  --pink-soft: var(--brand-soft);
+  --pink-wash: var(--brand-soft);
+  --bg: var(--ui-canvas);
+  --bg-2: var(--ui-surface-muted);
+  --surface: var(--ui-surface);
+  --surface-2: var(--ui-surface-muted);
+  --surface-3: var(--brand-soft);
+  --text: var(--ui-text);
+  --muted: var(--ui-muted);
+  --subtle: var(--ui-subtle);
+  --line: var(--ui-border);
+  --line-strong: var(--ui-border-strong);
+  --shadow: var(--shadow-lg);
+  --green: var(--success);
+  --radius: 24px;
 }
+
+
 
 /* Override base tokens for the auth page */
 body.auth-page {
