@@ -414,7 +414,7 @@ html[data-theme="dark"]{
 .stat-icon{background:var(--rose-50);color:var(--rose-600)}
 .checkout-main .search-box{border-color:var(--line2);background:var(--field-bg);color:var(--muted)}
 .checkout-main .search-box input{background:transparent;color:var(--ink)}
-.checkout-main .search-box input::placeholder{color:var(--muted2);opacity:1}
+.checkout-main .search-box input::placeholder{color:var(--muted2)}
 .checkout-main .search-box:focus-within{border-color:var(--rose-500);box-shadow:0 0 0 3px var(--pink-wash)}
 .checkout-main .cat-tab{border-color:var(--line2);background:var(--surface-2);color:var(--muted)}
 .checkout-main .cat-tab:hover{border-color:var(--rose-200);background:var(--pink-wash);color:var(--rose-700)}
@@ -450,7 +450,7 @@ html[data-theme="dark"]{
 .checkout-panel .client-fields,.checkout-panel .cart-row{border-color:var(--line);background:var(--surface-2)}
 .checkout-panel .field label{color:var(--muted2)}
 .checkout-panel .field input,.checkout-panel .field select,.checkout-panel .promo-row input{border-color:var(--field-border);background:var(--field-bg);color:var(--ink)}
-.checkout-panel .field input::placeholder,.checkout-panel .promo-row input::placeholder{color:var(--muted2);opacity:1}
+.checkout-panel .field input::placeholder,.checkout-panel .promo-row input::placeholder{color:var(--muted2)}
 .checkout-panel .field input:focus,.checkout-panel .field select:focus,.checkout-panel .promo-row input:focus{border-color:var(--rose-500)}
 .checkout-panel .field-hint,.checkout-panel .legal-staff-notice,.checkout-panel .order-label,.checkout-panel .secure-note{color:var(--muted2)}
 .checkout-panel .legal-staff-notice a,.checkout-panel .row-action,.checkout-panel .qty-btn{color:var(--rose-700)}
