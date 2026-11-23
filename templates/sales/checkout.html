@@ -24,18 +24,7 @@
     {{ lines.management_form }}
     {{ payments.management_form }}
 
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark"><i data-lucide="sparkles"></i></div>
-        <div><div class="brand-name">LASHPRO <span>KE</span></div><div class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</div></div>
-      </div>
-      <nav class="mode-switch" aria-label="Application mode">
-        <button id="nav-pos-btn" class="mode-btn active" type="button" onclick="switchMode('pos')"><i data-lucide="shopping-bag"></i><span>Salon POS</span></button>
-        {% if admin_suite.can_access_admin_suite %}
-        <a id="nav-admin-btn" class="mode-btn" href="{% url 'admin_suite' %}" style="text-decoration:none"><i data-lucide="layout-dashboard"></i><span>Admin Suite</span></a>
-        {% endif %}
-        {% if request.user.role == "CASHIER" %}
-        <a class="mode-btn" href="{% url 'training:enroll' %}" style="text-decoration:none"><i da<div class="app-shell admin-app-shell checkout-app-shell">
+    <div class="app-shell admin-app-shell checkout-app-shell">
 <aside class="sidebar checkout-sidebar" aria-label="Main navigation">
 <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout"><span class="brand-mark"><i data-lucide="sparkles"></i></span><span class="brand-copy"><span class="brand-name">LASHPRO <small>KE</small></span><span class="brand-caption">Premier lash &amp; academy</span></span></a>
 <div class="side-label">Workspace</div><nav class="side-nav" aria-label="Workspace navigation">
