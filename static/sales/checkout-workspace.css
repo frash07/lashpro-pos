@@ -383,7 +383,7 @@ html[data-theme="dark"]{
   --text:var(--ink);
   --subtle:var(--muted2);
   --line-strong:var(--line2);
-  --danger:var(--danger);
+  --danger:#F0A5AD;
   --red:var(--danger);
   --amber:var(--gold);
   --blue:#a3bafa;
