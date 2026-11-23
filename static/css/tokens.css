@@ -1,7 +1,10 @@
-/* LashPro POS design system
-   Canonical palette, typography, radii and elevation live here.
-   Feature stylesheets consume semantic tokens; compatibility aliases below
-   are intentionally centralised until their remaining consumers are retired. */
+/* LashPro POS design-token contract
+   SINGLE SOURCE OF TRUTH: this file is the only POS stylesheet that may
+   declare CSS custom properties. Define theme primitives and framework
+   adapters here; components and feature stylesheets must only consume tokens.
+   Deprecated aliases remain temporarily for legacy templates/integrations.
+   Do not add new uses of deprecated names; migrate consumers to semantic roles.
+*/
 
 :root,
 html[data-theme="light"] {
@@ -58,6 +61,8 @@ html[data-theme="light"] {
   --shadow-lg: 0 24px 56px rgba(var(--shadow-rgb), .13);
   --shadow-card: var(--shadow-sm);
   --bg-gradient: linear-gradient(180deg, var(--ui-surface), var(--ui-canvas));
+  --ui-surface-gradient: linear-gradient(145deg, var(--ui-surface), var(--ui-surface-muted));
+  --ui-canvas-gradient: linear-gradient(180deg, var(--ui-surface), var(--ui-canvas));
   --hero-gradient: linear-gradient(135deg, var(--premium-petal-soft), var(--ui-surface), var(--ui-surface-muted));
   --payment-mpesa-gradient: linear-gradient(135deg, #11B780, #0B8C61);
 
@@ -69,11 +74,15 @@ html[data-theme="light"] {
   --lp-radius-receipt: 20px;
   --lp-radius-receipt-mobile: 15px;
   --lp-radius-pill: 999px;
+  --lp-radius-card: 15px;
+  --lp-radius-icon: 13px;
+  --lp-radius-panel: 16px;
   --radius: var(--lp-radius-lg);
   --radius-sm: 13px;
 
   --lp-font-ui: "Inter", "Segoe UI", sans-serif;
   --lp-font-display: "Playfair Display", Georgia, serif;
+  --lp-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-ui: var(--lp-font-ui);
   --font-display: var(--lp-font-display);
 
@@ -207,6 +216,25 @@ html[data-theme="light"] {
   --pink-wash: var(--brand-soft);
   --on-accent: #FFFFFF;
 
+  /* Django admin framework variables are adapters, not a separate palette. */
+  --primary: var(--brand);
+  --secondary: var(--ui-surface-muted);
+  --accent: var(--brand);
+  --primary-fg: var(--on-accent);
+  --header-bg: var(--ui-surface);
+  --header-color: var(--ui-text);
+  --body-bg: var(--ui-canvas);
+  --body-fg: var(--ui-text);
+  --link-fg: var(--brand);
+  --link-hover-color: var(--brand-hover);
+  --hairline-color: var(--ui-border);
+  --darkened-bg: var(--ui-surface-muted);
+  --selected-bg: var(--brand-soft);
+  --selected-row: var(--brand-soft);
+  --breadcrumbs-bg: var(--ui-surface-muted);
+  --breadcrumbs-fg: var(--ui-muted);
+  --breadcrumbs-link-fg: var(--brand);
+
   /* Compatibility values centralised during the stylesheet migration. */
   --lp-compat-color-c4ae0b53: var(--on-accent);
   --lp-compat-radius-9d70d420: 14px;
@@ -309,6 +337,7 @@ html[data-theme="dark"] {
   --shadow-md: 0 12px 28px rgba(var(--shadow-rgb), .34);
   --shadow-lg: 0 24px 56px rgba(var(--shadow-rgb), .48);
   --bg-gradient: linear-gradient(180deg, var(--ui-canvas), var(--ui-surface));
+  --ui-canvas-gradient: linear-gradient(180deg, var(--ui-canvas), var(--ui-surface));
   --hero-gradient: linear-gradient(135deg, var(--ui-surface-muted), var(--ui-surface), var(--ui-canvas));
   --payment-mpesa-gradient: linear-gradient(135deg, #11B780, #0B8C61);
 

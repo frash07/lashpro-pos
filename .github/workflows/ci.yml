@@ -70,6 +70,8 @@ jobs:
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
         run: python scripts/check_css_tokens.py
+      - name: Enforce POS token ownership and semantic consumers
+        run: python scripts/check_pos_css_contract.py
       - name: Django system checks
         run: python manage.py check
       - name: Production deployment checks

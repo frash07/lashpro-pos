@@ -1,13 +1,17 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Supplier receipt history · LashPro{% endblock %}
+{% block head_extra %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'inventory/receipts.css' %}">
+{% endblock %}
 {% block content %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
-<main class="page" style="max-width:1000px;margin:0 auto;padding:1rem">
+<main class="page inventory-receipts-page">
   <h1>Supplier receipt history</h1>
   <p>Supplier documents already posted to inventory. This register is read-only; corrections must be recorded as separate stock movements.</p>
   {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
-  <section class="card" style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse">
+  <section class="card inventory-receipts-table-wrap">
+    <table class="inventory-receipts-table">
       <thead><tr><th>Received</th><th>Supplier</th><th>Document</th><th>Delivery note</th><th>Lines</th><th>Total cost</th><th>Received by</th></tr></thead>
       <tbody>
         {% for receipt in receipts %}

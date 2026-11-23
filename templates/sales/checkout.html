@@ -96,24 +96,24 @@
 
       <section id="admin-mode-view" class="view hidden">
         <div class="admin-hero">
-          <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="boxes"></i> Inventory workspace · Manager access</div><h1 class="admin-title">Stock, <em style="color:var(--pink)">accurately accounted for.</em></h1><p>Live product balances from the inventory database. Stock increases must be recorded through a supplier receipt.</p></div>
+          <div class="admin-hero-copy"><div class="executive-tag"><i data-lucide="boxes"></i> Inventory workspace · Manager access</div><h1 class="admin-title">Stock, <em class="text-brand">accurately accounted for.</em></h1><p>Live product balances from the inventory database. Stock increases must be recorded through a supplier receipt.</p></div>
         </div>
-        <div class="admin-hero-actions" style="flex-wrap:wrap;gap:8px;margin:16px 0">
-          <a class="button-secondary" href="{% url 'reporting:dashboard' %}" style="text-decoration:none"><i data-lucide="file-down"></i> Full reports</a>
-          <a class="button-secondary" href="{% url 'sales:refunds' %}" style="text-decoration:none"><i data-lucide="undo-2"></i> Refunds</a>
-          <a class="button-secondary" href="{% url 'payments:cash-session' %}" style="text-decoration:none"><i data-lucide="wallet"></i> Cash session</a>
-          <a class="button-secondary" href="{% url 'sales:services' %}" style="text-decoration:none"><i data-lucide="list-checks"></i> Service queue</a>
-          <a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a>
+        <div class="admin-hero-actions admin-hero-actions--wrapped">
+          <a class="button-secondary button-link" href="{% url 'reporting:dashboard' %}"><i data-lucide="file-down"></i> Full reports</a>
+          <a class="button-secondary button-link" href="{% url 'sales:refunds' %}"><i data-lucide="undo-2"></i> Refunds</a>
+          <a class="button-secondary button-link" href="{% url 'payments:cash-session' %}"><i data-lucide="wallet"></i> Cash session</a>
+          <a class="button-secondary button-link" href="{% url 'sales:services' %}"><i data-lucide="list-checks"></i> Service queue</a>
+          <a class="button-primary button-link" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Receive stock</a>
         </div>
         {% if admin_suite.is_manager and admin_suite.pending_reconciliation_count %}
-        <p class="admin-content-subtitle" style="margin-top:8px">
+        <p class="admin-content-subtitle admin-content-subtitle--spaced">
           <a href="{% url 'payments:reconciliation' %}">{{ admin_suite.pending_reconciliation_count }} M-Pesa payment{{ admin_suite.pending_reconciliation_count|pluralize }} awaiting review</a>
         </p>
         {% endif %}
         <div class="admin-content">
           <div class="admin-content-head"><div><div class="admin-content-title">Inventory on hand</div><div class="admin-content-subtitle">Read-only stock balances. Record all incoming stock using a supplier receipt.</div></div></div>
           <div class="admin-section">
-            <div class="subhead"><div><h3>Products &amp; reorder status</h3><p>Balances and reorder thresholds are read directly from the database.</p></div><a class="button-primary" href="{% url 'inventory:receive' %}" style="text-decoration:none"><i data-lucide="plus"></i> Receive stock</a></div>
+            <div class="subhead"><div><h3>Products &amp; reorder status</h3><p>Balances and reorder thresholds are read directly from the database.</p></div><a class="button-primary button-link" href="{% url 'inventory:receive' %}"><i data-lucide="plus"></i> Receive stock</a></div>
             <div class="table-shell"><table><thead><tr><th>SKU</th><th>Product</th><th>On hand</th><th>Reserved online</th><th>Available to sell</th><th>Reorder level</th><th>Stock status</th></tr></thead><tbody>
               {% for product in inventory_products %}
               <tr data-inventory-product-id="{{ product.pk }}" data-reorder-level="{{ product.reorder_level }}">
@@ -123,7 +123,7 @@
                 <td><span data-stock-field="reserved">{{ product.reserved_online|floatformat:3 }}</span></td>
                 <td><span data-stock-field="available">{{ product.available_stock|floatformat:3 }}</span></td>
                 <td><span data-stock-field="reorder-level">{{ product.reorder_level|floatformat:3 }}</span></td>
-                <td>{% if product.reorder_level > 0 and product.available_stock <= product.reorder_level %}<span data-stock-field="status" class="status-tag" style="color:var(--danger)">Low available stock</span>{% else %}<span data-stock-field="status" class="status-tag ok">In stock</span>{% endif %}</td>
+                <td>{% if product.reorder_level > 0 and product.available_stock <= product.reorder_level %}<span data-stock-field="status" class="status-tag status-tag--danger">Low available stock</span>{% else %}<span data-stock-field="status" class="status-tag ok">In stock</span>{% endif %}</td>
               </tr>
               {% empty %}
               <tr><td colspan="7">No active products are registered yet.</td></tr>
@@ -137,7 +137,7 @@
 </main>
           <aside class="checkout-panel">
             <div class="checkout-head">
-              <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill" style="padding:6px 8px;font-size:9px"><span class="status-dot" style="color:var(--green)"></span> Ready to close</span></div>
+              <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill soft-pill--compact"><span class="status-dot status-dot--success"></span> Ready to close</span></div>
               <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New transaction</div></div></div>
             </div>
             <div class="client-fields">
@@ -164,7 +164,7 @@
                 <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
                 <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
               </div>
-              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Record M-Pesa payment</span><i data-lucide="arrow-up-right" style="opacity:0.9"></i></button>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Record M-Pesa payment</span><i data-lucide="arrow-up-right" class="icon-subdued"></i></button>
               <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
               <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
             </div>
@@ -550,7 +550,7 @@
     function clearCart(){if(pendingCheckout)return;cart=[];appliedDiscount=0;appliedCode='';document.getElementById('discount-code').value='';renderCart();}
     function renderCart(){
       const container=document.getElementById('cart-items-container');
-      if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong style="color:var(--text);font-size:11px">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
+      if(!cart.length){container.innerHTML='<div class="empty-cart"><div class="empty-icon"><i data-lucide="shopping-basket"></i></div><strong class="empty-cart-title">Your order is empty</strong><span>Select items from the studio menu to begin.</span></div>';updateFinancials();refreshIcons();return;}
       container.innerHTML=cart.map(item=>{
         const locked=Boolean(pendingCheckout);
         const techPicker=item.type==='service'

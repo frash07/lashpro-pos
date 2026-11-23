@@ -42,7 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
         if not obj or not obj.image:
             return "No image uploaded"
         return format_html(
-            '<img src="{}" alt="{}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;">',
+            '<img src="{}" alt="{}" class="catalog-admin-thumbnail">',
             obj.image.url,
             obj.name,
         )

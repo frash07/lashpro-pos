@@ -7,7 +7,7 @@
   {{ block.super }}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   <link rel="stylesheet" href="{% static 'admin/css/payments-app-index.css' %}">
   <link rel="stylesheet" href="{% static 'admin/css/admin-index.css' %}">
@@ -353,7 +353,7 @@
 
           <div class="commission-summary">
             <div class="summary-box"><span>Gross service revenue</span><strong>KES 73,500</strong></div>
-            <div class="summary-box"><span>Commission payable</span><strong style="color:var(--pink)">KES 22,050</strong></div>
+            <div class="summary-box"><span>Commission payable</span><strong class="commission-value--accent">KES 22,050</strong></div>
             <div class="summary-box"><span>Artists on shift</span><strong>3 active</strong></div>
           </div>
 
@@ -361,9 +361,9 @@
             <table>
               <thead><tr><th>Artist</th><th>Role</th><th>Services today</th><th>Gross revenue</th><th>Commission (KES)</th></tr></thead>
               <tbody>
-                <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td style="color:var(--green);font-weight:700">KES 6,600</td></tr>
-                <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td style="color:var(--green);font-weight:700">KES 4,350</td></tr>
-                <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td style="color:var(--green);font-weight:700">KES 11,100</td></tr>
+                <tr><td><strong>Stacy M.</strong></td><td>Senior Lash Artist</td><td>4 full sets</td><td>KES 22,000</td><td class="commission-value--positive">KES 6,600</td></tr>
+                <tr><td><strong>Faith K.</strong></td><td>Lash Specialist</td><td>3 hybrid / lifts</td><td>KES 14,500</td><td class="commission-value--positive">KES 4,350</td></tr>
+                <tr><td><strong>Lyn W.</strong></td><td>Master Tech / Trainer</td><td>2 master sets + 1 student</td><td>KES 37,000</td><td class="commission-value--positive">KES 11,100</td></tr>
               </tbody>
             </table>
           </div>
