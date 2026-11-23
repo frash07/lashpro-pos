@@ -18,7 +18,7 @@ body{margin:0!important}
 .commission-kpi-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--pink-wash);color:var(--pink)}
 .commission-kpi-icon svg{width:17px;height:17px}
 .commission-kpi-icon.green{background:rgba(109,214,173,.11);color:var(--green)}
-.commission-kpi-icon.amber{background:rgba(231,177,104,.12);color:var(--amber)}
+.commission-kpi-icon.amber{background:var(--brand-soft);color:var(--brand)}
 .commission-kpi strong{display:block;margin:13px 0 5px;color:var(--text);font-size:clamp(17px,2vw,23px);font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .commission-kpi small{color:var(--subtle);font-size:9px}
 .commission-ledger-panel{padding:18px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:var(--shadow)}

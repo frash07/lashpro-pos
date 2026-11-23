@@ -1,69 +1,118 @@
+/* Django admin theme mapped to the shared LashPro POS design tokens. */
 :root {
-  color-scheme: dark;
-  --primary: #c08a75;
-  --secondary: #2c2521;
-  --accent: #e0a493;
-  --primary-fg: #21140f;
-  --header-bg: #171513;
-  --header-color: #f5eee9;
-  --body-bg: #100e0d;
-  --body-fg: #f5eee9;
-  --link-fg: #e0a493;
-  --link-hover-color: #f0c2ad;
-  --hairline-color: rgba(226, 181, 153, .16);
-  --darkened-bg: #201c19;
-  --selected-bg: rgba(192, 138, 117, .12);
-  --selected-row: rgba(192, 138, 117, .08);
-  --breadcrumbs-bg: #1c1714;
-  --breadcrumbs-fg: #f5eee9;
-  --breadcrumbs-link-fg: #e0a493;
+  color-scheme: light;
+  --primary: var(--brand);
+  --secondary: var(--ui-surface-muted);
+  --accent: var(--brand);
+  --primary-fg: #FFFFFF;
+  --header-bg: var(--ui-surface);
+  --header-color: var(--ui-text);
+  --body-bg: var(--ui-canvas);
+  --body-fg: var(--ui-text);
+  --link-fg: var(--brand);
+  --link-hover-color: var(--brand-hover);
+  --hairline-color: var(--ui-border);
+  --darkened-bg: var(--ui-surface-muted);
+  --selected-bg: var(--brand-soft);
+  --selected-row: var(--brand-soft);
+  --breadcrumbs-bg: var(--ui-surface-muted);
+  --breadcrumbs-fg: var(--ui-muted);
+  --breadcrumbs-link-fg: var(--brand);
 }
-html, body { background: #100e0d; color: #f5eee9; }
-body { font-family: "Segoe UI", "Aptos", Arial, sans-serif; }
-a:link, a:visited { color: #e0a493; }
-a:hover { color: #f0c2ad; }
-#container { background: #100e0d; }
-#header { min-height: 62px; background: #171513; color: #f5eee9; border-bottom: 1px solid rgba(226,181,153,.2); box-shadow: 0 8px 28px rgba(0,0,0,.25); }
-#branding h1, #branding h1 a:link, #branding h1 a:visited { color: #e4c5b6; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 600; letter-spacing: .035em; }
-#user-tools, #user-tools a:link, #user-tools a:visited { color: #c9bbb3; }
-#user-tools a:hover { color: #f0c2ad; }
-div.breadcrumbs { background: #211b18; color: #c9bbb3; border-bottom: 1px solid rgba(226,181,153,.13); }
-div.breadcrumbs a:link, div.breadcrumbs a:visited { color: #e0a493; }
-#content { color: #f5eee9; }
-#content h1, #content h2, #content h3, #content h4 { color: #f5eee9; }
+html, body { background: var(--ui-canvas); color: var(--ui-text); }
+body { font-family: var(--lp-font-ui); }
+a:link, a:visited { color: var(--brand); }
+a:hover { color: var(--brand-hover); }
+#container { background: var(--ui-canvas); }
+#header {
+  min-height: 62px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  border-bottom: 1px solid var(--ui-border);
+  box-shadow: var(--shadow-sm);
+}
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+  color: var(--ui-text);
+  font-family: var(--lp-font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: .035em;
+}
+#user-tools, #user-tools a:link, #user-tools a:visited { color: var(--ui-muted); }
+#user-tools a:hover { color: var(--brand); }
+div.breadcrumbs {
+  background: var(--ui-surface-muted);
+  color: var(--ui-muted);
+  border-bottom: 1px solid var(--ui-border);
+}
+div.breadcrumbs a:link, div.breadcrumbs a:visited { color: var(--brand); }
+#content { color: var(--ui-text); }
+#content h1, #content h2, #content h3, #content h4 { color: var(--ui-text); }
 .module, #content-related, #changelist-filter, .inline-group, .dashboard .module {
-  overflow: hidden; border: 1px solid rgba(226,181,153,.16); border-radius: 12px;
-  background: #191715; box-shadow: 0 8px 25px rgba(0,0,0,.18);
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-sm);
 }
-.module h2, .module caption, .inline-group h2, #changelist-filter h2 { padding: 11px 13px; background: #28211d; color: #e0a493; }
-.module caption a:link, .module caption a:visited { color: #e0a493; }
-#nav-sidebar { background: #171513; border-right: 1px solid rgba(226,181,153,.14); }
-#nav-sidebar .current-model { background: rgba(192,138,117,.14); }
-#nav-sidebar .current-model a, #nav-sidebar a:hover { color: #f0c2ad; }
-#content-main .module table th, #content-main .module table td, #changelist table td, #changelist table th { border-color: rgba(226,181,153,.13); }
-#changelist table thead th { background: #211b18; color: #c9bbb3; }
-#changelist table tbody tr:nth-child(even), .row-form-errors { background: rgba(255,255,255,.018); }
-#changelist table tbody tr:hover { background: rgba(192,138,117,.08); }
+.module h2, .module caption, .inline-group h2, #changelist-filter h2 {
+  padding: 11px 13px;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text);
+}
+.module caption a:link, .module caption a:visited { color: var(--brand); }
+#nav-sidebar { background: var(--ui-surface); border-right: 1px solid var(--ui-border); }
+#nav-sidebar .current-model { background: var(--brand-soft); }
+#nav-sidebar .current-model a, #nav-sidebar a:hover { color: var(--brand-hover); }
+#content-main .module table th, #content-main .module table td,
+#changelist table td, #changelist table th { border-color: var(--ui-border); }
+#changelist table thead th { background: var(--ui-surface-muted); color: var(--ui-muted); }
+#changelist table tbody tr:nth-child(even), .row-form-errors { background: var(--ui-surface-muted); }
+#changelist table tbody tr:hover { background: var(--brand-soft); }
 #changelist-filter { padding-bottom: 12px; }
 #changelist-filter h2 { margin: 0; }
-#toolbar, .paginator, .submit-row { border-color: rgba(226,181,153,.16); background: #191715; }
+#toolbar, .paginator, .submit-row { border-color: var(--ui-border); background: var(--ui-surface); }
 .button, input[type="submit"], input[type="button"], .submit-row input, a.button, .object-tools a {
-  border: 1px solid #c08a75; border-radius: 7px; background: #c08a75; color: #21140f !important; font-weight: 700;
+  border: 1px solid var(--brand);
+  border-radius: 7px;
+  background: var(--brand);
+  color: #FFFFFF !important;
+  font-weight: 700;
 }
-.button:hover, input[type="submit"]:hover, input[type="button"]:hover, .submit-row input:hover, a.button:hover, .object-tools a:hover { border-color: #e0a493; background: #e0a493; }
-.button.default, .submit-row input.default { background: #aa745f; }
-.object-tools a.addlink { background: #c08a75; }
-a.deletelink, .deletelink-box a { border-color: #a44d5b; background: #a44d5b; color: #fff !important; }
-input, select, textarea { border-color: rgba(226,181,153,.2); border-radius: 6px; background: #141210; color: #f5eee9; }
-input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible { outline: 3px solid rgba(224,164,147,.28); outline-offset: 2px; border-color: #e0a493; }
-.help, p.help, form .help, div.help, .quiet { color: #aa9d96; }
+.button:hover, input[type="submit"]:hover, input[type="button"]:hover,
+.submit-row input:hover, a.button:hover, .object-tools a:hover {
+  border-color: var(--brand-hover);
+  background: var(--brand-hover);
+}
+.button.default, .submit-row input.default { background: var(--brand-hover); }
+.object-tools a.addlink { background: var(--brand); }
+a.deletelink, .deletelink-box a {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #FFFFFF !important;
+}
+input, select, textarea {
+  border-color: var(--ui-border-strong);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+}
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+  outline: 3px solid var(--lp-focus);
+  outline-offset: 2px;
+  border-color: var(--brand);
+}
+.help, p.help, form .help, div.help, .quiet { color: var(--ui-muted); }
 .messagelist li { border-radius: 7px; }
-.messagelist li.success { background: rgba(40,139,90,.16); color: #a7e3bd; }
-.messagelist li.warning { background: rgba(158,117,30,.15); color: #e8c780; }
-.messagelist li.error { background: rgba(163,45,71,.17); color: #f19aaa; }
-.selector-chosen h2 { background: #28211d; }
-.calendar td.selected a, .calendar td a:focus, .clockbox h2 { background: #8c5948; }
-hr { border-color: rgba(226,181,153,.13); }
+.messagelist li.success { background: var(--success-soft); color: var(--success); }
+.messagelist li.warning { background: var(--warning-soft); color: var(--warning); }
+.messagelist li.error { background: var(--danger-soft); color: var(--danger); }
+.selector-chosen h2 { background: var(--ui-surface-muted); }
+.calendar td.selected a, .calendar td a:focus, .clockbox h2 {
+  background: var(--brand);
+  color: #FFFFFF;
+}
+hr { border-color: var(--ui-border); }
 @media (max-width: 767px) {
   #header { padding: 12px 16px; }
   #user-tools { padding-top: 5px; }

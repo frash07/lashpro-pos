@@ -40,7 +40,7 @@
 .customer-hub-restricted{color:var(--subtle);font-size:9px}
 .customer-hub-guidance{margin-top:17px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
 .customer-hub-guidance-heading{display:flex;align-items:center;gap:11px}
-.customer-hub-guidance-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(231,177,104,.12);color:var(--amber)}
+.customer-hub-guidance-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--brand-soft);color:var(--brand)}
 .customer-hub-guidance-icon svg{width:16px;height:16px}
 .customer-hub-guidance-heading strong,.customer-hub-guidance-heading span{display:block}
 .customer-hub-guidance-heading strong{color:var(--text);font-size:11px}

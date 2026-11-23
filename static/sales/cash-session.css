@@ -64,6 +64,6 @@
 .cash-alert.info{border-color:var(--line-strong);background:var(--pink-wash);color:var(--pink)}
 .cash-alert svg{width:14px;height:14px;flex:0 0 auto;margin-top:1px}
 .cash-status{white-space:nowrap}
-.cash-status.pending{color:var(--amber);background:rgba(244,199,125,.1)}
+.cash-status.pending{color:var(--amber);background:var(--warning-soft)}
 @media(max-width:920px){.cash-layout{grid-template-columns:1fr}.cash-review-grid{grid-template-columns:1fr}.cash-aside-card{padding:20px}}
 @media(max-width:600px){.cash-main{padding:17px 12px 25px}.cash-page-heading{gap:12px}.cash-metrics{grid-template-columns:1fr 1fr;gap:8px}.cash-metric{padding:13px}.cash-metric:last-child{grid-column:1/-1}.cash-metric-value{font-size:19px}.cash-card,.cash-aside-card{padding:17px;border-radius:17px}.cash-card-head h2,.cash-section-heading h2{font-size:19px}.cash-form-grid{grid-template-columns:1fr}.cash-amount-panel{align-items:flex-start;flex-direction:column}.cash-amount-aside{text-align:left}.cash-section-heading{align-items:flex-start;flex-direction:column}.cash-review-amounts{gap:5px}.cash-review-amount{padding:8px}.cash-review-amount strong{font-size:10px}.cash-nav-link .mode-btn-label{display:none}}
