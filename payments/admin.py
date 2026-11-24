@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     CashSession, CashSessionMovement, PaymentReconciliation, PaymentTransaction,
-    MpesaStkPush, PayoutReconciliation, RefundPayout, SalePayment,
+    MpesaC2BPayment, MpesaStkPush, PayoutReconciliation, RefundPayout, SalePayment,
 )
 
 
@@ -89,6 +89,25 @@ class MpesaStkPushAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return request.user.is_superuser or request.user.has_perm("payments.view_mpesastkpush")
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+
+@admin.register(MpesaC2BPayment)
+class MpesaC2BPaymentAdmin(admin.ModelAdmin):
+    list_display = ("received_at", "payment_transaction", "business_shortcode", "payer_first_name", "masked_msisdn", "transacted_at")
+    list_filter = ("business_shortcode", "received_at")
+    search_fields = ("payment_transaction__reference", "payer_first_name", "payer_last_name", "bill_ref_number")
+    readonly_fields = tuple(field.name for field in MpesaC2BPayment._meta.fields)
+    actions = None
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.has_perm("payments.view_mpesac2bpayment")
 
     def has_delete_permission(self, request, obj=None):
         return False

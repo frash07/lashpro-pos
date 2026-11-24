@@ -73,6 +73,7 @@
       <div class="integration-grid">
         <div class="integration-field">{{ form.mpesa_environment.label_tag }}{{ form.mpesa_environment }}{{ form.mpesa_environment.errors }}</div>
         <div class="integration-field">{{ form.mpesa_shortcode.label_tag }}{{ form.mpesa_shortcode }}{{ form.mpesa_shortcode.errors }}</div>
+        <div class="integration-field wide">{{ form.mpesa_c2b_shortcodes.label_tag }}{{ form.mpesa_c2b_shortcodes }}<small>Register C2B callbacks for direct Paybill or Till payments. Enter one receiving shortcode per line; this is separate from the STK Push shortcode setting.</small>{{ form.mpesa_c2b_shortcodes.errors }}</div>
         <div class="integration-field">{{ form.mpesa_consumer_key.label_tag }}{{ form.mpesa_consumer_key }}{{ form.mpesa_consumer_key.errors }}</div>
         <div class="integration-field">{{ form.mpesa_consumer_secret.label_tag }}{{ form.mpesa_consumer_secret }}{{ form.mpesa_consumer_secret.errors }}</div>
         <div class="integration-field wide">{{ form.mpesa_passkey.label_tag }}{{ form.mpesa_passkey }}{{ form.mpesa_passkey.errors }}</div>
@@ -83,6 +84,7 @@
       </div>
       <p class="integration-note">Use sandbox credentials while testing. Switch to production only after Safaricom has approved the shortcode, passkey and callback domain. STK requests require whole-KSh amounts and a Kenyan mobile number.</p>
       <label class="integration-clear">{{ form.clear_mpesa }} {{ form.clear_mpesa.label }}</label>
+      <p class="integration-note">After saving the shortcode list, use the button below to register the C2B v2 callbacks with Safaricom. Incoming C2B payments are stored as confirmed but unallocated until a cashier matches them to a sale.</p>
     </section>
 
     <section class="integration-card">
@@ -103,6 +105,11 @@
       <p>Last saved: {% if updated_at %}{{ updated_at|date:"d M Y, H:i" }} EAT{% else %}Not saved yet{% endif %}. Secret values are never returned to this page.</p>
       <button type="submit" class="integration-save">Save API settings</button>
     </div>
+  </form>
+  <form method="post" action="{% url 'payments:c2b-register' %}" class="integration-save-row">
+    {% csrf_token %}
+    <p>Register the C2B confirmation and validation URLs for every shortcode listed above. This requires saved Daraja credentials and a public HTTPS POS_BASE_URL.</p>
+    <button type="submit" class="integration-save">Register C2B callbacks</button>
   </form>
 </main>
 {% endblock %}

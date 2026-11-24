@@ -495,3 +495,167 @@ def process_stk_callback(*, callback_token, payload):
     if not callback_before_initiation_response:
         payment.save(update_fields=("status",))
     return push
+
+
+
+def configured_c2b_shortcodes(config):
+    """Return validated short codes entered one per line or comma-separated."""
+    raw = config.get("mpesa_c2b_shortcodes") or ""
+    if isinstance(raw, (list, tuple)):
+        values = raw
+    else:
+        values = str(raw).replace(",", "\n").replace(";", "\n").splitlines()
+    result = []
+    for value in values:
+        shortcode = "".join(character for character in str(value) if character.isdigit())
+        if shortcode and shortcode not in result:
+            if len(shortcode) > 20:
+                raise ValidationError({"mpesa_c2b_shortcodes": "A C2B shortcode is too long."})
+            result.append(shortcode)
+    return result
+
+
+def register_c2b_urls(*, config, shortcodes, confirmation_url, validation_url):
+    """Register Daraja C2B v2 callbacks against each receiving shortcode."""
+    if not shortcodes:
+        raise ValidationError({"mpesa_c2b_shortcodes": "Enter at least one Paybill or Till callback shortcode."})
+    for url in (confirmation_url, validation_url):
+        parts = urllib.parse.urlsplit(str(url or ""))
+        if parts.scheme != "https" or not parts.hostname or parts.username or parts.password:
+            raise ValidationError({"callback_url": "Daraja C2B callbacks require public HTTPS URLs."})
+    access_token = _access_token(config)
+    registered = []
+    for shortcode in shortcodes:
+        if not str(shortcode).isdigit():
+            raise ValidationError({"mpesa_c2b_shortcodes": "C2B shortcodes must contain digits only."})
+        payload = {
+            "ShortCode": str(shortcode),
+            "ResponseType": "Completed",
+            "ConfirmationURL": confirmation_url,
+            "ValidationURL": validation_url,
+        }
+        request = urllib.request.Request(
+            _root(config) + "/mpesa/c2b/v2/registerurl",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": "Bearer " + access_token,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+        status, response = _read_json_response(request, timeout=20)
+        if not isinstance(response, dict) or status not in (200, 201) or str(response.get("ResponseCode", "")) != "0":
+            description = (
+                response.get("ResponseDescription") or response.get("errorMessage")
+                if isinstance(response, dict) else None
+            )
+            raise DarajaError(
+                f"C2B callback registration failed for shortcode {shortcode}: "
+                f"{str(description or 'Daraja did not confirm registration.')[:180]}"
+            )
+        registered.append(shortcode)
+    return registered
+
+
+def _c2b_safe_name(value):
+    text = "".join(character for character in str(value or "") if character.isprintable())
+    return text.strip()[:100]
+
+
+def _c2b_mask_msisdn(value):
+    """Persist only a masked/withheld phone display, never a full payer number."""
+    raw = str(value or "").strip()
+    digits = "".join(character for character in raw if character.isdigit())
+    if 9 <= len(digits) <= 15:
+        return f"{digits[:4]}****{digits[-2:]}"
+    if "*" in raw:
+        return "".join(character for character in raw if character.isdigit() or character == "*")[:32]
+    return "Withheld by Safaricom" if raw else ""
+
+
+@transaction.atomic
+def process_c2b_callback(*, callback_token, payload):
+    """Persist a successful C2B confirmation as a verified, unallocated payment."""
+    from datetime import datetime
+    from .models import MpesaC2BPayment, MpesaStkPush, PaymentTransaction
+
+    config = IntegrationSettings.get_solo().get_config()
+    expected_token = str(config.get("mpesa_c2b_callback_token") or "")
+    if not expected_token or not secrets.compare_digest(str(callback_token or ""), expected_token):
+        raise ValidationError("Unknown C2B callback token.")
+
+    shortcodes = configured_c2b_shortcodes(config)
+    if not shortcodes:
+        raise ValidationError("No C2B callback shortcodes are configured.")
+    data = payload if isinstance(payload, dict) else {}
+    receipt = str(data.get("TransID") or "").strip().upper()
+    shortcode = str(data.get("BusinessShortCode") or "").strip()
+    if not receipt or len(receipt) > 50:
+        raise ValidationError("C2B callback is missing a valid M-Pesa receipt number.")
+    if shortcode not in shortcodes:
+        raise ValidationError("C2B callback shortcode is not configured.")
+    try:
+        amount = Decimal(str(data.get("TransAmount"))).quantize(CENT)
+    except (InvalidOperation, TypeError, ValueError):
+        raise ValidationError("C2B callback contains an invalid amount.") from None
+    if not amount.is_finite() or amount <= 0:
+        raise ValidationError("C2B callback amount must be positive.")
+    try:
+        transacted_at = timezone.make_aware(
+            datetime.strptime(str(data.get("TransTime") or ""), "%Y%m%d%H%M%S"),
+            timezone.get_current_timezone(),
+        )
+    except (TypeError, ValueError):
+        raise ValidationError("C2B callback contains an invalid transaction time.") from None
+
+    existing = PaymentTransaction.objects.filter(
+        method=PaymentTransaction.Method.MPESA, reference__iexact=receipt
+    ).first()
+    if existing:
+        try:
+            existing_c2b = existing.c2b_payment
+        except MpesaC2BPayment.DoesNotExist:
+            raise ValidationError("This M-Pesa receipt is already linked to another payment.") from None
+        if existing.amount != amount or existing_c2b.business_shortcode != shortcode:
+            raise ValidationError("The duplicate C2B receipt contains conflicting payment details.")
+        return existing_c2b
+
+    if MpesaStkPush.objects.filter(mpesa_receipt_number__iexact=receipt).exists():
+        raise ValidationError("This M-Pesa receipt is already linked to an STK payment.")
+
+    try:
+        with transaction.atomic():
+            payment = PaymentTransaction(
+                amount=amount,
+                method=PaymentTransaction.Method.MPESA,
+                status=PaymentTransaction.Status.SUCCEEDED,
+                reference=receipt,
+            )
+            payment.full_clean()
+            payment.save()
+            return MpesaC2BPayment.objects.create(
+                payment_transaction=payment,
+                business_shortcode=shortcode,
+                transaction_type=_c2b_safe_name(data.get("TransactionType"))[:60],
+                bill_ref_number=_c2b_safe_name(data.get("BillRefNumber"))[:100],
+                invoice_number=_c2b_safe_name(data.get("InvoiceNumber"))[:100],
+                payer_first_name=_c2b_safe_name(data.get("FirstName")),
+                payer_middle_name=_c2b_safe_name(data.get("MiddleName")),
+                payer_last_name=_c2b_safe_name(data.get("LastName")),
+                masked_msisdn=_c2b_mask_msisdn(data.get("MSISDN")),
+                transacted_at=transacted_at,
+            )
+    except IntegrityError:
+        # Safaricom may retry the same confirmation concurrently.
+        existing = PaymentTransaction.objects.filter(
+            method=PaymentTransaction.Method.MPESA, reference__iexact=receipt
+        ).first()
+        if existing:
+            try:
+                existing_c2b = existing.c2b_payment
+            except MpesaC2BPayment.DoesNotExist:
+                raise ValidationError("This M-Pesa receipt is already linked to another payment.") from None
+            if existing.amount == amount and existing_c2b.business_shortcode == shortcode:
+                return existing_c2b
+        raise ValidationError("This M-Pesa receipt has already been processed.") from None

@@ -1,0 +1,37 @@
+{% extends "base_pos.html" %}
+{% block title %}Incoming M-Pesa payments · LashPro{% endblock %}
+{% block pos_page_title %}Incoming M-Pesa payments{% endblock %}
+{% block pos_main %}
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:payments' %}">Balance payments</a><a href="{% url 'payments:cash-session' %}">Cash session</a></header>
+<main class="page">
+  <h1>Incoming M-Pesa payments</h1>
+  <p>These payments were confirmed by Safaricom through C2B but are not yet assigned to a sale. Ask the customer to confirm the payer details shown before matching the payment. Safaricom may omit names and masks the payer phone number.</p>
+  {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <section>
+    {% for incoming in incoming_payments %}
+      <article class="card">
+        <h2>KSh {{ incoming.payment_transaction.amount|floatformat:2 }} · {{ incoming.payment_transaction.reference }}</h2>
+        <p><strong>Payer name:</strong> {{ incoming.payer_display_name }}</p>
+        <p><strong>Phone:</strong> {{ incoming.masked_msisdn|default:"Not provided" }} · <strong>Received:</strong> {{ incoming.transacted_at|date:"d M Y H:i:s" }}</p>
+        <p><strong>Receiving shortcode:</strong> {{ incoming.business_shortcode }}{% if incoming.bill_ref_number %} · <strong>Account reference:</strong> {{ incoming.bill_ref_number }}{% endif %}</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="payment_id" value="{{ incoming.payment_transaction_id }}">
+          <label>Allocate to sale
+            <select name="sale_id" required>
+              <option value="">Choose the matching sale</option>
+              {% for sale in sale_candidates %}
+                <option value="{{ sale.pk }}">{{ sale.receipt_number }} · {% if sale.customer %}{{ sale.customer.name }}{% else %}Walk-in{% endif %} · Balance KSh {{ sale.available_to_collect|floatformat:2 }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label><input type="checkbox" name="customer_confirmed" required> Customer confirmed these payer details with the cashier.</label>
+          <button type="submit">Allocate and reconcile payment</button>
+        </form>
+      </article>
+    {% empty %}
+      <p>No unallocated C2B payments are waiting for a sale match.</p>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}

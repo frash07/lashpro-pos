@@ -36,3 +36,16 @@ Apply the migrations (core.0002_integrationsettings, payments.0009_mpesa_stk_pus
 ## WhatsApp catalogue commerce
 
 See [WHATSAPP_COMMERCE.md](WHATSAPP_COMMERCE.md) for the WhatsApp Business App coexistence onboarding, Meta catalogue credentials, webhook verification, automatic stock publication and inbound catalogue-order workflow. The existing WhatsApp booking-notification integration remains supported.
+
+
+## Direct M-Pesa Paybill / Till payments (C2B)
+
+LashPro can receive customer-initiated Paybill or Buy Goods/Till payments separately from STK Push. Configure **C2B callback shortcodes** in Admin Suite → API & Payment Integrations. Enter one receiving shortcode per line. For Buy Goods accounts, confirm with Safaricom which shortcode must be used for callback registration; some account structures route through a child shortcode.
+
+Save the settings, then select **Register C2B callbacks**. LashPro registers the C2B v2 confirmation and validation URLs for each configured shortcode using ResponseType=Completed. The confirmation callback is a distinct C2B payload, not the STK Body.stkCallback payload.
+
+A C2B confirmation creates a Safaricom-confirmed M-Pesa transaction in LashPro. It is intentionally left **unallocated** until a cashier opens Payments → Incoming M-Pesa, asks the customer to confirm the payer name displayed, selects the matching transaction and allocates it to a completed sale. Cashiers can allocate only to their own sales; owners and managers can allocate to any completed sale. A receipt can be allocated only once, and payments larger than the sale balance remain unallocated.
+
+C2B callback data is idempotent by M-Pesa receipt number. LashPro stores the payer name fields supplied by Safaricom and a masked/withheld phone display; it does not retain the full MSISDN or the raw callback body. The C2B callback token is stored with the encrypted integration configuration.
+
+C2B confirmation proves that the money reached the configured shortcode. Cashier allocation is a separate, audited action that links the received payment to a sale. It must not be performed solely because the amount matches.
