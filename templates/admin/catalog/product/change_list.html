@@ -2,26 +2,38 @@
 {% load static %}
 
 {% block title %}Products · LashPro KE{% endblock %}
-{% block bodyclass %}{{ block.super }} admin-suite-body checkout-page catalog-admin-page{% endblock %}
-{% block workspace_navigation %}{% endblock %}
+{% block bodyclass %}{{ block.super }}{% if not is_popup %} admin-suite-body checkout-page catalog-admin-page{% endif %}{% endblock %}
+{# The workspace replaces Django's chrome, not its changelist machinery. #}
+{% block header %}{% if is_popup %}{{ block.super }}{% endif %}{% endblock %}
+{% block nav-sidebar %}{% if is_popup %}{{ block.super }}{% endif %}{% endblock %}
+{% block breadcrumbs %}{% if is_popup %}{{ block.super }}{% endif %}{% endblock %}
 {% block pretitle %}{% endblock %}
 {% block content_title %}{% endblock %}
 {% block content_subtitle %}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
+  {% if not is_popup %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
   <link rel="stylesheet" href="{% static 'sales/checkout-workspace.css' %}">
-  <link rel="stylesheet" href="{% static 'catalog/catalog-admin.css' %}">
-  <link rel="stylesheet" href="{% static 'catalog/catalog-workspace.css' %}">
+  {% endif %}
+{% endblock %}
+
+{% block responsive %}
+  {{ block.super }}
+  {% if not is_popup %}<link rel="stylesheet" href="{% static 'catalog/catalog-workspace.css' %}">{% endif %}
 {% endblock %}
 
 {% block content %}
-  <div class="app-shell admin-app-shell checkout-app-shell catalog-workspace-shell">
+  {% if is_popup %}
+    {{ block.super }}
+  {% else %}
+  <div class="app-shell admin-app-shell checkout-app-shell inventory-mode catalog-workspace-shell">
     <aside class="sidebar checkout-sidebar catalog-workspace-sidebar" aria-label="Main navigation">
       <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout">
         <span class="brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
@@ -34,33 +46,33 @@
       <div class="side-label">Workspace</div>
       <nav class="side-nav" aria-label="Workspace navigation">
         <a class="side-link" href="{% url 'sales:checkout' %}" aria-label="Checkout" title="Checkout">
-          <i data-lucide="shopping-bag" aria-hidden="true"></i><span>Checkout</span>
+          <i data-lucide="shopping-bag" aria-hidden="true"></i><span class="nav-text">Checkout</span>
         </a>
         <a class="side-link" href="/admin/appointments/" aria-label="Appointments" title="Appointments">
-          <i data-lucide="calendar-days" aria-hidden="true"></i><span>Appointments</span>
+          <i data-lucide="calendar-days" aria-hidden="true"></i><span class="nav-text">Appointments</span>
         </a>
         <a class="side-link" href="/admin/customers/" aria-label="Clients" title="Clients">
-          <i data-lucide="users" aria-hidden="true"></i><span>Clients</span>
+          <i data-lucide="users" aria-hidden="true"></i><span class="nav-text">Clients</span>
         </a>
       </nav>
 
       <div class="side-label">Catalogue</div>
       <nav class="side-nav" aria-label="Catalogue navigation">
         <a class="side-link active" href="{% url 'admin:catalog_product_changelist' %}" aria-current="page" aria-label="Products" title="Products">
-          <i data-lucide="package" aria-hidden="true"></i><span>Products</span>
+          <i data-lucide="package" aria-hidden="true"></i><span class="nav-text">Products</span>
         </a>
         <a class="side-link" href="{% url 'admin:catalog_service_changelist' %}" aria-label="Services" title="Services">
-          <i data-lucide="sparkles" aria-hidden="true"></i><span>Services</span>
+          <i data-lucide="sparkles" aria-hidden="true"></i><span class="nav-text">Services</span>
         </a>
       </nav>
 
       <div class="side-label">Insights</div>
       <nav class="side-nav" aria-label="Insights navigation">
         <a class="side-link" href="{% url 'reporting:dashboard' %}" aria-label="Reports" title="Reports">
-          <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span>Reports</span>
+          <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span class="nav-text">Reports</span>
         </a>
         <a class="side-link" href="{% url 'admin_suite' %}" aria-label="Admin Suite" title="Admin Suite">
-          <i data-lucide="settings-2" aria-hidden="true"></i><span>Admin Suite</span>
+          <i data-lucide="settings-2" aria-hidden="true"></i><span class="nav-text">Admin Suite</span>
         </a>
       </nav>
 
@@ -80,14 +92,10 @@
           <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
           <small>{{ request.user.get_role_display|upper }}</small>
         </div>
-        <form method="post" action="{% url 'logout' %}" class="catalog-signout">
-          {% csrf_token %}
-          <button type="submit" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i></button>
-        </form>
       </div>
     </aside>
 
-    <main class="main-area checkout-main-area catalog-workspace-main">
+    <div class="main-area checkout-main-area catalog-workspace-main">
       <header class="topbar catalog-workspace-topbar">
         <div class="breadcrumbs" aria-label="Breadcrumb">
           <span>Studio</span>
@@ -110,6 +118,10 @@
               <div class="profile-role">{{ request.user.get_role_display|upper }}</div>
             </div>
           </div>
+          <form method="post" action="{% url 'logout' %}" class="catalog-signout">
+            {% csrf_token %}
+            <button type="submit" class="icon-action" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i><span class="sr-only">Sign out</span></button>
+          </form>
         </div>
       </header>
 
@@ -117,7 +129,7 @@
         <section class="welcome" aria-labelledby="catalog-welcome-title">
           <div class="welcome-copy">
             <div class="eyebrow">Catalog management</div>
-            <h1 id="catalog-welcome-title">Keep every <em>essential ready.</em></h1>
+            <h1 id="catalog-welcome-title">Product <em>catalogue.</em></h1>
             <p>Manage retail products, pricing and stock levels from one studio workspace.</p>
           </div>
           <div class="welcome-aside">
@@ -148,7 +160,7 @@
           <div class="section-heading">
             <div>
               <div class="section-kicker">Retail management</div>
-              <h2 id="catalog-list-title">Product catalogue</h2>
+              <h2 id="catalog-list-title">Manage products</h2>
               <p>Search by product name or SKU, review stock levels, and update product records.</p>
             </div>
           </div>
@@ -158,13 +170,14 @@
           </div>
         </section>
       </div>
-    </main>
+    </div>
   </div>
+  {% endif %}
 {% endblock %}
 
 {% block footer %}
   {{ block.super }}
-  <script src="https://unpkg.com/lucide@latest"></script>
+  {% if not is_popup %}
   <script>
     (function () {
       const root = document.documentElement;
@@ -210,6 +223,10 @@
       }
 
       if (window.lucide) window.lucide.createIcons();
+      document.addEventListener("DOMContentLoaded", function () {
+        if (window.lucide) window.lucide.createIcons();
+      });
     })();
   </script>
+  {% endif %}
 {% endblock %}

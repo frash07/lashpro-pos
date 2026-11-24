@@ -53,6 +53,45 @@ class CatalogAdminIntegrationTests(TestCase):
         self.assertContains(response, "Classic Lash Adhesive")
         self.assertNotContains(response, "Volume Lash Tray")
 
+    def test_product_workspace_preserves_native_admin_controls(self):
+        url = reverse("admin:catalog_product_changelist")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'catalog-workspace-shell')
+        self.assertContains(response, 'inventory-mode')
+        self.assertContains(response, 'id="result_list"')
+        self.assertContains(response, 'id="changelist-form"')
+        self.assertContains(response, 'id="changelist-filter"')
+        self.assertContains(response, 'id="changelist-search"')
+        self.assertContains(response, reverse("admin:catalog_product_add"))
+        self.assertContains(response, reverse("sales:checkout"))
+        self.assertContains(response, reverse("admin:catalog_product_change", args=[self.product.pk]))
+        self.assertContains(response, '>Classic Lash Adhesive</a>')
+        self.assertNotContains(response, 'id="nav-sidebar"')
+        self.assertNotContains(response, 'id="header"')
+        self.assertNotContains(response, 'catalog/catalog-admin.css')
+        self.assertEqual(
+            admin.site._registry[Product].list_display_links,
+            ("image_preview", "name"),
+        )
+
+    def test_product_popup_keeps_native_admin_changelist(self):
+        response = self.client.get(
+            reverse("admin:catalog_product_changelist"), {"_popup": "1"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="result_list"')
+        self.assertNotContains(response, 'catalog-workspace-shell')
+
+    def test_product_sort_and_combined_search_filter_work(self):
+        response = self.client.get(
+            reverse("admin:catalog_product_changelist"),
+            {"q": "Volume", "stock_level": "low", "o": "4"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Volume Lash Tray")
+        self.assertNotContains(response, "Classic Lash Adhesive")
+
     def test_product_low_stock_filter_works(self):
         url = reverse("admin:catalog_product_changelist")
         response = self.client.get(url, {"stock_level": "low"})
