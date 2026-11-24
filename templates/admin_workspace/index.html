@@ -1,0 +1,25 @@
+{% extends "admin_workspace/base.html" %}
+{% block workspace %}
+<section class="welcome product-welcome"><div class="welcome-copy"><div class="eyebrow">Studio management</div><h1>{{ workspace_title }}<em>.</em></h1><p>{{ workspace_description }}</p></div><a class="product-button secondary" href="{% url 'admin_suite' %}">Admin Suite <i data-lucide="arrow-up-right"></i></a></section>
+{% if workspace_is_index %}
+<section class="quick-stats product-stats" aria-label="Administration overview">
+  <article class="stat-card"><span class="stat-icon"><i data-lucide="layout-grid"></i></span><span><small>Available modules</small><strong>{{ app_list|length }}</strong></span></article>
+  {% if perms.catalog.view_product or perms.catalog.change_product %}<article class="stat-card"><span class="stat-icon"><i data-lucide="alert-triangle"></i></span><span><small>Low-stock products</small><strong>{{ admin_low_stock_count }}</strong></span></article>{% endif %}
+</section>
+{% if perms.catalog.view_product or perms.catalog.change_product %}
+<section class="register-panel" aria-labelledby="low-stock-title"><div class="register-heading"><div><h2 id="low-stock-title">Inventory attention</h2><p>Products at or below their configured reorder level.</p></div><a class="product-button secondary" href="{% url 'admin:catalog_product_changelist' %}?stock_level=low">View products</a></div>
+  {% for product in admin_low_stock_products %}<div class="directory-line"><a href="{% url 'admin:catalog_product_change' product.pk %}">{{ product.name }}</a><span class="register-muted">{{ product.on_hand }} on hand · {{ product.reorder_level }} reorder</span></div>{% empty %}<p class="register-muted">No products currently need attention.</p>{% endfor %}
+</section>
+{% endif %}
+{% endif %}
+<section aria-labelledby="directory-title"><div class="register-heading"><div><div class="eyebrow">Workspace directory</div><h2 id="directory-title">{% if workspace_is_index %}Administration modules{% else %}Available registers{% endif %}</h2><p>Only records available to your account are listed.</p></div>{% if not workspace_is_index %}<a class="product-button secondary" href="{% url 'admin:index' %}">All modules</a>{% endif %}</div>
+<div class="register-directory">
+{% for app in app_list %}
+<article class="register-panel directory-card"><div class="directory-card-heading"><span class="stat-icon"><i data-lucide="folder-open"></i></span><div><h3>{% if workspace_is_index %}<a href="{{ app.app_url }}">{{ app.name }}</a>{% else %}{{ app.name }}{% endif %}</h3><p>{{ app.models|length }} register{{ app.models|length|pluralize }}</p></div></div>
+{% for model in app.models %}
+<div class="directory-line"><div>{% if model.admin_url %}<a href="{{ model.admin_url }}">{{ model.name }}</a>{% else %}<span>{{ model.name }}</span>{% endif %}</div><div class="register-actions">{% if model.admin_url %}<a class="product-button secondary" href="{{ model.admin_url }}" aria-label="Open {{ model.name }}">Open</a>{% endif %}{% if model.add_url %}<a class="product-button secondary" href="{{ model.add_url }}" aria-label="Add {{ model.name }}"><i data-lucide="plus"></i> Add</a>{% endif %}</div></div>
+{% endfor %}
+</article>
+{% empty %}<div class="register-panel"><p>No administration modules are available to your account.</p></div>{% endfor %}
+</div></section>
+{% endblock %}

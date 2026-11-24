@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="">
+  <title>{% block title %}{{ workspace_title }} · LashPro KE{% endblock %}</title>
+  <script src="{% static 'catalog/product-workspace.js' %}"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/checkout-workspace.css' %}">
+  <link rel="stylesheet" href="{% static 'catalog/catalog-workspace.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-workspace.css' %}">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="{% static 'js/admin-register.js' %}" defer></script>
+  {% block media %}{% endblock %}
+</head>
+<body class="admin-suite-body checkout-page product-workspace standalone-admin">
+  <a class="product-skip" href="#product-main">Skip to workspace</a>
+  <div class="app-shell admin-app-shell checkout-app-shell product-shell">
+    <aside class="sidebar checkout-sidebar product-sidebar" aria-label="Main navigation">
+      <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout">
+        <span class="brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
+        <span class="brand-copy"><span class="brand-name">LASHPRO <small>KE</small></span><span class="brand-caption">Premier lash &amp; academy</span></span>
+      </a>
+      <button type="button" id="product-menu-toggle" class="product-menu-toggle" aria-expanded="true" aria-controls="product-nav" hidden><i data-lucide="menu" aria-hidden="true"></i> Menu</button>
+      <div id="product-nav" class="product-nav">
+        {% for group in workspace_nav %}{% if group.links %}
+          <div class="side-label">{{ group.title }}</div>
+          <nav class="side-nav" aria-label="{{ group.title }}">
+            {% for link in group.links %}<a class="side-link{% if link.active %} active{% endif %}" href="{{ link.url }}" {% if link.active %}aria-current="page"{% endif %} aria-label="{{ link.label }}" title="{{ link.label }}"><i data-lucide="{{ link.icon }}" aria-hidden="true"></i><span class="nav-text">{{ link.label }}</span></a>{% endfor %}
+          </nav>
+        {% endif %}{% endfor %}
+      </div>
+      <div class="sidebar-spacer"></div>
+      <section class="studio-card" aria-label="Active studio"><div class="studio-top"><strong>Nairobi Studio</strong><span class="studio-status"><i class="dot" aria-hidden="true"></i> Active</span></div><p>Salon workspace<br>Kenyan Shilling · KES</p></section>
+      <div class="staff-mini"><div class="avatar" aria-hidden="true">{{ request.user.username|slice:":1"|upper }}</div><div class="staff-copy"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|upper }}</small></div></div>
+    </aside>
+    <main id="product-main" class="main-area checkout-main-area product-main" tabindex="-1">
+      <header class="topbar">
+        <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{% url 'admin:index' %}">Studio</a><i data-lucide="chevron-right" aria-hidden="true"></i>{% if workspace_register %}<a href="{{ workspace_app_url }}">{{ workspace_module }}</a><i data-lucide="chevron-right" aria-hidden="true"></i>{% endif %}<strong>{{ workspace_title }}</strong></nav>
+        <div class="topbar-right"><span class="online-pill"><i class="dot" aria-hidden="true"></i> Secure workspace</span><button class="icon-action" id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"><i data-lucide="moon" aria-hidden="true"></i><span class="sr-only">Switch theme</span></button><div class="profile"><div class="avatar" aria-hidden="true">{{ request.user.username|slice:":1"|upper }}</div><div class="profile-copy"><div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div><div class="profile-role">{{ request.user.get_role_display|upper }}</div></div></div><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="icon-action" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i><span class="sr-only">Sign out</span></button></form></div>
+      </header>
+      {% if messages %}<div class="product-messages" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+      <div class="main checkout-main admin-register-main">
+        {% block workspace %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

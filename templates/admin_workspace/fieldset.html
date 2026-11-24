@@ -1,0 +1,15 @@
+<fieldset class="register-fieldset">
+{% if fieldset.name %}<legend>{{ fieldset.name }}</legend>{% endif %}
+{% if fieldset.description %}<div class="register-help">{{ fieldset.description|safe }}</div>{% endif %}
+{% for line in fieldset %}<div class="register-field-line{% if line.errors %} has-errors{% endif %}">
+{% for field in line %}
+{% if field.is_readonly %}
+<div class="register-field readonly-field"><div class="register-field-label">{{ field.label_tag }}</div><div class="register-readonly">{{ field.contents }}</div>{% if field.field.help_text %}<div class="register-help">{{ field.field.help_text|safe }}</div>{% endif %}</div>
+{% elif not field.field.is_hidden %}
+<div class="register-field{% if field.field.errors %} has-errors{% endif %}{% if field.is_checkbox %} checkbox-field{% endif %}">
+{% if field.is_checkbox %}<div class="register-checkbox">{{ field.field }}{{ field.label_tag }}</div>{% else %}{{ field.label_tag }}{{ field.field }}{% endif %}
+{{ field.field.errors }}{% if field.field.help_text %}<div class="register-help" id="{{ field.field.auto_id }}_helptext">{{ field.field.help_text|safe }}</div>{% endif %}
+</div>
+{% endif %}
+{% endfor %}</div>{% endfor %}
+</fieldset>
