@@ -11,6 +11,7 @@ from accounts.models import User
 from core.log_filters import RedactSensitiveDataFilter
 from core.models import SharedDatabaseProbe
 from core.views import health_check, home
+from config.settings import _sentry_before_send, _sentry_before_send_transaction
 
 
 class HomeLandingTests(SimpleTestCase):
@@ -77,6 +78,57 @@ class SensitiveLogFilterTests(SimpleTestCase):
         for secret in ("private-password", "private-key", "db.example.test"):
             self.assertNotIn(secret, message)
 
+
+class SentryPrivacyTests(SimpleTestCase):
+    def test_log_record_events_are_not_forwarded(self):
+        event = {"message": "Sensitive checkout log"}
+
+        self.assertIsNone(
+            _sentry_before_send(event, {"log_record": object()})
+        )
+
+    def test_request_urls_and_payloads_are_removed(self):
+        event = {
+            "request": {
+                "url": "https://lashpro-pos.fly.dev/sales/r/receipt-token/secret",
+                "query_string": "customer=private",
+                "data": {"mpesa_reference": "private"},
+                "headers": {"Cookie": "session=private"},
+            }
+        }
+
+        processed = _sentry_before_send(event, {})
+
+        self.assertEqual(processed["request"], {})
+
+    def test_sensitive_log_and_http_breadcrumbs_are_removed(self):
+        event = {
+            "breadcrumbs": {
+                "values": [
+                    {"category": "log", "message": "Sensitive customer detail"},
+                    {"category": "http", "message": "GET /sales/r/receipt-token/secret"},
+                    {"category": "view", "message": "Checkout view"},
+                ]
+            }
+        }
+
+        processed = _sentry_before_send(event, {})
+
+        self.assertEqual(
+            processed["breadcrumbs"]["values"],
+            [{"category": "view", "message": "Checkout view"}],
+        )
+
+    def test_transaction_request_context_is_also_scrubbed(self):
+        event = {
+            "request": {
+                "url": "https://lashpro-pos.fly.dev/accounts/password-reset/u/token",
+            }
+        }
+
+        processed = _sentry_before_send_transaction(event, {})
+
+        self.assertEqual(processed["request"], {})
 
 class AdminSuiteAccessTests(TestCase):
     @classmethod

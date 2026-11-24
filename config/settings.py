@@ -25,6 +25,73 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
 DJANGO_ENV = env("DJANGO_ENV", default="development").strip().lower()
 
+# Sentry is opt-in until a project DSN is configured. Avoid sending customer,
+# payment, or session data as telemetry; unhandled exceptions remain reportable.
+SENTRY_DSN = env("SENTRY_DSN", default="").strip()
+SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default=DJANGO_ENV).strip() or DJANGO_ENV
+SENTRY_RELEASE = env("SENTRY_RELEASE", default="").strip() or None
+SENTRY_TRACES_SAMPLE_RATE = env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0)
+
+if not 0.0 <= SENTRY_TRACES_SAMPLE_RATE <= 1.0:
+    raise ImproperlyConfigured(
+        "SENTRY_TRACES_SAMPLE_RATE must be between 0.0 and 1.0."
+    )
+
+
+def _sentry_scrub_event_request(event):
+    """Remove request context that may contain customer or one-time token data."""
+    request = event.get("request")
+    if isinstance(request, dict):
+        for field in ("url", "query_string", "data", "headers", "cookies", "env"):
+            request.pop(field, None)
+
+    breadcrumbs = event.get("breadcrumbs")
+    if isinstance(breadcrumbs, dict):
+        breadcrumbs["values"] = [
+            breadcrumb
+            for breadcrumb in breadcrumbs.get("values", [])
+            if not (
+                isinstance(breadcrumb, dict)
+                and breadcrumb.get("category") in {"log", "http", "httplib"}
+            )
+        ]
+    return event
+
+
+def _sentry_before_send(event, hint):
+    """Exclude log-only events and sensitive request context."""
+    if isinstance(hint, dict) and hint.get("log_record") is not None:
+        return None
+    return _sentry_scrub_event_request(event)
+
+
+def _sentry_before_send_transaction(event, hint):
+    """Apply the same request scrubbing to performance transactions."""
+    return _sentry_scrub_event_request(event)
+
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=SENTRY_ENVIRONMENT,
+        release=SENTRY_RELEASE,
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+        before_send=_sentry_before_send,
+        before_send_transaction=_sentry_before_send_transaction,
+        data_collection={
+            "user_info": False,
+            "cookies": {"mode": "off"},
+            "http_headers": {"request": {"mode": "off"}},
+            "http_bodies": [],
+            "url_query_params": {"mode": "off"},
+            "stack_frame_variables": False,
+        },
+        max_request_body_size="never",
+    )
+
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     default=["localhost", "127.0.0.1"],
