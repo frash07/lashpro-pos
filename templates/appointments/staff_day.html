@@ -1,6 +1,10 @@
-{% extends "storefront/base.html" %}
+{% extends "base_pos.html" %}
+{% load static %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'storefront/css/appointments.css' %}">{% endblock %}
 {% block title %}Appointment schedule | LashPro{% endblock %}
-{% block content %}
+{% block pos_page_title %}Appointments{% endblock %}
+
+{% block pos_main %}
 <section class="page-heading"><p class="eyebrow"><span></span> STAFF SCHEDULE</p><h1>Appointments <em>schedule.</em></h1><p class="section-subtitle">Review requests, confirm bookings and update visit outcomes.</p></section>
 <form class="staff-date-filter" method="get" action="{% url 'appointments:staff-day' %}">
   <label for="schedule-date">Schedule date</label><input id="schedule-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
