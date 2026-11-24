@@ -143,7 +143,7 @@
 .pos-studio-heading i, .pos-online-pill i {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
+  border-radius: var(--lp-radius-pill);
   background: var(--success);
   box-shadow: 0 0 9px rgba(var(--success-rgb), .45);
 }
@@ -167,7 +167,7 @@
   height: 34px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 50%;
+  border-radius: var(--lp-radius-pill);
   background: var(--premium-petal-soft);
   color: var(--brand-hover);
   font-size: 11px;
