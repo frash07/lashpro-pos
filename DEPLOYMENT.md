@@ -265,12 +265,12 @@ fly secrets set SENTRY_DSN='https://<public-key>@o<org-id>.ingest.sentry.io/<pro
 
 Keep the DSN out of committed files and logs. Set `SENTRY_RELEASE` to the deployed Git SHA (or another stable release identifier) when release-level grouping is needed. Error events are enabled independently of tracing; `SENTRY_TRACES_SAMPLE_RATE=0.0` disables performance spans, and a value such as `0.05` samples 5% of requests.
 
-The SDK configuration disables user identity, cookies, request headers, request bodies, query-string values and local-variable capture. Log-record events and log breadcrumbs are also excluded to reduce accidental exposure of customer/payment details. Review Sentry's project-level data scrubbing and access controls as an additional safeguard.
+The SDK configuration disables user identity, cookies, request headers, request bodies, query-string values and local-variable capture. Full request URLs are removed because some LashPro routes carry one-time receipt/password-reset tokens; HTTP and log breadcrumbs are excluded, and the same request scrubbing applies to performance transactions. Review Sentry's project-level data scrubbing and access controls as an additional safeguard.
 
 After setting the secrets and deploying both apps, send a non-sensitive connectivity check from the POS app:
 
 ```bash
-fly ssh console --app lashpro-pos -C "python manage.py shell -c 'import sentry_sdk; sentry_sdk.capture_message(\\"LashPro Sentry connectivity check\\", level=\\"info\\")'"
+fly ssh console --app lashpro-pos -C "python manage.py shell -c \\"import sentry_sdk; sentry_sdk.capture_message('LashPro Sentry connectivity check', level='info')\\""
 ```
 
 Confirm the message appears in the Sentry project under the `production` environment. A missing `SENTRY_DSN` leaves the SDK disabled; the app continues to write logs to Fly as before.
