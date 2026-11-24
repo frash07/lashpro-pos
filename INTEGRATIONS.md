@@ -12,7 +12,7 @@ A newly-created appointment request sends an email and, when configured, an SMS 
 - **SMS:** select Africa's Talking, enter the application username and API key. Use sandbox mode while testing. A live sender ID may need provider approval.
 - **WhatsApp:** add the Meta Cloud API access token and WhatsApp Business phone-number ID. Create and approve three utility templates (request received, confirmed, cancelled) in WhatsApp Manager, then enter their exact names. Each template body must accept four text variables, in order: customer name, service name, date, and time/provider.
 
-Provider delivery is best-effort: a provider outage is logged but does not undo or block a booking. Customers should still see the on-screen booking reference.
+Provider delivery is best-effort: a provider outage is logged but does not undo or block a booking. Production booking emails are not sent through the console backend when SMTP is absent, to avoid logging customer information. Customers should still see the on-screen booking reference.
 
 ## Safaricom Daraja STK Push
 

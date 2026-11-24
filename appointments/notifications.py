@@ -96,6 +96,11 @@ def _send_email(config, appointment, event, body):
             connection=connection,
         ).send(fail_silently=False)
     else:
+        # A console backend prints customer booking details to the process log.
+        # Leave delivery unconfigured rather than leaking private information.
+        if settings.DJANGO_ENV == "production" and settings.EMAIL_BACKEND.endswith("console.EmailBackend"):
+            logger.warning("Booking email provider is not configured; notification not sent.")
+            return
         EmailMessage(
             EVENT_COPY[event]["subject"], body, from_email, [recipient],
         ).send(fail_silently=False)

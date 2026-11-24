@@ -406,6 +406,8 @@ if DJANGO_ENV == "production":
         raise ImproperlyConfigured("Set TRUST_PROXY_SSL_HEADER=true behind the Fly proxy.")
     if not POS_BASE_URL.startswith("https://"):
         raise ImproperlyConfigured("POS_BASE_URL must be an HTTPS origin in production.")
+    if not STOREFRONT_BASE_URL.startswith("https://"):
+        raise ImproperlyConfigured("STOREFRONT_BASE_URL must be an HTTPS origin in production.")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
