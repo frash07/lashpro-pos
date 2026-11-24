@@ -233,25 +233,49 @@ def _update_push_before_callback(push_id, updates, payment_status=None):
     locked = MpesaStkPush.objects.select_for_update().select_related(
         "payment_transaction"
     ).get(pk=push_id)
-    # A very fast callback can arrive before the initial HTTP response is saved.
-    # Never let that response overwrite a callback-confirmed result.
+    # A callback can beat the synchronous STK response. In that case the
+    # callback's data is held as UNKNOWN until the request IDs are correlated.
     if locked.callback_received_at:
-        response_checkout_id = str(updates.get("checkout_request_id") or "")
-        response_merchant_id = str(updates.get("merchant_request_id") or "")
+        response_checkout_id = str(updates.get("checkout_request_id") or "").strip()
+        response_merchant_id = str(updates.get("merchant_request_id") or "").strip()
         callback_ids_mismatch = (
             (response_checkout_id and locked.checkout_request_id and response_checkout_id != locked.checkout_request_id)
             or (response_merchant_id and locked.merchant_request_id and response_merchant_id != locked.merchant_request_id)
         )
         if callback_ids_mismatch:
-            # A callback arrived before the STK initiation response. If the
-            # request identifiers disagree, never leave it marked as settled.
             locked.status = MpesaStkPush.Status.UNKNOWN
-            locked.result_description = "Daraja callback and initiation response IDs did not match; manual review is required."
+            locked.result_description = (
+                "Daraja callback and initiation response IDs did not match; payment requires review."
+            )
             locked.save(update_fields=("status", "result_description", "updated_at"))
-            payment = locked.payment_transaction
-            payment.status = PaymentTransaction.Status.UNVERIFIED
-            payment.save(update_fields=("status",))
+            return locked, True
+
+        # No initiation ID means there is still no safe correlation. Do not
+        # transition the immutable payment record until a matching response
+        # confirms the callback's CheckoutRequestID.
+        if not response_checkout_id or response_checkout_id != locked.checkout_request_id:
+            locked.status = MpesaStkPush.Status.UNKNOWN
+            locked.save(update_fields=("status", "updated_at"))
+            return locked, True
+
+        callback_result = str(locked.result_code or "")
+        final_push_status = (
+            MpesaStkPush.Status.SUCCEEDED if callback_result == "0"
+            else MpesaStkPush.Status.FAILED
+        )
+        final_payment_status = (
+            PaymentTransaction.Status.SUCCEEDED if callback_result == "0"
+            else PaymentTransaction.Status.FAILED
+        )
+        if response_merchant_id and not locked.merchant_request_id:
+            locked.merchant_request_id = response_merchant_id
+        locked.status = final_push_status
+        locked.save(update_fields=("merchant_request_id", "status", "updated_at"))
+        payment = locked.payment_transaction
+        payment.status = final_payment_status
+        payment.save(update_fields=("status",))
         return locked, True
+
     for field, value in updates.items():
         setattr(locked, field, value)
     locked.save(update_fields=tuple(updates.keys()) + ("updated_at",))
@@ -396,9 +420,11 @@ def process_stk_callback(*, callback_token, payload):
         raise ValidationError("M-Pesa callback does not match this merchant request.")
     if push.callback_received_at:
         return push
-    # A fast callback can beat the initiation response. Record its ID now;
-    # the later HTTP response is required to confirm the same ID.
-    if not push.checkout_request_id:
+    # If the STK response has not yet been persisted, hold this callback as
+    # UNKNOWN. The request response must later confirm the same checkout ID
+    # before the immutable payment status can change.
+    callback_before_initiation_response = not bool(push.checkout_request_id)
+    if callback_before_initiation_response:
         push.checkout_request_id = checkout_id
     if not push.merchant_request_id and merchant_id:
         push.merchant_request_id = merchant_id
@@ -431,16 +457,18 @@ def process_stk_callback(*, callback_token, payload):
         ).exclude(pk=push.pk).exists()
         if duplicate_receipt:
             raise ValidationError("This M-Pesa receipt number is already linked to another payment.")
-        push.status = MpesaStkPush.Status.SUCCEEDED
         push.mpesa_receipt_number = receipt
-        payment.status = PaymentTransaction.Status.SUCCEEDED
+        if not callback_before_initiation_response:
+            push.status = MpesaStkPush.Status.SUCCEEDED
+            payment.status = PaymentTransaction.Status.SUCCEEDED
         callback_metadata_summary = {
             "Amount": str(reported_amount),
             "MpesaReceiptNumber": receipt,
         }
     else:
-        push.status = MpesaStkPush.Status.FAILED
-        payment.status = PaymentTransaction.Status.FAILED
+        if not callback_before_initiation_response:
+            push.status = MpesaStkPush.Status.FAILED
+            payment.status = PaymentTransaction.Status.FAILED
         callback_metadata_summary = {}
 
     push.result_code = result_code[:20]
@@ -454,10 +482,16 @@ def process_stk_callback(*, callback_token, payload):
         "Metadata": callback_metadata_summary,
     }
     push.callback_received_at = timezone.now()
+    if callback_before_initiation_response:
+        push.status = MpesaStkPush.Status.UNKNOWN
+        push.result_description = (
+            result_description or "Callback received before initiation response; awaiting request ID confirmation."
+        )[:500]
     push.save(update_fields=(
         "checkout_request_id", "merchant_request_id", "status", "mpesa_receipt_number", "result_code",
         "result_description", "callback_payload", "callback_received_at",
         "updated_at",
     ))
-    payment.save(update_fields=("status",))
+    if not callback_before_initiation_response:
+        payment.save(update_fields=("status",))
     return push
