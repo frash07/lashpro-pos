@@ -361,6 +361,8 @@ def process_stk_callback(*, callback_token, payload):
     callback = body.get("stkCallback") if isinstance(body, dict) else None
     if not isinstance(callback, dict):
         raise ValidationError("Invalid M-Pesa callback format.")
+    if "ResultCode" not in callback:
+        raise ValidationError("M-Pesa callback is missing its result code.")
     checkout_id = str(callback.get("CheckoutRequestID") or "").strip()
     if not checkout_id:
         raise ValidationError("M-Pesa callback is missing its checkout request ID.")
