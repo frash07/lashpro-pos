@@ -127,3 +127,31 @@
   .standalone-admin .selector-chooser .selector-add::before { content: "↓"; }
   .standalone-admin .selector-chooser .selector-remove::before { content: "↑"; }
 }
+
+/* Financial operations use the same cards, controls and theme as the registers. */
+.standalone-admin .product-stats.quick-stats { grid-template-columns: repeat(auto-fit,minmax(min(100%,190px),1fr)); }
+.standalone-admin .product-stats .stat-card { min-width:0; grid-column:auto; }
+.standalone-admin .product-stats .stat-card strong { overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.standalone-admin .operation-section { scroll-margin-top: 85px; margin-bottom: 28px; }
+.standalone-admin .operation-jumps { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 24px; }
+.standalone-admin .operation-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.standalone-admin .operation-wide { grid-column:1/-1; }
+.standalone-admin .operation-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-top:16px; }
+.standalone-admin .operation-actions .product-button { white-space:normal; min-width:0; min-height:44px; text-align:center; }
+.standalone-admin .operation-review { margin-top:auto; padding-top:14px; border-top:1px solid var(--ui-border); }
+.standalone-admin .operation-review .operation-actions .product-button { flex:1 1 140px; }
+.standalone-admin .operation-amount { display:grid; gap:4px; margin:0 0 14px; }
+.standalone-admin .operation-amount small { color:var(--ui-muted); font-size:12px; }
+.standalone-admin .operation-amount strong { font-size:clamp(20px,2vw,26px); font-weight:700; color:var(--brand-hover); font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.standalone-admin .operation-status { font-size:12px; font-weight:700; color:var(--ui-muted); border:1px solid var(--ui-border); border-radius:var(--lp-radius-sm); padding:6px 9px; overflow-wrap:anywhere; }
+.standalone-admin .operation-status.pending, .standalone-admin .record-fields .record-pending { color:var(--warning); }
+.standalone-admin .operation-status.positive { color:var(--success); }
+.standalone-admin .operation-status.negative, .standalone-admin .record-fields .record-negative { color:var(--danger); }
+.standalone-admin .register-readonly .catalog-admin-thumbnail { max-width:min(100%,200px); max-height:200px; object-fit:contain; }
+.standalone-admin .product-sidebar .product-nav { overflow-wrap:anywhere; }
+@media (max-width:600px) {
+  .standalone-admin .product-stats.quick-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .standalone-admin .operation-form-grid { grid-template-columns:minmax(0,1fr); }
+  .standalone-admin .operation-actions > .product-button { flex:1 1 100%; }
+  .standalone-admin .operation-jumps > .product-button { flex:1 1 120px; }
+}
