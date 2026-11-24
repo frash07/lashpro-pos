@@ -27,6 +27,7 @@ class ProductAdmin(admin.ModelAdmin):
         "image_preview", "sku", "whatsapp_retailer_id", "name", "selling_price",
         "on_hand", "reorder_level", "low_stock", "active",
     )
+    list_display_links = ("image_preview", "name")
     list_filter = ("active", LowStockFilter)
     search_fields = ("sku", "whatsapp_retailer_id", "name")
     change_form_template = "admin/catalog/product/change_form.html"
