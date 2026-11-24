@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from accounts.models import User
+from core.admin_workspace import operational_workspace
 from catalog.models import Product
 from commissions.models import CommissionLedgerEntry, CommissionPayoutRecord
 from expenses.models import Expense
@@ -230,6 +231,7 @@ def daily_report(request):
     }
     inventory_products = Product.objects.filter(active=True).order_by("name")[:100]
     return render(request, "reporting/dashboard.html", {
+        **operational_workspace(request, "Executive reports", "reports"),
         "form": form,
         "report": report,
         "start": start,
