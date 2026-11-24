@@ -358,15 +358,9 @@
     backdrop-filter: blur(16px);
   }
   .pos-brand, .pos-studio-card, .pos-sidebar-spacer, .pos-sidebar-user, .pos-nav-label,
-  .pos-nav-label-secondary, .pos-nav:nth-of-type(2) { display: none; }
-  .pos-sidebar .pos-nav:first-of-type {
-    display: flex;
-    width: 100%;
-    max-width: 520px;
-    align-items: center;
-    justify-content: space-around;
-    gap: 5px;
-  }
+  .pos-nav-label-secondary { display: none; }
+  /* Flatten both navigation groups so role-specific secondary links stay reachable on mobile. */
+  .pos-sidebar .pos-nav { display: contents; }
   .pos-nav-link { display: grid; min-width: 0; min-height: 50px; flex: 1 1 0; align-content: center; justify-items: center; gap: 3px; padding: 4px 2px; font-size: 8px; }
   .pos-nav-link span { display: block; overflow: hidden; width: 100%; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .pos-nav-link svg { width: 17px; height: 17px; }
