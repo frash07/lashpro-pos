@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from django.templatetags.static import static
 
 from catalog.models import Product, Service
 from accounts.models import User
@@ -59,15 +60,15 @@ class CatalogAdminIntegrationTests(TestCase):
         for marker in (
             "product-shell", 'id="product-grid"', 'id="product-actions"',
             'id="product-search"', 'id="product-menu-toggle"',
-            'name="_selected_action"', "sales/checkout-workspace.css",
-            "css/tokens.css", "catalog/product-workspace.js",
+            'name="_selected_action"', static("sales/checkout-workspace.css"),
+            static("css/tokens.css"), static("catalog/product-workspace.js"),
             "Low stock", "In stock",
         ):
             self.assertContains(response, marker)
         for marker in (
             'id="result_list"', 'id="changelist-filter"', 'id="nav-sidebar"',
-            'id="header"', "admin/css/base.css", "admin/css/changelists.css",
-            "catalog/catalog-admin.css",
+            'id="header"', static("admin/css/base.css"), static("admin/css/changelists.css"),
+            static("catalog/catalog-admin.css"),
         ):
             self.assertNotContains(response, marker)
         self.assertContains(response, reverse("admin:catalog_product_add"))
