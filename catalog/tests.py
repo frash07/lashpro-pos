@@ -53,27 +53,28 @@ class CatalogAdminIntegrationTests(TestCase):
         self.assertContains(response, "Classic Lash Adhesive")
         self.assertNotContains(response, "Volume Lash Tray")
 
-    def test_product_workspace_preserves_native_admin_controls(self):
-        url = reverse("admin:catalog_product_changelist")
-        response = self.client.get(url)
+    def test_product_workspace_is_standalone_and_preserves_controls(self):
+        response = self.client.get(reverse("admin:catalog_product_changelist"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'catalog-workspace-shell')
-        self.assertContains(response, 'inventory-mode')
-        self.assertContains(response, 'id="result_list"')
-        self.assertContains(response, 'id="changelist-form"')
-        self.assertContains(response, 'id="changelist-filter"')
-        self.assertContains(response, 'id="changelist-search"')
+        for marker in (
+            "product-shell", 'id="product-grid"', 'id="product-actions"',
+            'id="product-search"', 'id="product-menu-toggle"',
+            'name="_selected_action"', "sales/checkout-workspace.css",
+            "css/tokens.css", "catalog/product-workspace.js",
+            "Low stock", "In stock",
+        ):
+            self.assertContains(response, marker)
+        for marker in (
+            'id="result_list"', 'id="changelist-filter"', 'id="nav-sidebar"',
+            'id="header"', "admin/css/base.css", "admin/css/changelists.css",
+            "catalog/catalog-admin.css",
+        ):
+            self.assertNotContains(response, marker)
         self.assertContains(response, reverse("admin:catalog_product_add"))
         self.assertContains(response, reverse("sales:checkout"))
         self.assertContains(response, reverse("admin:catalog_product_change", args=[self.product.pk]))
         self.assertContains(response, '>Classic Lash Adhesive</a>')
-        self.assertNotContains(response, 'id="nav-sidebar"')
-        self.assertNotContains(response, 'id="header"')
-        self.assertNotContains(response, 'catalog/catalog-admin.css')
-        self.assertEqual(
-            admin.site._registry[Product].list_display_links,
-            ("image_preview", "name"),
-        )
+        self.assertEqual(response.context["workspace_counts"], {"active": 2, "low": 1})
 
     def test_product_popup_keeps_native_admin_changelist(self):
         response = self.client.get(
@@ -81,7 +82,34 @@ class CatalogAdminIntegrationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="result_list"')
-        self.assertNotContains(response, 'catalog-workspace-shell')
+        self.assertNotContains(response, 'id="product-grid"')
+
+    def test_product_workspace_sort_and_page_links(self):
+        url = reverse("admin:catalog_product_changelist")
+        response = self.client.get(url)
+        cl = response.context["cl"]
+        price_index = cl.list_display.index("selling_price")
+        response = self.client.get(url, {"o": "-" + str(price_index)})
+        self.assertEqual(list(response.context["cl"].result_list), [self.low_stock_product, self.product])
+
+        from unittest.mock import patch
+        with patch.object(admin.site._registry[Product], "list_per_page", 1):
+            response = self.client.get(url, {"p": 2})
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Volume Lash Tray")
+            self.assertNotContains(response, "Classic Lash Adhesive")
+            self.assertTrue(response.context["workspace_previous"])
+
+    def test_product_workspace_bulk_delete_requires_confirmation(self):
+        response = self.client.post(reverse("admin:catalog_product_changelist"), {
+            "action": "delete_selected",
+            "index": "0",
+            "select_across": "0",
+            "_selected_action": [str(self.product.pk)],
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "admin/delete_selected_confirmation.html")
+        self.assertTrue(Product.objects.filter(pk=self.product.pk).exists())
 
     def test_product_sort_and_combined_search_filter_work(self):
         response = self.client.get(
