@@ -87,12 +87,27 @@ class SentryPrivacyTests(SimpleTestCase):
             _sentry_before_send(event, {"log_record": object()})
         )
 
-    def test_log_breadcrumbs_are_removed_from_exception_events(self):
+    def test_request_urls_and_payloads_are_removed(self):
+        event = {
+            "request": {
+                "url": "https://lashpro-pos.fly.dev/sales/r/receipt-token/secret",
+                "query_string": "customer=private",
+                "data": {"mpesa_reference": "private"},
+                "headers": {"Cookie": "session=private"},
+            }
+        }
+
+        processed = _sentry_before_send(event, {})
+
+        self.assertEqual(processed["request"], {})
+
+    def test_sensitive_log_and_http_breadcrumbs_are_removed(self):
         event = {
             "breadcrumbs": {
                 "values": [
                     {"category": "log", "message": "Sensitive customer detail"},
-                    {"category": "http", "message": "GET /healthz"},
+                    {"category": "http", "message": "GET /sales/r/receipt-token/secret"},
+                    {"category": "view", "message": "Checkout view"},
                 ]
             }
         }
@@ -101,9 +116,21 @@ class SentryPrivacyTests(SimpleTestCase):
 
         self.assertEqual(
             processed["breadcrumbs"]["values"],
-            [{"category": "http", "message": "GET /healthz"}],
+            [{"category": "view", "message": "Checkout view"}],
         )
 
+    def test_transaction_request_context_is_also_scrubbed(self):
+        from config.settings import _sentry_before_send_transaction
+
+        event = {
+            "request": {
+                "url": "https://lashpro-pos.fly.dev/accounts/password-reset/u/token",
+            }
+        }
+
+        processed = _sentry_before_send_transaction(event, {})
+
+        self.assertEqual(processed["request"], {})
 
 class AdminSuiteAccessTests(TestCase):
     @classmethod
