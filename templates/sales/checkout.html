@@ -278,8 +278,11 @@
         const warning = document.getElementById('checkout-status-unknown');
         if (warning) warning.hidden = false;
         const phone = document.getElementById('mpesa-phone');
-        if (phone && typeof pendingCheckout.mpesaPhone === 'string') {
-          phone.value = pendingCheckout.mpesaPhone;
+        const savedMethod = String(pendingCheckout.method || '').toUpperCase();
+        const savedPhone = pendingCheckout.mpesaPhone ||
+          (savedMethod === 'STK_PUSH' ? pendingCheckout.mpesaReference : '');
+        if (phone && typeof savedPhone === 'string') {
+          phone.value = savedPhone;
         }
         const discountCode = document.getElementById('discount-code');
         if (discountCode) discountCode.value = appliedCode;
@@ -297,11 +300,19 @@
         }
         const retryButton = document.getElementById('retry-pending-checkout');
         if (retryButton) {
-          retryButton.hidden = false;
-          retryButton.addEventListener('click', () => {
-            if (!window.confirm('Check Sales first. Retry the original checkout only if no matching sale was recorded. Continue?')) return;
-            submitCheckout(pendingCheckout.method, pendingCheckout.mpesaPhone || '');
-          });
+          const savedMethod = String(pendingCheckout.method || '').toUpperCase();
+          if (savedMethod === 'MPESA') {
+            // Legacy manual-reference checkouts cannot be retried through the STK-only POS.
+            retryButton.hidden = true;
+          } else {
+            retryButton.hidden = false;
+            retryButton.addEventListener('click', () => {
+              if (!window.confirm('Check Sales first. Retry the original checkout only if no matching sale was recorded. Continue?')) return;
+              const savedPhone = pendingCheckout.mpesaPhone ||
+                (savedMethod === 'STK_PUSH' ? pendingCheckout.mpesaReference : '');
+              submitCheckout(pendingCheckout.method, savedPhone || '');
+            });
+          }
         }
       }
     });
