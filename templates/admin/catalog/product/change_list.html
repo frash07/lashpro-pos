@@ -1,40 +1,27 @@
-{% extends "admin/change_list.html" %}
-{% load static %}
-
-{% block title %}Products · LashPro KE{% endblock %}
-{% block bodyclass %}{{ block.super }}{% if not is_popup %} admin-suite-body checkout-page catalog-admin-page{% endif %}{% endblock %}
-{# The workspace replaces Django's chrome, not its changelist machinery. #}
-{% block header %}{% if is_popup %}{{ block.super }}{% endif %}{% endblock %}
-{% block nav-sidebar %}{% if is_popup %}{{ block.super }}{% endif %}{% endblock %}
-{% block breadcrumbs %}{% if is_popup %}{{ block.super }}{% endif %}{% endblock %}
-{% block pretitle %}{% endblock %}
-{% block content_title %}{% endblock %}
-{% block content_subtitle %}{% endblock %}
-
-{% block extrastyle %}
-  {{ block.super }}
-  {% if not is_popup %}
+{% load static l10n %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="">
+  <title>Products · LashPro KE</title>
+  <script src="{% static 'catalog/product-workspace.js' %}"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
   <link rel="stylesheet" href="{% static 'sales/checkout-workspace.css' %}">
-  {% endif %}
-{% endblock %}
-
-{% block responsive %}
-  {{ block.super }}
-  {% if not is_popup %}<link rel="stylesheet" href="{% static 'catalog/catalog-workspace.css' %}">{% endif %}
-{% endblock %}
-
-{% block content %}
-  {% if is_popup %}
-    {{ block.super }}
-  {% else %}
-  <div class="app-shell admin-app-shell checkout-app-shell inventory-mode catalog-workspace-shell">
-    <aside class="sidebar checkout-sidebar catalog-workspace-sidebar" aria-label="Main navigation">
+  <link rel="stylesheet" href="{% static 'catalog/catalog-workspace.css' %}">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+</head>
+<body class="admin-suite-body checkout-page product-workspace">
+  <a class="product-skip" href="#product-main">Skip to products</a>
+  <div class="app-shell admin-app-shell checkout-app-shell product-shell">
+    <aside class="sidebar checkout-sidebar product-sidebar" aria-label="Main navigation">
       <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout">
         <span class="brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
         <span class="brand-copy">
@@ -43,10 +30,12 @@
         </span>
       </a>
 
+      <button type="button" id="product-menu-toggle" class="product-menu-toggle" aria-expanded="true" aria-controls="product-nav" hidden><i data-lucide="menu" aria-hidden="true"></i> Menu</button>
+      <div id="product-nav" class="product-nav">
       <div class="side-label">Workspace</div>
       <nav class="side-nav" aria-label="Workspace navigation">
         <a class="side-link" href="{% url 'sales:checkout' %}" aria-label="Checkout" title="Checkout">
-          <i data-lucide="shopping-bag" aria-hidden="true"></i><span class="nav-text">Checkout</span>
+          <i data-lucide="grid-2x2" aria-hidden="true"></i><span class="nav-text">Checkout</span>
         </a>
         <a class="side-link" href="/admin/appointments/" aria-label="Appointments" title="Appointments">
           <i data-lucide="calendar-days" aria-hidden="true"></i><span class="nav-text">Appointments</span>
@@ -76,6 +65,7 @@
         </a>
       </nav>
 
+      </div>
       <div class="sidebar-spacer"></div>
 
       <section class="studio-card" aria-label="Active studio">
@@ -95,138 +85,83 @@
       </div>
     </aside>
 
-    <div class="main-area checkout-main-area catalog-workspace-main">
-      <header class="topbar catalog-workspace-topbar">
-        <div class="breadcrumbs" aria-label="Breadcrumb">
-          <span>Studio</span>
-          <i data-lucide="chevron-right" aria-hidden="true"></i>
-          <span>Inventory</span>
-          <i data-lucide="chevron-right" aria-hidden="true"></i>
-          <strong>Products</strong>
-        </div>
 
+    <main id="product-main" class="main-area checkout-main-area product-main" tabindex="-1">
+      <header class="topbar">
+        <div class="breadcrumbs" aria-label="Breadcrumb"><span>Studio</span><i data-lucide="chevron-right" aria-hidden="true"></i><strong>Products</strong></div>
         <div class="topbar-right">
-          <span class="online-pill"><i class="dot" aria-hidden="true"></i><span>Secure workspace</span></span>
-          <button class="icon-action" id="catalog-admin-theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
-            <i data-lucide="moon" aria-hidden="true"></i>
-            <span class="sr-only">Switch theme</span>
-          </button>
-          <div class="profile">
-            <div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div>
-            <div class="profile-copy">
-              <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-              <div class="profile-role">{{ request.user.get_role_display|upper }}</div>
-            </div>
-          </div>
-          <form method="post" action="{% url 'logout' %}" class="catalog-signout">
-            {% csrf_token %}
-            <button type="submit" class="icon-action" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i><span class="sr-only">Sign out</span></button>
-          </form>
+          <span class="online-pill"><i class="dot" aria-hidden="true"></i> Secure workspace</span>
+          <button class="icon-action" id="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme"><i data-lucide="moon" aria-hidden="true"></i><span class="sr-only">Switch theme</span></button>
+          <div class="profile"><div class="avatar" aria-hidden="true">{{ request.user.username|slice:":1"|upper }}</div><div class="profile-copy"><div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div><div class="profile-role">{{ request.user.get_role_display|upper }}</div></div></div>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="icon-action" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i><span class="sr-only">Sign out</span></button></form>
         </div>
       </header>
-
-      <div class="main checkout-main catalog-workspace-content">
-        <section class="welcome" aria-labelledby="catalog-welcome-title">
-          <div class="welcome-copy">
-            <div class="eyebrow">Catalog management</div>
-            <h1 id="catalog-welcome-title">Product <em>catalogue.</em></h1>
-            <p>Manage retail products, pricing and stock levels from one studio workspace.</p>
-          </div>
-          <div class="welcome-aside">
-            <span class="date-mark"><i data-lucide="calendar-days" aria-hidden="true"></i></span>
-            <span class="date-copy">
-              <small>Today at the studio</small>
-              <strong>{% now "l, j F Y" %}</strong>
-            </span>
-          </div>
+      {% if messages %}<div class="product-messages" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+      <div class="main checkout-main">
+        <section class="quick-stats product-stats" aria-label="Inventory overview for current filters">
+          <article class="stat-card"><span class="stat-icon"><i data-lucide="package" aria-hidden="true"></i></span><span><small>Matching products</small><strong>{{ cl.result_count }}</strong></span></article>
+          <article class="stat-card"><span class="stat-icon"><i data-lucide="check-circle" aria-hidden="true"></i></span><span><small>Active products</small><strong>{{ workspace_counts.active }}</strong></span></article>
+          <article class="stat-card"><span class="stat-icon"><i data-lucide="alert-triangle" aria-hidden="true"></i></span><span><small>At reorder level</small><strong>{{ workspace_counts.low }}</strong></span></article>
         </section>
-
-        <section class="quick-stats catalog-workspace-stats" aria-label="Product catalogue overview">
-          <article class="stat-card">
-            <span class="stat-icon"><i data-lucide="package" aria-hidden="true"></i></span>
-            <span><small>Products in this view</small><strong>{{ cl.result_count }}</strong></span>
-          </article>
-          <article class="stat-card">
-            <span class="stat-icon"><i data-lucide="boxes" aria-hidden="true"></i></span>
-            <span><small>Inventory controls</small><strong>On hand · Reorder level</strong></span>
-          </article>
-          <article class="stat-card">
-            <span class="stat-icon"><i data-lucide="store" aria-hidden="true"></i></span>
-            <span><small>Sales channels</small><strong>Salon POS · WhatsApp</strong></span>
-          </article>
+        <section class="welcome product-welcome" aria-labelledby="products-title">
+          <div class="welcome-copy"><div class="eyebrow">Retail management</div><h1 id="products-title">Product <em>catalogue.</em></h1><p>Manage retail products, selling prices and inventory in one workspace.</p></div>
+          {% if has_add_permission %}<a class="product-button primary" href="{% url 'admin:catalog_product_add' %}{% if preserved_filters %}?{{ preserved_filters }}{% endif %}"><i data-lucide="plus" aria-hidden="true"></i> Add product</a>{% endif %}
         </section>
-
-        <section class="catalog-list-section" aria-labelledby="catalog-list-title">
-          <div class="section-heading">
-            <div>
-              <div class="section-kicker">Retail management</div>
-              <h2 id="catalog-list-title">Manage products</h2>
-              <p>Search by product name or SKU, review stock levels, and update product records.</p>
+        <section aria-labelledby="catalogue-heading">
+          <div class="section-heading product-heading"><div><div class="section-kicker">Studio inventory</div><h2 id="catalogue-heading">Manage products</h2><p>Search, review stock or open a product to manage its details.</p></div><span class="product-result-count">{{ cl.result_count }} product{{ cl.result_count|pluralize }}</span></div>
+          <form id="product-search" method="get" class="product-search">
+            {% for key, value in workspace_search_params %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+            <label class="search-box"><i data-lucide="search" aria-hidden="true"></i><span class="sr-only">Search products</span><input type="search" name="q" value="{{ cl.query }}" placeholder="Search name, SKU or Meta ID…" autocomplete="off"></label>
+            <label class="product-sort"><span class="sr-only">Sort products</span><select name="o">{% for value, label, selected in workspace_sorts %}<option value="{{ value }}"{% if selected %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+            <button class="product-button primary" type="submit">Apply</button>
+          </form>
+          <div class="product-filters">
+            {% for filter in workspace_filters %}
+              <div class="product-filter" role="group" aria-label="{{ filter.title|capfirst }}"><span class="product-filter-label">{{ filter.title|capfirst }}</span><div class="category-tabs filter-chips">{% for choice in filter.choices %}<a class="cat-tab filter-chip{% if choice.selected %} active{% endif %}" href="{{ choice.query_string }}"{% if choice.selected %} aria-current="true"{% endif %}>{{ choice.display }}</a>{% endfor %}</div></div>
+            {% endfor %}
+            <div class="product-filter-tools"><a href="{% url 'admin:catalog_product_changelist' %}">Reset filters</a><a href="{{ workspace_facets }}">{% if cl.add_facets %}Hide{% else %}Show{% endif %} counts</a></div>
+          </div>
+          <form id="product-actions" method="post">
+            {% csrf_token %}
+            {% if action_form and cl.result_count %}
+              <div class="product-bulk">
+                <label class="product-check"><input type="checkbox" id="product-select-all"> Select page</label>
+                <span id="product-selection" aria-live="polite">0 selected</span>
+                <label class="product-action-field"><span class="sr-only">Bulk action</span>{{ action_form.action }}</label>
+                <input type="hidden" name="select_across" value="0">
+                <button class="product-button secondary" type="submit" name="index" value="0">Run action</button>
+              </div>
+            {% endif %}
+            <div id="product-grid" class="catalog-grid product-grid">
+              {% for product in cl.result_list %}
+                <article class="catalog-card premium-tile product-card">
+                  <div class="tile-art retail-art product-art">
+                    {% if product.image %}<img src="{{ product.image.url }}" alt="" loading="lazy" decoding="async">{% else %}<span class="retail-art-icon"><i data-lucide="package" aria-hidden="true"></i></span><span class="retail-art-label">Retail &amp; care</span>{% endif %}
+                    {% if action_form %}<label class="product-card-check"><input type="checkbox" name="_selected_action" value="{{ product.pk|unlocalize }}"><span class="sr-only">Select {{ product.name }}</span></label>{% endif %}
+                  </div>
+                  <div class="tile-body">
+                    <div class="tile-meta"><span class="tile-tag">{% if product.active %}Active{% else %}Inactive{% endif %}</span><span class="product-stock {% if product.on_hand == 0 %}out{% elif product.low_stock %}low{% else %}ok{% endif %}">{% if product.on_hand == 0 %}Out of stock{% elif product.low_stock %}Low stock{% else %}In stock{% endif %}</span></div>
+                    <h3 class="tile-title"><a href="{% url 'admin:catalog_product_change' product.pk %}{% if preserved_filters %}?{{ preserved_filters }}{% endif %}">{{ product.name }}</a></h3>
+                    <p class="product-sku">SKU · {{ product.sku }}</p>
+                    {% if product.whatsapp_retailer_id %}<p class="product-sku">Meta ID · {{ product.whatsapp_retailer_id }}</p>{% endif %}
+                    <dl class="product-inventory"><div><dt>On hand</dt><dd>{{ product.on_hand|floatformat:"-3" }}</dd></div><div><dt>Reorder at</dt><dd>{{ product.reorder_level|floatformat:"-3" }}</dd></div></dl>
+                    <div class="tile-bottom"><span class="tile-price">KES {{ product.selling_price|floatformat:"2g" }}</span><a class="tile-add" href="{% url 'admin:catalog_product_change' product.pk %}{% if preserved_filters %}?{{ preserved_filters }}{% endif %}" aria-label="{% if has_change_permission %}Edit{% else %}View{% endif %} {{ product.name }}">{% if has_change_permission %}Edit{% else %}View{% endif %}<i data-lucide="arrow-up-right" aria-hidden="true"></i></a></div>
+                  </div>
+                </article>
+              {% empty %}
+                <div class="product-empty"><i data-lucide="package-search" aria-hidden="true"></i><h3>No products found</h3><p>Try another search or reset your filters.</p><a class="product-button secondary" href="{% url 'admin:catalog_product_changelist' %}">Reset filters</a></div>
+              {% endfor %}
             </div>
-          </div>
-
-          <div class="catalog-admin-content">
-            {{ block.super }}
-          </div>
+          </form>
+          {% if workspace_pages %}<nav class="product-pagination" aria-label="Product pages">
+            {% if workspace_previous %}<a href="{{ workspace_previous }}">Previous</a>{% endif %}
+            {% for page in workspace_pages %}{% if page.ellipsis %}<span>…</span>{% else %}<a href="{{ page.url }}"{% if page.current %} aria-current="page"{% endif %}>{{ page.number }}</a>{% endif %}{% endfor %}
+            {% if workspace_next %}<a href="{{ workspace_next }}">Next</a>{% endif %}
+            {% if workspace_show_all %}<a href="{{ workspace_show_all }}">Show all</a>{% endif %}
+          </nav>{% endif %}
         </section>
       </div>
-    </div>
+    </main>
   </div>
-  {% endif %}
-{% endblock %}
-
-{% block footer %}
-  {{ block.super }}
-  {% if not is_popup %}
-  <script>
-    (function () {
-      const root = document.documentElement;
-      const button = document.getElementById("catalog-admin-theme-toggle");
-
-      function applyTheme(theme) {
-        const selectedTheme = theme === "dark" ? "dark" : "light";
-        root.dataset.theme = selectedTheme;
-        root.style.colorScheme = selectedTheme;
-
-        if (button) {
-          const icon = selectedTheme === "dark" ? "sun" : "moon";
-          const label = selectedTheme === "dark" ? "Switch to light theme" : "Switch to dark theme";
-          button.innerHTML = '<i data-lucide="' + icon + '" aria-hidden="true"></i><span class="sr-only">Switch theme</span>';
-          button.setAttribute("aria-label", label);
-          button.setAttribute("title", label);
-          button.setAttribute("aria-pressed", String(selectedTheme === "dark"));
-        }
-
-        const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) {
-          meta.setAttribute("content", selectedTheme === "dark" ? "#121114" : "#F8F3EE");
-        }
-        if (window.lucide) window.lucide.createIcons();
-      }
-
-      try {
-        const savedTheme = localStorage.getItem("lashpro-checkout-theme") || localStorage.getItem("lashpro-theme");
-        applyTheme(savedTheme);
-      } catch (error) {
-        applyTheme("light");
-      }
-
-      if (button) {
-        button.addEventListener("click", function () {
-          const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-          applyTheme(nextTheme);
-          try {
-            localStorage.setItem("lashpro-checkout-theme", nextTheme);
-            localStorage.setItem("lashpro-theme", nextTheme);
-          } catch (error) {}
-        });
-      }
-
-      if (window.lucide) window.lucide.createIcons();
-      document.addEventListener("DOMContentLoaded", function () {
-        if (window.lucide) window.lucide.createIcons();
-      });
-    })();
-  </script>
-  {% endif %}
-{% endblock %}
+</body>
+</html>
