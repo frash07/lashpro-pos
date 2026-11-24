@@ -2,6 +2,10 @@
 {% load static %}
 
 {% block title %}Products · LashPro KE{% endblock %}
+{% block bodyclass %}{{ block.super }} admin-suite-body checkout-page catalog-admin-page{% endblock %}
+{% block pretitle %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block content_subtitle %}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -9,73 +13,152 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/checkout-workspace.css' %}">
   <link rel="stylesheet" href="{% static 'catalog/catalog-admin.css' %}">
+  <link rel="stylesheet" href="{% static 'catalog/catalog-workspace.css' %}">
 {% endblock %}
 
 {% block content %}
-  <header class="topbar catalog-admin-topbar">
-    <a class="brand catalog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
-      <span class="brand-mark"><i data-lucide="sparkles"></i></span>
-      <span>
-        <span class="brand-name">LASHPRO <span>KE</span></span>
-        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
-      </span>
-    </a>
-
-    <nav class="mode-switch" aria-label="Application navigation">
-      <a class="mode-btn" href="{% url 'sales:checkout' %}">
-        <i data-lucide="shopping-bag"></i><span>Salon POS</span>
+  <div class="app-shell admin-app-shell checkout-app-shell catalog-workspace-shell">
+    <aside class="sidebar checkout-sidebar catalog-workspace-sidebar" aria-label="Main navigation">
+      <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout">
+        <span class="brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
+        <span class="brand-copy">
+          <span class="brand-name">LASHPRO <small>KE</small></span>
+          <span class="brand-caption">Premier lash &amp; academy</span>
+        </span>
       </a>
-      <a class="mode-btn active" href="{% url 'admin:catalog_product_changelist' %}" aria-current="page">
-        <i data-lucide="package"></i><span>Products</span>
-      </a>
-      <a class="mode-btn" href="{% url 'admin:catalog_service_changelist' %}">
-        <i data-lucide="sparkles"></i><span>Services</span>
-      </a>
-    </nav>
 
-    <div class="top-actions">
-      <div class="status-pill"><span class="status-dot"></span><span>Secure workspace</span></div>
-      <button class="icon-button" id="catalog-admin-theme-toggle" type="button" aria-label="Switch color theme" title="Switch theme">
-        <i data-lucide="sun-moon"></i>
-      </button>
-      <div class="profile">
-        <div class="avatar">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</div>
-        <div class="profile-copy">
-          <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="profile-role">STAFF WORKSPACE</div>
-        </div>
-      </div>
-    </div>
-  </header>
+      <div class="side-label">Workspace</div>
+      <nav class="side-nav" aria-label="Workspace navigation">
+        <a class="side-link" href="{% url 'sales:checkout' %}">
+          <i data-lucide="shopping-bag" aria-hidden="true"></i><span>Checkout</span>
+        </a>
+        <a class="side-link" href="/admin/appointments/">
+          <i data-lucide="calendar-days" aria-hidden="true"></i><span>Appointments</span>
+        </a>
+        <a class="side-link" href="/admin/customers/">
+          <i data-lucide="users" aria-hidden="true"></i><span>Clients</span>
+        </a>
+      </nav>
 
-  <main class="main catalog-admin-main">
-    <section class="view">
-      <div class="page-heading catalog-admin-heading">
-        <div>
-          <div class="eyebrow">Catalog management</div>
-          <h1>Products <em>that keep the studio stocked.</em></h1>
-          <p>Manage retail essentials, pricing and stock levels from one workspace.</p>
-        </div>
-        <div class="heading-actions">
-          <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
-          <div class="soft-pill"><i data-lucide="package-check"></i> Retail catalogue</div>
-        </div>
-      </div>
+      <div class="side-label">Catalogue</div>
+      <nav class="side-nav" aria-label="Catalogue navigation">
+        <a class="side-link active" href="{% url 'admin:catalog_product_changelist' %}" aria-current="page">
+          <i data-lucide="package" aria-hidden="true"></i><span>Products</span>
+        </a>
+        <a class="side-link" href="{% url 'admin:catalog_service_changelist' %}">
+          <i data-lucide="sparkles" aria-hidden="true"></i><span>Services</span>
+        </a>
+      </nav>
 
-      <div class="catalog-admin-summary">
-        <div class="catalog-admin-summary-card">
-          <span class="catalog-admin-summary-icon"><i data-lucide="boxes"></i></span>
-          <span><strong>{{ cl.result_count }}</strong><small>Products in this view</small></span>
-        </div>
-        <div class="catalog-admin-summary-note">Use search and stock filters to find products that need attention.</div>
-      </div>
+      <div class="side-label">Insights</div>
+      <nav class="side-nav" aria-label="Insights navigation">
+        <a class="side-link" href="{% url 'reporting:dashboard' %}">
+          <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span>Reports</span>
+        </a>
+        <a class="side-link" href="{% url 'admin_suite' %}">
+          <i data-lucide="settings-2" aria-hidden="true"></i><span>Admin Suite</span>
+        </a>
+      </nav>
 
-      <div class="catalog-admin-content">
-        {{ block.super }}
+      <div class="sidebar-spacer"></div>
+
+      <section class="studio-card" aria-label="Active studio">
+        <div class="studio-top">
+          <strong>Nairobi Studio</strong>
+          <span class="studio-status"><i class="dot" aria-hidden="true"></i> Active</span>
+        </div>
+        <p>Salon workspace<br>Kenyan Shilling · KES</p>
+      </section>
+
+      <div class="staff-mini">
+        <div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div>
+        <div class="staff-copy">
+          <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+          <small>{{ request.user.get_role_display|upper }}</small>
+        </div>
+        <form method="post" action="{% url 'logout' %}" class="catalog-signout">
+          {% csrf_token %}
+          <button type="submit" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i></button>
+        </form>
       </div>
-    </section>
-  </main>
+    </aside>
+
+    <main class="main-area checkout-main-area catalog-workspace-main">
+      <header class="topbar catalog-workspace-topbar">
+        <div class="breadcrumbs" aria-label="Breadcrumb">
+          <span>Studio</span>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+          <span>Inventory</span>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+          <strong>Products</strong>
+        </div>
+
+        <div class="topbar-right">
+          <span class="online-pill"><i class="dot" aria-hidden="true"></i><span>Secure workspace</span></span>
+          <button class="icon-action" id="catalog-admin-theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
+            <i data-lucide="moon" aria-hidden="true"></i>
+            <span class="sr-only">Switch theme</span>
+          </button>
+          <div class="profile">
+            <div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div>
+            <div class="profile-copy">
+              <div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+              <div class="profile-role">{{ request.user.get_role_display|upper }}</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="main checkout-main catalog-workspace-content">
+        <section class="welcome" aria-labelledby="catalog-welcome-title">
+          <div class="welcome-copy">
+            <div class="eyebrow">Catalog management</div>
+            <h1 id="catalog-welcome-title">Keep every <em>essential ready.</em></h1>
+            <p>Manage retail products, pricing and stock levels from one studio workspace.</p>
+          </div>
+          <div class="welcome-aside">
+            <span class="date-mark"><i data-lucide="calendar-days" aria-hidden="true"></i></span>
+            <span class="date-copy">
+              <small>Today at the studio</small>
+              <strong>{% now "l, j F Y" %}</strong>
+            </span>
+          </div>
+        </section>
+
+        <section class="quick-stats catalog-workspace-stats" aria-label="Product catalogue overview">
+          <article class="stat-card">
+            <span class="stat-icon"><i data-lucide="package" aria-hidden="true"></i></span>
+            <span><small>Products in this view</small><strong>{{ cl.result_count }}</strong></span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon"><i data-lucide="boxes" aria-hidden="true"></i></span>
+            <span><small>Inventory controls</small><strong>On hand · Reorder level</strong></span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon"><i data-lucide="store" aria-hidden="true"></i></span>
+            <span><small>Sales channels</small><strong>Salon POS · WhatsApp</strong></span>
+          </article>
+        </section>
+
+        <section class="catalog-list-section" aria-labelledby="catalog-list-title">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Retail management</div>
+              <h2 id="catalog-list-title">Product catalogue</h2>
+              <p>Search by product name or SKU, review stock levels, and update product records.</p>
+            </div>
+          </div>
+
+          <div class="catalog-admin-content">
+            {{ block.super }}
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
 {% endblock %}
 
 {% block footer %}
@@ -87,24 +170,41 @@
       const button = document.getElementById("catalog-admin-theme-toggle");
 
       function applyTheme(theme) {
-        root.dataset.theme = theme;
+        const selectedTheme = theme === "dark" ? "dark" : "light";
+        root.dataset.theme = selectedTheme;
+        root.style.colorScheme = selectedTheme;
+
+        if (button) {
+          const icon = selectedTheme === "dark" ? "sun" : "moon";
+          const label = selectedTheme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+          button.innerHTML = '<i data-lucide="' + icon + '" aria-hidden="true"></i><span class="sr-only">Switch theme</span>';
+          button.setAttribute("aria-label", label);
+          button.setAttribute("title", label);
+          button.setAttribute("aria-pressed", String(selectedTheme === "dark"));
+        }
+
         const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute("content", theme === "dark" ? "#0B1220" : "#F5F7FB");
+        if (meta) {
+          meta.setAttribute("content", selectedTheme === "dark" ? "#121114" : "#F8F3EE");
+        }
         if (window.lucide) window.lucide.createIcons();
       }
 
       try {
-        const saved = localStorage.getItem("lashpro-theme");
-        applyTheme(saved === "light" ? "light" : "dark");
+        const savedTheme = localStorage.getItem("lashpro-checkout-theme") || localStorage.getItem("lashpro-theme");
+        applyTheme(savedTheme);
       } catch (error) {
-        applyTheme("dark");
+        applyTheme("light");
       }
 
       if (button) {
         button.addEventListener("click", function () {
-          const next = root.dataset.theme === "dark" ? "light" : "dark";
-          applyTheme(next);
-          try { localStorage.setItem("lashpro-theme", next); } catch (error) {}
+          const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(nextTheme);
+          try {
+            localStorage.setItem("lashpro-checkout-theme", nextTheme);
+            localStorage.setItem("lashpro-theme", nextTheme);
+          } catch (error) {}
         });
       }
 
