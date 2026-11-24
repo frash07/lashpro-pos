@@ -467,7 +467,7 @@ html[data-theme="dark"] .checkout-main .cat-tab.active {
 html[data-theme="dark"] .checkout-panel {
   border-left-color: var(--ui-border-strong);
   background: var(--ui-surface);
-  box-shadow: -12px 0 32px rgba(var(--shadow-rgb), .22);
+  box-shadow: var(--shadow-md);
 }
 html[data-theme="dark"] .checkout-panel .checkout-head {
   border-bottom-color: var(--ui-border-strong);
