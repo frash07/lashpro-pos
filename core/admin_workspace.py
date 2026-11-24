@@ -26,8 +26,27 @@ MODULES = {
     "expenses": ("Expenses", "receipt"),
     "storefront": ("Storefront & WhatsApp", "store"),
     "sales": ("Sales", "shopping-bag"),
+    "training": ("Training academy", "graduation-cap"),
+    "payments": ("Payments & cash", "wallet"),
 }
 REGISTERS = {
+    "training_course": ("Courses", "Manage academy courses, durations, tuition fees and availability.", "book-open"),
+    "training_cohort": ("Cohorts", "Manage course schedules, trainers, capacity and cohort status.", "users"),
+    "training_enrollment": ("Enrollments", "Review student registrations, tuition and linked sales.", "contact-round"),
+    "training_trainingsession": ("Training sessions", "Manage scheduled lessons and review recorded attendance.", "calendar-clock"),
+    "training_attendance": ("Attendance", "Review recorded student attendance. Record attendance in the academy workflow.", "clipboard-check"),
+    "training_assessment": ("Assessments", "Manage assessment schedules, maximum scores and passing thresholds.", "file-question"),
+    "training_assessmentresult": ("Assessment results", "Review recorded student scores and grading history.", "clipboard-list"),
+    "training_certificate": ("Certificates", "Review issued certificates and their current status.", "award"),
+    "payments_cashsessionmovement": ("Cash session movements", "Review recorded cash movements and their reasons.", "arrow-left-right"),
+    "payments_cashsession": ("Cash sessions", "Review opening floats, cash counts, variances and closeout status.", "wallet"),
+    "payments_mpesac2bpayment": ("M-Pesa C2B payments", "Review received payments and their linked transactions.", "smartphone"),
+    "payments_mpesastkpush": ("M-Pesa STK pushes", "Review payment requests, callbacks and receipt references.", "smartphone"),
+    "payments_paymentreconciliation": ("Payment reconciliation history", "Review recorded reconciliation decisions and references.", "clipboard-check"),
+    "payments_paymenttransaction": ("Payment transactions", "Review collection methods, transaction amounts and statuses.", "credit-card"),
+    "payments_salepayment": ("Sale payments", "Review allocations between sales and payment transactions.", "receipt"),
+    "payments_refundpayout": ("Refund payouts", "Review issued refunds and verification status.", "undo-2"),
+    "payments_payoutreconciliation": ("Payout reconciliation history", "Review recorded payout verification decisions.", "clipboard-list"),
     "catalog_product": ("Products", "Manage product details and pricing. On-hand quantity is controlled through stock operations.", "package"),
     "catalog_service": ("Services", "Manage service prices, durations and commission settings.", "sparkles"),
     "commissions_commissionpayoutrequest": ("Commission payout requests", "Review requests and use the operational dashboard to approve or reject them.", "clipboard-check"),
@@ -58,7 +77,7 @@ REGISTERS = {
 }
 
 
-def _navigation(context, current_app, current_model, index=False):
+def _navigation(context, current_app, current_model, index=False, user=None):
     available = {app["app_label"]: app for app in context.get("available_apps", ())}
     groups = [
         {"title": "Workspace", "links": [
@@ -68,6 +87,8 @@ def _navigation(context, current_app, current_model, index=False):
         {"title": "Management", "links": []},
         {"title": "Catalogue", "links": []},
     ]
+    if user and (user.is_superuser or user.role in {"OWNER", "MANAGER"}):
+        groups[0]["links"].append({"label": "Reports", "url": reverse("reporting:dashboard"), "icon": "chart-no-axes-combined"})
     for key, (label, icon) in MODULES.items():
         if key in available:
             app = available[key]
@@ -100,6 +121,7 @@ def operational_workspace(request, title, current):
     if manager:
         links.extend([
             {"label": "Cash session", "url": reverse("payments:cash-session"), "icon": "wallet"},
+            {"label": "Reports", "url": reverse("reporting:dashboard"), "icon": "chart-no-axes-combined", "active": current == "reports"},
             {"label": "M-Pesa reconciliation", "url": reverse("payments:reconciliation"), "icon": "clipboard-check", "active": current == "reconciliation"},
         ])
     groups = [{"title": "Workspace", "links": links}]
@@ -261,7 +283,7 @@ class StandaloneAdminWorkspaceMiddleware:
             "workspace_app": app_label,
             "workspace_register": register,
             "workspace_is_index": name == "index",
-            "workspace_nav": _navigation(context, app_label, register, index=name == "index"),
+            "workspace_nav": _navigation(context, app_label, register, index=name == "index", user=request.user),
             "workspace_app_url": reverse("admin:app_list", kwargs={"app_label": app_label}) if app_label else "",
             "workspace_list_url": reverse(f"admin:{register}_changelist") if register else "",
         })
@@ -271,6 +293,7 @@ class StandaloneAdminWorkspaceMiddleware:
                 {"preserved_filters": context.get("preserved_filters", ""), "opts": opts},
                 context["workspace_list_url"],
             )
+            context["workspace_has_autocomplete"] = register in {"training_cohort", "training_trainingsession", "training_assessment"}
             context["workspace_can_save"] = (
                 context.get("has_change_permission") or context.get("add") and context.get("has_add_permission")
             ) and context.get("show_save", True) and bool(context["adminform"].form.fields or context.get("has_editable_inline_admin_formsets"))
