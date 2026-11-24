@@ -22,9 +22,12 @@
 
     <div class="pos-nav-label">Workspace</div>
     <nav class="pos-nav" aria-label="Workspace navigation">
+      {% if request.user.role != "TRAINER" %}
       <a class="pos-nav-link{% if request.resolver_match.url_name == 'checkout' %} is-active{% endif %}" href="{% url 'sales:checkout' %}"{% if request.resolver_match.url_name == 'checkout' %} aria-current="page"{% endif %}>
         <i data-lucide="shopping-bag" aria-hidden="true"></i><span>Checkout</span>
       </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" %}
       <a class="pos-nav-link{% if request.resolver_match.url_name == 'staff-day' or request.resolver_match.url_name == 'update-status' %} is-active{% endif %}" href="{% url 'appointments:staff-day' %}"{% if request.resolver_match.url_name == 'staff-day' or request.resolver_match.url_name == 'update-status' %} aria-current="page"{% endif %}>
         <i data-lucide="calendar-days" aria-hidden="true"></i><span>Appointments</span>
       </a>
@@ -40,31 +43,42 @@
       <a class="pos-nav-link{% if request.resolver_match.url_name == 'admin_suite' %} is-active{% endif %}" href="{% url 'admin_suite' %}"{% if request.resolver_match.url_name == 'admin_suite' %} aria-current="page"{% endif %}>
         <i data-lucide="settings-2" aria-hidden="true"></i><span>Admin Suite</span>
       </a>
+      {% endif %}
+      {% if request.user.role != "CUSTOMER" %}
       <a class="pos-nav-link{% if request.resolver_match.namespace == 'training' %} is-active{% endif %}" href="{% url 'training:dashboard' %}"{% if request.resolver_match.namespace == 'training' %} aria-current="page"{% endif %}>
         <i data-lucide="graduation-cap" aria-hidden="true"></i><span>Academy</span>
       </a>
+      {% endif %}
     </nav>
 
     <div class="pos-nav-label pos-nav-label-secondary">More operations</div>
     <nav class="pos-nav" aria-label="More operations">
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" %}
       <a class="pos-nav-link{% if request.resolver_match.url_name == 'payments' %} is-active{% endif %}" href="{% url 'sales:payments' %}">
         <i data-lucide="wallet-cards" aria-hidden="true"></i><span>Payments</span>
       </a>
       <a class="pos-nav-link{% if request.resolver_match.url_name == 'refunds' %} is-active{% endif %}" href="{% url 'sales:refunds' %}">
         <i data-lucide="undo-2" aria-hidden="true"></i><span>Refunds</span>
       </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "TECHNICIAN" %}
       <a class="pos-nav-link{% if request.resolver_match.url_name == 'services' %} is-active{% endif %}" href="{% url 'sales:services' %}">
         <i data-lucide="list-checks" aria-hidden="true"></i><span>Service queue</span>
       </a>
       <a class="pos-nav-link{% if request.resolver_match.namespace == 'payments' %} is-active{% endif %}" href="{% url 'payments:cash-session' %}">
         <i data-lucide="banknote" aria-hidden="true"></i><span>Cash session</span>
       </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "TECHNICIAN" %}
       <a class="pos-nav-link{% if request.resolver_match.namespace == 'commissions' %} is-active{% endif %}" href="{% url 'commissions:dashboard' %}">
         <i data-lucide="hand-coins" aria-hidden="true"></i><span>Commissions</span>
       </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" %}
       <a class="pos-nav-link{% if request.resolver_match.namespace == 'expenses' %} is-active{% endif %}" href="{% url 'expenses:dashboard' %}">
         <i data-lucide="receipt-text" aria-hidden="true"></i><span>Expenses</span>
       </a>
+      {% endif %}
     </nav>
 
     <div class="pos-sidebar-spacer"></div>
