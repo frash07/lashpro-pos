@@ -167,7 +167,7 @@ class StandaloneAdminWorkspaceMiddleware:
         template = ""
         if name == "index" and "app_list" in context:
             template = "admin_workspace/index.html"
-        elif name == "app_list" and match.kwargs.get("app_label") in MODULES and "app_list" in context:
+        elif name == "app_list" and match.kwargs.get("app_label") in MODULES and match.kwargs.get("app_label") != "auth" and "app_list" in context:
             app_label = match.kwargs["app_label"]
             template = "admin_workspace/index.html"
         else:
@@ -210,7 +210,7 @@ class StandaloneAdminWorkspaceMiddleware:
             )
             context["workspace_can_save"] = (
                 context.get("has_change_permission") or context.get("add") and context.get("has_add_permission")
-            ) and context.get("show_save", True)
+            ) and context.get("show_save", True) and bool(context["adminform"].form.fields or context.get("has_editable_inline_admin_formsets"))
             context["workspace_can_save_continue"] = context["workspace_can_save"] and context.get("has_view_permission", True) and context.get("show_save_and_continue", True)
             context["workspace_can_save_add"] = context["workspace_can_save"] and context.get("has_add_permission") and not context.get("save_as")
             if context.get("original"):
