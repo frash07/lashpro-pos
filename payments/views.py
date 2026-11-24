@@ -70,7 +70,9 @@ def reconciliation_queue(request):
     ).order_by("created_at")
     pending_refunds = RefundPayout.objects.filter(method="MPESA", payout_reconciliation__isnull=True).select_related("refund__sale")
     pending_commissions = CommissionPayoutRecord.objects.filter(method="MPESA", payout_reconciliation__isnull=True).select_related("technician")
+    from core.admin_workspace import operational_workspace
     return render(request, "payments/reconciliation.html", {
+        **operational_workspace(request, "M-Pesa reconciliation", "reconciliation"),
         "pending_payments": pending,
         "pending_refund_payouts": pending_refunds,
         "pending_commission_payouts": pending_commissions,
