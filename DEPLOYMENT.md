@@ -254,6 +254,27 @@ For a production service:
 - retain application logs and investigate repeated errors;
 - verify that media is external and sessions/data are stored in shared durable services before scaling horizontally.
 
+### Sentry error tracking
+
+The Django app reports unhandled exceptions to Sentry when `SENTRY_DSN` is configured. Create a **Python/Django** project in Sentry and store its DSN as a Fly secret on **both** production apps because they run the same Django code:
+
+```bash
+fly secrets set SENTRY_DSN='https://<public-key>@o<org-id>.ingest.sentry.io/<project-id>' SENTRY_ENVIRONMENT='production' SENTRY_TRACES_SAMPLE_RATE='0.0' --app lashpro-pos
+fly secrets set SENTRY_DSN='https://<public-key>@o<org-id>.ingest.sentry.io/<project-id>' SENTRY_ENVIRONMENT='production' SENTRY_TRACES_SAMPLE_RATE='0.0' --app lashpro-storefront
+```
+
+Keep the DSN out of committed files and logs. Set `SENTRY_RELEASE` to the deployed Git SHA (or another stable release identifier) when release-level grouping is needed. Error events are enabled independently of tracing; `SENTRY_TRACES_SAMPLE_RATE=0.0` disables performance spans, and a value such as `0.05` samples 5% of requests.
+
+The SDK configuration disables user identity, cookies, request headers, request bodies, query-string values and local-variable capture. Log-record events and log breadcrumbs are also excluded to reduce accidental exposure of customer/payment details. Review Sentry's project-level data scrubbing and access controls as an additional safeguard.
+
+After setting the secrets and deploying both apps, send a non-sensitive connectivity check from the POS app:
+
+```bash
+fly ssh console --app lashpro-pos -C "python manage.py shell -c 'import sentry_sdk; sentry_sdk.capture_message(\\"LashPro Sentry connectivity check\\", level=\\"info\\")'"
+```
+
+Confirm the message appears in the Sentry project under the `production` environment. A missing `SENTRY_DSN` leaves the SDK disabled; the app continues to write logs to Fly as before.
+
 Useful operational commands:
 
 ```bash
