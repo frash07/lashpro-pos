@@ -116,7 +116,7 @@
   .product-stats .stat-icon { width: 30px; height: 30px; margin-bottom: 7px; }
   .product-stats .stat-card small { min-height: 28px; font-size: 10px; }
   .product-stats .stat-card strong { font-size: 18px; }
-  .product-main .product-welcome { align-items: stretch; padding: 18px; margin: 14px 0 20px; }
+  .product-main .product-welcome { align-items: stretch; flex-direction: column; padding: 18px; margin: 14px 0 20px; }
   .product-main .product-welcome .product-button { width: 100%; }
   .product-main .product-heading { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
   .product-search { grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
