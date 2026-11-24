@@ -628,7 +628,7 @@
       if(checkoutSubmitting)return;
       const form=document.getElementById('pos-form');
       if(!form)return;
-      syncCartToFormset(method,mpesaReference);
+      syncCartToFormset(method,mpesaPhone);
       const modeField=document.getElementById('checkout-payment-mode');
       const phoneField=document.getElementById('mpesa-stk-phone');
       if(modeField)modeField.value=method==='STK_PUSH'?'STK_PUSH':'';
