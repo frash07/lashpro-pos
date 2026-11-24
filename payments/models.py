@@ -285,6 +285,13 @@ class MpesaStkPush(models.Model):
 
     class Meta:
         ordering = ("-created_at", "-pk")
+        constraints = [
+            models.UniqueConstraint(
+                Lower("mpesa_receipt_number"),
+                condition=~Q(mpesa_receipt_number=""),
+                name="mpesa_stk_receipt_ci_unique",
+            ),
+        ]
 
     def __str__(self):
         return f"STK Push · payment #{self.payment_transaction_id} · {self.get_status_display()}"
