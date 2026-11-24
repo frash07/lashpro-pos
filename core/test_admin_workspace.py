@@ -59,7 +59,7 @@ class StandaloneAdminWorkspaceTests(TestCase):
 
     def test_all_requested_indexes(self):
         self.assert_workspace(self.client.get(reverse("admin:index")), "index")
-        for app in ("accounts", "appointments", "audit", "axes", "inventory"):
+        for app in ("accounts", "appointments", "audit", "axes", "inventory", "catalog", "commissions", "customers", "expenses", "storefront", "sales"):
             with self.subTest(app=app):
                 self.assert_workspace(self.client.get(reverse("admin:app_list", kwargs={"app_label": app})), "index")
 
@@ -70,12 +70,17 @@ class StandaloneAdminWorkspaceTests(TestCase):
             "axes_accesslog", "axes_accessattempt", "axes_accessfailurelog",
             "inventory_supplier", "inventory_stockreceipt", "inventory_stockadjustmentrequest",
             "inventory_serviceconsumable", "inventory_inventorymovement",
+            "catalog_service", "commissions_commissionpayoutrequest",
+            "commissions_commissionpayoutrecord", "commissions_commissionledgerentry",
+            "customers_customer", "expenses_expense", "storefront_whatsappinboundorder",
+            "storefront_whatsappcatalogsync", "storefront_storefrontorder",
+            "sales_sale", "sales_salerefund", "sales_saleline",
         ):
             with self.subTest(register=register):
                 self.assert_workspace(self.client.get(reverse("admin:" + register + "_changelist")), "change_list")
 
     def test_requested_forms_and_edit_links(self):
-        for register in ("auth_group", "inventory_supplier", "inventory_stockadjustmentrequest", "inventory_serviceconsumable"):
+        for register in ("auth_group", "inventory_supplier", "inventory_stockadjustmentrequest", "inventory_serviceconsumable", "catalog_service", "catalog_product", "customers_customer"):
             with self.subTest(register=register):
                 self.assert_workspace(self.client.get(reverse("admin:" + register + "_add")), "change_form")
         for register, obj in (("appointments_staffavailability", self.availability), ("appointments_appointment", self.appointment)):
@@ -120,3 +125,40 @@ class StandaloneAdminWorkspaceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateNotUsed(response, "admin_workspace/change_list.html")
         self.assertContains(response, 'id="product-grid"')
+
+    def test_operational_commissions_and_reconciliation_share_workspace(self):
+        for name, template in (("commissions:dashboard", "commissions/dashboard.html"),
+                               ("payments:reconciliation", "payments/reconciliation.html")):
+            with self.subTest(name=name):
+                response = self.client.get(reverse(name))
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, template)
+                self.assertTemplateUsed(response, "admin_workspace/base.html")
+                self.assertContains(response, static("css/admin-workspace.css"))
+                self.assertNotContains(response, static("admin/css/base.css"))
+        response = self.client.get(reverse("commissions:dashboard"))
+        self.assertContains(response, 'name="action" value="request"')
+        self.assertContains(response, 'name="technician"')
+        self.assertContains(response, "Commission balances by lash technician")
+
+    def test_nonstaff_technician_retains_self_service_only(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse("commissions:dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Available balance")
+        self.assertNotContains(response, 'name="technician"')
+        self.assertNotContains(response, "Commission balances by lash technician")
+        self.assertNotContains(response, reverse("admin:index"))
+        self.assertEqual(self.client.get(reverse("payments:reconciliation")).status_code, 403)
+
+    def test_new_catalogue_forms_keep_backend_fields(self):
+        product = self.client.get(reverse("admin:catalog_product_add"))
+        self.assert_workspace(product, "change_form")
+        self.assertContains(product, 'name="sku"')
+        self.assertContains(product, 'name="selling_price"')
+        self.assertContains(product, 'enctype="multipart/form-data"')
+        self.assertNotContains(product, 'name="on_hand"')
+        service = self.client.get(reverse("admin:catalog_service_add"))
+        self.assert_workspace(service, "change_form")
+        self.assertContains(service, 'name="price"')
+        self.assertContains(service, 'name="duration_minutes"')
