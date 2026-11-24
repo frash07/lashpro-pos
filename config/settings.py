@@ -38,20 +38,36 @@ if not 0.0 <= SENTRY_TRACES_SAMPLE_RATE <= 1.0:
     )
 
 
-def _sentry_before_send(event, hint):
-    """Exclude potentially sensitive log messages from Sentry events."""
-    if isinstance(hint, dict) and hint.get("log_record") is not None:
-        return None
+def _sentry_scrub_event_request(event):
+    """Remove request context that may contain customer or one-time token data."""
+    request = event.get("request")
+    if isinstance(request, dict):
+        for field in ("url", "query_string", "data", "headers", "cookies", "env"):
+            request.pop(field, None)
 
     breadcrumbs = event.get("breadcrumbs")
     if isinstance(breadcrumbs, dict):
         breadcrumbs["values"] = [
             breadcrumb
             for breadcrumb in breadcrumbs.get("values", [])
-            if breadcrumb.get("category") != "log"
+            if not (
+                isinstance(breadcrumb, dict)
+                and breadcrumb.get("category") in {"log", "http", "httplib"}
+            )
         ]
     return event
 
+
+def _sentry_before_send(event, hint):
+    """Exclude log-only events and sensitive request context."""
+    if isinstance(hint, dict) and hint.get("log_record") is not None:
+        return None
+    return _sentry_scrub_event_request(event)
+
+
+def _sentry_before_send_transaction(event, hint):
+    """Apply the same request scrubbing to performance transactions."""
+    return _sentry_scrub_event_request(event)
 
 if SENTRY_DSN:
     import sentry_sdk
@@ -64,6 +80,7 @@ if SENTRY_DSN:
         release=SENTRY_RELEASE,
         traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
         before_send=_sentry_before_send,
+        before_send_transaction=_sentry_before_send_transaction,
         data_collection={
             "user_info": False,
             "cookies": {"mode": "off"},
