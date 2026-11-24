@@ -1,8 +1,10 @@
-{% extends "base.html" %}
+{% extends "base_pos.html" %}
 
 {% block title %}Balance payments · LashPro{% endblock %}
 
-{% block content %}
+{% block pos_page_title %}Payments{% endblock %}
+
+{% block pos_main %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">New checkout</a><a href="{% url 'payments:cash-session' %}">Cash session</a></header>
 <main class="page"><h1>Collect a sale balance</h1><p>Choose a completed sale to record an additional cash or M-Pesa payment. Manual references remain unverified until a manager reconciles them. STK Push payments are confirmed by Safaricom callback.</p>
 {% if not mpesa_stk_configured %}<p class="message warning">M-Pesa STK Push is not configured. An owner can add Daraja credentials in Admin Suite → API Integrations.</p>{% endif %}
