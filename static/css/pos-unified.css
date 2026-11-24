@@ -32,6 +32,7 @@
   min-height: 620px;
   flex-direction: column;
   padding: 25px 15px 17px;
+  overflow-y: auto;
   border-right: 1px solid var(--ui-border);
   background: var(--ui-surface);
 }
