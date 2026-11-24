@@ -398,3 +398,11 @@ html[data-theme="dark"] .account-avatar { background: var(--brand-soft); color: 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+/* Keep the leading destinations reachable when touch navigation overflows. */
+@media (max-width: 860px) {
+  .sidebar .side-nav { justify-content: flex-start; }
+  .sidebar .side-link { flex-shrink: 0; min-height: 44px; min-width: 44px; }
+}
+@media (min-width: 861px) {
+  .sidebar { overflow-y: auto; height: 100dvh; }
+}

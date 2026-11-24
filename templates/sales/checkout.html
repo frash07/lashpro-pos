@@ -30,24 +30,26 @@
 <aside class="sidebar checkout-sidebar" aria-label="Main navigation">
 <a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout"><span class="brand-mark"><i data-lucide="sparkles"></i></span><span class="brand-copy"><span class="brand-name">LASHPRO <small>KE</small></span><span class="brand-caption">Premier lash &amp; academy</span></span></a>
 <div class="side-label">Workspace</div><nav class="side-nav" aria-label="Workspace navigation">
-<button id="nav-pos-btn" class="side-link active" type="button" onclick="switchMode('pos')" aria-current="page"><i data-lucide="grid-2x2"></i><span class="nav-text">Checkout</span></button>
+<button id="nav-pos-btn" class="side-link active" type="button" onclick="switchMode('pos')" aria-current="page" aria-label="Checkout" title="Checkout"><i data-lucide="grid-2x2"></i><span class="nav-text">Checkout</span></button>
 {% if admin_suite.can_access_admin_suite %}
-<a class="side-link" href="/admin/appointments/"><i data-lucide="calendar-days"></i><span class="nav-text">Appointments</span></a>
-<a class="side-link" href="/admin/customers/"><i data-lucide="users"></i><span class="nav-text">Clients</span></a>
+<a class="side-link" href="/admin/appointments/" aria-label="Appointments" title="Appointments"><i data-lucide="calendar-days"></i><span class="nav-text">Appointments</span></a>
+<a class="side-link" href="/admin/customers/" aria-label="Clients" title="Clients"><i data-lucide="users"></i><span class="nav-text">Clients</span></a>
 {% endif %}
 {% if admin_suite.is_manager %}
-<button id="nav-admin-btn" class="side-link" type="button" onclick="switchMode('admin')"><i data-lucide="package"></i><span class="nav-text">Inventory</span></button>
+<button id="nav-admin-btn" class="side-link" type="button" onclick="switchMode('admin')" aria-label="Inventory" title="Inventory"><i data-lucide="package"></i><span class="nav-text">Inventory</span></button>
 {% endif %}
 {% if admin_suite.can_access_admin_suite %}
-<a class="side-link" href="{% url 'reporting:dashboard' %}"><i data-lucide="chart-no-axes-combined"></i><span class="nav-text">Reports</span></a>
-<a class="side-link" href="{% url 'admin_suite' %}"><i data-lucide="settings"></i><span class="nav-text">Admin Suite</span></a>
+<a class="side-link" href="{% url 'reporting:dashboard' %}" aria-label="Reports" title="Reports"><i data-lucide="chart-no-axes-combined"></i><span class="nav-text">Reports</span></a>
+<a class="side-link" href="{% url 'admin_suite' %}" aria-label="Admin Suite" title="Admin Suite"><i data-lucide="settings"></i><span class="nav-text">Admin Suite</span></a>
 {% endif %}
 {% if request.user.role == "CASHIER" %}
-<a class="side-link" href="{% url 'training:enroll' %}"><i data-lucide="graduation-cap"></i><span class="nav-text">Enroll student</span></a>
+<a class="side-link" href="{% url 'training:enroll' %}" aria-label="Enroll student" title="Enroll student"><i data-lucide="graduation-cap"></i><span class="nav-text">Enroll student</span></a>
 {% elif admin_suite.is_manager %}
-<a class="side-link" href="{% url 'training:dashboard' %}"><i data-lucide="graduation-cap"></i><span class="nav-text">Academy</span></a>
+<a class="side-link" href="{% url 'training:dashboard' %}" aria-label="Academy" title="Academy"><i data-lucide="graduation-cap"></i><span class="nav-text">Academy</span></a>
 {% endif %}
-</nav><div class="sidebar-spacer"></div>
+</nav>
+<a class="checkout-section-jump" href="#order-summary">View order</a>
+<div class="sidebar-spacer"></div>
 <div class="studio-card"><div class="studio-top"><strong>Nairobi Studio</strong><span class="studio-status"><i class="dot"></i> Active</span></div><p>Salon register<br>Kenyan Shilling · KES</p></div>
 <div class="staff-mini"><div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div><div class="staff-copy"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|upper }}</small></div></div>
 </aside>
@@ -82,7 +84,7 @@
               <div class="welcome-copy"><div class="eyebrow">Salon register</div><h1 id="checkout-welcome-title">Make every visit <em>beautiful.</em></h1><p>Curate a client experience, one detail at a time.</p></div>
               <div class="welcome-aside"><span class="date-mark"><i data-lucide="calendar-days" aria-hidden="true"></i></span><span class="date-copy"><small>Today at the studio</small><strong id="today-date">Monday, 23 November 2026</strong></span></div>
             </section>
-<div class="section-heading"><div><div class="section-kicker">Curated for your clients</div><h2>Studio menu</h2><p>Select a salon service or retail essential to add it to today's visit.</p></div></div>
+<div class="section-heading"><div><div class="section-kicker">Curated for your clients</div><h2 id="studio-menu" tabindex="-1">Studio menu</h2><p>Select a salon service or retail essential to add it to today's visit.</p></div></div>
 <div class="catalog-controls"><label class="search-box" aria-label="Search catalogue"><i data-lucide="search" aria-hidden="true"></i><input type="search" id="catalog-search" placeholder="Search products by name, SKU or service…" oninput="filterCatalog()" autocomplete="off"></label></div>
 <div class="category-tabs filter-chips" role="group" aria-label="Filter catalogue">
 <button type="button" class="cat-tab filter-chip active" data-category="all" onclick="filterCategory('all',this)"><i data-lucide="grid-2x2"></i> All collection</button>
@@ -135,10 +137,10 @@
     </div>
 <footer class="legal-footer-links checkout-legal-footer" aria-label="Customer legal policies"><a href="{% url 'storefront:privacy' %}">Privacy policy</a><a href="{% url 'storefront:terms' %}">Terms of service</a><a href="{% url 'storefront:returns' %}">Returns &amp; refunds</a></footer>
 </main>
-          <aside class="checkout-panel">
+          <aside class="checkout-panel" id="order-summary" tabindex="-1" aria-label="Order summary">
             <div class="checkout-head">
               <div class="checkout-overline"><span class="tiny-label">Live transaction</span><span class="soft-pill soft-pill--compact"><span class="status-dot status-dot--success"></span> Ready to close</span></div>
-              <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New transaction</div></div></div>
+              <div class="checkout-title-wrap"><div class="checkout-icon"><i data-lucide="receipt-text"></i></div><div><a class="checkout-section-jump" href="#studio-menu">Back to menu</a><div class="checkout-title">Order summary</div><div class="order-label" id="order-label">New transaction</div></div></div>
             </div>
             <div class="client-fields">
               <div class="field"><label for="staff-select">ARTIST / TRAINER</label>

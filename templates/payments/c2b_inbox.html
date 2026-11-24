@@ -2,8 +2,8 @@
 {% block title %}Incoming M-Pesa payments · LashPro{% endblock %}
 {% block pos_page_title %}Incoming M-Pesa payments{% endblock %}
 {% block pos_main %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:payments' %}">Balance payments</a><a href="{% url 'payments:cash-session' %}">Cash session</a></header>
-<main class="page">
+<nav class="workspace-shortcuts" aria-label="Related workflows"><a href="{% url 'sales:payments' %}">Balance payments</a><a href="{% url 'payments:cash-session' %}">Cash session</a></nav>
+<main class="page operations-page">
   <h1>Incoming M-Pesa payments</h1>
   <p>These payments were confirmed by Safaricom through C2B but are not yet assigned to a sale. Ask the customer to confirm the payer details shown before matching the payment. Safaricom may omit names and masks the payer phone number.</p>
   {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}

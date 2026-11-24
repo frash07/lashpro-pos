@@ -546,3 +546,27 @@ html[data-theme="dark"] .checkout-page .online-pill {
   background: var(--success-soft);
   color: var(--success);
 }
+
+@media (max-width: 380px) {
+  .checkout-main .catalog-grid { grid-template-columns: minmax(0, 1fr); }
+  .checkout-panel :is(.checkout-head, .promo-row, .pay-secondary) { flex-wrap: wrap; }
+  .checkout-panel .promo-row input { flex: 1 1 8rem; min-width: 0; }
+  .checkout-main-area .topbar { gap: .375rem; }
+  .checkout-page .topbar-right { min-width: 0; gap: .375rem; }
+}
+
+.checkout-section-jump { display: none; }
+@media (max-width: 860px) {
+  .checkout-app-shell:not(.inventory-mode) .checkout-section-jump {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-height: 44px;
+    padding-inline: .5rem;
+    color: var(--brand-hover);
+    font-weight: 700;
+    font-size: .8rem;
+  }
+  #order-summary, #studio-menu { scroll-margin-block-start: 5rem; }
+  .checkout-sidebar .side-nav { justify-content: flex-start; }
+}
