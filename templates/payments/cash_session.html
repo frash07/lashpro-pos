@@ -1,22 +1,10 @@
+{% extends "base_pos.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#F5F7FB">
-  <title>Cash session · LashPro KE</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components.css' %}">
-  <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
-  <link rel="stylesheet" href="{% static 'sales/cash-session.css' %}">
-</head>
-<body>
-  <header class="topbar">
+{% block title %}Cash session · LashPro KE{% endblock %}
+{% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'sales/cash-session.css' %}">{% endblock %}
+{% block pos_page_title %}Cash session{% endblock %}
+{% block pos_main %}
+<header class="topbar">
     <a class="brand cash-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
       <span class="brand-mark"><i data-lucide="sparkles"></i></span>
       <span>
@@ -337,5 +325,4 @@
       if (window.lucide && typeof window.lucide.createIcons === "function") window.lucide.createIcons();
     });
   </script>
-</body>
-</html>
+{% endblock %}

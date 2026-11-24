@@ -3,5 +3,146 @@
 
 {% block head_extra %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'css/pos.css' %}">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <link rel="stylesheet" href="{% static 'css/pos-unified.css' %}">
+{% endblock %}
+
+{% block body_class %}pos-workspace-body{% endblock %}
+
+{% block content %}
+<div class="pos-shell">
+  <aside class="pos-sidebar" aria-label="Main navigation">
+    <a class="pos-brand" href="{% if request.user.role == "TRAINER" %}{% url 'training:dashboard' %}{% else %}{% url 'sales:checkout' %}{% endif %}" aria-label="LashPro POS home">
+      <span class="pos-brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
+      <span class="pos-brand-copy">
+        <strong>LASHPRO <small>KE</small></strong>
+        <span>Premier lash &amp; academy</span>
+      </span>
+    </a>
+
+    <div class="pos-nav-label">Workspace</div>
+    <nav class="pos-nav" aria-label="Workspace navigation">
+      {% if request.user.role != "TRAINER" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'checkout' %} is-active{% endif %}" href="{% url 'sales:checkout' %}"{% if request.resolver_match.url_name == 'checkout' %} aria-current="page"{% endif %}>
+        <i data-lucide="shopping-bag" aria-hidden="true"></i><span>Checkout</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'staff-day' or request.resolver_match.url_name == 'update-status' %} is-active{% endif %}" href="{% url 'appointments:staff-day' %}"{% if request.resolver_match.url_name == 'staff-day' or request.resolver_match.url_name == 'update-status' %} aria-current="page"{% endif %}>
+        <i data-lucide="calendar-days" aria-hidden="true"></i><span>Appointments</span>
+      </a>
+      <a class="pos-nav-link{% if '/admin/customers/' in request.path %} is-active{% endif %}" href="/admin/customers/"{% if '/admin/customers/' in request.path %} aria-current="page"{% endif %}>
+        <i data-lucide="users" aria-hidden="true"></i><span>Clients</span>
+      </a>
+      <a class="pos-nav-link{% if 'inventory' in request.path %} is-active{% endif %}" href="{% url 'inventory:receive' %}"{% if 'inventory' in request.path %} aria-current="page"{% endif %}>
+        <i data-lucide="package" aria-hidden="true"></i><span>Inventory</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.namespace == 'reporting' %} is-active{% endif %}" href="{% url 'reporting:dashboard' %}"{% if request.resolver_match.namespace == 'reporting' %} aria-current="page"{% endif %}>
+        <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span>Reports</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'admin_suite' %} is-active{% endif %}" href="{% url 'admin_suite' %}"{% if request.resolver_match.url_name == 'admin_suite' %} aria-current="page"{% endif %}>
+        <i data-lucide="settings-2" aria-hidden="true"></i><span>Admin Suite</span>
+      </a>
+      {% endif %}
+      {% if request.user.role != "CUSTOMER" %}
+      <a class="pos-nav-link{% if request.resolver_match.namespace == 'training' and request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'training:dashboard' %}"{% if request.resolver_match.namespace == 'training' and request.resolver_match.url_name == 'dashboard' %} aria-current="page"{% endif %}>
+        <i data-lucide="graduation-cap" aria-hidden="true"></i><span>Academy</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'manage' or request.resolver_match.url_name == 'edit_course' or request.resolver_match.url_name == 'edit_cohort' %} is-active{% endif %}" href="{% url 'training:manage' %}">
+        <i data-lucide="book-open-check" aria-hidden="true"></i><span>Academy management</span>
+      </a>
+      {% endif %}
+      {% if can_enroll %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'enroll' %} is-active{% endif %}" href="{% url 'training:enroll' %}">
+        <i data-lucide="user-plus" aria-hidden="true"></i><span>Enroll student</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" or request.user.role == "TECHNICIAN" %}
+    <div class="pos-nav-label pos-nav-label-secondary">More operations</div>
+    <nav class="pos-nav" aria-label="More operations">
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'payments' %} is-active{% endif %}" href="{% url 'sales:payments' %}">
+        <i data-lucide="wallet-cards" aria-hidden="true"></i><span>Payments</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'refunds' %} is-active{% endif %}" href="{% url 'sales:refunds' %}">
+        <i data-lucide="undo-2" aria-hidden="true"></i><span>Refunds</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "TECHNICIAN" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'services' %} is-active{% endif %}" href="{% url 'sales:services' %}">
+        <i data-lucide="list-checks" aria-hidden="true"></i><span>Service queue</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'cash-session' %} is-active{% endif %}" href="{% url 'payments:cash-session' %}">
+        <i data-lucide="banknote" aria-hidden="true"></i><span>Cash session</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "TECHNICIAN" %}
+      <a class="pos-nav-link{% if request.resolver_match.namespace == 'commissions' %} is-active{% endif %}" href="{% url 'commissions:dashboard' %}">
+        <i data-lucide="hand-coins" aria-hidden="true"></i><span>Commissions</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+      <a class="pos-nav-link{% if request.resolver_match.namespace == 'expenses' %} is-active{% endif %}" href="{% url 'expenses:dashboard' %}">
+        <i data-lucide="receipt-text" aria-hidden="true"></i><span>Expenses</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'reconciliation' %} is-active{% endif %}" href="{% url 'payments:reconciliation' %}">
+        <i data-lucide="file-check-2" aria-hidden="true"></i><span>M-Pesa review</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'receipts' or request.resolver_match.url_name == 'receipt_detail' %} is-active{% endif %}" href="{% url 'inventory:receipts' %}">
+        <i data-lucide="clipboard-list" aria-hidden="true"></i><span>Supplier receipts</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'product_import' %} is-active{% endif %}" href="{% url 'inventory:product_import' %}">
+        <i data-lucide="file-up" aria-hidden="true"></i><span>Import products</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'integrations-settings' %} is-active{% endif %}" href="{% url 'integrations-settings' %}">
+        <i data-lucide="plug-zap" aria-hidden="true"></i><span>API integrations</span>
+      </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    <div class="pos-sidebar-spacer"></div>
+    <section class="pos-studio-card" aria-label="Active studio">
+      <div class="pos-studio-heading"><strong>Nairobi Studio</strong><span><i></i> Active</span></div>
+      <p>Salon workspace<br>Kenyan Shilling · KES</p>
+    </section>
+    <div class="pos-sidebar-user">
+      <span class="pos-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|first|upper }}</span>
+      <span class="pos-user-copy"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|default:"STUDIO TEAM"|upper }}</small></span>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i></button></form>
+    </div>
+  </aside>
+
+  <section class="pos-workspace">
+    <header class="pos-topbar">
+      <div class="pos-topbar-heading">
+        <span>Studio <i data-lucide="chevron-right" aria-hidden="true"></i> Workspace</span>
+        <strong>{% block pos_page_title %}Studio workspace{% endblock %}</strong>
+      </div>
+      <div class="pos-topbar-actions">
+        <span class="pos-online-pill"><i></i> POS workspace</span>
+        <button class="pos-icon-action pos-theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme" aria-pressed="false">
+          <i data-lucide="moon" aria-hidden="true"></i>
+        </button>
+        <span class="pos-topbar-profile"><span class="pos-avatar">{{ request.user.get_full_name|default:request.user.username|first|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|default:"STUDIO TEAM" }}</small></span></span>
+      </div>
+    </header>
+    <div class="pos-page-frame">
+      <div class="pos-page-content">
+        {% block pos_main %}{% endblock %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/pos-unified.js' %}" defer></script>
 {% endblock %}

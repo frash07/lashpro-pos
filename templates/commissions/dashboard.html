@@ -1,8 +1,10 @@
-{% extends "base.html" %}
+{% extends "base_pos.html" %}
 
 {% block title %}Commissions · LashPro{% endblock %}
 
-{% block content %}
+{% block pos_page_title %}Commissions{% endblock %}
+
+{% block pos_main %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">Checkout</a><a href="{% url 'sales:services' %}">Service queue</a><a href="{% url 'payments:cash-session' %}">Cash session</a>{% if is_manager %}<a href="{% url 'payments:reconciliation' %}">M-Pesa review</a>{% endif %}</header><main class="page"><h1>Commissions</h1>{% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
 {% if not is_manager %}<section class="card"><h2>Available balance</h2><p>KSh {{ available_balance|floatformat:2 }}</p></section>{% endif %}
 {% if is_manager %}<section class="card"><h2>Commission balances by lash technician</h2><p>Amounts are from the commission ledger. Pending requests are reserved; an M-Pesa payout remains unverified until reconciled.</p><table><thead><tr><th>Technician</th><th>Earned</th><th>Reversed</th><th>Paid</th><th>Pending</th><th>Available</th></tr></thead><tbody>{% for row in technician_balances %}<tr><td>{{ row.technician.get_full_name|default:row.technician.username }}</td><td>KSh {{ row.earned|floatformat:2 }}</td><td>KSh {{ row.reversed|floatformat:2 }}</td><td>KSh {{ row.paid|floatformat:2 }}</td><td>KSh {{ row.pending|floatformat:2 }}</td><td><strong>KSh {{ row.available|floatformat:2 }}</strong></td></tr>{% empty %}<tr><td colspan="6">No technician accounts found.</td></tr>{% endfor %}</tbody></table></section>{% endif %}

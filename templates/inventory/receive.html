@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_pos.html" %}
 {% load static %}
 
 {% block title %}Receive supplier stock · LashPro{% endblock %}
-{% block body_class %}receive-stock-body{% endblock %}
+{% block body_class %}pos-workspace-body receive-stock-body{% endblock %}
 
 {% block head_extra %}
   {{ block.super }}
@@ -14,7 +14,9 @@
   <link rel="stylesheet" href="{% static 'inventory/receive.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block pos_page_title %}Receive stock{% endblock %}
+
+{% block pos_main %}
 <header class="topbar">
   <a class="brand brand-link" href="{% url 'sales:checkout' %}">
     <div class="brand-mark"><i data-lucide="sparkles"></i></div>

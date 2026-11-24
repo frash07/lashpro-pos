@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_pos.html" %}
 {% load static %}
 
 {% block title %}Import products · LashPro{% endblock %}
@@ -8,7 +8,9 @@
   <link rel="stylesheet" href="{% static 'inventory/product-import.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block pos_page_title %}Import products{% endblock %}
+
+{% block pos_main %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Back to inventory</a></header>
 <main class="page product-import-page">
   <h1>Import products</h1>

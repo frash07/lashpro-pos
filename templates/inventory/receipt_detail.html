@@ -1,10 +1,12 @@
-{% extends "base.html" %}
+{% extends "base_pos.html" %}
 {% load static %}
 {% block title %}Supplier receipt #{{ receipt.pk }} · LashPro{% endblock %}
 {% block head_extra %}{{ block.super }}
 <link rel="stylesheet" href="{% static 'inventory/receipts.css' %}">
 {% endblock %}
-{% block content %}
+{% block pos_page_title %}Supplier receipt{% endblock %}
+
+{% block pos_main %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receipts' %}">Receipt history</a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
 <main class="page inventory-receipts-page">
   <h1>Supplier receipt #{{ receipt.pk }}</h1>
