@@ -1,4 +1,5 @@
 import json
+import logging
 import secrets
 
 from django.conf import settings
@@ -16,12 +17,18 @@ from accounts.models import User
 from commissions.models import CommissionPayoutRecord
 from .forms import CashSessionApprovalForm, CashSessionMovementForm, CloseCashSessionForm, OpenCashSessionForm
 from sales.models import Sale
-from .models import CashSession, CashSessionMovement, MpesaStkPush, PaymentTransaction, RefundPayout
-from .mpesa import initiate_stk_push, process_stk_callback
+from .models import CashSession, CashSessionMovement, MpesaC2BPayment, MpesaStkPush, PaymentTransaction, RefundPayout
+from .mpesa import (
+    DarajaError, configured_c2b_shortcodes, initiate_stk_push,
+    process_c2b_callback, process_stk_callback, register_c2b_urls,
+)
 from .services import (
-    add_cash_session_movement, approve_cash_session_close, calculate_expected_cash,
+    add_cash_session_movement, allocate_c2b_mpesa_payment, approve_cash_session_close, calculate_expected_cash,
     close_cash_session, open_cash_session, reconcile_manual_mpesa,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def _manager(user):
@@ -182,4 +189,125 @@ def mpesa_stk_callback(request, token):
         "ResultCode": 0,
         "ResultDesc": "Accepted",
         "payment_status": push.status,
+    })
+
+
+
+@login_required(login_url="login")
+@require_POST
+def register_c2b_callbacks(request):
+    """Register Daraja C2B v2 confirmation and validation URLs for configured codes."""
+    if not _manager(request.user):
+        raise PermissionDenied
+    from core.models import IntegrationSettings
+
+    record = IntegrationSettings.get_solo()
+    try:
+        config = record.get_config()
+        shortcodes = configured_c2b_shortcodes(config)
+        if not shortcodes:
+            raise ValidationError({"mpesa_c2b_shortcodes": "Save at least one Paybill or Till callback shortcode in API Integrations first."})
+        base_url = str(settings.POS_BASE_URL or "").rstrip("/")
+        if not base_url.startswith("https://"):
+            raise ValidationError({"POS_BASE_URL": "Set POS_BASE_URL to the public HTTPS address of this POS before registering C2B callbacks."})
+        token = str(config.get("mpesa_c2b_callback_token") or "")
+        if not token:
+            token = secrets.token_urlsafe(48)
+            config["mpesa_c2b_callback_token"] = token
+            record.set_config(config)
+            record.updated_by = request.user
+            record.save(update_fields=("encrypted_config", "updated_by", "updated_at"))
+        confirmation_url = base_url + reverse("payments:c2b-confirmation", kwargs={"token": token})
+        validation_url = base_url + reverse("payments:c2b-validation", kwargs={"token": token})
+        registered = register_c2b_urls(
+            config=config,
+            shortcodes=shortcodes,
+            confirmation_url=confirmation_url,
+            validation_url=validation_url,
+        )
+    except (ValidationError, DarajaError, RuntimeError) as exc:
+        errors = exc.messages if isinstance(exc, ValidationError) else [str(exc)]
+        for error in errors:
+            messages.error(request, error)
+    else:
+        messages.success(request, "C2B callback URLs registered for shortcodes: " + ", ".join(registered) + ".")
+    return redirect("integrations-settings")
+
+
+@csrf_exempt
+@require_POST
+def c2b_validation(request, token):
+    """C2B is registered with ResponseType=Completed, so accept validation if called."""
+    from core.models import IntegrationSettings
+
+    try:
+        config = IntegrationSettings.get_solo().get_config()
+        expected = str(config.get("mpesa_c2b_callback_token") or "")
+        if not expected or not secrets.compare_digest(str(token or ""), expected):
+            return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid callback"}, status=403)
+    except RuntimeError:
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "Callback configuration unavailable"}, status=503)
+    return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
+
+
+@csrf_exempt
+@require_POST
+def c2b_confirmation(request, token):
+    try:
+        if len(request.body) > 65536:
+            return JsonResponse({"ResultCode": 1, "ResultDesc": "Payload too large"}, status=413)
+        payload = json.loads(request.body.decode("utf-8"))
+        record = process_c2b_callback(callback_token=token, payload=payload)
+    except (ValueError, UnicodeDecodeError, ValidationError) as exc:
+        reason = exc.messages[0] if isinstance(exc, ValidationError) and exc.messages else "invalid payload"
+        logger.warning("Rejected C2B confirmation callback: %s", reason[:160])
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid callback"}, status=400)
+    return JsonResponse({
+        "ResultCode": 0,
+        "ResultDesc": "Accepted",
+        "payment_status": record.payment_transaction.status,
+    })
+
+
+@login_required(login_url="login")
+def c2b_inbox(request):
+    if not _can_use_cash_tools(request.user):
+        raise PermissionDenied
+    is_manager = _manager(request.user)
+    if request.method == "POST":
+        sale_queryset = Sale.objects.filter(status=Sale.Status.COMPLETED)
+        if not is_manager:
+            sale_queryset = sale_queryset.filter(cashier=request.user)
+        sale = get_object_or_404(sale_queryset, pk=request.POST.get("sale_id"))
+        try:
+            allocate_c2b_mpesa_payment(
+                c2b_payment=request.POST.get("payment_id"),
+                sale=sale,
+                actor=request.user,
+                customer_confirmed=request.POST.get("customer_confirmed") == "on",
+            )
+        except ValidationError as exc:
+            for error in exc.messages:
+                messages.error(request, error)
+        else:
+            messages.success(request, f"M-Pesa payment allocated to {sale.receipt_number}.")
+        return redirect("payments:c2b-inbox")
+
+    incoming = MpesaC2BPayment.objects.filter(
+        payment_transaction__sale_allocation__isnull=True,
+        payment_transaction__status=PaymentTransaction.Status.SUCCEEDED,
+    ).select_related("payment_transaction").order_by("-transacted_at")[:100]
+    sale_queryset = Sale.objects.filter(status=Sale.Status.COMPLETED)
+    if not is_manager:
+        sale_queryset = sale_queryset.filter(cashier=request.user)
+    sale_candidates = list(
+        sale_queryset.select_related("customer", "cashier")
+        .prefetch_related("payment_allocations__payment_transaction")
+        .order_by("-created_at")[:300]
+    )
+    sale_candidates = [sale for sale in sale_candidates if sale.available_to_collect > 0]
+    return render(request, "payments/c2b_inbox.html", {
+        "incoming_payments": incoming,
+        "sale_candidates": sale_candidates,
+        "is_manager": is_manager,
     })

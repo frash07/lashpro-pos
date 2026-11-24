@@ -5,7 +5,7 @@
 {% block pos_page_title %}Payments{% endblock %}
 
 {% block pos_main %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">New checkout</a><a href="{% url 'payments:cash-session' %}">Cash session</a></header>
+<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'sales:checkout' %}">New checkout</a><a href="{% url 'payments:c2b-inbox' %}">Incoming M-Pesa</a><a href="{% url 'payments:cash-session' %}">Cash session</a></header>
 <main class="page"><h1>Collect a sale balance</h1><p>Collect cash or send an M-Pesa STK Push to the customer's phone. M-Pesa payments are recorded only after Safaricom confirms the callback; manual transaction references are not accepted.</p>
 {% if not mpesa_stk_configured %}<p class="message warning">M-Pesa STK Push is not configured. An owner can add Daraja credentials in Admin Suite → API Integrations.</p>{% endif %}
 {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}

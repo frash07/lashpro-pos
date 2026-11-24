@@ -68,6 +68,11 @@ class IntegrationSettingsForm(forms.Form):
         required=False, widget=forms.PasswordInput(render_value=False), label="Lipa Na M-Pesa passkey",
     )
     mpesa_shortcode = forms.CharField(max_length=20, required=False, label="Business short code")
+    mpesa_c2b_shortcodes = forms.CharField(
+        required=False, widget=forms.Textarea(attrs={"rows": 3}),
+        label="C2B callback shortcodes",
+        help_text="Enter each Paybill or Till callback shortcode on a separate line. For a Till, use the shortcode Safaricom says should receive the C2B callback.",
+    )
     mpesa_party_b = forms.CharField(max_length=20, required=False, label="Party B (optional)")
     mpesa_transaction_type = forms.ChoiceField(
         choices=(
@@ -99,7 +104,7 @@ class IntegrationSettingsForm(forms.Form):
     SECRET_FIELDS = {
         "email_password", "sms_api_key", "whatsapp_access_token", "whatsapp_app_secret",
         "whatsapp_webhook_verify_token",
-        "mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey",
+        "mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_passkey", "mpesa_c2b_callback_token",
         "etims_taxpayer_pin", "etims_communication_key",
     }
     CLEAR_GROUPS = {

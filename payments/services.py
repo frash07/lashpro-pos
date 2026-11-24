@@ -295,3 +295,76 @@ def cancel_abandoned_pending_payment(*, payment, actor, reason):
     locked.status = PaymentTransaction.Status.CANCELLED
     locked.save(update_fields=("status",))
     return locked
+
+
+
+@transaction.atomic
+def allocate_c2b_mpesa_payment(*, c2b_payment, sale, actor, customer_confirmed):
+    """Allocate a Safaricom-confirmed C2B receipt to one completed sale."""
+    from sales.models import Sale
+    from .models import MpesaC2BPayment
+
+    payment_id = (
+        c2b_payment.payment_transaction_id
+        if isinstance(c2b_payment, MpesaC2BPayment)
+        else c2b_payment
+    )
+    sale_id = sale.pk if isinstance(sale, Sale) else sale
+    if not getattr(actor, "is_active", False) or (
+        getattr(actor, "role", None) not in {
+            User.Role.OWNER, User.Role.MANAGER, User.Role.CASHIER
+        } and not getattr(actor, "is_superuser", False)
+    ):
+        raise ValidationError({"actor": "Only an active cashier, manager or owner may allocate an incoming C2B payment."})
+    if not customer_confirmed:
+        raise ValidationError({"customer_confirmed": "Confirm the payer's name with the customer before allocating this Till payment."})
+
+    try:
+        locked_sale = Sale.objects.select_for_update().get(pk=sale_id)
+    except (Sale.DoesNotExist, TypeError, ValueError):
+        raise ValidationError({"sale": "Choose a valid sale."}) from None
+    if locked_sale.status != Sale.Status.COMPLETED:
+        raise ValidationError({"sale": "Incoming C2B payments can only be allocated to completed sales."})
+    if not _manager(actor) and locked_sale.cashier_id != actor.pk:
+        raise ValidationError({"sale": "You may allocate payments only to your own sales."})
+
+    try:
+        payment = PaymentTransaction.objects.select_for_update().get(pk=payment_id)
+    except (PaymentTransaction.DoesNotExist, TypeError, ValueError):
+        raise ValidationError({"payment": "Incoming C2B payment not found."}) from None
+    if payment.method != PaymentTransaction.Method.MPESA or payment.status != PaymentTransaction.Status.SUCCEEDED:
+        raise ValidationError({"payment": "Only Safaricom-confirmed M-Pesa payments can be allocated."})
+    try:
+        c2b_record = payment.c2b_payment
+    except MpesaC2BPayment.DoesNotExist:
+        raise ValidationError({"payment": "This payment did not arrive through the C2B confirmation callback."}) from None
+    if SalePayment.objects.filter(payment_transaction=payment).exists():
+        raise ValidationError({"payment": "This incoming M-Pesa payment has already been allocated."})
+    if payment.amount > locked_sale.available_to_collect:
+        raise ValidationError({"amount": "The receipt exceeds this sale's remaining balance. Select a sale with a sufficient balance or leave it unallocated for review."})
+
+    allocation = SalePayment.objects.create(
+        sale=locked_sale,
+        payment_transaction=payment,
+        amount=payment.amount,
+    )
+    record_audit_event(
+        event_type=AuditEvent.EventType.PAYMENT_RECONCILIATION,
+        object_type="c2b_payment_allocation",
+        object_id=payment.pk,
+        actor=actor,
+        reason="Incoming C2B payment allocated after the customer confirmed the payer name.",
+        before_state={"allocation": "UNALLOCATED"},
+        after_state={"allocation": "ALLOCATED", "sale_id": locked_sale.pk},
+        metadata={
+            "receipt": payment.reference,
+            "business_shortcode": c2b_record.business_shortcode,
+            "sale_receipt": locked_sale.receipt_number,
+            "amount": str(payment.amount),
+        },
+    )
+    enrollment = getattr(locked_sale, "training_enrollment", None)
+    if enrollment:
+        from training.services import sync_enrollment_payment_status
+        sync_enrollment_payment_status(enrollment)
+    return allocation

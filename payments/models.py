@@ -295,3 +295,47 @@ class MpesaStkPush(models.Model):
 
     def __str__(self):
         return f"STK Push · payment #{self.payment_transaction_id} · {self.get_status_display()}"
+
+
+class MpesaC2BPayment(models.Model):
+    """Safaricom-confirmed inbound C2B payment, awaiting allocation to a sale."""
+
+    payment_transaction = models.OneToOneField(
+        PaymentTransaction,
+        on_delete=models.PROTECT,
+        related_name="c2b_payment",
+    )
+    business_shortcode = models.CharField(max_length=20)
+    transaction_type = models.CharField(max_length=60, blank=True)
+    bill_ref_number = models.CharField(max_length=100, blank=True)
+    invoice_number = models.CharField(max_length=100, blank=True)
+    payer_first_name = models.CharField(max_length=100, blank=True)
+    payer_middle_name = models.CharField(max_length=100, blank=True)
+    payer_last_name = models.CharField(max_length=100, blank=True)
+    masked_msisdn = models.CharField(max_length=32, blank=True)
+    transacted_at = models.DateTimeField()
+    received_at = models.DateTimeField(auto_now_add=True)
+    objects = ImmutableManager()
+
+    class Meta:
+        ordering = ("-received_at", "-pk")
+
+    @property
+    def payer_display_name(self):
+        name = " ".join(
+            part for part in (
+                self.payer_first_name, self.payer_middle_name, self.payer_last_name
+            ) if part
+        ).strip()
+        return name or "Name not provided by Safaricom"
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise TypeError("C2B callback records are immutable.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("C2B callback records cannot be deleted.")
+
+    def __str__(self):
+        return f"C2B {self.payment_transaction.reference} · {self.payment_transaction.amount}"
