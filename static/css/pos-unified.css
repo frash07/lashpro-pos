@@ -384,3 +384,40 @@
 @media (prefers-reduced-motion: reduce) {
   .pos-nav-link { transition: none; }
 }
+
+/* Nested admin pages use the same page frame without re-introducing a second shell. */
+.pos-admin-content > main,
+.pos-admin-content > .page {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-top: 27px;
+  padding-bottom: 34px;
+}
+.pos-admin-content > main h1,
+.pos-admin-content > .page h1 {
+  color: var(--ui-text);
+  font-family: var(--lp-font-display);
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+.pos-admin-content .card,
+.pos-admin-content .integration-card,
+.pos-admin-content .expense-panel {
+  border-color: var(--ui-border);
+  border-radius: var(--lp-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-card);
+}
+.pos-admin-content input:not([type="checkbox"]):not([type="radio"]),
+.pos-admin-content select,
+.pos-admin-content textarea {
+  border-color: var(--ui-border);
+  border-radius: var(--lp-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+}
+@media (max-width: 700px) {
+  .pos-admin-content > main,
+  .pos-admin-content > .page { padding-top: 18px; }
+}
