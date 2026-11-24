@@ -1,13 +1,16 @@
-{% extends "base.html" %}
+{% extends "base_pos.html" %}
 {% load static %}
 
 {% block title %}Executive dashboard · LashPro KE{% endblock %}
 
 {% block head_extra %}
+  {{ block.super }}
   <link rel="stylesheet" href="{% static 'reporting/dashboard.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block pos_page_title %}Executive reports{% endblock %}
+
+{% block pos_main %}
 <header class="app-header executive-header">
   <a class="brand-lockup" href="{% url 'reporting:dashboard' %}">
     <span class="brand-mark" aria-hidden="true">✦</span>
