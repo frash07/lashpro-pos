@@ -200,13 +200,16 @@ class CashierViewTests(TestCase):
         self.product.refresh_from_db()
         self.assertEqual(self.product.on_hand, Decimal("9.000"))
 
-    def test_mpesa_reference_is_saved_unverified(self):
+    def test_checkout_rejects_manual_mpesa_transaction_reference(self):
         self.client.force_login(self.cashier)
-        self.client.post(reverse("sales:checkout"), self.data("MPESA", reference="QAB123XYZ"))
-        sale = Sale.objects.get()
-        payment = PaymentTransaction.objects.get(sale_allocation__sale=sale)
-        self.assertEqual(payment.status, PaymentTransaction.Status.UNVERIFIED)
-        self.assertEqual(payment.reference, "QAB123XYZ")
+        response = self.client.post(
+            reverse("sales:checkout"),
+            self.data("MPESA", reference="QAB123XYZ"),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Sale.objects.exists())
+        self.assertFalse(PaymentTransaction.objects.filter(method="MPESA").exists())
+        self.assertContains(response, "Manual transaction references are not accepted.")
 
     def test_empty_cart_does_not_create_sale(self):
         self.client.force_login(self.cashier)
@@ -275,6 +278,20 @@ class CashierViewTests(TestCase):
         payment = PaymentTransaction.objects.get(sale_allocation__sale=sale)
         self.assertEqual(payment.recorded_by, self.cashier)
         self.assertEqual(payment.cash_session.cashier, self.cashier)
+
+    def test_balance_payment_screen_rejects_manual_mpesa_reference(self):
+        sale = checkout_sale(cashier=self.cashier, items=[{"service_id": self.service.pk}])
+        self.client.force_login(self.cashier)
+        response = self.client.post(reverse("sales:payments"), {
+            "sale": str(sale.pk),
+            "idempotency_key": "44444444-4444-4444-8444-444444444444",
+            "method": "MPESA",
+            "amount": "1000.00",
+            "reference": "QAB123XYZ",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(PaymentTransaction.objects.filter(sale_allocation__sale=sale).exists())
+        self.assertContains(response, "must be collected through an STK Push")
 
     def test_cashier_cannot_collect_payment_for_another_cashiers_sale(self):
         other = User.objects.create_user(username="other-cashier", password="pass", role=User.Role.CASHIER)
