@@ -57,6 +57,12 @@ def service_worker(request):
         static("css/tokens.css"),
         static("css/components.css"),
         static("css/pos.css"),
+        static("css/legal.css"),
+        static("sales/checkout.css"),
+        static("sales/admin-suite.css"),
+        static("sales/checkout-workspace.css"),
+        static("js/cash-sync.js"),
+        static("pwa/manifest.webmanifest"),
         static("css/auth.css"),
         static("css/admin-shell.css"),
         static("css/receipt.css"),
@@ -74,6 +80,7 @@ def service_worker(request):
     cache_name = "lashpro-static-" + hashlib.sha256(json.dumps(precache_urls).encode("utf-8")).hexdigest()[:12]
     logout_paths = [reverse("logout"), reverse("admin:logout")]
     checkout_path = reverse("sales:checkout")
+    login_path = reverse("login")
     script = '''
 const CACHE_NAME = __CACHE_NAME__;
 const CACHE_PREFIX = "lashpro-static-";
@@ -81,12 +88,47 @@ const PRECACHE_URLS = __PRECACHE_URLS__;
 const OFFLINE_URL = __OFFLINE_URL__;
 const LOGOUT_PATHS = __LOGOUT_PATHS__;
 const CHECKOUT_PATH = __CHECKOUT_PATH__;
-const PRECACHE_PATHS = new Set(PRECACHE_URLS.map((path) => new URL(path, self.location.origin).pathname));
+const LOGIN_PATH = __LOGIN_PATH__;
+const HOME_PATH = __HOME_PATH__;
+const SHELL_URL = CHECKOUT_PATH + "?offline-shell=1";
+const MAX_SHELL_AGE = 12 * 60 * 60 * 1000;
+let authGeneration = 0;
 
-async function clearLashProCaches() {
-  const keys = await caches.keys();
-  await Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX)).map((key) => caches.delete(key)));
+async function checkoutNavigation(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request, {signal: AbortSignal.timeout(6000)});
+    if (response.status >= 500) throw new Error("Checkout unavailable");
+    if (!response.ok || new URL(response.url).pathname !== CHECKOUT_PATH) await cache.delete(SHELL_URL);
+    return response;
+  } catch {
+    const shell = await cache.match(SHELL_URL);
+    const savedAt = Number(shell?.headers.get("X-LashPro-Cached-At"));
+    if (shell && Date.now() - savedAt < MAX_SHELL_AGE) return shell;
+    await cache.delete(SHELL_URL);
+    return (await cache.match(OFFLINE_URL)) || new Response("Reconnect to open checkout.", {status: 503});
+  }
 }
+
+async function refreshOfflineShell(request) {
+  const generation = authGeneration;
+  const cache = await caches.open(CACHE_NAME);
+  const response = await fetch(request, {signal: AbortSignal.timeout(6000)});
+  if (response.status >= 500 || generation !== authGeneration) return response;
+  if (!response.ok || response.redirected || response.headers.get("X-LashPro-Offline-Shell") !== "1") {
+    await cache.delete(SHELL_URL);
+    return response;
+  }
+  const shell = response.clone();
+  const headers = new Headers(shell.headers);
+  headers.delete("Content-Encoding");
+  headers.delete("Content-Length");
+  headers.set("X-LashPro-Cached-At", String(Date.now()));
+  const html = await shell.text();
+  if (generation === authGeneration) await cache.put(SHELL_URL, new Response(html, {headers}));
+  return response;
+}
+const PRECACHE_PATHS = new Set(PRECACHE_URLS.map((path) => new URL(path, self.location.origin).pathname));
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -109,8 +151,19 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (LOGOUT_PATHS.includes(url.pathname)) event.waitUntil(clearLashProCaches());
-  if (request.method !== "GET") {
+  if ([...LOGOUT_PATHS, LOGIN_PATH].includes(url.pathname)) {
+    authGeneration += 1;
+    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.delete(SHELL_URL)));
+  }
+  if (request.method === "GET" && url.pathname + url.search === SHELL_URL) {
+    event.respondWith(refreshOfflineShell(request));
+    return;
+  }
+  if (request.mode === "navigate" && request.method === "GET" && [CHECKOUT_PATH, HOME_PATH].includes(url.pathname)) {
+    event.respondWith(checkoutNavigation(request));
+    return;
+  }
+  if (request.method !== "GET" && request.mode === "navigate") {
     event.respondWith(fetch(request).catch(() => {
       const checkoutFailed = request.method === "POST" && url.pathname === CHECKOUT_PATH;
       const heading = checkoutFailed ? "Checkout status unknown" : "Request status unknown";
@@ -158,6 +211,8 @@ self.addEventListener("fetch", (event) => {
     script = script.replace("__OFFLINE_URL__", json.dumps(static("pwa/offline.html")))
     script = script.replace("__LOGOUT_PATHS__", json.dumps(logout_paths))
     script = script.replace("__CHECKOUT_PATH__", json.dumps(checkout_path))
+    script = script.replace("__LOGIN_PATH__", json.dumps(login_path))
+    script = script.replace("__HOME_PATH__", json.dumps(reverse("home")))
     response = HttpResponse(script, content_type="application/javascript; charset=utf-8")
     response["Cache-Control"] = "no-cache"
     response["Service-Worker-Allowed"] = "/"

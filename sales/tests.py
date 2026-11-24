@@ -578,3 +578,61 @@ class SalesAdminIntegrationTests(TestCase):
             ).status_code,
             403,
         )
+
+
+class OfflineCashCheckoutTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.cashier = User.objects.create_user(username="offline-cashier", role=User.Role.CASHIER)
+        cls.other_cashier = User.objects.create_user(username="other-cashier", role=User.Role.CASHIER)
+        cls.session = CashSession.objects.create(cashier=cls.cashier, opened_by=cls.cashier)
+        cls.product = Product.objects.create(
+            sku="OFFLINE-001", name="Lash Brush", cost_price="50.00",
+            selling_price="200.00", on_hand="3.000",
+        )
+        Customer.objects.create(name="Private Customer", phone="0712345678")
+
+    def setUp(self):
+        self.url = reverse("sales:cash-sync")
+        self.client.force_login(self.cashier)
+        self.fields = {
+            "idempotency_key": str(uuid.uuid4()), "cashier_id": self.cashier.pk,
+            "cash_session_id": self.session.pk, "amount": "200.00",
+            "items-TOTAL_FORMS": "1", "items-INITIAL_FORMS": "0",
+            "items-0-product": self.product.pk, "items-0-quantity": "1",
+        }
+
+    def test_retry_after_catalogue_change_returns_same_receipt(self):
+        first = self.client.post(self.url, self.fields)
+        self.assertEqual(first.status_code, 200, first.content)
+        Product.objects.filter(pk=self.product.pk).update(active=False)
+        retry = self.client.post(self.url, self.fields)
+        self.assertEqual(retry.json(), first.json())
+        self.assertEqual(Sale.objects.count(), 1)
+        self.assertEqual(PaymentTransaction.objects.filter(cash_session=self.session).count(), 1)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.on_hand, Decimal("2"))
+
+    def test_changed_total_rolls_back_sale_and_stock(self):
+        self.fields["amount"] = "199.00"
+        self.assertEqual(self.client.post(self.url, self.fields).status_code, 409)
+        self.assertFalse(Sale.objects.exists())
+        self.assertFalse(PaymentTransaction.objects.exists())
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.on_hand, Decimal("3"))
+
+    def test_sale_cannot_sync_to_a_different_cashier_or_session(self):
+        self.client.force_login(self.other_cashier)
+        self.assertEqual(self.client.post(self.url, self.fields).status_code, 403)
+        self.client.force_login(self.cashier)
+        self.fields["cash_session_id"] += 1
+        self.assertEqual(self.client.post(self.url, self.fields).status_code, 409)
+        self.assertFalse(Sale.objects.exists())
+
+    def test_offline_shell_excludes_customer_data_and_csrf_token(self):
+        response = self.client.get(reverse("sales:checkout"), {"offline-shell": "1"})
+        self.assertEqual(response["X-LashPro-Offline-Shell"], "1")
+        self.assertContains(response, self.product.name)
+        self.assertNotContains(response, "Private Customer")
+        self.assertNotContains(response, "csrfmiddlewaretoken")
+        self.assertNotContains(response, self.cashier.username)

@@ -9,7 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="{% static 'js/cash-sync.js' %}" defer></script>
+  <link rel="manifest" href="{% static 'pwa/manifest.webmanifest' %}">
+  <link rel="apple-touch-icon" href="{% static 'pwa/icon-180.png' %}">
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
@@ -19,7 +22,7 @@
 </head>
 <body class="admin-suite-body checkout-page">
   <form id="pos-form" method="post" novalidate>
-    {% csrf_token %}
+    {% if not offline_shell %}{% csrf_token %}{% endif %}
     {{ details.idempotency_key }}
     <input type="hidden" name="checkout_payment_mode" id="checkout-payment-mode" value="">
     <input type="hidden" name="mpesa_stk_phone" id="mpesa-stk-phone" value="">
@@ -51,16 +54,23 @@
 <a class="checkout-section-jump" href="#order-summary">View order</a>
 <div class="sidebar-spacer"></div>
 <div class="studio-card"><div class="studio-top"><strong>Nairobi Studio</strong><span class="studio-status"><i class="dot"></i> Active</span></div><p>Salon register<br>Kenyan Shilling · KES</p></div>
-<div class="staff-mini"><div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div><div class="staff-copy"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display|upper }}</small></div></div>
+<div class="staff-mini"><div class="avatar">{% if not offline_shell %}{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}{% endif %}</div><div class="staff-copy"><strong>{% if offline_shell %}Cashier{% else %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}</strong><small>{{ request.user.get_role_display|upper }}</small></div></div>
 </aside>
 <main class="main-area checkout-main-area">
 <header class="topbar"><div class="breadcrumbs"><span>Studio</span><i data-lucide="chevron-right"></i><strong id="workspace-breadcrumb">Checkout</strong></div><div class="topbar-right">
 <span id="connection-status" class="online-pill"><i class="dot"></i><span>Online</span></span>
 <button class="icon-action" id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark theme" title="Switch to dark theme" aria-pressed="false"><i data-lucide="moon"></i><span class="sr-only">Switch theme</span></button>
 <button id="pwa-install-btn" class="icon-action hidden" type="button" onclick="installPWA()" aria-label="Install app" title="Install app"><i data-lucide="download"></i></button>
-<div class="profile"><div class="avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}</div><div class="profile-copy"><div class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</div><div class="profile-role">{{ request.user.get_role_display|upper }}</div></div></div>
+<div class="profile"><div class="avatar" aria-hidden="true">{% if not offline_shell %}{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|default:""|slice:":1"|upper }}{% endif %}</div><div class="profile-copy"><div class="profile-name">{% if offline_shell %}Cashier{% else %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}</div><div class="profile-role">{{ request.user.get_role_display|upper }}</div></div></div>
 </div></header>
-<div class="checkout-alert-stack">    <div id="checkout-status-unknown" class="checkout-status-unknown" role="alert" hidden>
+<div class="checkout-alert-stack">
+      <section id="cash-sync-panel" class="checkout-status-unknown" hidden aria-label="Saved cash sales">
+        <p id="cash-sync-status" aria-live="polite"></p>
+        <ul id="cash-sync-orders"></ul>
+        <button id="cash-sync-retry" type="button">Sync now</button>
+        {% if offline_shell %}<a href="{% url 'sales:checkout' %}">Reload live checkout</a>{% endif %}
+      </section>
+    <div id="checkout-status-unknown" class="checkout-status-unknown" role="alert" hidden>
       A previous checkout may have completed, but its response was not confirmed. Check Sales before retrying.
       This tab retains the original cart and checkout key. Only retry the original checkout if no sale is listed.
       <p><button id="retry-pending-checkout" type="button" hidden>Retry original checkout</button></p>
@@ -153,7 +163,7 @@
                 </select>
                 <span id="staff-select-help" class="field-hint">Default for services you add next</span>
               </div>
-              <div class="field"><label for="id_customer">CLIENT / STUDENT</label>{{ details.customer }}</div>
+              <div class="field"><label for="id_customer">CLIENT / STUDENT</label>{% if offline_shell %}<span>Walk-in customer</span>{% else %}{{ details.customer }}{% endif %}</div>
             </div>
             <p class="legal-staff-notice">Use customer details only to identify and serve the client. See the customer <a href="{% url 'storefront:privacy' %}">Privacy Policy</a>, <a href="{% url 'storefront:terms' %}">Terms</a> and <a href="{% url 'storefront:returns' %}">Returns Policy</a>.</p>
             <div id="cart-items-container" class="cart-items"></div>
@@ -168,6 +178,7 @@
               </div>
               <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>M-Pesa STK Push</span><i data-lucide="arrow-up-right" class="icon-subdued"></i></button>
               <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
+              <output id="cash-save-feedback" role="status"></output>
               <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
             </div>
           </aside>
@@ -188,11 +199,17 @@
 
   </form>
 
+  {{ catalog_items|json_script:"checkout-catalogue" }}
   <script>
+    const OFFLINE_SHELL = {{ offline_shell|yesno:"true,false" }};
+    const CASHIER_ID = {{ request.user.pk }};
+    const CASH_SESSION_ID = {{ cash_session.pk|default:"null" }};
+    const CASH_SYNC_URL = "{% url 'sales:cash-sync' %}";
+    const CHECKOUT_URL = "{% url 'sales:checkout' %}";
     const adminSuite = { is_manager: {{ admin_suite.is_manager|yesno:"true,false" }} };
     const canDiscount = {{ can_discount|yesno:"true,false" }};
     const CHECKOUT_STATUS_KNOWN_FAILURE = {{ checkout_status_known_failure|yesno:"true,false" }};
-    const catalogData = {{ catalog_data_json|safe }};
+    const catalogData = JSON.parse(document.getElementById("checkout-catalogue").textContent);
     const CATALOG_SNAPSHOT_URL = "{% url 'sales:catalog-snapshot' %}";
     // Technician choices come from the rendered #staff-select options, whose values are real user primary
     // keys. Each service line in the cart keeps its own technicianId; products never carry one.
@@ -206,6 +223,7 @@
 
     (function restorePendingCheckout() {
       try {
+        if (OFFLINE_SHELL) return;
         const raw = sessionStorage.getItem(PENDING_CHECKOUT_STORAGE_KEY);
         if (!raw) return;
         const saved = JSON.parse(raw);
@@ -269,6 +287,10 @@
       renderCatalog();
       renderCart();
       setupPWA();
+      window.cashSync = setupCashSync({
+        cashierId: CASHIER_ID, cashSessionId: CASH_SESSION_ID, offlineShell: OFFLINE_SHELL,
+        syncUrl: CASH_SYNC_URL, checkoutUrl: CHECKOUT_URL, workerUrl: "{% url 'service_worker' %}"
+      });
       updateOnlineStatus();
       refreshIcons();
       if (CHECKOUT_STATUS_KNOWN_FAILURE) {
@@ -651,6 +673,17 @@
       const phoneField=document.getElementById('mpesa-stk-phone');
       if(modeField)modeField.value=method==='STK_PUSH'?'STK_PUSH':'';
       if(phoneField)phoneField.value=method==='STK_PUSH'?String(mpesaPhone||'').trim():'';
+      const cash = String(method).toUpperCase() === 'CASH';
+      const offline = OFFLINE_SHELL || !navigator.onLine;
+      const walkIn = !form.querySelector('[name="customer"]')?.value;
+      if (cash && walkIn && !pendingCheckout) {
+        if (window.cashSync.save(form, centsToAmount(computeTotals().amountDue), validCartItems())) clearCart();
+        return;
+      }
+      if (offline) {
+        alert('Only new walk-in cash sales can be saved offline. Reconnect to continue with this checkout.');
+        return;
+      }
       if(!persistPendingCheckout(method,mpesaPhone))return;
       checkoutSubmitting=true;
       document.querySelectorAll('.pay-primary,.pay-secondary button').forEach(button=>{button.disabled=true;});
@@ -681,6 +714,7 @@
         return;
       }
       if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
+      if(method==='mpesa' && (OFFLINE_SHELL || !navigator.onLine)){alert('Reconnect and open live checkout to send an M-Pesa prompt.');return;}
       if(method==='mpesa'){openModal('mpesa-modal');document.getElementById('mpesa-phone').focus();return;}
       submitCheckout(method);
     }
