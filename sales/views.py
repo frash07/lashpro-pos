@@ -182,6 +182,11 @@ def checkout(request):
         valid_details = details.is_valid()
         valid_lines = lines.is_valid()
         valid_payments = payments_formset.is_valid()
+        if not valid_payments:
+            for payment_errors in payments_formset.errors:
+                for field_errors in payment_errors.values():
+                    for error in field_errors:
+                        messages.error(request, error)
         if valid_details and valid_lines and valid_payments:
             items, payments = [], []
             for form in lines:
@@ -495,6 +500,10 @@ def balance_payments(request):
             else:
                 messages.success(request, f"Payment recorded for {data['sale'].receipt_number}.")
                 return redirect("sales:payments")
+        else:
+            for field_errors in form.errors.values():
+                for error in field_errors:
+                    messages.error(request, error)
     return render(request, "sales/payments.html", {
         "sales": sales,
         "is_manager": is_manager,
