@@ -155,3 +155,46 @@
   .standalone-admin .operation-actions > .product-button { flex:1 1 100%; }
   .standalone-admin .operation-jumps > .product-button { flex:1 1 120px; }
 }
+
+/* Academy relational widgets use Select2's functional styles and shared design tokens. */
+.standalone-admin .register-field .select2-container { width:100% !important; min-width:0; max-width:100%; }
+.standalone-admin .related-widget-wrapper > .select2-container { flex:1 1 180px; width:auto !important; min-width:0; }
+.standalone-admin .select2-container--default .select2-selection--single,
+.standalone-admin .select2-container--default .select2-selection--multiple { min-height:44px; height:auto; display:flex; align-items:center; border:1px solid var(--ui-border-strong); border-radius:var(--lp-radius-sm); background:var(--ui-surface); }
+.standalone-admin .select2-container--default .select2-selection--single .select2-selection__rendered { color:var(--ui-text); padding:8px 30px 8px 12px; white-space:normal; line-height:1.5; overflow-wrap:anywhere; width:100%; }
+.standalone-admin .select2-container--default .select2-selection--single .select2-selection__arrow { height:100%; right:7px; }
+.standalone-admin .select2-container--default .select2-selection__placeholder { color:var(--ui-muted); }
+.standalone-admin .select2-dropdown { background:var(--ui-surface); color:var(--ui-text); border:1px solid var(--ui-border-strong); border-radius:var(--lp-radius-sm); max-width:calc(100vw - 20px); }
+.standalone-admin .select2-container--default .select2-search--dropdown .select2-search__field { color:var(--ui-text); background:var(--ui-surface); border:1px solid var(--ui-border-strong); font-size:16px; min-height:44px; }
+.standalone-admin .select2-container--default .select2-results__option { overflow-wrap:anywhere; min-height:40px; padding:9px; }
+.standalone-admin .select2-container--default .select2-results__option[aria-selected=true],
+.standalone-admin .select2-container--default .select2-results__option--selected { background:var(--ui-surface-muted); color:var(--ui-text); }
+.standalone-admin .select2-container--default .select2-results__option--highlighted[aria-selected],
+.standalone-admin .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background:var(--brand); color:var(--on-accent); }
+/* Executive reports share the same register panels and responsive record cards. */
+.standalone-admin .report-metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:12px; margin-bottom:16px; }
+.standalone-admin .report-metric { display:flex; gap:12px; margin:0; align-items:flex-start; }
+.standalone-admin .report-metric .register-record-icon { flex:0 0 40px; }
+.standalone-admin .report-metric > div { min-width:0; display:grid; gap:5px; }
+.standalone-admin .report-metric small { color:var(--ui-muted); font-size:12px; font-weight:600; line-height:1.4; overflow-wrap:anywhere; }
+.standalone-admin .report-metric strong { color:var(--ui-text); font-size:clamp(19px,2vw,25px); font-variant-numeric:tabular-nums; line-height:1.25; overflow-wrap:anywhere; }
+.standalone-admin .report-metric p { color:var(--ui-muted); font-size:12px; line-height:1.5; margin:0; overflow-wrap:anywhere; }
+.standalone-admin .report-period-panel .register-heading { margin:0 0 12px; }
+.standalone-admin .report-period-form { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; }
+.standalone-admin .report-period-form .register-field { flex:1 1 180px; }
+.standalone-admin .report-period-form > .errorlist { flex:1 0 100%; }
+.standalone-admin .report-period-form .product-button { min-height:44px; }
+.standalone-admin .register-record .operation-status { flex-shrink:1; min-width:0; }
+.standalone-admin .welcome .register-actions { justify-content:flex-end; min-width:0; }
+.standalone-admin .register-actions [hidden] { display:none !important; }
+@media (max-width:600px) {
+  .standalone-admin .report-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .standalone-admin .report-metric { display:grid; padding:12px; gap:8px; }
+  .standalone-admin .report-metric .register-record-icon { width:32px; height:32px; }
+  .standalone-admin .report-metric strong { font-size:18px; }
+  .standalone-admin .report-period-form > .product-button { flex:1 0 100%; }
+  .standalone-admin .welcome .register-actions { width:100%; }
+}
+@media (max-width:360px) {
+  .standalone-admin .report-metric-grid { grid-template-columns:minmax(0,1fr); }
+}
