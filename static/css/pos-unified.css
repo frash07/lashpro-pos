@@ -422,3 +422,9 @@
   .pos-admin-content > main,
   .pos-admin-content > .page { padding-top: 18px; }
 }
+
+/* The customer hub already owns its inner sections; avoid doubling the shell gutters. */
+.pos-page-content > main.customer-hub-main {
+  padding-right: 0;
+  padding-left: 0;
+}
