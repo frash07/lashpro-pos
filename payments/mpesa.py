@@ -99,6 +99,8 @@ def _access_token(config):
         # OAuth happens before the STK request, so it is safe to tell the user
         # that a prompt was not submitted when the token request itself failed.
         raise DarajaError("Could not authenticate with Daraja. Check the consumer key, secret and environment.") from None
+    if not isinstance(payload, dict):
+        raise DarajaError("Daraja authentication returned an invalid response.")
     token = payload.get("access_token")
     if status not in (200, 201) or not token:
         raise DarajaError("Daraja authentication failed. Check the consumer key, secret and environment.")
@@ -121,6 +123,8 @@ def _stk_request(config, amount, phone, callback_url):
     passkey = (config.get("mpesa_passkey") or "").strip()
     if not (shortcode and passkey):
         raise DarajaError("Enter the Daraja business short code and Lipa Na M-Pesa passkey.")
+    if not shortcode.isdigit():
+        raise DarajaError("The Daraja business short code must contain digits only.")
     access_token = _access_token(config)
     timestamp = timezone.localtime().strftime("%Y%m%d%H%M%S")
     password = base64.b64encode(
@@ -129,7 +133,11 @@ def _stk_request(config, amount, phone, callback_url):
     account_reference = (config.get("mpesa_account_reference") or "LashPro")[:12]
     description = (config.get("mpesa_transaction_description") or "POS Payment")[:13]
     transaction_type = config.get("mpesa_transaction_type") or "CustomerPayBillOnline"
+    if transaction_type not in {"CustomerPayBillOnline", "CustomerBuyGoodsOnline"}:
+        raise DarajaError("Choose a supported Daraja STK transaction type.")
     party_b = (config.get("mpesa_party_b") or shortcode).strip()
+    if not party_b.isdigit():
+        raise DarajaError("The Daraja Party B short code must contain digits only.")
     payload = {
         "BusinessShortCode": shortcode,
         "Password": password,
@@ -229,10 +237,14 @@ def _update_push_before_callback(push_id, updates, payment_status=None):
     # Never let that response overwrite a callback-confirmed result.
     if locked.callback_received_at:
         response_checkout_id = str(updates.get("checkout_request_id") or "")
-        if response_checkout_id and locked.checkout_request_id and response_checkout_id != locked.checkout_request_id:
-            # A callback arrived before the STK initiation response. If the two
-            # request IDs disagree, do not leave a callback-confirmed payment
-            # marked as settled.
+        response_merchant_id = str(updates.get("merchant_request_id") or "")
+        callback_ids_mismatch = (
+            (response_checkout_id and locked.checkout_request_id and response_checkout_id != locked.checkout_request_id)
+            or (response_merchant_id and locked.merchant_request_id and response_merchant_id != locked.merchant_request_id)
+        )
+        if callback_ids_mismatch:
+            # A callback arrived before the STK initiation response. If the
+            # request identifiers disagree, never leave it marked as settled.
             locked.status = MpesaStkPush.Status.UNKNOWN
             locked.result_description = "Daraja callback and initiation response IDs did not match; manual review is required."
             locked.save(update_fields=("status", "result_description", "updated_at"))
@@ -255,6 +267,17 @@ def initiate_stk_push(
     idempotency_key=None, actor,
 ):
     config = IntegrationSettings.get_solo().get_config()
+    environment = config.get("mpesa_environment") or "sandbox"
+    if environment not in {"sandbox", "production"}:
+        raise ValidationError({"mpesa": "Choose either the Daraja sandbox or production environment."})
+    callback_parts = urllib.parse.urlsplit(str(callback_url or ""))
+    if (
+        callback_parts.scheme != "https"
+        or not callback_parts.hostname
+        or callback_parts.username
+        or callback_parts.password
+    ):
+        raise ValidationError({"callback_url": "Daraja requires a public HTTPS callback URL."})
     required = ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_shortcode", "mpesa_passkey")
     if not all(config.get(key) for key in required):
         raise ValidationError({"mpesa": "Daraja is not configured. Add the consumer key, secret, short code and passkey in Admin Suite → API Integrations."})
@@ -368,12 +391,17 @@ def process_stk_callback(*, callback_token, payload):
         raise ValidationError("M-Pesa callback is missing its checkout request ID.")
     if push.checkout_request_id and checkout_id != push.checkout_request_id:
         raise ValidationError("M-Pesa callback does not match this checkout request.")
+    merchant_id = str(callback.get("MerchantRequestID") or "").strip()
+    if push.merchant_request_id and merchant_id and merchant_id != push.merchant_request_id:
+        raise ValidationError("M-Pesa callback does not match this merchant request.")
     if push.callback_received_at:
         return push
     # A fast callback can beat the initiation response. Record its ID now;
     # the later HTTP response is required to confirm the same ID.
     if not push.checkout_request_id:
         push.checkout_request_id = checkout_id
+    if not push.merchant_request_id and merchant_id:
+        push.merchant_request_id = merchant_id
 
     result_code = str(callback.get("ResultCode", ""))
     result_description = str(callback.get("ResultDesc") or "")[:500]
@@ -427,7 +455,7 @@ def process_stk_callback(*, callback_token, payload):
     }
     push.callback_received_at = timezone.now()
     push.save(update_fields=(
-        "checkout_request_id", "status", "mpesa_receipt_number", "result_code",
+        "checkout_request_id", "merchant_request_id", "status", "mpesa_receipt_number", "result_code",
         "result_description", "callback_payload", "callback_received_at",
         "updated_at",
     ))
