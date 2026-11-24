@@ -43,7 +43,7 @@ Both apps must run the same revision of the application code. The POS stores upl
 
 The database still has the old filenames, but the files on the previous Fly machine could not be found. Those old database references do not mean the corresponding files exist in Cloudinary.
 
-After the updated POS app is deployed, open `https://lashpro-pos.fly.dev/admin/` and edit each product. Upload the matching local file from your Downloads folder:
+After the updated POS app is deployed, open `https://pos.lashproke.cc/admin/` and edit each product. Upload the matching local file from your Downloads folder:
 
 | Product | Local file |
 |---|---|
@@ -59,7 +59,7 @@ The Dummy product has no recovered image. It can remain without an image until i
 
 1. Save a product after choosing its image in the admin.
 2. Confirm the admin preview loads from `res.cloudinary.com`.
-3. Open `https://lashpro-storefront.fly.dev/` and check the corresponding product card.
+3. Open `https://lashproke.cc/` and check the corresponding product card.
 4. Add the product to the cart and verify that its image loads there too.
 
 New uploads are now stored outside Fly machines, so both apps can display the same image and machine restarts no longer remove the uploaded files.

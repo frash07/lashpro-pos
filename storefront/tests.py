@@ -22,8 +22,8 @@ User = get_user_model()
 
 
 @override_settings(
-    ALLOWED_HOSTS=["testserver", "lashproke.co.ke", "pos.lashproke.co.ke"],
-    POS_HOSTS=["pos.lashproke.co.ke"],
+    ALLOWED_HOSTS=["testserver", "lashproke.co.ke", "pos.lashproke.cc"],
+    POS_HOSTS=["pos.lashproke.cc"],
 )
 class StorefrontHomeTests(TestCase):
     @classmethod
@@ -103,7 +103,7 @@ class StorefrontHomeTests(TestCase):
     def test_pos_hostname_root_redirects_to_staff_checkout(self):
         response = self.client.get(
             "/",
-            HTTP_HOST="pos.lashproke.co.ke",
+            HTTP_HOST="pos.lashproke.cc",
         )
 
         self.assertRedirects(

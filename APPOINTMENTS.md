@@ -1,6 +1,6 @@
 # Appointments and provider availability
 
-Appointments are available from the public storefront at `https://domain.ke/appointments/` (the path is also registered on the POS host). The booking flow supports guest checkout and signed-in storefront customers. All dates and displayed times use the configured Django timezone (`Africa/Nairobi` in production). The storefront service cards link directly to the selected service's booking page; the page must not be advertised as available until live services and provider hours have been published.
+Appointments are available from the public storefront at `https://lashproke.cc/appointments/` (the path is also registered on the POS host). The booking flow supports guest checkout and signed-in storefront customers. All dates and displayed times use the configured Django timezone (`Africa/Nairobi` in production). The storefront service cards link directly to the selected service's booking page; the page must not be advertised as available until live services and provider hours have been published.
 
 ## Publish bookable services
 
@@ -29,7 +29,7 @@ The Admin dashboard includes direct links to the service catalogue, weekly staff
 
 After the same reviewed application revision is running on both Fly apps:
 
-1. Open `https://domain.ke/appointments/` and confirm the page loads over HTTPS.
+1. Open `https://lashproke.cc/appointments/` and confirm the page loads over HTTPS.
 2. Confirm each active service card's **Book now** link opens the booking page with that service preselected.
 3. Pick a date and confirm that published provider slots appear in East Africa Time.
 4. Submit a disposable guest request. Confirm the private reference page opens and the request appears in staff appointment management as **Awaiting confirmation**.
@@ -51,4 +51,4 @@ The booking transaction locks the selected provider row and rechecks the slot be
 
 ## Payment and POS boundary
 
-An appointment request is not a completed sale. This release does not collect deposits or payments, create POS sales, deduct stock, or send SMS/email notifications. Payment collection remains a separate staff POS action.
+An appointment request is not a completed sale. This release does not collect deposits or payments, create POS sales, or deduct stock. Best-effort email, SMS and WhatsApp notifications are supported for requested, confirmed, cancelled and expired bookings when providers are configured. See [INTEGRATIONS.md](INTEGRATIONS.md). Payment collection remains a separate staff POS action.

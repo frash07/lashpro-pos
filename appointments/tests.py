@@ -101,9 +101,9 @@ class AppointmentBookingTests(TestCase):
         self.assertTrue(payload["slots"])
         self.assertIn("Nia Kamau", payload["slots"][0]["label"])
 
-    @override_settings(ALLOWED_HOSTS=["domain.ke", "pos.domain.ke"])
+    @override_settings(ALLOWED_HOSTS=["lashproke.cc", "pos.lashproke.cc"])
     def test_booking_page_and_availability_route_on_both_canonical_hosts(self):
-        for host in ("domain.ke", "pos.domain.ke"):
+        for host in ("lashproke.cc", "pos.lashproke.cc"):
             page = self.client.get(
                 reverse("appointments:book"),
                 {

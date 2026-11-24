@@ -32,7 +32,7 @@ Run this command once to materialise due expirations and prune old throttle buck
 python manage.py expire_public_reservations
 ```
 
-Schedule it every minute using the production scheduler/cron facility. The deadlines themselves are enforced in availability queries and stock calculations, so a delayed cleanup run does not let an expired hold continue to block inventory or a provider slot. The scheduled command updates visible order/appointment statuses and sends booking-expiry notifications.
+The dedicated POS `scheduler` process in `fly.toml` runs `scripts/reservation_scheduler.sh` approximately every minute. Scale it to one running Machine and verify logs after deployment. The deadlines themselves are enforced in availability queries and stock calculations, so a delayed cleanup run does not let an expired hold continue to block inventory or a provider slot. The scheduled command updates visible order/appointment statuses and sends booking-expiry notifications.
 
 ## Deployment
 

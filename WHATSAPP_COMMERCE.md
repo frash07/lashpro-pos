@@ -42,7 +42,7 @@ The app secret and webhook verification token are encrypted in LashPro's integra
 
 Use the callback URL displayed on the integration settings page. The production POS callback is:
 
-`https://lashpro-pos.fly.dev/webhooks/whatsapp/`
+`https://pos.lashproke.cc/webhooks/whatsapp/`
 
 Configure Meta Webhooks for the correct WhatsApp Business Account and subscribe to the `messages` field. Use the exact same webhook verification token saved in LashPro. Meta's signed POST events are checked using the app secret before any order is processed.
 

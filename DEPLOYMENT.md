@@ -35,7 +35,7 @@ Useful provider references:
 - Configure the same Neon pooled `DATABASE_URL` on both Fly apps, including the same database name and branch endpoint; the pooled hostname commonly includes `-pooler`. Keep `DB_CONN_MAX_AGE=0` and `DB_DISABLE_SERVER_SIDE_CURSORS=true` for the Neon pooled runtime.
 - If Neon supplies a direct/unpooled URL for migrations, set `DATABASE_URL_DIRECT` only on the POS app and ensure it targets that exact same Neon branch and database. The release script uses it only for the POS migration process; application runtime continues to use the pooled `DATABASE_URL`.
 - The production GitHub workflow deploys POS first and storefront second. Only the POS release applies migrations; the storefront is deployed after the schema is ready. Do not run independent/manual migration commands against production while a release is in progress.
-- Pushes to `main` and pull requests run CI; they do not release production. A production release requires a separate `workflow_dispatch` from `main` with `deploy_production=true`, after the backup, infrastructure and business release gates are approved. Both app-scoped Fly tokens must be configured.
+- Pushes to `main` and pull requests run CI; they do not release production. A production release requires a separate `workflow_dispatch` from `main` with `deploy_production=true`, after the backup, infrastructure and business release gates are approved. Both app-scoped Fly tokens must be configured; an explicitly requested production deployment now fails if either token is missing.
 - GitHub Actions serializes workflow runs for the same ref. Manual Fly releases are outside that queue and must be coordinated with the workflow and every operator. Protect `main` in GitHub settings: require a pull request and the successful `Django CI / test` check, and disallow ordinary direct pushes.
 - `DATABASE_URL` is required in production and must use PostgreSQL TLS. Both apps must be configured with the same Neon pooled connection target: same Neon project, branch and database. Keep the connection URL in Fly secrets only; never put it in Git, build logs, tickets or chat.
 - `DATABASE_URL_DIRECT` is optional and is reserved for the POS release migration command when Neon provides a direct/unpooled endpoint. It must refer to the same Neon branch and database as the runtime URL. Do not configure the storefront to run migrations separately. Never expose either URL or its password.
@@ -151,7 +151,7 @@ fly secrets set \
   EMAIL_HOST_USER='smtp-user' \
   EMAIL_HOST_PASSWORD='SMTP_APP_PASSWORD' \
   EMAIL_USE_TLS='true' \
-  DEFAULT_FROM_EMAIL='LashPro <no-reply@example.com>' \
+  DEFAULT_FROM_EMAIL='LashPro <no-reply@lashproke.cc>' \
   SYNTHETIC_DATA_ENABLED='false' \
   --app lashpro-pos
 ```
@@ -232,9 +232,9 @@ Once the first owner login is confirmed:
 
 The current apps have the Fly hostnames `lashpro-pos.fly.dev` and `lashpro-storefront.fly.dev`. For the branded hosts:
 
-1. Point `domain.ke` to `lashpro-storefront` and `pos.domain.ke` to `lashpro-pos`.
+1. Point `lashproke.cc` to `lashpro-storefront` and `pos.lashproke.cc` to `lashpro-pos`.
 2. Add each hostname to the corresponding app's `ALLOWED_HOSTS` and HTTPS origin to its `CSRF_TRUSTED_ORIGINS`.
-3. Add `pos.domain.ke` to `POS_HOSTS` and set `POS_BASE_URL=https://pos.domain.ke` on both apps so staff links and callbacks use the canonical POS origin.
+3. Add `pos.lashproke.cc` to `POS_HOSTS` and set `POS_BASE_URL=https://pos.lashproke.cc` on both apps so staff links and callbacks use the canonical POS origin.
 4. Add both certificates using `fly certs add` and publish the exact DNS records Fly displays.
 5. Verify certificate issuance/renewal, HTTP-to-HTTPS redirects, host validation, cross-app links, and CSRF-protected forms on both domains.
 6. Keep `SECURE_HSTS_INCLUDE_SUBDOMAINS=false` and `SECURE_HSTS_PRELOAD=false` until every affected subdomain is HTTPS-only and the business deliberately approves the domain-wide commitment.
@@ -248,7 +248,7 @@ The current machine definition is one shared CPU with 1 GB RAM. That is a starti
 For a production service:
 - provision at least two POS Machines and the approved number of storefront Machines;
 - keep each app's minimum running machine count aligned with the Machines actually provisioned;
-- confirm every Machine passes its configured `/accounts/login/` health check;
+- confirm every Machine passes its configured `/readyz` database-readiness check;
 - monitor CPU, memory, restarts, request errors, response latency and database connections;
 - configure alerts to a named support contact;
 - retain application logs and investigate repeated errors;
@@ -325,3 +325,10 @@ Do not declare production ready until all of the following are evidenced:
 - [ ] Backups, off-provider copies and a restore rehearsal are complete.
 - [ ] Monitoring, alerting and operational ownership are documented.
 - [ ] The production smoke test passes and the business owner accepts the release.
+
+
+## 13. Scheduler and live acceptance
+
+The POS configuration includes a dedicated `scheduler` process. After deploying, verify `fly scale count app=2 scheduler=1 --app lashpro-pos` is appropriate for the approved capacity, then inspect Machine state and logs. Keep exactly one scheduler running; it executes the expiry command approximately every minute. Do not enable the worker on the storefront. Verify expiry status and notification behaviour with a disposable record in staging first.
+
+Canonical origins are https://lashproke.cc and https://pos.lashproke.cc; add Fly certificates and DNS records before switching public links or registering callbacks. Verify both aliases and branded HTTPS endpoints. Preserve the Django secret used to encrypt integration settings. See [docs/CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md) for evidence requirements.
