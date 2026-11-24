@@ -11,6 +11,7 @@ from django.utils import timezone
 from appointments.models import Appointment, StaffAvailability
 from catalog.models import Product, Service
 from inventory.models import Supplier
+from training.models import Assessment, Cohort, Course, TrainingSession
 
 
 class StandaloneAdminWorkspaceTests(TestCase):
@@ -59,7 +60,7 @@ class StandaloneAdminWorkspaceTests(TestCase):
 
     def test_all_requested_indexes(self):
         self.assert_workspace(self.client.get(reverse("admin:index")), "index")
-        for app in ("accounts", "appointments", "audit", "axes", "inventory", "catalog", "commissions", "customers", "expenses", "storefront", "sales"):
+        for app in ("accounts", "appointments", "audit", "axes", "inventory", "catalog", "commissions", "customers", "expenses", "storefront", "sales", "training", "payments"):
             with self.subTest(app=app):
                 self.assert_workspace(self.client.get(reverse("admin:app_list", kwargs={"app_label": app})), "index")
 
@@ -75,12 +76,17 @@ class StandaloneAdminWorkspaceTests(TestCase):
             "customers_customer", "expenses_expense", "storefront_whatsappinboundorder",
             "storefront_whatsappcatalogsync", "storefront_storefrontorder",
             "sales_sale", "sales_salerefund", "sales_saleline",
+            "training_course", "training_cohort", "training_trainingsession", "training_enrollment",
+            "training_assessment", "training_assessmentresult", "training_attendance", "training_certificate",
+            "payments_cashsession", "payments_cashsessionmovement", "payments_mpesac2bpayment",
+            "payments_mpesastkpush", "payments_paymentreconciliation", "payments_paymenttransaction",
+            "payments_salepayment", "payments_refundpayout", "payments_payoutreconciliation",
         ):
             with self.subTest(register=register):
                 self.assert_workspace(self.client.get(reverse("admin:" + register + "_changelist")), "change_list")
 
     def test_requested_forms_and_edit_links(self):
-        for register in ("auth_group", "inventory_supplier", "inventory_stockadjustmentrequest", "inventory_serviceconsumable", "catalog_service", "catalog_product", "customers_customer"):
+        for register in ("auth_group", "inventory_supplier", "inventory_stockadjustmentrequest", "inventory_serviceconsumable", "catalog_service", "catalog_product", "customers_customer", "training_course", "training_cohort", "training_trainingsession", "training_assessment"):
             with self.subTest(register=register):
                 self.assert_workspace(self.client.get(reverse("admin:" + register + "_add")), "change_form")
         for register, obj in (("appointments_staffavailability", self.availability), ("appointments_appointment", self.appointment)):
@@ -162,3 +168,65 @@ class StandaloneAdminWorkspaceTests(TestCase):
         self.assert_workspace(service, "change_form")
         self.assertContains(service, 'name="price"')
         self.assertContains(service, 'name="duration_minutes"')
+
+
+    def test_academy_creation_and_autocomplete(self):
+        course_url = reverse("admin:training_course_add")
+        response = self.client.post(course_url, {"code": "UI-101", "name": "Workspace course",
+            "duration_days": "5", "tuition_fee": "2500", "minimum_attendance_percent": "80",
+            "is_active": "on", "_save": "Save"})
+        self.assertEqual(response.status_code, 302)
+        course = Course.objects.get(code="UI-101")
+        trainer = get_user_model().objects.create_user(username="workspace-trainer", role="TRAINER", password="x")
+        today = timezone.localdate()
+        end = today + timedelta(days=5)
+        cohort_url = reverse("admin:training_cohort_add")
+        response = self.client.get(cohort_url)
+        self.assert_workspace(response, "change_form")
+        self.assertContains(response, "admin-autocomplete")
+        self.assertContains(response, static("admin/css/vendor/select2/select2.min.css"))
+        response = self.client.post(cohort_url, {"course": course.pk, "trainer": trainer.pk,
+            "name": "Workspace cohort", "start_date": today.isoformat(), "end_date": end.isoformat(),
+            "capacity": "12", "status": Cohort.Status.PLANNED, "_save": "Save"})
+        self.assertEqual(response.status_code, 302)
+        cohort = Cohort.objects.get(course=course)
+        for model, name, data in (
+            (Assessment, "assessment", {"title": "Practice assessment", "max_score": "100",
+                "passing_score": "80", "due_at_0": "", "due_at_1": ""}),
+            (TrainingSession, "trainingsession", {"title": "Practice session",
+                "starts_at_0": today.isoformat(), "starts_at_1": "09:00:00",
+                "ends_at_0": today.isoformat(), "ends_at_1": "10:00:00"}),
+        ):
+            with self.subTest(name=name):
+                url = reverse("admin:training_" + name + "_add")
+                page = self.client.get(url)
+                self.assert_workspace(page, "change_form")
+                formsets = page.context["inline_admin_formsets"]
+                for inline in formsets:
+                    prefix = inline.formset.prefix
+                    data.update({prefix + "-TOTAL_FORMS": "0", prefix + "-INITIAL_FORMS": "0",
+                        prefix + "-MIN_NUM_FORMS": "0", prefix + "-MAX_NUM_FORMS": "0"})
+                response = self.client.post(url, {"cohort": cohort.pk, "_save": "Save", **data})
+                self.assertEqual(response.status_code, 302)
+                obj = model.objects.get(cohort=cohort)
+                self.assertEqual(obj.created_by, self.owner)
+                self.assert_workspace(self.client.get(reverse("admin:training_" + name + "_change", args=[obj.pk])), "change_form")
+
+    def test_read_only_payment_and_academy_registers(self):
+        for name in ("training_attendance", "training_assessmentresult", "training_certificate",
+                     "training_enrollment", "payments_paymenttransaction", "payments_cashsession",
+                     "payments_cashsessionmovement", "payments_salepayment", "payments_mpesac2bpayment",
+                     "payments_mpesastkpush", "payments_paymentreconciliation", "payments_refundpayout",
+                     "payments_payoutreconciliation"):
+            with self.subTest(name=name):
+                response = self.client.get(reverse("admin:" + name + "_changelist"))
+                self.assert_workspace(response, "change_list")
+                self.assertFalse(response.context["has_add_permission"])
+                self.assertEqual(self.client.get(reverse("admin:" + name + "_add")).status_code, 403)
+        viewer = get_user_model().objects.create_user(username="workspace-training-viewer", is_staff=True, password="x")
+        viewer.user_permissions.add(Permission.objects.get(content_type__app_label="training", codename="view_course"))
+        self.client.force_login(viewer)
+        self.assert_workspace(self.client.get(reverse("admin:training_course_changelist")), "change_list")
+        self.assertEqual(self.client.get(reverse("admin:training_course_add")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("admin:payments_paymenttransaction_changelist")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("reporting:dashboard")).status_code, 403)
