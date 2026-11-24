@@ -33,7 +33,7 @@ REGISTERS = {
     "commissions_commissionpayoutrequest": ("Commission payout requests", "Review requests and use the operational dashboard to approve or reject them.", "clipboard-check"),
     "commissions_commissionpayoutrecord": ("Commission payout records", "Review issued payments and their verification status.", "receipt-text"),
     "commissions_commissionledgerentry": ("Commission ledger", "Review recorded earnings and reversals.", "book-open"),
-    "customers_customer": ("Customer directory", "Search clients, maintain contact details and review completed sales counts.", "contact-round"),
+    "customers_customer": ("Customer directory", "Search clients, maintain contact details and review completed sales counts. Purchase history is summarised from completed sales.", "contact-round"),
     "expenses_expense": ("Expense records", "Review expenses, payment status and supporting references.", "receipt"),
     "storefront_whatsappinboundorder": ("WhatsApp inbound orders", "Review incoming messages, order links and processing issues.", "message-circle"),
     "storefront_whatsappcatalogsync": ("WhatsApp catalogue sync", "Review synchronisation status and retry selected records using the existing action.", "refresh-cw"),
