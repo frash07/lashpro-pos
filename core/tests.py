@@ -11,6 +11,7 @@ from accounts.models import User
 from core.log_filters import RedactSensitiveDataFilter
 from core.models import SharedDatabaseProbe
 from core.views import health_check, home
+from config.settings import _sentry_before_send
 
 
 class HomeLandingTests(SimpleTestCase):
@@ -76,6 +77,32 @@ class SensitiveLogFilterTests(SimpleTestCase):
         message = record.getMessage()
         for secret in ("private-password", "private-key", "db.example.test"):
             self.assertNotIn(secret, message)
+
+
+class SentryPrivacyTests(SimpleTestCase):
+    def test_log_record_events_are_not_forwarded(self):
+        event = {"message": "Sensitive checkout log"}
+
+        self.assertIsNone(
+            _sentry_before_send(event, {"log_record": object()})
+        )
+
+    def test_log_breadcrumbs_are_removed_from_exception_events(self):
+        event = {
+            "breadcrumbs": {
+                "values": [
+                    {"category": "log", "message": "Sensitive customer detail"},
+                    {"category": "http", "message": "GET /healthz"},
+                ]
+            }
+        }
+
+        processed = _sentry_before_send(event, {})
+
+        self.assertEqual(
+            processed["breadcrumbs"]["values"],
+            [{"category": "http", "message": "GET /healthz"}],
+        )
 
 
 class AdminSuiteAccessTests(TestCase):
