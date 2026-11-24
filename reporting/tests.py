@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 
 from django.test import TestCase
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 
@@ -32,6 +33,17 @@ class DailyReportTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["report"]["confirmed_collection"], Decimal("500.00"))
         self.assertEqual(response.context["report"]["unverified_collection"], Decimal("500.00"))
+        self.assertTemplateUsed(response, "admin_workspace/base.html")
+        self.assertContains(response, static("js/report-workspace.js"))
+        self.assertContains(response, 'id="export-report"')
+        self.assertContains(response, 'id="report-range"')
+        self.assertContains(response, 'data-reference="REPORT123"')
+        self.assertContains(response, 'data-status="PENDING"')
+        self.assertContains(response, 'name="start_date"')
+        self.assertContains(response, 'name="end_date"')
+        self.assertContains(response, "Confirmed collections")
+        self.assertContains(response, "Training Academy Hub")
+        self.assertNotContains(response, static("reporting/dashboard.css"))
         payment = PaymentTransaction.objects.get(sale_allocation__sale=sale, method="MPESA")
         reconcile_manual_mpesa(payment=payment, actor=self.manager, decision="CONFIRMED", reason="Matched to statement.")
         response = self.client.get(reverse("reporting:dashboard"))
