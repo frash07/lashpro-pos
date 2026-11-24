@@ -61,6 +61,11 @@ class TrainingSessionAdmin(admin.ModelAdmin):
     inlines = (AttendanceInline,)
     autocomplete_fields = ("cohort", "created_by")
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
 
 class AssessmentResultInline(admin.TabularInline):
     model = AssessmentResult
@@ -80,6 +85,11 @@ class AssessmentAdmin(admin.ModelAdmin):
     readonly_fields = ("created_by", "created_at")
     inlines = (AssessmentResultInline,)
     autocomplete_fields = ("cohort", "created_by")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Attendance)
