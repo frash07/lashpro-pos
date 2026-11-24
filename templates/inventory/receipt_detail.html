@@ -1,8 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Supplier receipt #{{ receipt.pk }} · LashPro{% endblock %}
+{% block head_extra %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'inventory/receipts.css' %}">
+{% endblock %}
 {% block content %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receipts' %}">Receipt history</a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
-<main class="page" style="max-width:1000px;margin:0 auto;padding:1rem">
+<main class="page inventory-receipts-page">
   <h1>Supplier receipt #{{ receipt.pk }}</h1>
   <section class="card">
     <h2>{{ receipt.supplier.name }}</h2>
@@ -12,9 +16,9 @@
     <p><strong>Recorded by:</strong> {{ receipt.received_by.get_full_name|default:receipt.received_by.username }}</p>
     <p><strong>Notes:</strong> {{ receipt.notes|default:"—" }}</p>
   </section>
-  <section class="card" style="overflow-x:auto">
+  <section class="card inventory-receipts-table-wrap">
     <h2>Items received</h2>
-    <table style="width:100%;border-collapse:collapse">
+    <table class="inventory-receipts-table">
       <thead><tr><th>Product</th><th>SKU</th><th>Quantity</th><th>Unit cost</th><th>Line total</th><th>Movement</th></tr></thead>
       <tbody>
         {% for line in receipt.lines.all %}
@@ -28,7 +32,7 @@
           </tr>
         {% endfor %}
       </tbody>
-      <tfoot><tr><th colspan="4" style="text-align:right">Receipt total</th><th>KSh {{ receipt.total_cost|floatformat:2 }}</th><th></th></tr></tfoot>
+      <tfoot><tr><th colspan="4" class="receipt-total-heading">Receipt total</th><th>KSh {{ receipt.total_cost|floatformat:2 }}</th><th></th></tr></tfoot>
     </table>
   </section>
   <p><a href="{% url 'inventory:receipts' %}">Back to receipt history</a></p>

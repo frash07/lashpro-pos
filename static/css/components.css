@@ -1,3 +1,77 @@
+/* Shared POS components. Legacy template primitives remain at the top
+   until their markup is migrated; all values resolve through tokens.css. */
+
+/* Legacy template primitives retained during migration. Keep before modern component rules. */
+body { background: var(--ui-canvas); color: var(--ui-text); font-family: var(--lp-font-ui); }
+a { color: var(--brand); }
+a:hover { color: var(--brand-hover); }
+header {
+  background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
+  border-bottom-color: var(--ui-border);
+  box-shadow: var(--shadow-sm);
+  color: var(--ui-text);
+}
+header nav { color: var(--ui-muted); }
+button, input, select, textarea { color: var(--ui-text); }
+input, select, textarea {
+  border-color: var(--ui-border);
+  background: var(--ui-surface);
+}
+.page, .login, .card, .form-card, .report-panel, .dashboard-panel, .table-card {
+  color: var(--ui-text);
+}
+.page h1, .page h2, .page h3, .login h1, .login h2 { color: var(--ui-text); }
+.submit, .button-primary, button[type=submit] {
+  border-color: transparent;
+  background: var(--brand);
+  color: var(--on-accent);
+}
+.submit:hover, .button-primary:hover, button[type=submit]:hover {
+  background: var(--brand-hover);
+  color: var(--on-accent);
+}
+.button-quiet {
+  min-height: 40px;
+  padding: 8px 13px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--lp-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-weight: 650;
+  text-decoration: none;
+}
+.button-quiet:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-hover);
+}
+.message.success, .message.info {
+  border: 1px solid color-mix(in srgb, var(--success) 25%, transparent);
+  background: var(--success-soft);
+  color: var(--success);
+}
+.message.warning {
+  border: 1px solid color-mix(in srgb, var(--warning) 28%, transparent);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.message.error, .error {
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.status-badge { border-radius: var(--lp-radius-pill); }
+.status-success { border-color: var(--success); background: var(--success-soft); color: var(--success); }
+.status-warning { border-color: var(--warning); background: var(--warning-soft); color: var(--warning); }
+.status-danger { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+.status-muted { border-color: var(--ui-border); background: var(--ui-surface-muted); color: var(--ui-muted); }
+.table-scroll, .table-wrap { border-color: var(--ui-border); background: var(--ui-surface); }
+table th { color: var(--ui-muted); border-color: var(--ui-border); }
+table td { color: var(--ui-muted); border-color: var(--ui-border); }
+@media print { body { background: var(--ui-surface); color: var(--ui-text); } }
+
+
+/* Current shared component primitives. */
 .btn,
 .button,
 .submit,
@@ -11,8 +85,8 @@ button[type="submit"] {
   padding: 0.7rem 1.1rem;
   border: 1px solid transparent;
   border-radius: var(--lp-radius-md);
-  background: var(--lp-neutral-100);
-  color: var(--lp-text);
+  background: var(--ui-surface-muted);
+  color: var(--ui-text);
   font-weight: 700;
   text-decoration: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -24,33 +98,33 @@ button[type="submit"] {
 button[type="button"]:hover,
 button[type="submit"]:hover {
   transform: translateY(-1px);
-  box-shadow: var(--lp-shadow-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary,
 .submit,
 button.primary,
 .btn-primary[type="submit"] {
-  background: var(--lp-btn-primary-bg);
+  background: var(--brand);
   border-color: transparent;
-  color: var(--lp-btn-primary-text);
+  color: var(--on-accent);
 }
 
 .btn-primary:hover,
 .submit:hover,
 button.primary:hover {
-  background: var(--lp-btn-primary-hover);
+  background: var(--brand-hover);
 }
 
 .btn-secondary {
-  background: var(--lp-neutral-100);
-  border-color: var(--lp-border);
-  color: var(--lp-text);
+  background: var(--ui-surface-muted);
+  border-color: var(--ui-border);
+  color: var(--ui-text);
 }
 
 .btn-mpesa {
   background: var(--payment-mpesa-gradient);
-  color: var(--lp-neutral-0);
+  color: var(--ui-surface);
 }
 
 .btn-block {
@@ -63,10 +137,10 @@ aside,
 article,
 .login,
 .receipt {
-  background: var(--lp-surface);
-  border: 1px solid var(--lp-border);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
   border-radius: var(--lp-radius-lg);
-  box-shadow: var(--lp-shadow-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .pill,
@@ -76,10 +150,10 @@ article,
   align-items: center;
   justify-content: center;
   padding: 0.45rem 0.8rem;
-  border: 1px solid var(--lp-border);
+  border: 1px solid var(--ui-border);
   border-radius: var(--lp-radius-pill);
-  background: var(--lp-surface-strong);
-  color: var(--lp-text-muted);
+  background: var(--ui-surface-muted);
+  color: var(--ui-muted);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -87,9 +161,9 @@ article,
 .pill.is-active,
 .catalog-filter.is-active,
 .mode-link.is-active {
-  background: var(--lp-pink-50);
+  background: var(--brand-soft);
   border-color: rgba(var(--brand-rgb), 0.22);
-  color: var(--lp-pink-700);
+  color: var(--brand-hover);
 }
 
 .badge-success,
@@ -105,23 +179,23 @@ article,
 }
 
 .badge-success {
-  background: var(--lp-success-soft);
-  color: var(--lp-success);
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .badge-warning {
-  background: var(--lp-warning-soft);
-  color: var(--lp-warning);
+  background: var(--warning-soft);
+  color: var(--warning);
 }
 
 .badge-danger {
-  background: var(--lp-danger-soft);
-  color: var(--lp-danger);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .badge-card {
-  background: var(--lp-neutral-100);
-  color: var(--lp-text-muted);
+  background: var(--ui-surface-muted);
+  color: var(--ui-muted);
 }
 
 .input,
@@ -131,15 +205,15 @@ textarea {
   width: 100%;
   min-height: 44px;
   padding: 0.75rem 0.85rem;
-  border: 1px solid var(--lp-border-strong);
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--lp-radius-sm);
-  background: var(--lp-surface);
-  color: var(--lp-text);
+  background: var(--ui-surface);
+  color: var(--ui-text);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--lp-neutral-400);
+  color: var(--ui-subtle);
 }
 
 .input:focus,
@@ -159,12 +233,12 @@ textarea:focus {
 .data-table th,
 .data-table td {
   padding: 0.8rem 0.7rem;
-  border-bottom: 1px solid var(--lp-border);
+  border-bottom: 1px solid var(--ui-border);
   text-align: left;
 }
 
 .data-table thead th {
-  color: var(--lp-text-muted);
+  color: var(--ui-muted);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -179,13 +253,13 @@ textarea:focus {
 }
 
 .message.success {
-  background: var(--lp-success-soft);
-  color: var(--lp-success);
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .message.error,
 .error,
 .row-errors {
-  background: var(--lp-danger-soft);
-  color: var(--lp-danger);
+  background: var(--danger-soft);
+  color: var(--danger);
 }

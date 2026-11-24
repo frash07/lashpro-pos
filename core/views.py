@@ -39,7 +39,6 @@ def service_worker(request):
     precache_urls = [
         static("css/tokens.css"),
         static("css/components.css"),
-        static("css/legacy.css"),
         static("css/pos.css"),
         static("css/auth.css"),
         static("css/admin-shell.css"),

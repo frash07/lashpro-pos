@@ -1,16 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Import products · LashPro{% endblock %}
 
 {% block head_extra %}
-<style>
-    .import-table-wrap{overflow-x:auto}.import-table{width:100%;border-collapse:collapse;margin:1rem 0}.import-table th,.import-table td{border-bottom:1px solid #ddd;padding:.65rem;text-align:left;vertical-align:top}.import-table th{background:#f5f7f8;white-space:nowrap}.row-errors{color:#9b1c1c;margin:.25rem 0}.muted{color:#555}.actions{display:flex;gap:.75rem;flex-wrap:wrap}.sku-generated{font-size:.8rem;color:#555;display:block}
-  </style>
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'inventory/product-import.css' %}">
 {% endblock %}
 
 {% block content %}
 <header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Back to inventory</a></header>
-<main class="page">
+<main class="page product-import-page">
   <h1>Import products</h1>
   <p>Upload a CSV or Excel workbook to preview new products before saving. This import creates products only; existing SKUs are never overwritten.</p>
   {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}

@@ -7,27 +7,9 @@
   {{ block.super }}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
   <link rel="stylesheet" href="{% static 'catalog/catalog-admin.css' %}">
-  <style>
-    .catalog-hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 18px}
-    .catalog-hub-card{display:flex;align-items:center;gap:14px;min-width:0;padding:17px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,var(--surface),var(--surface-2));color:var(--text);text-decoration:none;transition:border-color .18s,transform .18s,box-shadow .18s}
-    .catalog-hub-card:hover{border-color:var(--pink);transform:translateY(-2px);box-shadow:var(--shadow)}
-    .catalog-hub-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:var(--pink-wash);color:var(--pink)}
-    .catalog-hub-icon svg{width:20px;height:20px}
-    .catalog-hub-copy{min-width:0;flex:1}
-    .catalog-hub-copy strong{display:block;color:var(--text);font-size:13px}
-    .catalog-hub-copy small{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.5}
-    .catalog-hub-arrow{color:var(--subtle)}
-    .catalog-hub-section{margin:0 0 13px}
-    .catalog-hub-section h2{margin:0;color:var(--text);font-family: var(--lp-font-display);font-size:19px;font-weight:500}
-    .catalog-hub-section p{margin:5px 0 0;color:var(--muted);font-size:10px}
-    .catalog-hub-list{padding:17px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow)}
-    .catalog-hub-list .module{border:0!important;background:transparent!important}
-    .catalog-hub-list table{width:100%}
-    @media(max-width:620px){.catalog-hub-grid{grid-template-columns:1fr}.catalog-hub-card{padding:14px}}
-  </style>
 {% endblock %}
 
 {% block content %}

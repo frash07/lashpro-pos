@@ -2,8 +2,8 @@
 html,
 body {
   min-width: 320px;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--ui-canvas);
+  color: var(--ui-text);
   font-family: var(--lp-font-ui), system-ui, sans-serif;
 }
 
@@ -18,7 +18,7 @@ body.lashpro-product-workspace #content {
   min-width: 0;
   margin: 0;
   padding: 0 !important;
-  background: var(--bg);
+  background: var(--ui-canvas);
 }
 
 body.lashpro-product-workspace #header,
@@ -35,13 +35,13 @@ body.lashpro-product-workspace #main {
 
 body.lashpro-product-workspace #content {
   overflow: visible;
-  color: var(--text);
+  color: var(--ui-text);
 }
 
 body.lashpro-product-workspace #content h1,
 body.lashpro-product-workspace #content h2,
 body.lashpro-product-workspace #content h3 {
-  color: var(--text);
+  color: var(--ui-text);
 }
 
 .product-form-topbar {
@@ -50,7 +50,7 @@ body.lashpro-product-workspace #content h3 {
 
 .product-form-brand {
   min-width: 205px;
-  color: var(--text);
+  color: var(--ui-text);
   text-decoration: none;
 }
 
@@ -75,7 +75,7 @@ body.lashpro-product-workspace #content h3 {
   border: 0;
   padding: 5px 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font: 600 9px var(--lp-font-ui), system-ui, sans-serif;
   text-decoration: none;
   white-space: nowrap;
@@ -83,7 +83,7 @@ body.lashpro-product-workspace #content h3 {
 
 .product-form-account-link:hover,
 .product-form-logout button:hover {
-  color: var(--pink);
+  color: var(--brand);
 }
 
 .product-form-logout {
@@ -101,7 +101,7 @@ body.lashpro-product-workspace #content h3 {
 }
 
 .product-form-heading h1 em {
-  color: var(--pink);
+  color: var(--brand);
   font-style: italic;
   font-weight: 400;
 }
@@ -127,10 +127,10 @@ body.lashpro-product-workspace #content h3 {
 .product-form-panel {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--lp-compat-radius-1af91184);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-md);
 }
 
 .product-form-panel-heading {
@@ -139,15 +139,15 @@ body.lashpro-product-workspace #content h3 {
   justify-content: space-between;
   gap: 16px;
   padding: 21px 23px 18px;
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(135deg, var(--surface-2), var(--surface));
+  border-bottom: 1px solid var(--ui-border);
+  background: linear-gradient(135deg, var(--ui-surface-muted), var(--ui-surface));
 }
 
 .product-form-overline {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--pink);
+  color: var(--brand);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: .15em;
@@ -160,7 +160,7 @@ body.lashpro-product-workspace #content h3 {
 
 .product-form-panel-heading h2 {
   margin: 9px 0 4px;
-  color: var(--text);
+  color: var(--ui-text);
   font-family: var(--lp-font-display), Georgia, serif;
   font-size: 21px;
   font-weight: 500;
@@ -169,7 +169,7 @@ body.lashpro-product-workspace #content h3 {
 
 .product-form-panel-heading p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 10px;
   line-height: 1.6;
 }
@@ -177,10 +177,10 @@ body.lashpro-product-workspace #content h3 {
 .product-form-state {
   flex: 0 0 auto;
   padding: 7px 10px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--lp-compat-radius-7e291c02);
-  background: var(--pink-wash);
-  color: var(--pink);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-size: 9px;
   font-weight: 700;
   white-space: nowrap;
@@ -192,7 +192,7 @@ body.lashpro-product-workspace #content h3 {
   max-width: none !important;
   margin: 0 !important;
   overflow: visible;
-  color: var(--text);
+  color: var(--ui-text);
 }
 
 .product-form-panel #content-main form {
@@ -206,18 +206,18 @@ body.lashpro-product-workspace #content h3 {
 .product-form-panel #content-main fieldset.module {
   margin: 0 0 14px;
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-border);
   border-radius: var(--lp-compat-radius-0e828a1b);
-  background: linear-gradient(145deg, var(--surface), var(--surface-2));
+  background: linear-gradient(145deg, var(--ui-surface), var(--ui-surface-muted));
   box-shadow: none;
 }
 
 .product-form-panel #content-main fieldset.module h2 {
   margin: 0;
   padding: 13px 16px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ui-border);
   background: transparent;
-  color: var(--text);
+  color: var(--ui-text);
   font-family: var(--lp-font-display), Georgia, serif;
   font-size: 16px;
   font-weight: 500;
@@ -231,7 +231,7 @@ body.lashpro-product-workspace #content h3 {
   gap: 15px;
   margin: 0;
   padding: 14px 16px !important;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ui-border);
   background: transparent;
 }
 
@@ -265,7 +265,7 @@ body.lashpro-product-workspace #content h3 {
   margin: 0 !important;
   padding: 0 !important;
   float: none !important;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: .09em;
@@ -284,11 +284,11 @@ body.lashpro-product-workspace #content h3 {
   min-height: 42px;
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-border);
   border-radius: var(--lp-compat-radius-59f8bf2c);
-  background: var(--bg-2);
+  background: var(--ui-surface-muted);
   box-shadow: none;
-  color: var(--text);
+  color: var(--ui-text);
   font: 500 11px var(--lp-font-ui), system-ui, sans-serif;
   transition: border-color .18s, box-shadow .18s, background .18s;
 }
@@ -300,10 +300,10 @@ body.lashpro-product-workspace #content h3 {
   min-height: 42px;
   margin: 0;
   padding: 8px 10px;
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--ui-border-strong);
   border-radius: var(--lp-compat-radius-59f8bf2c);
-  background: var(--bg-2);
-  color: var(--muted);
+  background: var(--ui-surface-muted);
+  color: var(--ui-muted);
   font: 500 10px var(--lp-font-ui), system-ui, sans-serif;
 }
 
@@ -311,16 +311,16 @@ body.lashpro-product-workspace #content h3 {
   width: 17px;
   height: 17px;
   margin: 0 8px 0 0;
-  accent-color: var(--pink-strong);
+  accent-color: var(--brand-hover);
   vertical-align: middle;
 }
 
 .product-form-panel #content-main .form-row input:focus,
 .product-form-panel #content-main .form-row select:focus,
 .product-form-panel #content-main .form-row textarea:focus {
-  border-color: var(--pink);
+  border-color: var(--brand);
   outline: none;
-  box-shadow: 0 0 0 3px var(--pink-wash);
+  box-shadow: 0 0 0 3px var(--brand-soft);
 }
 
 .product-form-panel #content-main .form-row .readonly {
@@ -328,10 +328,10 @@ body.lashpro-product-workspace #content h3 {
   min-height: 42px;
   align-items: center;
   padding: 10px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-border);
   border-radius: var(--lp-compat-radius-59f8bf2c);
-  background: var(--bg-2);
-  color: var(--muted);
+  background: var(--ui-surface-muted);
+  color: var(--ui-muted);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
@@ -341,7 +341,7 @@ body.lashpro-product-workspace #content h3 {
 .product-form-panel #content-main .form-row .helptext {
   display: block;
   margin: 6px 0 0;
-  color: var(--subtle);
+  color: var(--ui-subtle);
   font-size: 9px;
   line-height: 1.55;
 }
@@ -353,7 +353,7 @@ body.lashpro-product-workspace #content h3 {
   border: 1px solid rgba(var(--brand-rgb), .25);
   border-radius: var(--lp-compat-radius-05011417);
   background: rgba(var(--brand-rgb), .08);
-  color: var(--red);
+  color: var(--danger);
   font-size: 9px;
   list-style: none;
 }
@@ -364,7 +364,7 @@ body.lashpro-product-workspace #content h3 {
   border: 1px solid rgba(var(--brand-rgb), .25);
   border-radius: var(--lp-compat-radius-59f8bf2c);
   background: rgba(var(--brand-rgb), .08);
-  color: var(--red);
+  color: var(--danger);
   font-size: 10px;
 }
 
@@ -376,9 +376,9 @@ body.lashpro-product-workspace #content h3 {
   gap: 8px;
   margin: 0 !important;
   padding: 16px 19px !important;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ui-border);
   border-radius: 0;
-  background: var(--surface-2) !important;
+  background: var(--ui-surface-muted) !important;
 }
 
 .product-form-panel #content-main .submit-row input[type="submit"],
@@ -389,18 +389,18 @@ body.lashpro-product-workspace #content h3 {
   justify-content: center;
   margin: 0;
   padding: 10px 14px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--lp-compat-radius-59f8bf2c);
-  background: var(--surface);
-  color: var(--text) !important;
+  background: var(--ui-surface);
+  color: var(--ui-text) !important;
   font: 700 10px var(--lp-font-ui), system-ui, sans-serif;
   text-decoration: none;
   transition: transform .18s, border-color .18s, background .18s;
 }
 
 .product-form-panel #content-main .submit-row input[name="_save"] {
-  border-color: var(--pink);
-  background: var(--pink);
+  border-color: var(--brand);
+  background: var(--brand);
   color: var(--on-accent) !important;
   box-shadow: 0 7px 18px rgba(var(--brand-rgb), .16);
 }
@@ -408,13 +408,13 @@ body.lashpro-product-workspace #content h3 {
 .product-form-panel #content-main .submit-row input:hover,
 .product-form-panel #content-main .submit-row a:hover {
   transform: translateY(-1px);
-  border-color: var(--pink);
-  background: var(--pink-wash);
-  color: var(--pink) !important;
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand) !important;
 }
 
 .product-form-panel #content-main .submit-row input[name="_save"]:hover {
-  background: var(--pink-strong);
+  background: var(--brand-hover);
   color: var(--on-accent) !important;
 }
 
@@ -422,7 +422,7 @@ body.lashpro-product-workspace #content h3 {
   margin-right: auto;
   border-color: rgba(var(--brand-rgb), .3);
   background: rgba(var(--brand-rgb), .08);
-  color: var(--red) !important;
+  color: var(--danger) !important;
 }
 
 .product-form-aside {
@@ -433,16 +433,16 @@ body.lashpro-product-workspace #content h3 {
 
 .product-guide-card {
   padding: 19px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--lp-compat-radius-f361d844);
   background:
     radial-gradient(ellipse at 100% 0%, rgba(var(--brand-rgb), .13), transparent 43%),
-    linear-gradient(145deg, var(--surface), var(--surface-2));
-  box-shadow: var(--shadow);
+    linear-gradient(145deg, var(--ui-surface), var(--ui-surface-muted));
+  box-shadow: var(--shadow-md);
 }
 
 .product-guide-kicker {
-  color: var(--pink);
+  color: var(--brand);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: .15em;
@@ -450,7 +450,7 @@ body.lashpro-product-workspace #content h3 {
 
 .product-guide-card h2 {
   margin: 11px 0 7px;
-  color: var(--text);
+  color: var(--ui-text);
   font-family: var(--lp-font-display), Georgia, serif;
   font-size: 21px;
   font-weight: 500;
@@ -459,7 +459,7 @@ body.lashpro-product-workspace #content h3 {
 
 .product-guide-card > p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 10px;
   line-height: 1.65;
 }
@@ -469,7 +469,7 @@ body.lashpro-product-workspace #content h3 {
   gap: 15px;
   margin-top: 20px;
   padding-top: 17px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ui-border);
 }
 
 .product-guide-step {
@@ -484,10 +484,10 @@ body.lashpro-product-workspace #content h3 {
   height: 27px;
   flex: 0 0 27px;
   place-items: center;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--lp-compat-radius-9669c71c);
-  background: var(--pink-wash);
-  color: var(--pink);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-size: 8px;
   font-weight: 700;
 }
@@ -495,7 +495,7 @@ body.lashpro-product-workspace #content h3 {
 .product-guide-step strong,
 .product-guide-note strong {
   display: block;
-  color: var(--text);
+  color: var(--ui-text);
   font-size: 10px;
   font-weight: 700;
 }
@@ -503,7 +503,7 @@ body.lashpro-product-workspace #content h3 {
 .product-guide-step small {
   display: block;
   margin-top: 4px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 9px;
   line-height: 1.5;
 }
@@ -526,7 +526,7 @@ body.lashpro-product-workspace #content h3 {
   place-items: center;
   border-radius: var(--lp-compat-radius-59f8bf2c);
   background: rgba(var(--success-rgb), .1);
-  color: var(--green);
+  color: var(--success);
 }
 
 .product-guide-note-icon svg {
@@ -536,19 +536,19 @@ body.lashpro-product-workspace #content h3 {
 
 .product-guide-note p {
   margin: 5px 0 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 9px;
   line-height: 1.6;
 }
 
 .product-guide-note-subtle {
-  border-color: var(--line);
-  background: var(--surface);
+  border-color: var(--ui-border);
+  background: var(--ui-surface);
 }
 
 .product-guide-note-subtle .product-guide-note-icon {
-  background: var(--pink-wash);
-  color: var(--pink);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .product-form-footer {
@@ -557,13 +557,13 @@ body.lashpro-product-workspace #content h3 {
   gap: 12px;
   margin-top: 24px;
   padding: 15px 2px 0;
-  border-top: 1px solid var(--line);
-  color: var(--subtle);
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-subtle);
   font-size: 9px;
 }
 
 .product-form-footer-brand {
-  color: var(--pink);
+  color: var(--brand);
   font-weight: 700;
   letter-spacing: .13em;
 }

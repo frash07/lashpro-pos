@@ -1,23 +1,4 @@
-/* Django admin theme mapped to the shared LashPro POS design tokens. */
-:root {
-  --primary: var(--brand);
-  --secondary: var(--ui-surface-muted);
-  --accent: var(--brand);
-  --primary-fg: var(--on-accent);
-  --header-bg: var(--ui-surface);
-  --header-color: var(--ui-text);
-  --body-bg: var(--ui-canvas);
-  --body-fg: var(--ui-text);
-  --link-fg: var(--brand);
-  --link-hover-color: var(--brand-hover);
-  --hairline-color: var(--ui-border);
-  --darkened-bg: var(--ui-surface-muted);
-  --selected-bg: var(--brand-soft);
-  --selected-row: var(--brand-soft);
-  --breadcrumbs-bg: var(--ui-surface-muted);
-  --breadcrumbs-fg: var(--ui-muted);
-  --breadcrumbs-link-fg: var(--brand);
-}
+/* Django admin component rules consume the canonical POS tokens. */
 html, body { background: var(--ui-canvas); color: var(--ui-text); }
 body { font-family: var(--lp-font-ui); }
 a:link, a:visited { color: var(--brand); }
@@ -115,4 +96,11 @@ hr { border-color: var(--ui-border); }
 @media (max-width: 767px) {
   #header { padding: 12px 16px; }
   #user-tools { padding-top: 5px; }
+}
+
+.catalog-admin-thumbnail {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--lp-radius-sm);
 }

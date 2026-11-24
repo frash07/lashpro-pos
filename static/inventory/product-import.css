@@ -1,0 +1,15 @@
+/* Product import preview styles. Theme colours come from tokens.css. */
+.product-import-page .import-table-wrap { overflow-x:auto; }
+.product-import-page .import-table { width:100%; border-collapse:collapse; margin:1rem 0; }
+.product-import-page .import-table th,
+.product-import-page .import-table td {
+  border-bottom:1px solid var(--ui-border);
+  padding:.65rem;
+  text-align:left;
+  vertical-align:top;
+}
+.product-import-page .import-table th { background:var(--ui-surface-muted); white-space:nowrap; }
+.product-import-page .row-errors { color:var(--danger); margin:.25rem 0; }
+.product-import-page .muted, .product-import-page .sku-generated { color:var(--ui-muted); }
+.product-import-page .actions { display:flex; gap:.75rem; flex-wrap:wrap; }
+.product-import-page .sku-generated { font-size:.8rem; display:block; }

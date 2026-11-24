@@ -1,0 +1,5 @@
+/* Supplier receipt history and detail tables. */
+.inventory-receipts-page { max-width:1000px; margin:0 auto; padding:1rem; }
+.inventory-receipts-table-wrap { overflow-x:auto; }
+.inventory-receipts-table { width:100%; border-collapse:collapse; }
+.inventory-receipts-table .receipt-total-heading { text-align:right; }
