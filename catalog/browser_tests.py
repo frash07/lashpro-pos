@@ -44,7 +44,7 @@ class ProductWorkspaceBrowserTests(StaticLiveServerTestCase):
                 for width in (320, 375, 390, 600, 768, 1024, 1440, 1920):
                     with self.subTest(width=width):
                         page.set_viewport_size({"width": width, "height": 900})
-                        page.wait_for_function("document.documentElement.clientWidth === " + str(width))
+                        page.wait_for_function("innerWidth === " + str(width))
                         self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"Document overflows at {width}px")
                         self.assertTrue(page.locator(".product-card").evaluate_all("(cards) => cards.every(c => { const r = c.getBoundingClientRect(); return r.left >= -1 && r.right <= innerWidth + 1; })"), f"Card overflows at {width}px")
                         self.assertTrue(page.get_by_role("link", name="Add product").is_visible())
