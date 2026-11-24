@@ -270,7 +270,7 @@ The SDK configuration disables user identity, cookies, request headers, request 
 After setting the secrets and deploying both apps, send a non-sensitive connectivity check from the POS app:
 
 ```bash
-fly ssh console --app lashpro-pos -C "python manage.py shell -c \\"import sentry_sdk; sentry_sdk.capture_message('LashPro Sentry connectivity check', level='info')\\""
+fly ssh console --app lashpro-pos -C "python manage.py shell -c \"import sentry_sdk; sentry_sdk.capture_message('LashPro Sentry connectivity check', level='info')\""
 ```
 
 Confirm the message appears in the Sentry project under the `production` environment. A missing `SENTRY_DSN` leaves the SDK disabled; the app continues to write logs to Fly as before.
