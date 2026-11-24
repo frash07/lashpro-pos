@@ -1,0 +1,59 @@
+/* Place Django's existing forms, lists and messages beside the staff rail.
+   Product catalogue and related-object popups supply their own layout. */
+#container:has(> .pos-sidebar) {
+  box-sizing: border-box;
+  min-width: 0;
+  padding-inline-start: 224px;
+}
+#container > .pos-sidebar {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 224px;
+  height: 100dvh;
+  min-height: 0;
+  font-family: var(--lp-font-ui);
+}
+#container > .pos-sidebar * { box-sizing: border-box; }
+#container > .pos-sidebar .pos-nav-link { color: var(--ui-muted); }
+#container > .pos-sidebar .pos-nav-link:is(:hover, .is-active) { color: var(--brand-hover); }
+#container:has(> .pos-sidebar) :is(#main, #content-start, #content-main) { min-width: 0; }
+#container:has(> .pos-sidebar) .results { max-width: 100%; overflow-x: auto; }
+#container:has(> .pos-sidebar) #content > h1 {
+  font-family: var(--lp-font-display);
+  font-size: clamp(1.55rem, 3vw, 2.25rem);
+}
+#container:has(> .pos-sidebar) #content header.topbar {
+  position: static;
+  flex-wrap: wrap;
+  gap: .75rem;
+  min-width: 0;
+  height: auto;
+  background: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
+}
+#container:has(> .pos-sidebar) header.topbar > .brand { display: none; }
+#container:has(> .pos-sidebar) header.topbar .mode-switch {
+  min-width: 0;
+  max-width: 100%;
+  justify-content: flex-start;
+  overflow-x: auto;
+}
+@media (max-width: 1120px) {
+  #container:has(> .pos-sidebar) { padding-inline-start: 72px; }
+  #container > .pos-sidebar { width: 72px; }
+}
+@media (max-width: 860px) {
+  #container:has(> .pos-sidebar) { padding-inline-start: 0; }
+  #container > .pos-sidebar { position: sticky; inset: 0 auto auto; width: 100%; height: auto; }
+  #container:has(> .pos-sidebar) #content header.topbar { padding: .65rem .85rem; }
+  #container:has(> .pos-sidebar) header.topbar .top-actions { flex-wrap: wrap; min-width: 0; }
+  #container:has(> .pos-sidebar) .form-row :is(input:not([type=checkbox]), select, textarea) {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+}
+@media print {
+  #container > .pos-sidebar { display: none; }
+  #container:has(> .pos-sidebar) { padding: 0; }
+}

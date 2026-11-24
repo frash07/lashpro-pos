@@ -26,3 +26,19 @@
   }
 </script>
 {% endblock %}
+
+{% block header %}
+  {% block workspace_navigation %}{% include "workspace/sidebar.html" %}{% endblock %}
+  {{ block.super }}
+{% endblock %}
+
+{% block responsive %}
+  {{ block.super }}
+  {% if not is_popup %}
+    <link rel="stylesheet" href="{% static 'css/pos-unified.css' %}">
+    <link rel="stylesheet" href="{% static 'admin/css/workspace.css' %}">
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap">
+    <script defer src="{% static 'js/admin-workspace.js' %}"></script>
+  {% endif %}
+{% endblock %}
