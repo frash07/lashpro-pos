@@ -301,11 +301,16 @@
         const retryButton = document.getElementById('retry-pending-checkout');
         if (retryButton) {
           const savedMethod = String(pendingCheckout.method || '').toUpperCase();
+          retryButton.hidden = false;
           if (savedMethod === 'MPESA') {
-            // Legacy manual-reference checkouts cannot be retried through the STK-only POS.
-            retryButton.hidden = true;
+            // Legacy saved checkouts are resumed through STK, never by replaying a manual reference.
+            retryButton.textContent = 'Continue with STK Push';
+            retryButton.addEventListener('click', () => {
+              if (!window.confirm('This checkout used the previous manual M-Pesa flow. Check Sales first. Continue only if the matching sale is not already paid and has a balance due. Continue with STK Push?')) return;
+              openModal('mpesa-modal');
+              document.getElementById('mpesa-phone').focus();
+            });
           } else {
-            retryButton.hidden = false;
             retryButton.addEventListener('click', () => {
               if (!window.confirm('Check Sales first. Retry the original checkout only if no matching sale was recorded. Continue?')) return;
               const savedPhone = pendingCheckout.mpesaPhone ||
