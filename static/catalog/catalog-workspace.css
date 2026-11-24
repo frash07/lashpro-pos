@@ -286,9 +286,9 @@ body.admin-suite-body.checkout-page.catalog-admin-page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .catalog-workspace-page *,
-  .catalog-workspace-page *::before,
-  .catalog-workspace-page *::after {
+  .catalog-admin-page *,
+  .catalog-admin-page *::before,
+  .catalog-admin-page *::after {
     scroll-behavior: auto !important;
     transition: none !important;
     animation: none !important;
