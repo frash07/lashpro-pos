@@ -99,15 +99,15 @@ ALLOWED_HOSTS = env.list(
 
 # Hosts that should keep the staff POS at the root URL. Add the custom POS
 # hostname here when the domain is registered; all other hosts serve the shop.
-POS_HOSTS = env.list("POS_HOSTS", default=["lashpro-pos.fly.dev"])
+POS_HOSTS = env.list("POS_HOSTS", default=["pos.lashproke.cc", "lashpro-pos.fly.dev"])
 POS_BASE_URL = env(
     "POS_BASE_URL",
-    default="https://lashpro-pos.fly.dev",
+    default="https://pos.lashproke.cc",
 ).strip().rstrip("/")
 
 STOREFRONT_BASE_URL = env(
     "STOREFRONT_BASE_URL",
-    default="https://lashpro-storefront.fly.dev",
+    default="https://lashproke.cc",
 ).strip().rstrip("/")
 
 # Production defaults activate when DEBUG is off. Trust the forwarded HTTPS
@@ -394,6 +394,8 @@ if DJANGO_ENV == "production" and not DURABLE_MEDIA_CONFIGURED:
 if DJANGO_ENV == "production":
     if DEBUG:
         raise ImproperlyConfigured("DEBUG must be false when DJANGO_ENV=production.")
+    if env.bool("SYNTHETIC_DATA_ENABLED", default=False):
+        raise ImproperlyConfigured("Synthetic data must never be enabled in production.")
     if not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS:
         raise ImproperlyConfigured("Set explicit ALLOWED_HOSTS for production.")
     if not CSRF_TRUSTED_ORIGINS:

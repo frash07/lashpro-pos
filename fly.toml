@@ -13,18 +13,19 @@ primary_region = 'ams'
   release_command = 'bash release.sh'
 
 [env]
-  ALLOWED_HOSTS = 'lashpro-pos.fly.dev'
+  ALLOWED_HOSTS = 'pos.lashproke.cc,lashpro-pos.fly.dev'
   AXES_IPWARE_PROXY_COUNT = '1'
   CSRF_COOKIE_SECURE = 'true'
-  CSRF_TRUSTED_ORIGINS = 'https://lashpro-pos.fly.dev'
+  CSRF_TRUSTED_ORIGINS = 'https://pos.lashproke.cc,https://lashpro-pos.fly.dev'
   DB_CONN_MAX_AGE = '0'
   DB_DISABLE_SERVER_SIDE_CURSORS = 'true'
   DEBUG = 'false'
   DJANGO_ENV = 'production'
   LOG_LEVEL = 'INFO'
   PORT = '8080'
-  POS_BASE_URL = 'https://lashpro-pos.fly.dev'
-  POS_HOSTS = 'lashpro-pos.fly.dev'
+  POS_BASE_URL = 'https://pos.lashproke.cc'
+  STOREFRONT_BASE_URL = 'https://lashproke.cc'
+  POS_HOSTS = 'pos.lashproke.cc,lashpro-pos.fly.dev'
   SECURE_HSTS_INCLUDE_SUBDOMAINS = 'false'
   SECURE_HSTS_PRELOAD = 'false'
   SECURE_HSTS_SECONDS = '300'
@@ -32,6 +33,11 @@ primary_region = 'ams'
   SESSION_COOKIE_SECURE = 'true'
   SYNTHETIC_DATA_ENABLED = 'false'
   TRUST_PROXY_SSL_HEADER = 'true'
+
+# Dedicated reservation expiry worker; scale scheduler=1 and verify after deploy.
+[processes]
+  app = 'gunicorn config.wsgi:application --bind 0.0.0.0:8080 --workers 1 --threads 2 --access-logfile - --access-logformat "%(m)s %(s)s %(D)s" --error-logfile -'
+  scheduler = 'bash scripts/reservation_scheduler.sh'
 
 [http_service]
   internal_port = 8080
@@ -46,7 +52,7 @@ primary_region = 'ams'
     timeout = '5s'
     grace_period = '15s'
     method = 'GET'
-    path = '/accounts/login/'
+    path = '/readyz'
 
     [http_service.checks.headers]
       Host = 'lashpro-pos.fly.dev'

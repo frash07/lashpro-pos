@@ -3,6 +3,7 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.db import connection, DatabaseError
 from django.shortcuts import redirect
 from django.templatetags.static import static
 from django.urls import reverse
@@ -29,6 +30,22 @@ def home(request):
 def health_check(request):
     """Expose a minimal liveness response for the hosting platform."""
     response = HttpResponse("ok", content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@require_GET
+def readiness_check(request):
+    """Check database connectivity without exposing internal configuration."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except DatabaseError:
+        response = HttpResponse("unavailable", status=503, content_type="text/plain; charset=utf-8")
+    else:
+        response = HttpResponse("ok", content_type="text/plain; charset=utf-8")
     response["Cache-Control"] = "no-store"
     response["X-Content-Type-Options"] = "nosniff"
     return response

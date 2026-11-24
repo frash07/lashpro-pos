@@ -5,6 +5,7 @@ import urllib.parse
 import urllib.request
 
 from django.conf import settings
+from django.utils import timezone
 from django.core.mail import EmailMessage
 from django.core.mail.backends.smtp import EmailBackend
 
@@ -53,7 +54,7 @@ def _phone_e164(value):
 
 def _appointment_message(appointment, event):
     copy = EVENT_COPY[event]
-    starts = appointment.starts_at.strftime("%a %d %b %Y, %I:%M %p")
+    starts = timezone.localtime(appointment.starts_at).strftime("%a %d %b %Y, %I:%M %p")
     staff = appointment.staff.get_full_name().strip() or appointment.staff.username
     return (
         f"{copy['heading']}, {appointment.customer_name}. "
@@ -134,8 +135,8 @@ def _send_whatsapp(config, appointment, event):
     params = [
         appointment.customer_name,
         appointment.service_name_snapshot,
-        appointment.starts_at.strftime("%d %b %Y"),
-        appointment.starts_at.strftime("%I:%M %p") + " · " + staff,
+        timezone.localtime(appointment.starts_at).strftime("%d %b %Y"),
+        timezone.localtime(appointment.starts_at).strftime("%I:%M %p") + " · " + staff,
     ]
     payload = {
         "messaging_product": "whatsapp",
