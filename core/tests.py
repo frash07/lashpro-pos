@@ -11,7 +11,7 @@ from accounts.models import User
 from core.log_filters import RedactSensitiveDataFilter
 from core.models import SharedDatabaseProbe
 from core.views import health_check, home
-from config.settings import _sentry_before_send
+from config.settings import _sentry_before_send, _sentry_before_send_transaction
 
 
 class HomeLandingTests(SimpleTestCase):
@@ -120,8 +120,6 @@ class SentryPrivacyTests(SimpleTestCase):
         )
 
     def test_transaction_request_context_is_also_scrubbed(self):
-        from config.settings import _sentry_before_send_transaction
-
         event = {
             "request": {
                 "url": "https://lashpro-pos.fly.dev/accounts/password-reset/u/token",
