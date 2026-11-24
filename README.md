@@ -36,3 +36,11 @@ Use named owner, manager, cashier, technician and trainer accounts; never share 
 - [Deferred roadmap](PRODUCT_ROADMAP.md)
 
 CI runs Django tests, migration checks, asset compilation and a Docker build. Production release is an explicit workflow dispatch from main following approval. The POS runs migrations first; the storefront follows. A successful CI run alone is not production acceptance. KRA eTIMS credential storage is not fiscal invoice submission.
+
+### Checkout during a connection drop
+
+Open Checkout while signed in and connected on the device that will run the register. Open a cash session before taking payment. The installed app can reopen its last saved checkout for up to 12 hours. Retail and service sales for walk-in customers can be saved locally with cash payment. Service lines still need a technician.
+
+Keep Checkout open or reopen it as the original cashier when connected. Check **Saved cash sales** and open each synced receipt as needed. Resolve sales marked **Needs review** with a manager before closing the cash session. The server uses current prices and stock and requires the original cash session. Keep browser data on the device until all saved sales have synced.
+
+M-Pesa, named customer checkouts, and other administrative actions require connectivity.

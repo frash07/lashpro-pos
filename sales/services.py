@@ -153,7 +153,7 @@ def _create_sale_line(*, sale, item):
 
 
 @transaction.atomic
-def record_sale_payment(*, sale, method, amount, reference="", actor=None, idempotency_key=None):
+def record_sale_payment(*, sale, method, amount, reference="", actor=None, idempotency_key=None, expected_cash_session_id=None):
     """Record cash or a legacy M-Pesa reference against a completed sale.
 
     New POS M-Pesa collection is STK-only. The legacy M-Pesa branch remains
@@ -241,6 +241,11 @@ def record_sale_payment(*, sale, method, amount, reference="", actor=None, idemp
         if cash_session is None:
             raise ValidationError({"cash_session": "Open a cash session before accepting cash."})
 
+    if expected_cash_session_id is not None and (
+        cash_session is None or cash_session.pk != expected_cash_session_id
+    ):
+        raise ValidationError("The original cash session is closed. Ask a manager to reconcile this sale.")
+
     payment = PaymentTransaction(
         amount=payment_amount,
         method=method,
@@ -297,7 +302,8 @@ def _normalize_idempotency_key(value):
         raise ValidationError({"idempotency_key": "Submit a valid checkout key."}) from None
 
 
-def checkout_sale(*, cashier, items, customer=None, payments=(), idempotency_key=None):
+def checkout_sale(*, cashier, items, customer=None, payments=(), idempotency_key=None,
+                  expected_total=None, expected_cash_session_id=None):
     """Create one completed sale for a checkout key, even if a request is retried."""
     if not getattr(cashier, "is_active", False) or not (
         cashier.is_superuser
@@ -314,7 +320,8 @@ def checkout_sale(*, cashier, items, customer=None, payments=(), idempotency_key
     try:
         return _create_checkout_sale(
             cashier=cashier, items=items, customer=customer, payments=payments,
-            idempotency_key=key,
+            idempotency_key=key, expected_total=expected_total,
+            expected_cash_session_id=expected_cash_session_id,
         )
     except IntegrityError:
         # A concurrent retry can pass the initial lookup; the unique database
@@ -328,7 +335,8 @@ def checkout_sale(*, cashier, items, customer=None, payments=(), idempotency_key
 
 
 @transaction.atomic
-def _create_checkout_sale(*, cashier, items, customer, payments, idempotency_key):
+def _create_checkout_sale(*, cashier, items, customer, payments, idempotency_key,
+                          expected_total, expected_cash_session_id):
     try:
         item_specs = list(items)
     except TypeError:
@@ -357,6 +365,9 @@ def _create_checkout_sale(*, cashier, items, customer, payments, idempotency_key
     sale.status = Sale.Status.COMPLETED
     sale.save(update_fields=("status",))
 
+    if expected_total is not None and sale.total_amount != expected_total:
+        raise ValidationError("The price changed since checkout. Ask a manager to reconcile this sale.")
+
     # Process M-Pesa allocations before cash so a cash tender can correctly
     # cover the remaining balance and calculate change independent of form order.
     ordered_payment_specs = sorted(
@@ -374,6 +385,7 @@ def _create_checkout_sale(*, cashier, items, customer, payments, idempotency_key
             method=payment.get("method"),
             amount=payment.get("amount"),
             reference=payment.get("reference", ""),
+            expected_cash_session_id=expected_cash_session_id,
         )
 
     return sale

@@ -2,6 +2,7 @@ import json
 import secrets
 import uuid
 from io import BytesIO
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib import messages
@@ -11,7 +12,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
+from django.middleware.csrf import get_token
+from django import forms
 from accounts.models import User
 from catalog.models import Product, Service
 from customers.models import Customer
@@ -170,9 +173,69 @@ def _build_checkout_initial_payments(payments):
     return rows
 
 
+def _checkout_items(lines):
+    items = []
+    for form in lines:
+        row = form.cleaned_data
+        if row.get("DELETE") or not (row.get("product") or row.get("service")):
+            continue
+        item = {"quantity": row["quantity"], "discount": row.get("discount") or "0.00", "discount_reason": row.get("discount_reason", "")}
+        item["product_id" if row.get("product") else "service_id"] = (row["product"].pk if row.get("product") else row["service"].pk)
+        if row.get("service"):
+            item["technician_id"] = row["technician"].pk
+        items.append(item)
+    return items
+
+
+class CashSyncForm(forms.Form):
+    idempotency_key = forms.UUIDField()
+    cashier_id = forms.IntegerField(min_value=1)
+    cash_session_id = forms.IntegerField(min_value=1)
+    amount = forms.DecimalField(min_value=Decimal("0.01"), max_digits=10, decimal_places=2)
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def cash_sync(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Sign in as the cashier who recorded this sale."}, status=401)
+    check_role(request.user)
+    if request.method == "GET":
+        return JsonResponse({"cashier_id": request.user.pk, "csrf": get_token(request)})
+
+    details = CashSyncForm(request.POST)
+    if not details.is_valid():
+        return JsonResponse({"error": "Invalid saved cash checkout."}, status=409)
+    data = details.cleaned_data
+    if data["cashier_id"] != request.user.pk:
+        return JsonResponse({"error": "Sign in as the original cashier to sync."}, status=403)
+
+    # A retry after an ambiguous response can succeed even if the catalogue or shift has since changed.
+    existing = Sale.objects.filter(
+        checkout_idempotency_key=data["idempotency_key"], cashier=request.user,
+    ).first()
+    if existing:
+        return JsonResponse({"receipt": reverse("sales:receipt", kwargs={"token": existing.receipt_token})})
+    lines = LineFormSet(request.POST, prefix="items")
+    if not lines.is_valid():
+        return JsonResponse({"error": "A saved item or technician is no longer valid. Review this sale with a manager."}, status=409)
+    try:
+        sale = checkout_sale(
+            cashier=request.user, items=_checkout_items(lines),
+            payments=[{"method": "CASH", "amount": data["amount"]}],
+            idempotency_key=data["idempotency_key"], expected_total=data["amount"],
+            expected_cash_session_id=data["cash_session_id"],
+        )
+    except ValidationError as exc:
+        return JsonResponse({"error": " ".join(exc.messages)}, status=409)
+    return JsonResponse({"receipt": reverse("sales:receipt", kwargs={"token": sale.receipt_token})})
+
+
 @login_required(login_url="login")
+@never_cache
 def checkout(request):
     check_role(request.user)
+    offline_shell = request.method == "GET" and request.GET.get("offline-shell") == "1"
     if request.method == "POST":
         details = CheckoutDetailsForm(request.POST)
         lines = LineFormSet(request.POST, prefix="items")
@@ -188,16 +251,7 @@ def checkout(request):
                     for error in field_errors:
                         messages.error(request, error)
         if valid_details and valid_lines and valid_payments:
-            items, payments = [], []
-            for form in lines:
-                row = form.cleaned_data
-                if row.get("DELETE") or not (row.get("product") or row.get("service")):
-                    continue
-                item = {"quantity": row["quantity"], "discount": row.get("discount") or "0.00", "discount_reason": row.get("discount_reason", "")}
-                item["product_id" if row.get("product") else "service_id"] = (row["product"].pk if row.get("product") else row["service"].pk)
-                if row.get("service"):
-                    item["technician_id"] = row["technician"].pk
-                items.append(item)
+            items, payments = _checkout_items(lines), []
             stk_mode = request.POST.get("checkout_payment_mode", "").upper() == "STK_PUSH"
             if not stk_mode:
                 for form in payments_formset:
@@ -301,12 +355,15 @@ def checkout(request):
         })
     from payments.models import CashSession
     cash_session = CashSession.objects.filter(cashier=request.user, status=CashSession.Status.OPEN).first()
-    admin_suite = _build_admin_suite_context(request.user)
-    inventory_products = products if admin_suite["is_manager"] else []
+    admin_suite = {} if offline_shell else _build_admin_suite_context(request.user)
+    inventory_products = products if admin_suite.get("is_manager") else []
     technicians = list(User.objects.filter(role=User.Role.TECHNICIAN, is_active=True).order_by("first_name", "username"))
     default_technician_id = request.user.pk if getattr(request.user, "role", None) == User.Role.TECHNICIAN else None
     technician_payload = [{"id": technician.pk, "name": technician.get_full_name() or technician.username} for technician in technicians]
-    return render(request, "sales/checkout.html", {"admin_suite": admin_suite, "inventory_products": inventory_products, "details": details, "lines": lines, "payments": payments_formset, "prices": prices, "products": products, "services": services, "catalog_items": catalog_items, "catalog_data_json": json.dumps(catalog_items), "initial_cart": initial_cart, "initial_payments": initial_payments, "cash_session": cash_session, "can_discount": request.user.is_superuser or request.user.role in {User.Role.OWNER, User.Role.MANAGER}, "technicians": technicians, "default_technician_id": default_technician_id, "technicians_json": json.dumps(technician_payload), "checkout_status_known_failure": request.method == "POST"})
+    response = render(request, "sales/checkout.html", {"offline_shell": offline_shell, "admin_suite": admin_suite, "inventory_products": inventory_products, "details": details, "lines": lines, "payments": payments_formset, "prices": prices, "products": products, "services": services, "catalog_items": catalog_items, "initial_cart": initial_cart, "initial_payments": initial_payments, "cash_session": cash_session, "can_discount": request.user.is_superuser or request.user.role in {User.Role.OWNER, User.Role.MANAGER}, "technicians": technicians, "default_technician_id": default_technician_id, "technicians_json": json.dumps(technician_payload), "checkout_status_known_failure": request.method == "POST"})
+    if offline_shell:
+        response["X-LashPro-Offline-Shell"] = "1"
+    return response
 
 
 @login_required(login_url="login")
