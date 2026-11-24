@@ -111,13 +111,15 @@ class CashierViewTests(TestCase):
         response = self.client.get(reverse("sales:catalog-snapshot"))
         self.assertEqual(response.status_code, 403)
 
-    def test_redesigned_checkout_uses_real_customer_and_manual_mpesa_fields(self):
+    def test_redesigned_checkout_uses_real_customer_and_stk_only_mpesa(self):
         self.client.force_login(self.cashier)
         response = self.client.get(reverse("sales:checkout"))
         self.assertContains(response, 'name="customer"')
-        self.assertContains(response, 'id="mpesa-reference"')
-        self.assertContains(response, "recorded as unverified")
-        self.assertNotContains(response, 'id="client-name"')
+        self.assertContains(response, 'id="mpesa-phone"')
+        self.assertContains(response, "M-Pesa STK Push")
+        self.assertNotContains(response, 'id="mpesa-reference"')
+        self.assertNotContains(response, "Record manual payment")
+        self.assertNotContains(response, 'name="client-name"')
         self.assertNotContains(response, "processSTKPush")
 
     def test_technician_dropdown_uses_real_user_ids(self):
