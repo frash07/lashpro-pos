@@ -1,0 +1,32 @@
+{% extends "admin_workspace/base.html" %}
+{% load l10n %}
+{% block workspace %}
+<section class="quick-stats product-stats" aria-label="Register overview"><article class="stat-card"><span class="stat-icon"><i data-lucide="{{ workspace_icon }}"></i></span><span><small>Matching records</small><strong>{{ cl.result_count }}</strong></span></article>{% if cl.show_full_result_count %}<article class="stat-card"><span class="stat-icon"><i data-lucide="layers"></i></span><span><small>Total records</small><strong>{{ cl.full_result_count }}</strong></span></article>{% endif %}</section>
+<section class="welcome product-welcome"><div class="welcome-copy"><div class="eyebrow">{{ workspace_module }}</div><h1>{{ workspace_title }}<em>.</em></h1><p>{{ workspace_description }}</p></div>{% if workspace_add_url %}<a class="product-button primary" href="{{ workspace_add_url }}"><i data-lucide="plus"></i> Add {{ cl.opts.verbose_name }}</a>{% endif %}</section>
+<section aria-labelledby="register-heading">
+<div class="register-heading"><div><h2 id="register-heading">{{ workspace_title }}</h2><p>{{ cl.result_count }} matching record{{ cl.result_count|pluralize }}</p></div><a class="product-button secondary" href="{{ workspace_app_url }}">Module overview</a></div>
+<form method="get" class="register-toolbar" role="search">
+{% for key, value in workspace_search_params %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+{% if cl.search_fields %}<label class="search-box"><i data-lucide="search"></i><span class="sr-only">Search records</span><input type="search" name="q" value="{{ cl.query }}" placeholder="Search {{ workspace_title|lower }}…" autocomplete="off"></label>{% endif %}
+<label><span class="sr-only">Sort records</span><select name="o">{% for value, label, selected in workspace_sorts %}<option value="{{ value }}"{% if selected %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><button class="product-button primary" type="submit">Apply</button>
+</form>
+{% if workspace_filters or workspace_hierarchy.show %}
+<div class="register-filter-bar">
+{% if workspace_hierarchy.show %}<div class="register-date-nav" aria-label="Date navigation">{% if workspace_hierarchy.back %}<a class="product-button secondary" href="{{ workspace_hierarchy.back.link }}">← {{ workspace_hierarchy.back.title }}</a>{% endif %}{% for choice in workspace_hierarchy.choices %}{% if choice.link %}<a class="product-button secondary" href="{{ choice.link }}">{{ choice.title }}</a>{% else %}<span>{{ choice.title }}</span>{% endif %}{% endfor %}</div>{% endif %}
+{% for filter in workspace_filters %}<details class="register-filter"><summary>{{ filter.title|capfirst }} <i data-lucide="chevron-down"></i></summary><div class="register-filter-options">{% for choice in filter.choices %}<a class="filter-option{% if choice.selected %} selected{% endif %}" href="{{ choice.query_string }}"{% if choice.selected %} aria-current="true"{% endif %}>{{ choice.display }}</a>{% endfor %}</div></details>{% endfor %}
+<div class="register-filter-links"><a href="{{ workspace_list_url }}">Reset</a>{% if cl.has_filters and cl.show_facets.value != "never" %}<a href="{{ workspace_facets }}">{% if cl.add_facets %}Hide{% else %}Show{% endif %} counts</a>{% endif %}</div>
+</div>{% endif %}
+<form method="post" id="product-actions">{% csrf_token %}
+{% if action_form and workspace_rows %}<div class="product-bulk"><label class="register-check"><input type="checkbox" id="product-select-all"> Select page</label><span id="product-selection" aria-live="polite">0 selected</span><label class="product-action-field"><span class="sr-only">Bulk action</span>{{ action_form.action }}</label><input type="hidden" name="select_across" value="0"><button type="submit" class="product-button secondary" name="index" value="0">Run action</button></div>{% endif %}
+<div class="register-grid">
+{% for row in workspace_rows %}<article class="register-record">
+<div class="register-record-top"><span class="register-record-icon"><i data-lucide="{{ workspace_icon }}" aria-hidden="true"></i></span>{% if action_form %}<label class="register-check"><input type="checkbox" name="_selected_action" value="{{ row.pk|unlocalize }}"><span class="sr-only">Select {{ row.title|striptags }}</span></label>{% endif %}</div>
+<div class="register-record-body"><h3>{% if row.url %}<a href="{{ row.url }}">{{ row.title }}</a>{% else %}{{ row.title }}{% endif %}</h3>
+<dl class="record-fields">{% for field in row.fields %}<div><dt>{{ field.label }}</dt><dd{% if field.tone %} class="record-{{ field.tone }}"{% endif %}>{{ field.value }}</dd></div>{% endfor %}</dl>
+{% if row.url %}<div class="register-record-footer"><a class="product-button secondary" href="{{ row.url }}">Open record <i data-lucide="arrow-up-right"></i></a></div>{% endif %}
+</div></article>
+{% empty %}<div class="product-empty"><i data-lucide="search"></i><h3>No records found</h3><p>Try a different search or reset your filters.</p><a class="product-button secondary" href="{{ workspace_list_url }}">Reset filters</a></div>{% endfor %}
+</div></form>
+{% if workspace_pages %}<nav class="product-pagination" aria-label="Record pages">{% if workspace_previous %}<a href="{{ workspace_previous }}">Previous</a>{% endif %}{% for page in workspace_pages %}{% if page.ellipsis %}<span>…</span>{% else %}<a href="{{ page.url }}"{% if page.current %} aria-current="page"{% endif %}>{{ page.number }}</a>{% endif %}{% endfor %}{% if workspace_next %}<a href="{{ workspace_next }}">Next</a>{% endif %}{% if workspace_show_all %}<a href="{{ workspace_show_all }}">Show all</a>{% endif %}</nav>{% endif %}
+</section>
+{% endblock %}
