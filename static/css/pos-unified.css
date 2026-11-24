@@ -349,19 +349,25 @@
     height: 66px;
     min-height: 0;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding: 5px 8px calc(5px + env(safe-area-inset-bottom));
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
     border-top: 1px solid var(--ui-border);
     border-right: 0;
     background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
     box-shadow: 0 -5px 20px rgba(var(--shadow-rgb), .07);
     backdrop-filter: blur(16px);
   }
+  .pos-sidebar::-webkit-scrollbar { display: none; }
   .pos-brand, .pos-studio-card, .pos-sidebar-spacer, .pos-sidebar-user, .pos-nav-label,
   .pos-nav-label-secondary { display: none; }
-  /* Flatten both navigation groups so role-specific secondary links stay reachable on mobile. */
+  /* Flatten both navigation groups so all role-specific links can scroll horizontally on mobile. */
   .pos-sidebar .pos-nav { display: contents; }
-  .pos-nav-link { display: grid; min-width: 0; min-height: 50px; flex: 1 1 0; align-content: center; justify-items: center; gap: 3px; padding: 4px 2px; font-size: 8px; }
+  .pos-nav-link { display: grid; min-width: 66px; min-height: 50px; flex: 0 0 66px; align-content: center; justify-items: center; gap: 3px; padding: 4px 2px; font-size: 8px; }
   .pos-nav-link span { display: block; overflow: hidden; width: 100%; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .pos-nav-link svg { width: 17px; height: 17px; }
   .pos-topbar { min-height: 64px; padding: 8px 14px; }
