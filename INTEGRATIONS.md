@@ -30,7 +30,7 @@ The owner form stores the taxpayer PIN, branch, device identifier, communication
 
 ## Deploying the branch
 
-Apply the migrations (core.0002_integrationsettings and payments.0009_mpesa_stk_push) as part of the normal release process, install the requirements, and verify the Fly callback URL and public POS_BASE_URL. Keep this branch in pilot until sandbox callbacks and all notification templates have been tested with real provider accounts.
+Apply the migrations (core.0002_integrationsettings, payments.0009_mpesa_stk_push and payments.0010_unique_stk_receipt) as part of the normal release process, install the requirements, and verify the Fly callback URL and public POS_BASE_URL. Keep this branch in pilot until sandbox STK prompts, callback races, duplicate receipt protection and the POS checkout flow have been tested with the Daraja sandbox account.
 
 
 ## WhatsApp catalogue commerce

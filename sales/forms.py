@@ -112,8 +112,8 @@ class PaymentForm(forms.Form):
             self.add_error("method", "Choose Cash or M-Pesa.")
         if amount is None:
             self.add_error("amount", "Enter the amount collected.")
-        if method == PaymentTransaction.Method.MPESA and not reference:
-            self.add_error("reference", "Enter the M-Pesa reference.")
+        if method == PaymentTransaction.Method.MPESA:
+            self.add_error("method", "M-Pesa payments must be collected through an STK Push. Manual transaction references are not accepted.")
         data["reference"] = reference
         return data
 
@@ -132,9 +132,7 @@ class BalancePaymentForm(forms.Form):
     def clean(self):
         data = super().clean()
         if data and data.get("method") == PaymentTransaction.Method.MPESA:
-            data["reference"] = (data.get("reference") or "").strip()
-            if not data["reference"]:
-                self.add_error("reference", "Enter the manual M-Pesa reference.")
+            self.add_error("method", "M-Pesa balance payments must be collected through an STK Push. Manual transaction references are not accepted.")
         return data
 
 

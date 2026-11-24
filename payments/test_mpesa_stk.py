@@ -3,14 +3,21 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase
 
 from accounts.models import User
 from catalog.models import Service
 from core.models import IntegrationSettings
 from payments.models import MpesaStkPush, PaymentTransaction, SalePayment
-from payments.mpesa import initiate_stk_push, normalize_mpesa_phone, process_stk_callback
+from payments.mpesa import (
+    DarajaOutcomeUnknown, _read_json_response, initiate_stk_push,
+    normalize_mpesa_phone, process_stk_callback,
+)
+from sales.forms import PaymentForm
 from sales.models import Sale, SaleLine
+import urllib.error
+import urllib.request
 
 
 class MpesaPhoneNormalizationTests(SimpleTestCase):
@@ -22,6 +29,26 @@ class MpesaPhoneNormalizationTests(SimpleTestCase):
     def test_rejects_non_kenyan_or_invalid_numbers(self):
         with self.assertRaises(ValidationError):
             normalize_mpesa_phone("0201234567")
+
+    def test_temporary_http_error_from_stk_post_is_outcome_unknown(self):
+        request = urllib.request.Request(
+            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+            data=b"{}",
+            method="POST",
+        )
+        error = urllib.error.HTTPError(request.full_url, 500, "server error", {}, None)
+        with patch("payments.mpesa.urllib.request.urlopen", side_effect=error):
+            with self.assertRaises(DarajaOutcomeUnknown):
+                _read_json_response(request)
+
+    def test_pos_payment_form_rejects_manual_mpesa_reference(self):
+        form = PaymentForm(data={
+            "method": "MPESA",
+            "amount": "1500.00",
+            "reference": "QWE1234567",
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("STK Push", str(form.errors))
 
 
 class MpesaStkCallbackTests(TestCase):
@@ -161,6 +188,109 @@ class MpesaStkCallbackTests(TestCase):
         self.assertEqual(push.status, MpesaStkPush.Status.FAILED)
         self.assertEqual(push.payment_transaction.status, PaymentTransaction.Status.FAILED)
         self.assertEqual(self.sale.available_to_collect, Decimal("1500.00"))
+
+    @patch("payments.mpesa._stk_request")
+    def test_callback_can_arrive_before_initiation_response(self, stk_request):
+        callback = {
+            "Body": {"stkCallback": {
+                "CheckoutRequestID": "ws_CO_fast_callback",
+                "ResultCode": 0,
+                "ResultDesc": "Success",
+                "CallbackMetadata": {"Item": [
+                    {"Name": "Amount", "Value": 1500},
+                    {"Name": "MpesaReceiptNumber", "Value": "FAST1234567"},
+                    {"Name": "PhoneNumber", "Value": 254712345678},
+                ]},
+            }}
+        }
+
+        def send_callback_before_response(*args, **kwargs):
+            process_stk_callback(callback_token="callback-before-response", payload=callback)
+            return {
+                "ResponseCode": "0",
+                "MerchantRequestID": "merchant-fast",
+                "CheckoutRequestID": "ws_CO_fast_callback",
+            }
+
+        stk_request.side_effect = send_callback_before_response
+        push = initiate_stk_push(
+            sale=self.sale,
+            amount=Decimal("1500.00"),
+            phone="0712345678",
+            callback_url="https://lashpro-pos.fly.dev/callback/",
+            callback_token="callback-before-response",
+            idempotency_key=uuid.uuid4(),
+            actor=self.owner,
+        )
+        push.refresh_from_db()
+        push.payment_transaction.refresh_from_db()
+        self.assertEqual(push.checkout_request_id, "ws_CO_fast_callback")
+        self.assertEqual(push.status, MpesaStkPush.Status.SUCCEEDED)
+        self.assertEqual(push.payment_transaction.status, PaymentTransaction.Status.SUCCEEDED)
+
+    @patch("payments.mpesa._stk_request")
+    def test_callback_response_id_mismatch_downgrades_to_unknown(self, stk_request):
+        callback = {
+            "Body": {"stkCallback": {
+                "CheckoutRequestID": "ws_CO_callback_id",
+                "ResultCode": 0,
+                "ResultDesc": "Success",
+                "CallbackMetadata": {"Item": [
+                    {"Name": "Amount", "Value": 1500},
+                    {"Name": "MpesaReceiptNumber", "Value": "MISMATCH123"},
+                    {"Name": "PhoneNumber", "Value": 254712345678},
+                ]},
+            }}
+        }
+
+        def send_mismatched_response(*args, **kwargs):
+            process_stk_callback(callback_token="callback-id-mismatch", payload=callback)
+            return {
+                "ResponseCode": "0",
+                "MerchantRequestID": "merchant-mismatch",
+                "CheckoutRequestID": "ws_CO_different_id",
+            }
+
+        stk_request.side_effect = send_mismatched_response
+        push = initiate_stk_push(
+            sale=self.sale,
+            amount=Decimal("1500.00"),
+            phone="0712345678",
+            callback_url="https://lashpro-pos.fly.dev/callback/",
+            callback_token="callback-id-mismatch",
+            idempotency_key=uuid.uuid4(),
+            actor=self.owner,
+        )
+        push.refresh_from_db()
+        push.payment_transaction.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.UNKNOWN)
+        self.assertEqual(push.payment_transaction.status, PaymentTransaction.Status.UNVERIFIED)
+
+    def test_receipt_number_is_unique_case_insensitively(self):
+        existing_payment = PaymentTransaction.objects.create(
+            amount=Decimal("1500.00"), method=PaymentTransaction.Method.MPESA,
+            status=PaymentTransaction.Status.UNVERIFIED, reference="STK-RECEIPT-1",
+            recorded_by=self.owner,
+        )
+        MpesaStkPush.objects.create(
+            payment_transaction=existing_payment,
+            callback_token="receipt-already-used",
+            phone_number="254712345678",
+            mpesa_receipt_number="DUPLICATE123",
+        )
+        second_payment = PaymentTransaction.objects.create(
+            amount=Decimal("1500.00"), method=PaymentTransaction.Method.MPESA,
+            status=PaymentTransaction.Status.UNVERIFIED, reference="STK-RECEIPT-2",
+            recorded_by=self.owner,
+        )
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                MpesaStkPush.objects.create(
+                    payment_transaction=second_payment,
+                    callback_token="receipt-reuse-test",
+                    phone_number="254712345678",
+                    mpesa_receipt_number="duplicate123",
+                )
 
     def test_callback_with_wrong_checkout_id_is_rejected(self):
         payment = PaymentTransaction.objects.create(

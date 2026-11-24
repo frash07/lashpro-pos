@@ -154,10 +154,11 @@ def _create_sale_line(*, sale, item):
 
 @transaction.atomic
 def record_sale_payment(*, sale, method, amount, reference="", actor=None, idempotency_key=None):
-    """Record a cash or manually entered M-Pesa payment against a completed sale.
+    """Record cash or a legacy M-Pesa reference against a completed sale.
 
-    A caller-supplied key makes a repeated cashier form submission safe. The
-    payment row and sale allocation are created together in a savepoint.
+    New POS M-Pesa collection is STK-only. The legacy M-Pesa branch remains
+    solely to support historical records and controlled reconciliation workflows.
+    A caller-supplied key makes repeated cash submissions safe.
     """
     sale_id = sale.pk if isinstance(sale, Sale) else sale
     try:

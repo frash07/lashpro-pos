@@ -298,8 +298,8 @@ After deployment, use separate named staff accounts and test with controlled tra
 - open and close a cash session;
 - complete a product + service checkout;
 - print the receipt;
-- record a cash payment and a manual M-Pesa reference;
-- verify the manual M-Pesa payment remains unverified until reconciliation;
+- record a cash payment;
+- initiate a sandbox M-Pesa STK Push and confirm the payment remains pending until the successful Daraja callback;
 - test a partial payment and repeat submission to confirm idempotency;
 - test refund request and independent manager approval;
 - verify stock movements, service consumables and commission ledger entries;
