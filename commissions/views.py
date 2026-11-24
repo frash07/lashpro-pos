@@ -6,6 +6,7 @@ from django.db.models import Sum
 from decimal import Decimal
 
 from accounts.models import User
+from core.admin_workspace import operational_workspace
 from payments.models import CashSession
 from .forms import CommissionPayoutForm
 from .models import CommissionLedgerEntry, CommissionPayoutRecord, CommissionPayoutRequest
@@ -83,6 +84,7 @@ def commission_dashboard(request):
             })
         balance = None
     return render(request, "commissions/dashboard.html", {
+        **operational_workspace(request, "Commissions", "commissions"),
         "is_manager": is_manager, "technicians": technicians,
         "payout_form": CommissionPayoutForm(), "payout_requests": requests[:100],
         "payout_records": records[:100], "ledger": ledger[:100], "available_balance": balance,

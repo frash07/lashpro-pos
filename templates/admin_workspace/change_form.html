@@ -13,7 +13,7 @@
 <h2>{{ inline.opts.verbose_name_plural|capfirst }}</h2>{{ inline.formset.management_form }}{{ inline.formset.non_form_errors }}
 {% for inline_form in inline %}
 <div class="inline-related{% if inline_form.original %} has_original{% endif %}{% if forloop.last and inline.has_add_permission %} empty-form{% endif %}" id="{{ inline.formset.prefix }}-{% if forloop.last and inline.has_add_permission %}empty{% else %}{{ forloop.counter0 }}{% endif %}">
-<h3><b>{{ inline.opts.verbose_name|capfirst }}:</b> <span class="inline_label">{% if inline_form.original %}{{ inline_form.original }}{% else %}#{{ forloop.counter }}{% endif %}</span>{% if inline_form.original and inline.has_delete_permission %}<span class="delete">{{ inline_form.deletion_field.field }} {{ inline_form.deletion_field.label_tag }}</span>{% endif %}</h3>
+<h3><b>{{ inline.opts.verbose_name|capfirst }}:</b> <span class="inline_label">{% if inline_form.original %}{{ inline_form.original }}{% else %}#{{ forloop.counter }}{% endif %}</span>{% if inline_form.original and inline.has_delete_permission and inline.formset.can_delete %}<span class="delete">{{ inline_form.deletion_field.field }} {{ inline_form.deletion_field.label_tag }}</span>{% endif %}</h3>
 {{ inline_form.form.non_field_errors }}{% for hidden in inline_form.form.hidden_fields %}{{ hidden }}{{ hidden.errors }}{% endfor %}
 {% for fieldset in inline_form %}{% include "admin_workspace/fieldset.html" %}{% endfor %}
 </div>{% endfor %}</section>{% endfor %}
