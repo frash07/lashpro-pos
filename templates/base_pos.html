@@ -45,12 +45,23 @@
       </a>
       {% endif %}
       {% if request.user.role != "CUSTOMER" %}
-      <a class="pos-nav-link{% if request.resolver_match.namespace == 'training' %} is-active{% endif %}" href="{% url 'training:dashboard' %}"{% if request.resolver_match.namespace == 'training' %} aria-current="page"{% endif %}>
+      <a class="pos-nav-link{% if request.resolver_match.namespace == 'training' and request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'training:dashboard' %}"{% if request.resolver_match.namespace == 'training' and request.resolver_match.url_name == 'dashboard' %} aria-current="page"{% endif %}>
         <i data-lucide="graduation-cap" aria-hidden="true"></i><span>Academy</span>
+      </a>
+      {% endif %}
+      {% if request.user.role == "OWNER" or request.user.role == "MANAGER" %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'manage' or request.resolver_match.url_name == 'edit_course' or request.resolver_match.url_name == 'edit_cohort' %} is-active{% endif %}" href="{% url 'training:manage' %}">
+        <i data-lucide="book-open-check" aria-hidden="true"></i><span>Academy management</span>
+      </a>
+      {% endif %}
+      {% if can_enroll %}
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'enroll' %} is-active{% endif %}" href="{% url 'training:enroll' %}">
+        <i data-lucide="user-plus" aria-hidden="true"></i><span>Enroll student</span>
       </a>
       {% endif %}
     </nav>
 
+    {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" or request.user.role == "TECHNICIAN" %}
     <div class="pos-nav-label pos-nav-label-secondary">More operations</div>
     <nav class="pos-nav" aria-label="More operations">
       {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" %}
@@ -67,7 +78,7 @@
       </a>
       {% endif %}
       {% if request.user.role == "OWNER" or request.user.role == "MANAGER" or request.user.role == "CASHIER" %}
-      <a class="pos-nav-link{% if request.resolver_match.namespace == 'payments' %} is-active{% endif %}" href="{% url 'payments:cash-session' %}">
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'cash-session' %} is-active{% endif %}" href="{% url 'payments:cash-session' %}">
         <i data-lucide="banknote" aria-hidden="true"></i><span>Cash session</span>
       </a>
       {% endif %}
@@ -80,8 +91,21 @@
       <a class="pos-nav-link{% if request.resolver_match.namespace == 'expenses' %} is-active{% endif %}" href="{% url 'expenses:dashboard' %}">
         <i data-lucide="receipt-text" aria-hidden="true"></i><span>Expenses</span>
       </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'reconciliation' %} is-active{% endif %}" href="{% url 'payments:reconciliation' %}">
+        <i data-lucide="file-check-2" aria-hidden="true"></i><span>M-Pesa review</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'receipts' or request.resolver_match.url_name == 'receipt_detail' %} is-active{% endif %}" href="{% url 'inventory:receipts' %}">
+        <i data-lucide="clipboard-list" aria-hidden="true"></i><span>Supplier receipts</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'product_import' %} is-active{% endif %}" href="{% url 'inventory:product_import' %}">
+        <i data-lucide="file-up" aria-hidden="true"></i><span>Import products</span>
+      </a>
+      <a class="pos-nav-link{% if request.resolver_match.url_name == 'integrations-settings' %} is-active{% endif %}" href="{% url 'integrations-settings' %}">
+        <i data-lucide="plug-zap" aria-hidden="true"></i><span>API integrations</span>
+      </a>
       {% endif %}
     </nav>
+    {% endif %}
 
     <div class="pos-sidebar-spacer"></div>
     <section class="pos-studio-card" aria-label="Active studio">
