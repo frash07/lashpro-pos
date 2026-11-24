@@ -101,7 +101,7 @@ def _catalog_payload(product, retailer_id, *, require_image=True):
         visibility = "staging"
 
     storefront_base = getattr(
-        settings, "STOREFRONT_BASE_URL", "https://lashpro-storefront.fly.dev"
+        settings, "STOREFRONT_BASE_URL", "https://lashproke.cc"
     ).rstrip("/")
     product_link = storefront_base + "/?" + urllib.parse.urlencode({
         "kind": "products",

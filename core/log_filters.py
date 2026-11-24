@@ -8,6 +8,8 @@ _SENSITIVE_PATTERNS = (
         r"\1<redacted>/<redacted>",
     ),
     (re.compile(r"(?i)(/sales/r/)[^/?#\s]+"), r"\1<redacted>"),
+    (re.compile(r"(?i)(/payments/(?:mpesa/stk/callback|c2b/(?:confirmation|validation))/)[^/?#\s]+"), r"\1<redacted>"),
+    (re.compile(r"(?i)(/appointments/confirmation/|/order/)[^/?#\s]+"), r"\1<redacted>"),
     (
         re.compile(
             r"(?i)([?&](?:token|password|reference|mpesa_reference|secret|api_key|"

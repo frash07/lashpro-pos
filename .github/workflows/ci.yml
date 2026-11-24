@@ -171,8 +171,8 @@ jobs:
             fi
           done
           if (( ${#missing[@]} )); then
-            echo "::notice::Production POS and storefront deployments skipped. Add repository secrets: ${missing[*]}."
-            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Production deployment requested but required repository secrets are missing: ${missing[*]}."
+            exit 1
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi

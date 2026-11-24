@@ -12,7 +12,7 @@ A newly-created appointment request sends an email and, when configured, an SMS 
 - **SMS:** select Africa's Talking, enter the application username and API key. Use sandbox mode while testing. A live sender ID may need provider approval.
 - **WhatsApp:** add the Meta Cloud API access token and WhatsApp Business phone-number ID. Create and approve three utility templates (request received, confirmed, cancelled) in WhatsApp Manager, then enter their exact names. Each template body must accept four text variables, in order: customer name, service name, date, and time/provider.
 
-Provider delivery is best-effort: a provider outage is logged but does not undo or block a booking. Customers should still see the on-screen booking reference.
+Provider delivery is best-effort: a provider outage is logged but does not undo or block a booking. Production booking emails are not sent through the console backend when SMTP is absent, to avoid logging customer information. Customers should still see the on-screen booking reference.
 
 ## Safaricom Daraja STK Push
 
@@ -28,9 +28,9 @@ This implementation deliberately does not edit immutable transaction references.
 
 The owner form stores the taxpayer PIN, branch, device identifier, communication key and the selected environment as encrypted setup data. **It does not submit invoices to KRA and must not be presented as an active eTIMS integration.** KRA OSCU/VSCU self-integration requires the correct technical specification, testing and KRA vetting/certification, plus taxpayer/device activation. The actual invoice payload, receipt response, offline queue/retry policy and fiscal reconciliation must be implemented and tested against the approved KRA protocol before enabling production submission.
 
-## Deploying the branch
+## Production acceptance
 
-Apply the migrations (core.0002_integrationsettings, payments.0009_mpesa_stk_push and payments.0010_unique_stk_receipt) as part of the normal release process, install the requirements, and verify the Fly callback URL and public POS_BASE_URL. Keep this branch in pilot until sandbox STK prompts, callback races, duplicate receipt protection and the POS checkout flow have been tested with the Daraja sandbox account.
+Apply the migrations (core.0002_integrationsettings, payments.0009_mpesa_stk_push and payments.0010_unique_stk_receipt) as part of the normal release process, install the requirements, and verify the Fly callback URL and public POS_BASE_URL. Keep payment collection in pilot until sandbox STK prompts, callback races, duplicate receipt protection and the POS checkout flow have been tested with the Daraja sandbox account.
 
 
 ## WhatsApp catalogue commerce
@@ -49,3 +49,8 @@ A C2B confirmation creates a Safaricom-confirmed M-Pesa transaction in LashPro. 
 C2B callback data is idempotent by M-Pesa receipt number. LashPro stores the payer name fields supplied by Safaricom and a masked/withheld phone display; it does not retain the full MSISDN or the raw callback body. The C2B callback token is stored with the encrypted integration configuration.
 
 C2B confirmation proves that the money reached the configured shortcode. Cashier allocation is a separate, audited action that links the received payment to a sale. It must not be performed solely because the amount matches.
+
+
+## Canonical production callbacks
+
+Set POS_BASE_URL=https://pos.lashproke.cc and STOREFRONT_BASE_URL=https://lashproke.cc on both Fly apps. Confirm TLS and DNS before registering callbacks. Register C2B URLs anew after the domain change; preserve old Fly aliases while outstanding STK requests settle. Never paste callback tokens or live credentials into issues or logs. Use a controlled low-value live transaction only after sandbox acceptance and business approval. Match every recorded receipt to the business's Safaricom statement; investigate UNKNOWN or pending requests without resending a prompt. See [docs/CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md) for the integration acceptance matrix.

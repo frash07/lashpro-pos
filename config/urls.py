@@ -5,11 +5,13 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 
-from core.views import service_worker, admin_suite, home, integration_settings
+from core.views import service_worker, admin_suite, home, integration_settings, health_check, readiness_check
 from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
 from storefront.whatsapp_views import whatsapp_webhook
 urlpatterns = [
+    path("healthz", health_check, name="health-check"),
+    path("readyz", readiness_check, name="readiness-check"),
     path("sw.js", service_worker, name="service_worker"),
     path("webhooks/whatsapp/", whatsapp_webhook, name="whatsapp_webhook"),
     path("accounts/home/", home, name="home"),

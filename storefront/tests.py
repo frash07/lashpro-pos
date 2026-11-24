@@ -22,8 +22,8 @@ User = get_user_model()
 
 
 @override_settings(
-    ALLOWED_HOSTS=["testserver", "lashproke.co.ke", "pos.lashproke.co.ke"],
-    POS_HOSTS=["pos.lashproke.co.ke"],
+    ALLOWED_HOSTS=["testserver", "lashproke.cc", "pos.lashproke.cc"],
+    POS_HOSTS=["pos.lashproke.cc"],
 )
 class StorefrontHomeTests(TestCase):
     @classmethod
@@ -54,7 +54,7 @@ class StorefrontHomeTests(TestCase):
     def test_root_domain_renders_active_products_and_services(self):
         response = self.client.get(
             reverse("storefront:home"),
-            HTTP_HOST="lashproke.co.ke",
+            HTTP_HOST="lashproke.cc",
         )
 
         self.assertEqual(response.status_code, 200)
@@ -67,7 +67,7 @@ class StorefrontHomeTests(TestCase):
     def test_service_card_links_directly_to_online_booking(self):
         response = self.client.get(
             reverse("storefront:home"),
-            HTTP_HOST="lashproke.co.ke",
+            HTTP_HOST="lashproke.cc",
         )
 
         self.assertEqual(response.status_code, 200)
@@ -80,7 +80,7 @@ class StorefrontHomeTests(TestCase):
         self.service.active = False
         self.service.save(update_fields=("active",))
 
-        response = self.client.get("/", HTTP_HOST="lashproke.co.ke")
+        response = self.client.get("/", HTTP_HOST="lashproke.cc")
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Our service menu is being prepared")
@@ -94,7 +94,7 @@ class StorefrontHomeTests(TestCase):
             ("storefront:terms", "Terms of service"),
             ("storefront:returns", "Returns &amp; refunds"),
         ):
-            response = self.client.get(reverse(name), HTTP_HOST="lashproke.co.ke")
+            response = self.client.get(reverse(name), HTTP_HOST="lashproke.cc")
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, heading)
             self.assertContains(response, "support@lashpro.ke")
@@ -103,7 +103,7 @@ class StorefrontHomeTests(TestCase):
     def test_pos_hostname_root_redirects_to_staff_checkout(self):
         response = self.client.get(
             "/",
-            HTTP_HOST="pos.lashproke.co.ke",
+            HTTP_HOST="pos.lashproke.cc",
         )
 
         self.assertRedirects(
@@ -116,7 +116,7 @@ class StorefrontHomeTests(TestCase):
         response = self.client.get(
             "/",
             {"kind": "products", "q": "adhesive"},
-            HTTP_HOST="lashproke.co.ke",
+            HTTP_HOST="lashproke.cc",
         )
 
         self.assertEqual(response.status_code, 200)
@@ -129,7 +129,7 @@ class StorefrontHomeTests(TestCase):
         product_response = self.client.get(
             "/",
             {"q": "WEB-001"},
-            HTTP_HOST="lashproke.co.ke",
+            HTTP_HOST="lashproke.cc",
         )
         self.assertEqual(product_response.status_code, 200)
         self.assertContains(product_response, "Lash Adhesive")
@@ -139,7 +139,7 @@ class StorefrontHomeTests(TestCase):
         service_response = self.client.get(
             "/",
             {"q": "classic lash"},
-            HTTP_HOST="lashproke.co.ke",
+            HTTP_HOST="lashproke.cc",
         )
         self.assertEqual(service_response.status_code, 200)
         self.assertContains(service_response, "Classic Lash Set")
@@ -150,7 +150,7 @@ class StorefrontHomeTests(TestCase):
         response = self.client.get(
             "/",
             {"kind": "services"},
-            HTTP_HOST="lashproke.co.ke",
+            HTTP_HOST="lashproke.cc",
         )
         self.assertContains(response, 'type="hidden" name="kind" value="services"')
 

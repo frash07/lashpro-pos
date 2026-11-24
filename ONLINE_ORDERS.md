@@ -31,7 +31,7 @@ The POS sale does not create a payment automatically. The storefront payment opt
 
 1. Open the POS **Collect a sale balance** page from the online order's linked POS sale.
 2. Record cash received (cash collection requires the collecting staff member to have an open cash session), or send an M-Pesa STK Push to the customer's Safaricom phone.
-3. An M-Pesa payment remains pending until Safaricom sends a successful callback containing the matching amount, phone and receipt number. Manual M-Pesa references are not accepted in the POS.
+3. An M-Pesa payment remains pending until Safaricom sends a successful callback containing the matching amount, phone and receipt number. Manual M-Pesa references are not accepted in the POS. Alternatively, allocate a confirmed Paybill/Till payment from the incoming M-Pesa inbox after verifying the payer and sale.
 
 This keeps gross sales separate from confirmed cash/M-Pesa collections. An unpaid online order therefore appears as revenue after fulfilment but remains in the outstanding POS balance until its payment is entered. A second POS checkout must not be created for the same order: that would duplicate revenue and potentially deduct the stock twice.
 

@@ -14,6 +14,7 @@ from customers.models import Customer
 from storefront.models import StorefrontProfile
 
 from .models import Appointment, StaffAvailability, StaffTimeOff
+from .notifications import _appointment_message, _send_email, _send_whatsapp
 from .services import create_appointment, get_available_slots
 
 
@@ -101,9 +102,9 @@ class AppointmentBookingTests(TestCase):
         self.assertTrue(payload["slots"])
         self.assertIn("Nia Kamau", payload["slots"][0]["label"])
 
-    @override_settings(ALLOWED_HOSTS=["domain.ke", "pos.domain.ke"])
+    @override_settings(ALLOWED_HOSTS=["lashproke.cc", "pos.lashproke.cc"])
     def test_booking_page_and_availability_route_on_both_canonical_hosts(self):
-        for host in ("domain.ke", "pos.domain.ke"):
+        for host in ("lashproke.cc", "pos.lashproke.cc"):
             page = self.client.get(
                 reverse("appointments:book"),
                 {
@@ -169,6 +170,26 @@ class AppointmentBookingTests(TestCase):
         self.assertEqual(response.status_code, 302)
         appointment = Appointment.objects.get()
         send_notification.assert_called_once_with(appointment, "REQUESTED")
+
+    def test_notification_formats_persisted_utc_timestamp_in_nairobi_time(self):
+        appointment = self._book(self._first_slot())
+        appointment.refresh_from_db()
+        expected_time = timezone.localtime(appointment.starts_at).strftime("%I:%M %p")
+        self.assertIn(expected_time, _appointment_message(appointment, "REQUESTED"))
+        with patch("appointments.notifications._post_json") as post:
+            _send_whatsapp({
+                "whatsapp_access_token": "test-token",
+                "whatsapp_phone_number_id": "test-number",
+                "whatsapp_template_requested": "test_template",
+            }, appointment, "REQUESTED")
+        self.assertIn(expected_time, post.call_args.args[1]["template"]["components"][0]["parameters"][3]["text"])
+
+    @override_settings(DJANGO_ENV="production", EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend")
+    def test_missing_email_provider_does_not_log_customer_booking(self):
+        appointment = self._book(self._first_slot())
+        with patch("appointments.notifications.EmailMessage") as email:
+            _send_email({}, appointment, "REQUESTED", "private booking information")
+        email.assert_not_called()
 
     def test_appointment_request_requires_terms_acceptance(self):
         slot = self._first_slot()

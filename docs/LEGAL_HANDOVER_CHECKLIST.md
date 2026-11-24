@@ -1,6 +1,6 @@
 # Legal and privacy handover checklist
 
-The customer-facing policy pages and consent prompts are published in this branch. Complete the checks below with the business owner before production handover. The repository identifies the brand as LashPro KE and the studio as Nairobi-based, but it does not contain verified legal-entity registration details or a street/postal address.
+The customer-facing policy pages and consent prompts are published in this branch. Complete the checks below with the business owner before production handover. The repository identifies the brand as LashPro KE and the studio as Nairobi-based, but it does not contain verified legal-entity registration details or a verified postal/service address. The studio address and phone numbers displayed in the legal template must be confirmed with the owner.
 
 ## Business identity and contact details
 - [ ] Confirm the full registered legal name and any registered trading name that operates LashPro.

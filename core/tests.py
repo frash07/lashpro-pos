@@ -1,6 +1,8 @@
 import json
 import logging
 from io import StringIO
+from unittest.mock import patch
+from django.db import OperationalError
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -10,7 +12,7 @@ from django.urls import reverse
 from accounts.models import User
 from core.log_filters import RedactSensitiveDataFilter
 from core.models import SharedDatabaseProbe
-from core.views import health_check, home
+from core.views import health_check, readiness_check, home
 from config.settings import _sentry_before_send, _sentry_before_send_transaction
 
 
@@ -40,6 +42,20 @@ class HealthCheckTests(SimpleTestCase):
         self.assertEqual(response["X-Content-Type-Options"], "nosniff")
 
 
+class ReadinessTests(TestCase):
+    def test_readiness_route_checks_database(self):
+        response = self.client.get(reverse("readiness-check"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"ok")
+        self.assertEqual(response["Cache-Control"], "no-store")
+
+    def test_database_unavailable_returns_503_without_details(self):
+        with patch("core.views.connection.cursor", side_effect=OperationalError("private database host")):
+            response = readiness_check(RequestFactory().get("/readyz"))
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.content, b"unavailable")
+
+
 class SensitiveLogFilterTests(SimpleTestCase):
     def test_redacts_reset_receipt_and_sensitive_query_values(self):
         record = logging.LogRecord(
@@ -59,6 +75,17 @@ class SensitiveLogFilterTests(SimpleTestCase):
         for secret in ("reset-token", "receipt-token", "mpesa-secret"):
             self.assertNotIn(secret, message)
         self.assertIn("<redacted>", message)
+
+    def test_redacts_callback_and_public_reference_paths(self):
+        record = logging.LogRecord("app", logging.ERROR, __file__, 1,
+            "/payments/mpesa/stk/callback/private-stk/ "
+            "/payments/c2b/confirmation/private-c2b/ "
+            "/payments/c2b/validation/private-validation/ "
+            "/appointments/confirmation/private-appointment/ /order/private-order/",
+            (), None)
+        RedactSensitiveDataFilter().filter(record)
+        self.assertNotIn("private-", record.getMessage())
+        self.assertIn("<redacted>", record.getMessage())
 
     def test_redacts_database_urls_and_secret_assignments(self):
         record = logging.LogRecord(
