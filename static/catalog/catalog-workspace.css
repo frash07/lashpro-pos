@@ -1,0 +1,296 @@
+/* Product catalogue layout aligned with the shared LashPro checkout workspace. */
+body.admin-suite-body.checkout-page.catalog-admin-page {
+  min-height: 100vh;
+  background: var(--ui-canvas);
+  color: var(--ui-text);
+}
+
+.catalog-workspace-shell {
+  grid-template-columns: 224px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.catalog-workspace-sidebar {
+  min-width: 0;
+  min-height: 100vh;
+  height: 100vh;
+}
+
+.catalog-workspace-main {
+  grid-column: 2;
+  display: flex;
+  min-width: 0;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.catalog-workspace-topbar {
+  flex: 0 0 76px;
+  min-width: 0;
+}
+
+.catalog-workspace-content {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0 34px 34px;
+}
+
+.catalog-workspace-content .welcome {
+  margin-top: 27px;
+  margin-bottom: 22px;
+}
+
+.catalog-workspace-content .quick-stats {
+  margin-bottom: 25px;
+}
+
+.catalog-workspace-stats .stat-card strong {
+  font-size: 12px;
+}
+
+.catalog-list-section {
+  min-width: 0;
+  margin: 0;
+}
+
+.catalog-list-section .section-heading {
+  align-items: flex-end;
+  margin: 0 0 15px;
+}
+
+.catalog-list-section .section-heading p {
+  max-width: 680px;
+}
+
+.catalog-admin-content {
+  width: 100%;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--lp-radius-panel);
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.catalog-admin-content #content-main {
+  width: 100%;
+  min-width: 0;
+}
+
+.catalog-admin-content #changelist {
+  min-width: 0;
+}
+
+.catalog-admin-content .catalog-admin-thumbnail {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--lp-radius-sm);
+}
+
+.catalog-signout {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.catalog-signout button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--lp-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-muted);
+  transition: color .18s, border-color .18s, background .18s;
+}
+
+.catalog-signout button:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-hover);
+}
+
+.catalog-signout button svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 1050px) {
+  .catalog-workspace-content {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 860px) {
+  .catalog-workspace-shell {
+    display: block;
+    padding-bottom: 0;
+  }
+
+  .catalog-workspace-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 14px;
+  }
+
+  .catalog-workspace-sidebar .brand {
+    flex: 0 0 auto;
+    padding: 0 6px 0 0;
+  }
+
+  .catalog-workspace-sidebar .brand-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .catalog-workspace-sidebar .brand-caption,
+  .catalog-workspace-sidebar .side-label,
+  .catalog-workspace-sidebar .sidebar-spacer,
+  .catalog-workspace-sidebar .studio-card,
+  .catalog-workspace-sidebar .staff-mini {
+    display: none;
+  }
+
+  .catalog-workspace-sidebar .side-nav {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+    overflow: visible;
+  }
+
+  .catalog-workspace-sidebar .side-link {
+    width: auto;
+    min-height: 38px;
+    flex: 0 0 auto;
+    gap: 7px;
+    padding: 0 10px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .catalog-workspace-sidebar .side-link svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .catalog-workspace-main {
+    grid-column: auto;
+    min-height: calc(100vh - 60px);
+  }
+
+  .catalog-workspace-main.main-area {
+    padding: 0 24px 26px;
+  }
+
+  .catalog-workspace-topbar {
+    flex-basis: 58px;
+    height: 58px;
+  }
+}
+
+@media (max-width: 600px) {
+  .catalog-workspace-sidebar {
+    gap: 8px;
+    padding: 9px 12px;
+  }
+
+  .catalog-workspace-sidebar .brand {
+    padding-right: 2px;
+  }
+
+  .catalog-workspace-sidebar .brand-name {
+    font-size: 18px;
+  }
+
+  .catalog-workspace-sidebar .side-link {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .catalog-workspace-main.main-area {
+    padding: 0 12px 20px;
+  }
+
+  .catalog-workspace-topbar {
+    flex-basis: 52px;
+    height: 52px;
+  }
+
+  .catalog-workspace-topbar .breadcrumbs {
+    gap: 5px;
+    font-size: 9px;
+  }
+
+  .catalog-workspace-topbar .topbar-right {
+    gap: 7px;
+  }
+
+  .catalog-workspace-topbar .online-pill,
+  .catalog-workspace-topbar .profile-copy {
+    display: none;
+  }
+
+  .catalog-workspace-topbar .icon-action {
+    width: 35px;
+    height: 35px;
+  }
+
+  .catalog-workspace-content .welcome {
+    min-height: 0;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 18px;
+    padding: 20px;
+  }
+
+  .catalog-workspace-content .welcome h1 {
+    font-size: 29px;
+  }
+
+  .catalog-workspace-content .welcome-aside {
+    width: 100%;
+  }
+
+  .catalog-workspace-content .quick-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .catalog-workspace-content .quick-stats .stat-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .catalog-list-section .section-heading {
+    align-items: flex-start;
+  }
+
+  .catalog-admin-content {
+    padding: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-workspace-page *,
+  .catalog-workspace-page *::before,
+  .catalog-workspace-page *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
