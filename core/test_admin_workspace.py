@@ -1,6 +1,7 @@
 from datetime import time, timedelta
 from decimal import Decimal
 
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
@@ -8,6 +9,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 
+from core.admin_workspace import MODULES, REGISTERS
 from appointments.models import Appointment, StaffAvailability
 from catalog.models import Product, Service
 from inventory.models import Supplier
@@ -60,7 +62,7 @@ class StandaloneAdminWorkspaceTests(TestCase):
 
     def test_all_requested_indexes(self):
         self.assert_workspace(self.client.get(reverse("admin:index")), "index")
-        for app in ("accounts", "appointments", "audit", "axes", "inventory", "catalog", "commissions", "customers", "expenses", "storefront", "sales", "training", "payments"):
+        for app in ("accounts", "appointments", "audit", "auth", "axes", "inventory", "catalog", "commissions", "customers", "expenses", "storefront", "sales", "training", "payments"):
             with self.subTest(app=app):
                 self.assert_workspace(self.client.get(reverse("admin:app_list", kwargs={"app_label": app})), "index")
 
@@ -230,3 +232,40 @@ class StandaloneAdminWorkspaceTests(TestCase):
         self.assertEqual(self.client.get(reverse("admin:training_course_add")).status_code, 403)
         self.assertEqual(self.client.get(reverse("admin:payments_paymenttransaction_changelist")).status_code, 403)
         self.assertEqual(self.client.get(reverse("reporting:dashboard")).status_code, 403)
+
+
+    def test_every_registered_admin_model_has_standalone_workspace_metadata(self):
+        missing = []
+        for model in admin.site._registry:
+            app_label = model._meta.app_label
+            if app_label in MODULES:
+                register = f"{app_label}_{model._meta.model_name}"
+                if register not in REGISTERS:
+                    missing.append(register)
+        self.assertEqual(missing, [])
+
+    def test_admin_utility_pages_use_standalone_layout(self):
+        auth_index = self.client.get(reverse("admin:app_list", kwargs={"app_label": "auth"}))
+        self.assert_workspace(auth_index, "index")
+        self.assertContains(auth_index, "Access groups")
+
+        history = self.client.get(reverse("admin:inventory_supplier_history", args=[self.supplier.pk]))
+        self.assert_workspace(history, "history")
+        self.assertContains(history, "Record history")
+
+        delete = self.client.get(reverse("admin:inventory_supplier_delete", args=[self.supplier.pk]))
+        self.assert_workspace(delete, "delete_confirmation")
+        self.assertContains(delete, "Confirm deletion")
+
+    def test_admin_login_and_password_pages_use_standalone_auth_templates(self):
+        self.client.logout()
+        login = self.client.get(reverse("admin:login"))
+        self.assertEqual(login.status_code, 200)
+        self.assertTemplateUsed(login, "registration/login.html")
+        self.client.force_login(self.owner)
+        change = self.client.get(reverse("admin:password_change"))
+        self.assertEqual(change.status_code, 200)
+        self.assertTemplateUsed(change, "registration/password_change_form.html")
+        done = self.client.get(reverse("admin:password_change_done"))
+        self.assertEqual(done.status_code, 200)
+        self.assertTemplateUsed(done, "registration/password_change_done.html")
