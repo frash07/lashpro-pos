@@ -344,3 +344,132 @@ class MpesaStkCallbackTests(TestCase):
                     ]},
                 }}},
             )
+
+    def _old_pending_push(self):
+        from datetime import timedelta
+        from django.core.cache import cache
+        from django.utils import timezone
+        cache.clear()
+        with patch("payments.mpesa._stk_request", return_value={
+            "ResponseCode": "0", "MerchantRequestID": "merchant-query",
+            "CheckoutRequestID": "ws_CO_query",
+        }):
+            push = initiate_stk_push(
+                sale=self.sale, amount=Decimal("1500"), phone="0712345678",
+                callback_url="https://lashpro-pos.fly.dev/callback/",
+                callback_token="query-callback", actor=self.owner,
+            )
+        MpesaStkPush.objects.filter(pk=push.pk).update(created_at=timezone.now() - timedelta(minutes=5))
+        return push
+
+    @patch("payments.stk_reconciliation._query_request")
+    def test_query_success_without_receipt_preserves_reservation(self, query):
+        from audit.models import AuditEvent
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        query.return_value = {
+            "ResponseCode": "0", "ResultCode": "0",
+            "CheckoutRequestID": "ws_CO_query", "MerchantRequestID": "merchant-query",
+        }
+        outcome = query_sandbox_stk(push_id=push.pk, actor=self.owner, close_cancelled=True)
+        push.refresh_from_db()
+        self.assertIn("Await verified receipt", outcome)
+        self.assertEqual(push.status, MpesaStkPush.Status.PENDING)
+        self.assertEqual(push.payment_transaction.status, PaymentTransaction.Status.UNVERIFIED)
+        self.assertEqual(self.sale.available_to_collect, Decimal("0"))
+        self.assertTrue(AuditEvent.objects.filter(object_type="mpesa_stk_query", object_id=str(push.pk)).exists())
+
+    @patch("payments.stk_reconciliation._query_request")
+    def test_correlated_query_cancellation_can_be_closed(self, query):
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        query.return_value = {
+            "ResponseCode": "0", "ResultCode": 1032,
+            "CheckoutRequestID": "ws_CO_query", "MerchantRequestID": "merchant-query",
+        }
+        query_sandbox_stk(push_id=push.pk, actor=self.owner, close_cancelled=True)
+        push.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.FAILED)
+        self.assertEqual(push.payment_transaction.status, PaymentTransaction.Status.FAILED)
+        self.assertEqual(self.sale.available_to_collect, Decimal("1500"))
+        self.assertIsNone(push.callback_received_at)
+
+    @patch("payments.stk_reconciliation._query_request")
+    def test_mismatched_query_cannot_close_payment(self, query):
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        query.return_value = {
+            "ResponseCode": "0", "ResultCode": 1032,
+            "CheckoutRequestID": "other", "MerchantRequestID": "merchant-query",
+        }
+        query_sandbox_stk(push_id=push.pk, actor=self.owner, close_cancelled=True)
+        push.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.PENDING)
+        self.assertEqual(self.sale.available_to_collect, Decimal("0"))
+
+    @patch("payments.stk_reconciliation._query_request")
+    def test_cancelled_query_is_advisory_without_explicit_close(self, query):
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        query.return_value = {
+            "ResponseCode": "0", "ResultCode": 1032,
+            "CheckoutRequestID": "ws_CO_query", "MerchantRequestID": "merchant-query",
+        }
+        query_sandbox_stk(push_id=push.pk, actor=self.owner)
+        push.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.PENDING)
+
+    @patch("payments.stk_reconciliation._query_request")
+    def test_query_rejects_cashier_and_production(self, query):
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        cashier = User.objects.create_user(username="query-cashier", password="test-password", role=User.Role.CASHIER)
+        with self.assertRaises(ValidationError):
+            query_sandbox_stk(push_id=push.pk, actor=cashier)
+        config = self.config.get_config()
+        config["mpesa_environment"] = "production"
+        self.config.set_config(config)
+        self.config.save()
+        with self.assertRaises(ValidationError):
+            query_sandbox_stk(push_id=push.pk, actor=self.owner)
+        query.assert_not_called()
+
+    @patch("payments.stk_reconciliation._query_request", side_effect=DarajaOutcomeUnknown("temporary failure"))
+    def test_query_timeout_cannot_release_reservation(self, query):
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        query_sandbox_stk(push_id=push.pk, actor=self.owner, close_cancelled=True)
+        push.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.PENDING)
+        self.assertEqual(self.sale.available_to_collect, Decimal("0"))
+
+    @patch("payments.stk_reconciliation._query_request")
+    def test_late_success_after_query_cancellation_is_flagged_not_reopened(self, query):
+        from audit.models import AuditEvent
+        from payments.stk_reconciliation import query_sandbox_stk
+        push = self._old_pending_push()
+        query.return_value = {
+            "ResponseCode": "0", "ResultCode": 1032,
+            "CheckoutRequestID": "ws_CO_query", "MerchantRequestID": "merchant-query",
+        }
+        query_sandbox_stk(push_id=push.pk, actor=self.owner, close_cancelled=True)
+        process_stk_callback(callback_token="query-callback", payload={"Body":{"stkCallback":{
+            "CheckoutRequestID": "ws_CO_query", "MerchantRequestID": "merchant-query",
+            "ResultCode": 0, "CallbackMetadata": {"Item": [
+                {"Name": "Amount", "Value": 1500},
+                {"Name": "MpesaReceiptNumber", "Value": "TEST123456"},
+                {"Name": "PhoneNumber", "Value": 254712345678},
+            ]},
+        }}})
+        push.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.FAILED)
+        self.assertTrue(AuditEvent.objects.filter(object_type="mpesa_stk_conflict", object_id=str(push.pk)).exists())
+
+    def test_malformed_callback_result_code_never_releases_payment(self):
+        push = self._old_pending_push()
+        with self.assertRaises(ValidationError):
+            process_stk_callback(callback_token="query-callback", payload={"Body":{"stkCallback":{
+                "CheckoutRequestID": "ws_CO_query", "ResultCode": None,
+            }}})
+        push.refresh_from_db()
+        self.assertEqual(push.status, MpesaStkPush.Status.PENDING)
