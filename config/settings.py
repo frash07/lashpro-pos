@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import socket
 
 import environ
 from django.core.exceptions import ImproperlyConfigured
@@ -256,6 +257,27 @@ if DATABASE_URL:
     default_database["CONN_MAX_AGE"] = DB_CONN_MAX_AGE
     default_database["DISABLE_SERVER_SIDE_CURSORS"] = DB_DISABLE_SERVER_SIDE_CURSORS
     default_database.setdefault("OPTIONS", {}).setdefault("sslmode", "require")
+    if env.bool("DATABASE_PREFER_IPV6", default=False):
+        database_host = default_database.get("HOST")
+        database_port = default_database.get("PORT") or 5432
+        try:
+            ipv6_hostaddr = next(
+                address[4][0]
+                for address in socket.getaddrinfo(
+                    database_host,
+                    database_port,
+                    family=socket.AF_INET6,
+                    type=socket.SOCK_STREAM,
+                )
+            )
+        except (OSError, StopIteration) as exc:
+            raise ImproperlyConfigured(
+                "DATABASE_PREFER_IPV6 is enabled, but the database host has no reachable IPv6 address."
+            ) from exc
+        # Keep HOST for TLS hostname verification and use the resolved IPv6
+        # address for the socket connection. Fly's storefront IPv4 route to
+        # Neon is unavailable, while IPv6 is healthy.
+        default_database.setdefault("OPTIONS", {})["hostaddr"] = ipv6_hostaddr
     DATABASES = {"default": default_database}
 else:
     DATABASES = {
