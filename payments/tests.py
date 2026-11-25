@@ -13,6 +13,7 @@ from .models import (
     CashSessionMovement,
     PaymentReconciliation,
     PaymentTransaction,
+    MpesaStkPush,
     PayoutReconciliation,
     RefundPayout,
     SalePayment,
@@ -69,6 +70,16 @@ class PaymentsCashAdminIntegrationTests(TestCase):
             sale=cls.sale,
             payment_transaction=cls.payment,
             amount=Decimal("1500.00"),
+        )
+
+        cls.stk_push = MpesaStkPush.objects.create(
+            payment_transaction=cls.payment,
+            callback_token="ADMIN-CALLBACK-TOKEN-DO-NOT-RENDER",
+            phone_number="254708374149",
+            merchant_request_id="ADMIN-MERCHANT-REQUEST",
+            checkout_request_id="ws_CO_ADMIN_TEST",
+            status=MpesaStkPush.Status.PENDING,
+            callback_payload={"private_marker": "RAW_CALLBACK_SECRET"},
         )
 
         cls.cash_session = open_cash_session(
@@ -206,3 +217,29 @@ class PaymentsCashAdminIntegrationTests(TestCase):
             payout_reconciliation.delete()
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, PaymentTransaction.Status.SUCCEEDED)
+
+
+    def test_stk_push_register_uses_workspace_and_hides_callback_secrets(self):
+        self.client.force_login(self.owner)
+        listing = self.client.get(reverse("admin:payments_mpesastkpush_changelist"))
+        self.assertEqual(listing.status_code, 200)
+        self.assertTemplateUsed(listing, "admin_workspace/change_list.html")
+        self.assertContains(listing, "M-Pesa STK pushes")
+        self.assertContains(listing, "ADMINPAYMENT001")
+        self.assertContains(listing, "KSh 1,500.00")
+        self.assertContains(listing, "25470•••149")
+        self.assertNotContains(listing, "254708374149")
+        self.assertContains(listing, "Prompt sent")
+        self.assertContains(listing, "Awaiting callback")
+        self.assertContains(listing, "Paid")
+        self.assertContains(listing, "Failed")
+
+        detail = self.client.get(reverse("admin:payments_mpesastkpush_change", args=[self.stk_push.pk]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertTemplateUsed(detail, "admin_workspace/change_form.html")
+        self.assertContains(detail, "Daraja request")
+        self.assertContains(detail, "ws_CO_ADMIN_TEST")
+        self.assertNotContains(detail, "ADMIN-CALLBACK-TOKEN-DO-NOT-RENDER")
+        self.assertNotContains(detail, "RAW_CALLBACK_SECRET")
+        self.assertNotContains(detail, "Callback token")
+        self.assertNotContains(detail, "Callback payload")
