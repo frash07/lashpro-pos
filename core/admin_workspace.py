@@ -268,7 +268,13 @@ class StandaloneAdminWorkspaceMiddleware:
                 register = name[:-len(password_suffix)]
                 app_label = register.split("_", 1)[0]
                 template = "admin_workspace/password_change.html"
-            else:
+            elif name == "auth_user_password_change" and "form" in context and context.get("opts"):
+                opts = context["opts"]
+                register = f"{opts.app_label}_{opts.model_name}"
+                if register in REGISTERS:
+                    app_label = opts.app_label
+                    template = "admin_workspace/password_change.html"
+            if not template:
                 for suffix in ("_changelist", "_add", "_change", "_history", "_delete"):
                     if name.endswith(suffix) and name[:-len(suffix)] in REGISTERS:
                         register = name[:-len(suffix)]
