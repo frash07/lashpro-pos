@@ -2,6 +2,11 @@ from pathlib import Path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+
+# Keep Django Admin authentication utilities inside the same branded auth experience.
+admin.site.login_template = "registration/login.html"
+admin.site.password_change_template = "registration/password_change_form.html"
+admin.site.password_change_done_template = "registration/password_change_done.html"
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 
