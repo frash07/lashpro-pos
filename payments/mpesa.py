@@ -15,6 +15,8 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from accounts.models import User
+from audit.models import AuditEvent
+from audit.services import record_audit_event
 from core.models import IntegrationSettings
 from sales.models import Sale
 from .models import MpesaStkPush, PaymentTransaction, SalePayment
@@ -110,12 +112,12 @@ def _access_token(config):
 
 def _validate_amount(value):
     try:
-        amount = Decimal(str(value)).quantize(CENT)
+        amount = Decimal(str(value))
     except (InvalidOperation, TypeError, ValueError):
         raise ValidationError({"amount": "Enter a valid KSh amount."}) from None
     if not amount.is_finite() or amount <= 0 or amount != amount.to_integral_value():
         raise ValidationError({"amount": "M-Pesa STK Push requires a positive whole-KSh amount."})
-    return amount
+    return amount.quantize(CENT)
 
 
 def _stk_request(config, amount, phone, callback_url):
@@ -170,7 +172,7 @@ def _stk_request(config, amount, phone, callback_url):
 
 
 @transaction.atomic
-def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, actor):
+def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, actor, environment, shortcode):
     sale_id = sale.pk if isinstance(sale, Sale) else sale
     try:
         locked_sale = Sale.objects.select_for_update().get(pk=sale_id)
@@ -184,6 +186,8 @@ def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, ac
         }
     ):
         raise ValidationError({"actor": "You are not allowed to collect this payment."})
+    if not actor.is_superuser and actor.role == User.Role.CASHIER and locked_sale.cashier_id != actor.pk:
+        raise ValidationError({"actor": "Cashiers may collect only their own sales."})
 
     existing = PaymentTransaction.objects.filter(idempotency_key=idempotency_key).first()
     if existing:
@@ -224,6 +228,12 @@ def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, ac
         payment_transaction=payment,
         callback_token=callback_token,
         phone_number=phone,
+    )
+    record_audit_event(
+        event_type=AuditEvent.EventType.PAYMENT_RECONCILIATION,
+        object_type="mpesa_stk_origin", object_id=push.pk, actor=actor,
+        reason="STK payment reserved",
+        metadata={"environment": environment, "shortcode": shortcode},
     )
     return push, True
 
@@ -317,6 +327,7 @@ def initiate_stk_push(
     push, created = _reserve_payment(
         sale=sale, amount=amount, phone=phone, callback_token=callback_token,
         idempotency_key=key, actor=actor,
+        environment=environment, shortcode=str(config.get("mpesa_shortcode") or "").strip(),
     )
     if not created:
         return push
@@ -408,16 +419,35 @@ def process_stk_callback(*, callback_token, payload):
     callback = body.get("stkCallback") if isinstance(body, dict) else None
     if not isinstance(callback, dict):
         raise ValidationError("Invalid M-Pesa callback format.")
-    if "ResultCode" not in callback:
-        raise ValidationError("M-Pesa callback is missing its result code.")
+    raw_code = callback.get("ResultCode")
+    if isinstance(raw_code, bool) or not isinstance(raw_code, (int, str)) or not str(raw_code).isascii() or not str(raw_code).isdigit() or len(str(raw_code)) > 20:
+        raise ValidationError("M-Pesa callback is missing a valid result code.")
     checkout_id = str(callback.get("CheckoutRequestID") or "").strip()
-    if not checkout_id:
-        raise ValidationError("M-Pesa callback is missing its checkout request ID.")
+    if not checkout_id or len(checkout_id) > 100:
+        raise ValidationError("M-Pesa callback is missing a valid checkout request ID.")
     if push.checkout_request_id and checkout_id != push.checkout_request_id:
         raise ValidationError("M-Pesa callback does not match this checkout request.")
     merchant_id = str(callback.get("MerchantRequestID") or "").strip()
     if push.merchant_request_id and merchant_id and merchant_id != push.merchant_request_id:
         raise ValidationError("M-Pesa callback does not match this merchant request.")
+    if len(merchant_id) > 100:
+        raise ValidationError("Invalid M-Pesa merchant request ID.")
+    # A terminal payment must never be silently reopened after releasing its
+    # reservation. A contradictory callback requires financial review.
+    if push.status == MpesaStkPush.Status.FAILED and str(raw_code) != push.result_code:
+        actor = push.payment_transaction.recorded_by
+        if actor and not AuditEvent.objects.filter(
+            object_type="mpesa_stk_conflict", object_id=str(push.pk),
+            metadata__callback_code=str(raw_code),
+        ).exists():
+            record_audit_event(
+                event_type=AuditEvent.EventType.PAYMENT_RECONCILIATION,
+                object_type="mpesa_stk_conflict", object_id=push.pk, actor=actor,
+                reason="Late callback conflicts with a closed STK payment. Investigate against provider records.",
+                metadata={"callback_code": str(raw_code), "closed_code": push.result_code},
+            )
+        logger.warning("Conflicting callback for closed STK payment %s", push.pk)
+        return push
     if push.callback_received_at:
         return push
     # If the STK response has not yet been persisted, hold this callback as
@@ -434,19 +464,24 @@ def process_stk_callback(*, callback_token, payload):
     metadata = {}
     callback_metadata = callback.get("CallbackMetadata")
     items = callback_metadata.get("Item", []) if isinstance(callback_metadata, dict) else []
-    for item in items or []:
-        if isinstance(item, dict) and item.get("Name"):
-            metadata[item["Name"]] = item.get("Value")
-    receipt = str(metadata.get("MpesaReceiptNumber") or "").strip().upper()[:50]
+    if not isinstance(items, list):
+        raise ValidationError("Invalid M-Pesa callback metadata.")
+    for item in items:
+        if not isinstance(item, dict) or not isinstance(item.get("Name"), str) or not item["Name"]:
+            raise ValidationError("Invalid M-Pesa callback metadata item.")
+        if item["Name"] in metadata:
+            raise ValidationError("Duplicate M-Pesa callback metadata item.")
+        metadata[item["Name"]] = item.get("Value")
+    receipt = str(metadata.get("MpesaReceiptNumber") or "").strip().upper()
 
     payment = push.payment_transaction
     if result_code == "0":
         # A success code without a receipt is incomplete, not a failed payment.
-        if not receipt:
-            raise ValidationError("Successful M-Pesa callback is missing the receipt number.")
+        if not receipt or len(receipt) > 50 or not receipt.isascii() or not receipt.isalnum():
+            raise ValidationError("Successful M-Pesa callback is missing a valid receipt number.")
         # Accept only callback facts that match the reserved amount and phone.
         try:
-            reported_amount = Decimal(str(metadata.get("Amount"))).quantize(CENT)
+            reported_amount = Decimal(str(metadata.get("Amount")))
             reported_phone = normalize_mpesa_phone(metadata.get("PhoneNumber"))
         except (InvalidOperation, TypeError, ValueError, ValidationError):
             raise ValidationError("Successful M-Pesa callback is missing valid amount or phone metadata.") from None
@@ -455,7 +490,7 @@ def process_stk_callback(*, callback_token, payload):
         duplicate_receipt = MpesaStkPush.objects.filter(
             mpesa_receipt_number__iexact=receipt
         ).exclude(pk=push.pk).exists()
-        if duplicate_receipt:
+        if duplicate_receipt or PaymentTransaction.objects.filter(method=PaymentTransaction.Method.MPESA, reference__iexact=receipt).exclude(pk=payment.pk).exists():
             raise ValidationError("This M-Pesa receipt number is already linked to another payment.")
         push.mpesa_receipt_number = receipt
         if not callback_before_initiation_response:
