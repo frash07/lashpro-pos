@@ -54,3 +54,12 @@ C2B confirmation proves that the money reached the configured shortcode. Cashier
 ## Canonical production callbacks
 
 Set POS_BASE_URL=https://pos.lashproke.cc and STOREFRONT_BASE_URL=https://lashproke.cc on both Fly apps. Confirm TLS and DNS before registering callbacks. Register C2B URLs anew after the domain change; preserve old Fly aliases while outstanding STK requests settle. Never paste callback tokens or live credentials into issues or logs. Use a controlled low-value live transaction only after sandbox acceptance and business approval. Match every recorded receipt to the business's Safaricom statement; investigate UNKNOWN or pending requests without resending a prompt. See [docs/CLIENT_HANDOVER.md](docs/CLIENT_HANDOVER.md) for the integration acceptance matrix.
+
+
+### Sandbox STK recovery and reconciliation
+
+- Open Payments → M-Pesa review → STK review as an owner or manager. An unresolved request with a checkout ID can be queried after two minutes; the query does not send another STK prompt.
+- New STK reservations retain an audit record of the originating environment and shortcode. For older requests, verify the original sandbox account and explicitly confirm that provenance before querying.
+- A matching query with result code 0 is **not** a substitute for a verified receipt. Keep the payment reserved pending callback/statement review. For a matching sandbox result 1032, a manager may explicitly close the cancelled request. No retry is sent by that action.
+- A missing or conflicting ID, transport error, unrecognized outcome, or late conflicting callback must be reviewed; do not assume a payment failed merely because a callback was delayed. Query results and cancellation decisions are recorded in the audit log.
+- Use dedicated test sales and reconcile all sandbox activity before go-live. The sandbox pilot does not fully isolate test sales from the normal financial ledger; production activation remains gated pending that isolation and an end-to-end successful sandbox test. The new query action is deliberately sandbox-only until the production recovery workflow is reviewed.

@@ -81,7 +81,8 @@ class MpesaStkPushAdmin(admin.ModelAdmin):
     list_display = ("created_at", "payment_transaction", "phone_number", "status", "checkout_request_id", "mpesa_receipt_number", "callback_received_at")
     list_filter = ("status", "created_at")
     search_fields = ("phone_number", "checkout_request_id", "merchant_request_id", "mpesa_receipt_number")
-    readonly_fields = tuple(field.name for field in MpesaStkPush._meta.fields)
+    exclude = ("callback_token",)
+    readonly_fields = tuple(field.name for field in MpesaStkPush._meta.fields if field.name != "callback_token")
     actions = None
 
     def has_add_permission(self, request):
