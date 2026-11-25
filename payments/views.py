@@ -14,6 +14,8 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 
 from accounts.models import User
+from audit.models import AuditEvent
+from core.models import IntegrationSettings
 from commissions.models import CommissionPayoutRecord
 from .forms import CashSessionApprovalForm, CashSessionMovementForm, CloseCashSessionForm, OpenCashSessionForm
 from sales.models import Sale
@@ -22,6 +24,7 @@ from .mpesa import (
     DarajaError, configured_c2b_shortcodes, initiate_stk_push,
     process_c2b_callback, process_stk_callback, register_c2b_urls,
 )
+from .stk_reconciliation import query_sandbox_stk
 from .services import (
     add_cash_session_movement, allocate_c2b_mpesa_payment, approve_cash_session_close, calculate_expected_cash,
     close_cash_session, open_cash_session, reconcile_manual_mpesa,
@@ -46,6 +49,14 @@ def reconciliation_queue(request):
     if request.method == "POST":
         reason = request.POST.get("reason", "")
         try:
+            if request.POST.get("stk_id"):
+                outcome = query_sandbox_stk(
+                    push_id=request.POST["stk_id"], actor=request.user,
+                    legacy_confirmed=request.POST.get("legacy_confirmed") == "yes",
+                    close_cancelled=request.POST.get("stk_action") == "close_cancelled",
+                )
+                messages.info(request, outcome)
+                return redirect("payments:reconciliation")
             if request.POST.get("payout_id"):
                 from .services import reconcile_mpesa_payout
                 reconcile_mpesa_payout(payout_type=request.POST.get("payout_type", ""), payout=request.POST.get("payout_id"), actor=request.user, decision=request.POST.get("decision", ""), reason=reason)
@@ -68,12 +79,35 @@ def reconciliation_queue(request):
         "sale_allocation__sale__customer",
         "sale_allocation__sale__training_enrollment__cohort__course",
     ).order_by("created_at")
+    pending_stk = list(MpesaStkPush.objects.filter(
+        status__in=(MpesaStkPush.Status.PENDING, MpesaStkPush.Status.UNKNOWN),
+        payment_transaction__status=PaymentTransaction.Status.UNVERIFIED,
+    ).select_related("payment_transaction__sale_allocation__sale").order_by("created_at"))
+    push_ids = [str(push.pk) for push in pending_stk]
+    origins = set(AuditEvent.objects.filter(
+        object_type="mpesa_stk_origin", object_id__in=push_ids,
+    ).values_list("object_id", flat=True))
+    latest_queries = {}
+    for event in AuditEvent.objects.filter(
+        object_type="mpesa_stk_query", object_id__in=push_ids,
+    ).order_by("-created_at", "-pk"):
+        latest_queries.setdefault(event.object_id, event)
+    for push in pending_stk:
+        push.legacy_origin = str(push.pk) not in origins
+        push.latest_query = latest_queries.get(str(push.pk))
+    stk_conflicts = AuditEvent.objects.filter(
+        object_type="mpesa_stk_conflict",
+    ).order_by("-created_at", "-pk")[:50]
+    sandbox_query_enabled = IntegrationSettings.get_solo().get_config().get("mpesa_environment") == "sandbox"
     pending_refunds = RefundPayout.objects.filter(method="MPESA", payout_reconciliation__isnull=True).select_related("refund__sale")
     pending_commissions = CommissionPayoutRecord.objects.filter(method="MPESA", payout_reconciliation__isnull=True).select_related("technician")
     from core.admin_workspace import operational_workspace
     return render(request, "payments/reconciliation.html", {
         **operational_workspace(request, "M-Pesa reconciliation", "reconciliation"),
         "pending_payments": pending,
+        "pending_stk": pending_stk,
+        "stk_conflicts": stk_conflicts,
+        "sandbox_query_enabled": sandbox_query_enabled,
         "pending_refund_payouts": pending_refunds,
         "pending_commission_payouts": pending_commissions,
     })
