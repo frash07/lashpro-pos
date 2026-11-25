@@ -270,6 +270,13 @@ class MpesaStkPush(models.Model):
         on_delete=models.PROTECT,
         related_name="stk_push",
     )
+    storefront_order = models.ForeignKey(
+        "storefront.StorefrontOrder",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="mpesa_pushes",
+    )
     callback_token = models.CharField(max_length=96, unique=True)
     phone_number = models.CharField(max_length=16)
     merchant_request_id = models.CharField(max_length=100, blank=True)

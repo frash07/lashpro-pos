@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import json
 import logging
 import secrets
@@ -9,6 +10,7 @@ import urllib.request
 import uuid
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -228,6 +230,86 @@ def _reserve_payment(*, sale, amount, phone, callback_token, idempotency_key, ac
     return push, True
 
 
+def storefront_stk_available():
+    if not settings.STOREFRONT_MPESA_ENABLED:
+        return False
+    try:
+        config = IntegrationSettings.get_solo().get_config()
+    except RuntimeError:
+        logger.error("Storefront M-Pesa credentials could not be decrypted.")
+        return False
+    return (
+        config.get("mpesa_environment") == "production"
+        and all(config.get(key) for key in (
+            "mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_shortcode", "mpesa_passkey"
+        ))
+    )
+
+
+@transaction.atomic
+def _reserve_storefront_payment(*, order, amount, phone, callback_token, retry_id):
+    from storefront.models import StorefrontOrder
+    from core.public_throttle import _consume
+
+    locked = StorefrontOrder.objects.select_for_update().get(pk=order.pk)
+    if (
+        locked.payment_method != StorefrontOrder.PaymentMethod.MPESA
+        or locked.source_channel != StorefrontOrder.SourceChannel.STOREFRONT
+        or locked.status != StorefrontOrder.Status.PLACED
+        or locked.expires_at <= timezone.now()
+        or locked.total_amount != amount
+        or normalize_mpesa_phone(locked.customer_phone) != phone
+    ):
+        raise ValidationError("This order is not eligible for online payment.")
+    previous = locked.mpesa_payment
+    if previous:
+        # Initial checkout retries never send a second prompt. An explicit
+        # retry must identify the most recent definitively failed attempt.
+        if previous.status != MpesaStkPush.Status.FAILED or retry_id != str(previous.pk):
+            return previous, False
+    elif retry_id not in (None, "none"):
+        raise ValidationError("Refresh the order before trying again.")
+
+    # Shared per-phone rate limit, independent of client IP and order tokens.
+    digest = hmac.new(
+        settings.SECRET_KEY.encode(), ("storefront-stk:" + phone).encode(), hashlib.sha256
+    ).hexdigest()
+    if _consume("storefront-stk-phone", digest, 3, 900) is not None:
+        raise ValidationError("Too many payment prompts for this number. Try again later.")
+
+    payment = PaymentTransaction(
+        amount=amount, method=PaymentTransaction.Method.MPESA,
+        status=PaymentTransaction.Status.UNVERIFIED,
+        reference="STK-" + secrets.token_hex(10).upper(),
+    )
+    payment.full_clean()
+    payment.save()
+    push = MpesaStkPush.objects.create(
+        payment_transaction=payment, storefront_order=locked,
+        callback_token=callback_token, phone_number=phone,
+    )
+    return push, True
+
+
+def _sync_paid_storefront_order(push):
+    """Called inside the callback transaction; never revive an expired stock hold."""
+    if not push.storefront_order_id or push.status != MpesaStkPush.Status.SUCCEEDED:
+        return
+    from storefront.models import StorefrontOrder
+    from storefront.services import _lock_order_products, _expire_locked_storefront_order
+
+    order = StorefrontOrder.objects.select_for_update().get(pk=push.storefront_order_id)
+    if order.status != StorefrontOrder.Status.PLACED:
+        return
+    # Serialize against new reservations and recheck the deadline after locking.
+    _lock_order_products(list(order.lines.all()))
+    if _expire_locked_storefront_order(order):
+        # Keep the confirmed payment attached to the expired order for review.
+        return
+    order.status = StorefrontOrder.Status.CONFIRMED
+    order.save(update_fields=("status", "updated_at"))
+
+
 @transaction.atomic
 def _update_push_before_callback(push_id, updates, payment_status=None):
     locked = MpesaStkPush.objects.select_for_update().select_related(
@@ -274,6 +356,7 @@ def _update_push_before_callback(push_id, updates, payment_status=None):
         payment = locked.payment_transaction
         payment.status = final_payment_status
         payment.save(update_fields=("status",))
+        _sync_paid_storefront_order(locked)
         return locked, True
 
     for field, value in updates.items():
@@ -287,8 +370,8 @@ def _update_push_before_callback(push_id, updates, payment_status=None):
 
 
 def initiate_stk_push(
-    *, sale, amount, phone, callback_url, callback_token=None,
-    idempotency_key=None, actor,
+    *, sale=None, amount, phone, callback_url, callback_token=None,
+    idempotency_key=None, actor=None, storefront_order=None, retry_id=None,
 ):
     config = IntegrationSettings.get_solo().get_config()
     environment = config.get("mpesa_environment") or "sandbox"
@@ -314,10 +397,20 @@ def initiate_stk_push(
         raise ValidationError({"idempotency_key": "Invalid payment request key."}) from None
     callback_token = callback_token or secrets.token_urlsafe(48)
 
-    push, created = _reserve_payment(
-        sale=sale, amount=amount, phone=phone, callback_token=callback_token,
-        idempotency_key=key, actor=actor,
-    )
+    if storefront_order is not None:
+        if sale is not None or not settings.STOREFRONT_MPESA_ENABLED or environment != "production":
+            raise ValidationError("Online M-Pesa payment is unavailable.")
+        push, created = _reserve_storefront_payment(
+            order=storefront_order, amount=amount, phone=phone,
+            callback_token=callback_token, retry_id=retry_id,
+        )
+        # Use the server-created order reference for provider reconciliation.
+        config = dict(config, mpesa_account_reference=storefront_order.reference)
+    else:
+        push, created = _reserve_payment(
+            sale=sale, amount=amount, phone=phone, callback_token=callback_token,
+            idempotency_key=key, actor=actor,
+        )
     if not created:
         return push
 
@@ -494,6 +587,7 @@ def process_stk_callback(*, callback_token, payload):
     ))
     if not callback_before_initiation_response:
         payment.save(update_fields=("status",))
+        _sync_paid_storefront_order(push)
     return push
 
 
