@@ -29,9 +29,9 @@ class StorefrontOrderLineInline(admin.TabularInline):
 class StorefrontOrderAdmin(admin.ModelAdmin):
     list_display = (
         "reference", "source_channel", "customer_name", "customer_phone", "total_amount",
-        "status", "pos_sale", "created_at", "expires_at",
+        "status", "payment_state", "pos_sale", "created_at", "expires_at",
     )
-    list_filter = ("source_channel", "status", "created_at")
+    list_filter = ("source_channel", "status", "payment_method", "created_at")
     search_fields = ("reference", "customer_name", "customer_email", "customer_phone", "sale__receipt_number")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
@@ -43,12 +43,12 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     fields = (
         "reference", "created_at", "updated_at", "expires_at", "expired_at",
         "source_channel", "external_order_id", "customer_name", "customer_email", "customer_phone", "notes",
-        "payment_method", "total_amount", "status", "pos_sale_link",
+        "payment_method", "payment_state", "total_amount", "status", "pos_sale_link",
     )
     readonly_fields = (
         "reference", "created_at", "updated_at", "expires_at", "expired_at",
         "source_channel", "external_order_id", "customer_name", "customer_email", "customer_phone", "notes",
-        "payment_method", "total_amount", "status", "pos_sale_link",
+        "payment_method", "payment_state", "total_amount", "status", "pos_sale_link",
     )
 
     def get_queryset(self, request):
@@ -76,6 +76,19 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    @admin.display(description="Online payment")
+    def payment_state(self, obj):
+        if obj.payment_method != StorefrontOrder.PaymentMethod.MPESA:
+            return "Pay at studio"
+        push = obj.mpesa_payment
+        if not push:
+            return "Not initiated"
+        if push.status == "SUCCEEDED":
+            if obj.status in ("EXPIRED", "CANCELLED"):
+                return "PAID — REVIEW / REFUND REQUIRED · " + push.mpesa_receipt_number
+            return "PAID · " + push.mpesa_receipt_number
+        return push.get_status_display()
+
     @admin.display(description="POS sale", ordering="sale__receipt_number")
     def pos_sale(self, obj):
         if not obj.sale_id:
@@ -87,6 +100,8 @@ class StorefrontOrderAdmin(admin.ModelAdmin):
         if not obj.sale_id:
             return "A POS sale is created when this order is fulfilled."
         receipt_url = reverse("sales:receipt", args=(obj.sale.receipt_token,))
+        if obj.payment_method == StorefrontOrder.PaymentMethod.MPESA:
+            return format_html('<a href="{}">{}</a> · Online M-Pesa paid', receipt_url, obj.sale.receipt_number)
         payments_url = reverse("sales:payments")
         return format_html(
             '<a href="{}">{}</a> · <a href="{}">Collect payment</a>',

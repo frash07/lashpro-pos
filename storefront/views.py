@@ -1,3 +1,4 @@
+import secrets
 import uuid
 
 from django.conf import settings
@@ -10,12 +11,15 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
+from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import User
 from catalog.models import Product, Service
 from core.public_throttle import public_rate_limit
 from customers.models import Customer
 from inventory.services import available_stock_by_product, available_stock_for_product
+from payments.mpesa import initiate_stk_push, normalize_mpesa_phone, storefront_stk_available, _validate_amount
 from .forms import CustomerLoginForm, CustomerRegistrationForm, StorefrontCheckoutForm
 from .models import StorefrontOrder, StorefrontProfile
 from .services import create_storefront_order, expire_due_storefront_orders
@@ -244,9 +248,21 @@ def checkout(request):
             "phone": profile.customer.phone,
         })
 
+    mpesa_available = storefront_stk_available()
     if request.method == "POST":
         form = StorefrontCheckoutForm(request.POST)
+        method = request.POST.get("payment_method", StorefrontOrder.PaymentMethod.PAY_AT_STUDIO)
         if form.is_valid():
+            if method == StorefrontOrder.PaymentMethod.MPESA:
+                if not mpesa_available:
+                    form.add_error(None, "Online M-Pesa is not currently available.")
+                else:
+                    try:
+                        normalize_mpesa_phone(form.cleaned_data["phone"])
+                        _validate_amount(total)
+                    except ValidationError as exc:
+                        form.add_error(None, " ".join(exc.messages))
+        if not form.errors:
             try:
                 order = create_storefront_order(
                     items={str(item["product"].pk): item["quantity"] for item in items},
@@ -257,13 +273,17 @@ def checkout(request):
                     account=profile.user if profile else None,
                     customer=profile.customer if profile else None,
                     idempotency_key=form.cleaned_data["idempotency_key"],
+                    payment_method=method,
                 )
             except ValidationError as exc:
                 form.add_error(None, " ".join(exc.messages))
             else:
                 request.session.pop(CART_SESSION_KEY, None)
                 request.session.pop(CHECKOUT_KEY_SESSION_KEY, None)
-                messages.success(request, "Your order request has been received.")
+                if order.payment_method == StorefrontOrder.PaymentMethod.MPESA:
+                    _send_order_prompt(request, order)
+                else:
+                    messages.success(request, "Your order request has been received.")
                 return redirect("storefront:order-detail", token=order.access_token)
         else:
             if not form.cleaned_data.get("idempotency_key"):
@@ -272,11 +292,42 @@ def checkout(request):
         form = StorefrontCheckoutForm(initial=initial)
 
     context = _base_context(request)
-    context.update({"items": items, "total": total, "form": form, "is_guest_checkout": profile is None})
+    context.update({"items": items, "total": total, "form": form, "is_guest_checkout": profile is None, "mpesa_available": mpesa_available})
     return render(request, "storefront/checkout.html", context)
 
 
+def _send_order_prompt(request, order, retry_id=None):
+    if not storefront_stk_available():
+        messages.warning(request, "Online M-Pesa is currently unavailable. Contact the studio.")
+        return
+    token = secrets.token_urlsafe(48)
+    callback_url = settings.POS_BASE_URL.rstrip("/") + reverse(
+        "payments:mpesa-stk-callback", kwargs={"token": token}
+    )
+    try:
+        initiate_stk_push(
+            storefront_order=order, amount=order.total_amount,
+            phone=order.customer_phone, callback_url=callback_url,
+            callback_token=token, retry_id=retry_id,
+        )
+    except ValidationError:
+        # Provider details and credentials are not customer-facing.
+        messages.warning(request, "Check the payment status below before trying again.")
+
+
+@public_rate_limit("storefront-stk-retry", limits={"POST": (3, 900)})
+@require_POST
 @never_cache
+def retry_order_payment(request, token):
+    order = get_object_or_404(StorefrontOrder, access_token=token)
+    retry_id = request.POST.get("attempt")
+    if retry_id:
+        _send_order_prompt(request, order, retry_id=retry_id)
+    return redirect("storefront:order-detail", token=order.access_token)
+
+
+@never_cache
+@public_rate_limit("storefront-order-detail", limits={"GET": (120, 60)})
 def order_detail(request, token):
     expire_due_storefront_orders(limit=100)
     order = get_object_or_404(
@@ -285,6 +336,15 @@ def order_detail(request, token):
     )
     context = _base_context(request)
     context["order"] = order
+    if order.payment_method == StorefrontOrder.PaymentMethod.MPESA:
+        push = order.mpesa_payment
+        context["mpesa_payment"] = push
+        context["can_retry_mpesa"] = (
+            order.status == StorefrontOrder.Status.PLACED
+            and order.expires_at > timezone.now()
+            and (not push or push.status == "FAILED")
+            and storefront_stk_available()
+        )
     context["reservation_minutes"] = settings.PUBLIC_ORDER_RESERVATION_MINUTES
     return render(request, "storefront/order_detail.html", context)
 

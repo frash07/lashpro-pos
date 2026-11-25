@@ -110,6 +110,9 @@ STOREFRONT_BASE_URL = env(
     default="https://lashproke.cc",
 ).strip().rstrip("/")
 
+# Public STK checkout is opt-in; never enable against a sandbox on the live shop.
+STOREFRONT_MPESA_ENABLED = env.bool("STOREFRONT_MPESA_ENABLED", default=False)
+
 # Production defaults activate when DEBUG is off. Trust the forwarded HTTPS
 # header only when a proxy is configured to overwrite it on every request.
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)

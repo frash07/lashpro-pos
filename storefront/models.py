@@ -59,6 +59,7 @@ class StorefrontOrder(models.Model):
 
     class PaymentMethod(models.TextChoices):
         PAY_AT_STUDIO = "PAY_AT_STUDIO", "Pay at studio"
+        MPESA = "MPESA", "M-Pesa STK Push"
 
     class SourceChannel(models.TextChoices):
         STOREFRONT = "STOREFRONT", "Online storefront"
@@ -125,6 +126,10 @@ class StorefrontOrder(models.Model):
                 name="storefront_channel_order_unique",
             ),
         ]
+
+    @property
+    def mpesa_payment(self):
+        return self.mpesa_pushes.select_related("payment_transaction").order_by("-pk").first()
 
     def __str__(self):
         return self.reference

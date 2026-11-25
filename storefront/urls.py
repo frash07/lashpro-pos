@@ -15,6 +15,7 @@ urlpatterns = [
     path("terms/", views.terms_of_service, name="terms"),
     path("returns/", views.returns_policy, name="returns"),
     path("order/<str:token>/", views.order_detail, name="order-detail"),
+    path("order/<str:token>/pay/", views.retry_order_payment, name="order-pay"),
     path("account/register/", views.register, name="register"),
     path("account/login/", views.customer_login, name="login"),
     path("account/logout/", views.customer_logout, name="logout"),

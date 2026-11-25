@@ -83,8 +83,13 @@ def create_storefront_order(
     idempotency_key,
     source_channel=StorefrontOrder.SourceChannel.STOREFRONT,
     external_order_id="",
+    payment_method=StorefrontOrder.PaymentMethod.PAY_AT_STUDIO,
 ):
     """Create an unpaid collection request and reserve its stock atomically; no POS sale is created."""
+    if payment_method not in StorefrontOrder.PaymentMethod.values:
+        raise ValidationError({"payment_method": "Choose a supported payment method."})
+    if payment_method == StorefrontOrder.PaymentMethod.MPESA and source_channel != StorefrontOrder.SourceChannel.STOREFRONT:
+        raise ValidationError({"payment_method": "Online M-Pesa is only available for storefront orders."})
     cleaned_items = _normalise_items(items)
     key = _normalise_key(idempotency_key)
     customer_name = " ".join(str(customer_name or "").split())
@@ -102,7 +107,7 @@ def create_storefront_order(
 
     existing = StorefrontOrder.objects.filter(idempotency_key=key).first()
     if existing:
-        if _matches_existing_order(
+        if existing.payment_method == payment_method and _matches_existing_order(
             existing,
             items=cleaned_items,
             customer_name=customer_name,
@@ -128,7 +133,7 @@ def create_storefront_order(
     # so the original order wins even when its reservation uses the last unit.
     existing = StorefrontOrder.objects.filter(idempotency_key=key).first()
     if existing:
-        if _matches_existing_order(
+        if existing.payment_method == payment_method and _matches_existing_order(
             existing,
             items=cleaned_items,
             customer_name=customer_name,
@@ -182,6 +187,7 @@ def create_storefront_order(
                 customer_email=customer_email,
                 customer_phone=customer_phone,
                 notes=notes,
+                payment_method=payment_method,
                 total_amount=total.quantize(CENT),
                 expires_at=timezone.now() + timedelta(minutes=settings.PUBLIC_ORDER_RESERVATION_MINUTES),
             )
@@ -200,7 +206,7 @@ def create_storefront_order(
             duplicate = StorefrontOrder.objects.filter(
                 source_channel=source_channel, external_order_id=external_order_id
             ).first()
-        if duplicate and duplicate.source_channel == source_channel and _matches_existing_order(
+        if duplicate and duplicate.payment_method == payment_method and duplicate.source_channel == source_channel and _matches_existing_order(
             duplicate,
             items=cleaned_items,
             customer_name=customer_name,
@@ -324,6 +330,23 @@ def create_pos_sale_for_storefront_order(*, order, actor):
     if existing_link:
         raise ValidationError({"order": "This POS sale is already linked to a different online order."})
 
+    if locked_order.payment_method == StorefrontOrder.PaymentMethod.MPESA:
+        from payments.models import MpesaStkPush, PaymentTransaction, SalePayment
+
+        push = locked_order.mpesa_payment
+        if (
+            not push or push.status != MpesaStkPush.Status.SUCCEEDED
+            or push.payment_transaction.status != PaymentTransaction.Status.SUCCEEDED
+            or push.payment_transaction.amount != sale.total_amount
+        ):
+            raise ValidationError({"payment": "The online M-Pesa payment is not confirmed for this order total."})
+        allocation, _ = SalePayment.objects.get_or_create(
+            payment_transaction=push.payment_transaction,
+            defaults={"sale": sale, "amount": sale.total_amount},
+        )
+        if allocation.sale_id != sale.pk or allocation.amount != sale.total_amount:
+            raise ValidationError({"payment": "The online payment is already allocated elsewhere."})
+
     if locked_order.sale_id != sale.pk:
         locked_order.sale = sale
         locked_order.save(update_fields=("sale", "updated_at"))
@@ -399,6 +422,16 @@ def transition_storefront_order(*, order, target_status, actor):
     }
     if target_status not in allowed.get(locked_order.status, set()):
         raise ValidationError({"status": f"An order in {locked_order.get_status_display()} cannot move to {target_status.label}."})
+
+    if locked_order.payment_method == StorefrontOrder.PaymentMethod.MPESA:
+        from payments.models import MpesaStkPush
+
+        push = locked_order.mpesa_payment
+        if target_status == StorefrontOrder.Status.CANCELLED:
+            if push and push.status != MpesaStkPush.Status.FAILED:
+                raise ValidationError({"payment": "Do not cancel a paid or unresolved M-Pesa order. A manager must review the payment/refund first."})
+        elif not push or push.status != MpesaStkPush.Status.SUCCEEDED:
+            raise ValidationError({"payment": "Wait for confirmed M-Pesa payment before processing this order."})
 
     lines = list(locked_order.lines.select_related("product").order_by("product_id", "pk"))
     products = _lock_order_products(lines)
