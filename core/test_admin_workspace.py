@@ -257,6 +257,18 @@ class StandaloneAdminWorkspaceTests(TestCase):
         self.assert_workspace(delete, "delete_confirmation")
         self.assertContains(delete, "Confirm deletion")
 
+        bulk_delete = self.client.post(reverse("admin:inventory_supplier_changelist"), {
+            "action": "delete_selected",
+            "_selected_action": [str(self.supplier.pk)],
+            "index": "0",
+        })
+        self.assert_workspace(bulk_delete, "delete_selected_confirmation")
+        self.assertContains(bulk_delete, "Delete selected records")
+
+        password = self.client.get(reverse("admin:accounts_user_password_change", args=[self.staff.pk]))
+        self.assert_workspace(password, "password_change")
+        self.assertContains(password, "Change staff password")
+
     def test_admin_login_and_password_pages_use_standalone_auth_templates(self):
         self.client.logout()
         login = self.client.get(reverse("admin:login"))
