@@ -1,0 +1,13 @@
+{% extends "admin_workspace/base.html" %}
+{% block workspace %}
+<section class="welcome product-welcome"><div class="welcome-copy"><div class="eyebrow">{{ workspace_module }} · Record management</div><h1>Delete selected records<em>.</em></h1><p>Review the selected records and related objects before confirming this permanent action.</p></div><a class="product-button secondary" href="{{ workspace_list_url }}"><i data-lucide="arrow-left"></i> Return to register</a></section>
+{% if perms_lacking %}<section class="register-panel" role="alert"><h2>Deletion not permitted</h2><p>Your account cannot delete all related object types required by this action.</p>{{ perms_lacking|unordered_list }}</section>
+{% elif protected %}<section class="register-panel" role="alert"><h2>Protected records prevent deletion</h2><p>The selected records have protected dependencies.</p>{{ protected|unordered_list }}</section>
+{% else %}
+<section class="register-panel"><div class="register-heading"><div><div class="eyebrow">Permanent action</div><h2>Delete {{ objects_name }}?</h2><p>The selected records and their deletable related objects will be removed.</p></div></div>
+<dl class="record-fields">{% for model_name, count in model_count %}<div><dt>{{ model_name }}</dt><dd>{{ count }}</dd></div>{% endfor %}</dl>
+<div class="delete-object-list">{% for deletable_object in deletable_objects %}{{ deletable_object|unordered_list }}{% endfor %}</div>
+<form method="post" class="register-form">{% csrf_token %}{% for obj in queryset %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">{% endfor %}<input type="hidden" name="action" value="delete_selected"><input type="hidden" name="post" value="yes"><div class="operation-actions"><a class="product-button secondary" href="{{ workspace_list_url }}">Cancel</a><button type="submit" class="product-button danger"><i data-lucide="trash-2"></i> Delete selected permanently</button></div></form>
+</section>
+{% endif %}
+{% endblock %}
