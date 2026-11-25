@@ -268,6 +268,10 @@ class StandaloneAdminWorkspaceTests(TestCase):
         password = self.client.get(reverse("admin:accounts_user_password_change", args=[self.staff.pk]))
         self.assert_workspace(password, "password_change")
         self.assertContains(password, "Change staff password")
+        self.assertContains(password, 'name="password1"')
+        self.assertContains(password, 'name="password2"')
+        self.assertContains(password, 'name="usable_password"')
+
 
     def test_admin_login_and_password_pages_use_standalone_auth_templates(self):
         self.client.logout()
@@ -277,7 +281,11 @@ class StandaloneAdminWorkspaceTests(TestCase):
         self.client.force_login(self.owner)
         change = self.client.get(reverse("admin:password_change"))
         self.assertEqual(change.status_code, 200)
-        self.assertTemplateUsed(change, "registration/password_change_form.html")
+        self.assertTemplateUsed(change, "registration/admin_password_change_form.html")
+        self.assertContains(change, 'name="password1"')
+        self.assertContains(change, 'name="password2"')
+        self.assertContains(change, 'name="usable_password"')
+        self.assertNotContains(change, 'name="old_password"')
         done = self.client.get(reverse("admin:password_change_done"))
         self.assertEqual(done.status_code, 200)
         self.assertTemplateUsed(done, "registration/password_change_done.html")
