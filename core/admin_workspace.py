@@ -280,7 +280,7 @@ class StandaloneAdminWorkspaceMiddleware:
                         template = "admin_workspace/change_form.html"
                     elif suffix == "_history" and "action_list" in context:
                         template = "admin_workspace/history.html"
-                    elif suffix == "_delete" and "deletable_objects" in context:
+                    elif suffix == "_delete" and "deleted_objects" in context:
                         template = "admin_workspace/delete_confirmation.html"
                     break
         if not template:
