@@ -263,26 +263,34 @@ class StandaloneAdminWorkspaceMiddleware:
             app_label = match.kwargs["app_label"]
             template = "admin_workspace/index.html"
         else:
-            for suffix in ("_changelist", "_add", "_change", "_history", "_delete"):
-                if name.endswith(suffix) and name[:-len(suffix)] in REGISTERS:
-                    register = name[:-len(suffix)]
-                    app_label = register.split("_", 1)[0]
-                    if register == "catalog_product" and suffix == "_changelist":
-                        return response
-                    if suffix == "_changelist" and "cl" in context:
-                        cl = context["cl"]
-                        # Editable lists need the native formset; none of the selected registers use them.
-                        if cl.list_editable or cl.is_popup:
+            password_suffix = "_password_change"
+            if name.endswith(password_suffix) and name[:-len(password_suffix)] in REGISTERS and "form" in context:
+                register = name[:-len(password_suffix)]
+                app_label = register.split("_", 1)[0]
+                template = "admin_workspace/password_change.html"
+            else:
+                for suffix in ("_changelist", "_add", "_change", "_history", "_delete"):
+                    if name.endswith(suffix) and name[:-len(suffix)] in REGISTERS:
+                        register = name[:-len(suffix)]
+                        app_label = register.split("_", 1)[0]
+                        if register == "catalog_product" and suffix == "_changelist":
                             return response
-                        _list_context(request, context, cl)
-                        template = "admin_workspace/change_list.html"
-                    elif suffix in {"_add", "_change"} and "adminform" in context:
-                        template = "admin_workspace/change_form.html"
-                    elif suffix == "_history" and "action_list" in context:
-                        template = "admin_workspace/history.html"
-                    elif suffix == "_delete" and "deleted_objects" in context:
-                        template = "admin_workspace/delete_confirmation.html"
-                    break
+                        if suffix == "_changelist" and "deletable_objects" in context and "queryset" in context:
+                            template = "admin_workspace/delete_selected_confirmation.html"
+                        elif suffix == "_changelist" and "cl" in context:
+                            cl = context["cl"]
+                            # Editable lists need the native formset; none of the selected registers use them.
+                            if cl.list_editable or cl.is_popup:
+                                return response
+                            _list_context(request, context, cl)
+                            template = "admin_workspace/change_list.html"
+                        elif suffix in {"_add", "_change"} and "adminform" in context:
+                            template = "admin_workspace/change_form.html"
+                        elif suffix == "_history" and "action_list" in context:
+                            template = "admin_workspace/history.html"
+                        elif suffix == "_delete" and "deleted_objects" in context:
+                            template = "admin_workspace/delete_confirmation.html"
+                        break
         if not template:
             return response
 
