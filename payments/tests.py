@@ -72,8 +72,17 @@ class PaymentsCashAdminIntegrationTests(TestCase):
             amount=Decimal("1500.00"),
         )
 
+        # Keep the STK push transaction separate from the manual-reconciliation fixture.
+        cls.stk_payment = PaymentTransaction.objects.create(
+            amount=Decimal("1500.00"),
+            method=PaymentTransaction.Method.MPESA,
+            status=PaymentTransaction.Status.UNVERIFIED,
+            reference="ADMINSTKPUSH001",
+            recorded_by=cls.cashier,
+        )
+
         cls.stk_push = MpesaStkPush.objects.create(
-            payment_transaction=cls.payment,
+            payment_transaction=cls.stk_payment,
             callback_token="ADMIN-CALLBACK-TOKEN-DO-NOT-RENDER",
             phone_number="254708374149",
             merchant_request_id="ADMIN-MERCHANT-REQUEST",
@@ -225,7 +234,7 @@ class PaymentsCashAdminIntegrationTests(TestCase):
         self.assertEqual(listing.status_code, 200)
         self.assertTemplateUsed(listing, "admin_workspace/change_list.html")
         self.assertContains(listing, "M-Pesa STK pushes")
-        self.assertContains(listing, "ADMINPAYMENT001")
+        self.assertContains(listing, "ADMINSTKPUSH001")
         self.assertContains(listing, "KSh 1,500.00")
         self.assertContains(listing, "25470•••149")
         self.assertNotContains(listing, "254708374149")
