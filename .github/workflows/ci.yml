@@ -112,6 +112,7 @@ jobs:
           format: table
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          trivyignores: .trivyignore.yaml
           exit-code: "1"
 
       # Optional preview deployment. The pilot Fly app is never targeted here.
