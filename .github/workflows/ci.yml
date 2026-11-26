@@ -63,9 +63,13 @@ jobs:
       - name: Install pinned dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
       - name: Check dependency consistency
         run: python -m pip check
+      - name: Lint Python syntax and undefined names
+        run: |
+          python -m compileall -q .
+          python -m ruff check . --select F821
       - name: Enforce token-only CSS theme values in changed styles
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
@@ -77,7 +81,7 @@ jobs:
       - name: Production deployment checks
         run: |
           SECURE_SSL_REDIRECT=true \
-          SECURE_HSTS_SECONDS=300 \
+          SECURE_HSTS_SECONDS=31536000 \
           SECURE_HSTS_INCLUDE_SUBDOMAINS=false \
           SECURE_HSTS_PRELOAD=false \
           SESSION_COOKIE_SECURE=true \
@@ -100,6 +104,16 @@ jobs:
 
       - name: Build production Docker image
         run: docker build --tag lashpro-pos:ci .
+
+      - name: Scan production Docker image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: lashpro-pos:ci
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          trivyignores: .trivyignore.yaml
+          exit-code: "1"
 
       # Optional preview deployment. The pilot Fly app is never targeted here.
       # Configure the repository secrets/variable documented in docs/STOREFRONT_PREVIEW.md.
@@ -152,7 +166,7 @@ jobs:
             SYNTHETIC_DATA_CONFIRM_DATABASE="$DATABASE_NAME" \
             SYNTHETIC_STAFF_PASSWORD="$PREVIEW_STAFF_PASSWORD"
 
-          flyctl deploy --config fly.storefront-preview.toml --app "$APP" --remote-only --ha=false
+          flyctl deploy --config fly.storefront-preview.toml --app "$APP" --remote-only --ha=false --strategy rolling
 
       # Production is opt-in: pushing to main runs checks but never releases.
       # Dispatch this workflow from main with deploy_production=true only after
@@ -189,6 +203,7 @@ jobs:
         run: |
           set -euo pipefail
           export FLY_API_TOKEN="$FLY_POS_API_TOKEN"
-          flyctl deploy --config fly.toml --app lashpro-pos --remote-only
+          flyctl deploy --config fly.toml --app lashpro-pos --remote-only --strategy rolling
           export FLY_API_TOKEN="$FLY_STOREFRONT_API_TOKEN"
-          flyctl deploy --config fly.storefront.toml --app lashpro-storefront --remote-only
+          flyctl deploy --config fly.storefront.toml --app lashpro-storefront --remote-only --strategy rolling
+

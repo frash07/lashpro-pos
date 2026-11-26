@@ -1,13 +1,13 @@
 {% extends "base_pos.html" %}
 
-{% block title %}Enroll a student · LashPro{% endblock %}
+{% block title %}Enroll a student · Lashpro KE{% endblock %}
 
 {% block pos_page_title %}Enroll a student{% endblock %}
 
 {% block pos_main %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a>{% if request.user.role != "CASHIER" %}<a href="{% url 'training:dashboard' %}">Training cohorts</a>{% endif %}<a href="{% url 'sales:payments' %}">Collect tuition</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<header><a class="brand" href="{% url 'sales:checkout' %}">Lashpro KE <small>TRAINING</small></a>{% if request.user.role != "CASHIER" %}<a href="{% url 'training:dashboard' %}">Training cohorts</a>{% endif %}<a href="{% url 'sales:payments' %}">Collect tuition</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
 <main class="page">
-  <div class="heading"><div><small>NEW ENROLLMENT</small><h1>Enroll a student</h1><p>Select an existing LashPro customer and an open training cohort.</p></div></div>
+  <div class="heading"><div><small>NEW ENROLLMENT</small><h1>Enroll a student</h1><p>Select an existing Lashpro KE customer and an open training cohort.</p></div></div>
   {% if form.non_field_errors %}<div class="error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
   <section class="card"><form method="post">{% csrf_token %}{{ form.idempotency_key }}
     <label>Open cohort {{ form.cohort }}{{ form.cohort.errors }}</label>

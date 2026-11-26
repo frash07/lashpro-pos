@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'sales/checkout.css' %}">
+  <link rel="stylesheet" href="{% static 'sales/mpesa.css' %}">
 <link rel="stylesheet" href="{% static 'sales/admin-suite.css' %}">
 <link rel="stylesheet" href="{% static 'sales/checkout-workspace.css' %}">
   <link rel="stylesheet" href="{% static 'css/legal.css' %}">
@@ -25,13 +26,12 @@
     {% if not offline_shell %}{% csrf_token %}{% endif %}
     {{ details.idempotency_key }}
     <input type="hidden" name="checkout_payment_mode" id="checkout-payment-mode" value="">
-    <input type="hidden" name="mpesa_stk_phone" id="mpesa-stk-phone" value="">
     {{ lines.management_form }}
     {{ payments.management_form }}
 
     <div class="app-shell admin-app-shell checkout-app-shell">
 <aside class="sidebar checkout-sidebar" aria-label="Main navigation">
-<a class="brand" href="{% url 'sales:checkout' %}" aria-label="LashPro checkout"><span class="brand-mark"><i data-lucide="sparkles"></i></span><span class="brand-copy"><span class="brand-name">LASHPRO <small>KE</small></span><span class="brand-caption">Premier lash &amp; academy</span></span></a>
+<a class="brand" href="{% url 'sales:checkout' %}" aria-label="Lashpro KE checkout"><span class="brand-mark"><i data-lucide="sparkles"></i></span><span class="brand-copy"><span class="brand-name">Lashpro KE</span><span class="brand-caption">Girls Love Lashe</span></span></a>
 <div class="side-label">Workspace</div><nav class="side-nav" aria-label="Workspace navigation">
 <button id="nav-pos-btn" class="side-link active" type="button" onclick="switchMode('pos')" aria-current="page" aria-label="Checkout" title="Checkout"><i data-lucide="grid-2x2"></i><span class="nav-text">Checkout</span></button>
 {% if admin_suite.can_access_admin_suite %}
@@ -86,7 +86,7 @@
     <div class="main checkout-main">
       <section id="pos-mode-view" class="view"><section class="quick-stats checkout-stats" aria-label="Checkout information">
 <article class="stat-card"><span class="stat-icon"><i data-lucide="layers"></i></span><span><small>Matching catalogue items</small><strong id="result-count">12 items</strong></span></article>
-<article class="stat-card"><span class="stat-icon"><i data-lucide="wallet-cards"></i></span><span><small>Payment methods</small><strong>M-Pesa STK Push · Cash · Card</strong></span></article>
+<article class="stat-card"><span class="stat-icon"><i data-lucide="wallet-cards"></i></span><span><small>Payment methods</small><strong>Manual M-Pesa · Cash · Card</strong></span></article>
 <article class="stat-card"><span class="stat-icon"><i data-lucide="receipt"></i></span><span><small>Tax treatment</small><strong>16% VAT included</strong></span></article></section>
         <div class="pos-layout">
           <div class="workspace">
@@ -176,7 +176,7 @@
                 <div class="financial-row"><span>VAT included (16%)</span><span id="summary-tax">KES 0</span></div>
                 <div class="financial-row financial-total"><span>Total due</span><span id="summary-total">KES 0</span></div>
               </div>
-              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>M-Pesa STK Push</span><i data-lucide="arrow-up-right" class="icon-subdued"></i></button>
+              <button type="button" class="pay-primary" onclick="triggerCheckout('mpesa')"><i data-lucide="smartphone"></i><span>Manual M-Pesa</span><i data-lucide="arrow-up-right" class="icon-subdued"></i></button>
               <div class="pay-secondary"><button type="button" onclick="triggerCheckout('cash')"><i data-lucide="banknote"></i> Cash payment</button><button type="button" onclick="triggerCheckout('card')"><i data-lucide="credit-card"></i> Card</button></div>
               <output id="cash-save-feedback" role="status"></output>
               <div class="secure-note"><i data-lucide="shield-check"></i> Secure checkout · Kenyan Shilling (KES)</div>
@@ -185,12 +185,13 @@
 </div>
     <div id="mpesa-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="mpesa-title" onclick="backdropClose(event,'mpesa-modal')">
       <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-head"><h3 id="mpesa-title">M-Pesa STK Push</h3><button type="button" class="icon-button" onclick="closeModal('mpesa-modal')" aria-label="Close">×</button></div>
+        <div class="modal-head"><h3 id="mpesa-title">Manual M-Pesa payment</h3><button type="button" class="icon-button" onclick="closeModal('mpesa-modal')" aria-label="Close">×</button></div>
         <div class="modal-body">
-          <p>Enter the customer's Safaricom number. Daraja will send a payment prompt to their phone. The sale is marked paid only after Safaricom confirms the payment callback.</p>
-          <label class="field-block"><span>Customer M-Pesa phone number</span><input id="mpesa-phone" type="tel" maxlength="20" autocomplete="tel" placeholder="0712 345 678"></label>
+          <p>Ask the customer to pay with M-Pesa, then enter the transaction code from their confirmation message. The payment stays pending until a manager reconciles it.</p>
+          <div class="paybill-details"><strong>Paybill <span>542542</span></strong><strong>Account <span>183288</span></strong></div>
+          <label class="field-block"><span>M-Pesa transaction code</span><input id="mpesa-reference" type="text" maxlength="50" autocomplete="off" placeholder="e.g. QAB12CDE34"></label>
         </div>
-        <div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('mpesa-modal')">Cancel</button><button type="button" class="button-primary" onclick="submitMpesaStk()">Send STK Push</button></div>
+        <div class="modal-actions"><button type="button" class="button-secondary" onclick="closeModal('mpesa-modal')">Cancel</button><button type="button" class="button-primary" onclick="submitManualMpesa()">Record reference</button></div>
       </div>
     </div>
 
@@ -301,12 +302,11 @@
       if (pendingCheckout) {
         const warning = document.getElementById('checkout-status-unknown');
         if (warning) warning.hidden = false;
-        const phone = document.getElementById('mpesa-phone');
         const savedMethod = String(pendingCheckout.method || '').toUpperCase();
-        const savedPhone = pendingCheckout.mpesaPhone ||
-          (savedMethod === 'STK_PUSH' ? pendingCheckout.mpesaReference : '');
-        if (phone && typeof savedPhone === 'string') {
-          phone.value = savedPhone;
+        const savedReference = savedMethod === 'MPESA' ? String(pendingCheckout.mpesaPhone || '') : '';
+        const referenceInput = document.getElementById('mpesa-reference');
+        if (referenceInput && savedReference) {
+          referenceInput.value = savedReference;
         }
         const discountCode = document.getElementById('discount-code');
         if (discountCode) discountCode.value = appliedCode;
@@ -327,19 +327,21 @@
           const savedMethod = String(pendingCheckout.method || '').toUpperCase();
           retryButton.hidden = false;
           if (savedMethod === 'MPESA') {
-            // Legacy saved checkouts are resumed through STK, never by replaying a manual reference.
-            retryButton.textContent = 'Continue with STK Push';
+            retryButton.textContent = 'Review manual M-Pesa';
             retryButton.addEventListener('click', () => {
-              if (!window.confirm('This checkout used the previous manual M-Pesa flow. Check Sales first. Continue only if the matching sale is not already paid and has a balance due. Continue with STK Push?')) return;
+              if (!window.confirm('Check Sales first. Continue only if no matching sale or payment was recorded.')) return;
               openModal('mpesa-modal');
-              document.getElementById('mpesa-phone').focus();
+              document.getElementById('mpesa-reference').focus();
+            });
+          } else if (savedMethod === 'STK_PUSH') {
+            retryButton.textContent = 'M-Pesa recovery instructions';
+            retryButton.addEventListener('click', () => {
+              alert('STK Push is paused. Check Payments and the manager reconciliation queue. If a balance remains due, record a customer-initiated Paybill payment from the Payments page.');
             });
           } else {
             retryButton.addEventListener('click', () => {
               if (!window.confirm('Check Sales first. Retry the original checkout only if no matching sale was recorded. Continue?')) return;
-              const savedPhone = pendingCheckout.mpesaPhone ||
-                (savedMethod === 'STK_PUSH' ? pendingCheckout.mpesaReference : '');
-              submitCheckout(pendingCheckout.method, savedPhone || '');
+              submitCheckout(pendingCheckout.method, pendingCheckout.mpesaPhone || '');
             });
           }
         }
@@ -670,9 +672,7 @@
       if(!form)return;
       syncCartToFormset(method,mpesaPhone);
       const modeField=document.getElementById('checkout-payment-mode');
-      const phoneField=document.getElementById('mpesa-stk-phone');
       if(modeField)modeField.value=method==='STK_PUSH'?'STK_PUSH':'';
-      if(phoneField)phoneField.value=method==='STK_PUSH'?String(mpesaPhone||'').trim():'';
       const cash = String(method).toUpperCase() === 'CASH';
       const offline = OFFLINE_SHELL || !navigator.onLine;
       const walkIn = !form.querySelector('[name="customer"]')?.value;
@@ -714,14 +714,15 @@
         return;
       }
       if(method==='card'){alert('Card / PDQ processing is not connected yet. Use Cash or M-Pesa.');return;}
-      if(method==='mpesa' && (OFFLINE_SHELL || !navigator.onLine)){alert('Reconnect and open live checkout to send an M-Pesa prompt.');return;}
-      if(method==='mpesa'){openModal('mpesa-modal');document.getElementById('mpesa-phone').focus();return;}
+      if(method==='mpesa' && (OFFLINE_SHELL || !navigator.onLine)){alert('Reconnect and open live checkout to record a manual M-Pesa payment.');return;}
+      if(method==='mpesa'){openModal('mpesa-modal');document.getElementById('mpesa-reference').focus();return;}
       submitCheckout(method);
     }
-    function submitMpesaStk(){
-      const phone=document.getElementById('mpesa-phone').value.trim();
-      if(!phone){alert("Enter the customer's M-Pesa phone number.");document.getElementById('mpesa-phone').focus();return;}
-      submitCheckout('STK_PUSH',phone);
+    function submitManualMpesa(){
+      const reference=document.getElementById('mpesa-reference').value.trim().toUpperCase();
+      if(!reference){alert("Enter the customer's M-Pesa transaction code.");document.getElementById('mpesa-reference').focus();return;}
+      closeModal('mpesa-modal');
+      submitCheckout('MPESA',reference);
     }
     function openModal(id){document.getElementById(id).classList.remove('hidden');document.body.style.overflow='hidden';}
     function closeModal(id){document.getElementById(id).classList.add('hidden');if(!document.querySelector('.modal-backdrop:not(.hidden)'))document.body.style.overflow='';}

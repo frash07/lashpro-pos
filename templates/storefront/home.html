@@ -1,9 +1,9 @@
 {% extends "storefront/base.html" %}
-{% block title %}LashPro | Lash products & beauty services{% endblock %}
+{% block title %}Lashpro KE · Girls Love Lashe{% endblock %}
 {% block content %}
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow"><span></span> THE LASHPRO COLLECTION</p>
+    <p class="eyebrow"><span></span> GIRLS LOVE LASHE</p>
     <h1>Everything for<br>your <em>lash business.</em></h1>
     <p class="hero-lede">Professional products, considered treatments and the essentials behind every beautiful set.</p>
     <div class="hero-actions">
@@ -13,21 +13,21 @@
     </div>
     <div class="hero-note"><span class="note-line"></span><span>TOOLS FOR ARTISTS. CARE FOR EVERY CLIENT.</span></div>
   </div>
-  <div class="hero-art" aria-label="Abstract LashPro beauty campaign artwork" role="img">
+  <div class="hero-art" aria-label="Abstract Lashpro KE beauty campaign artwork" role="img">
     <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-sun"></div>
     <div class="art-word">LASH<br><i>RITUAL</i></div>
     <div class="art-caption"><span>01 / 03</span><span>THE ART OF DETAIL</span></div>
   </div>
   <div class="hero-index">L / P <span>EST. BEAUTY</span></div>
 </section>
-<section class="trust-strip" aria-label="LashPro highlights">
+<section class="trust-strip" aria-label="Lashpro KE highlights">
   <div><span class="trust-number">01</span><span><strong>Professional quality</strong><small>Products for lash artists</small></span></div>
-  <div><span class="trust-number">02</span><span><strong>One LashPro catalogue</strong><small>Products and services together</small></span></div>
+  <div><span class="trust-number">02</span><span><strong>One Lashpro KE catalogue</strong><small>Products and services together</small></span></div>
   <div><span class="trust-number">03</span><span><strong>Locally managed</strong><small>One connected business system</small></span></div>
 </section>
 <section class="catalog-section" id="shop">
   <div class="section-heading">
-    <div><p class="eyebrow"><span></span> THE SHOP</p><h2>Professional <em>essentials.</em></h2><p class="section-subtitle">Browse the products currently available in the LashPro catalogue.</p></div>
+    <div><p class="eyebrow"><span></span> THE SHOP</p><h2>Professional <em>essentials.</em></h2><p class="section-subtitle">Browse the products currently available in the Lashpro KE catalogue.</p></div>
     <span class="section-count">{{ product_count|stringformat:"02d" }} PRODUCTS</span>
   </div>
   <form class="catalog-tools" method="get" action="{% url 'storefront:home' %}">
@@ -86,7 +86,7 @@
 </section>
 <section class="about-section" id="about">
   <div class="about-mark">L.</div>
-  <div><p class="eyebrow"><span></span> ABOUT LASHPRO</p><h2>Made for the details<br>that make the difference.</h2><p class="about-copy">LashPro brings professional lash products and beauty services together in one place. Request an appointment online, or submit product orders for studio confirmation. Payments and inventory remain managed through the staff POS workflow.</p></div>
+  <div><p class="eyebrow"><span></span> ABOUT LASHPRO</p><h2>Made for the details<br>that make the difference.</h2><p class="about-copy">Lashpro KE brings professional lash products and beauty services together in one place. Request an appointment online, or submit product orders for studio confirmation. Payments and inventory remain managed through the staff POS workflow.</p></div>
   <a class="button button-dark" href="{{ pos_url }}/accounts/login/">Staff portal <span aria-hidden="true">↗</span></a>
 </section>
 {% endblock %}

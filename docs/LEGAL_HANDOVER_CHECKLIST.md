@@ -1,15 +1,16 @@
 # Legal and privacy handover checklist
 
-The customer-facing policy pages and consent prompts are published in this branch. Complete the checks below with the business owner before production handover. The repository identifies the brand as LashPro KE and the studio as Nairobi-based, but it does not contain verified legal-entity registration details or a verified postal/service address. The studio address and phone numbers displayed in the legal template must be confirmed with the owner.
+The customer-facing policy pages and consent prompts are published in this branch. The owner has identified LASHPRO BEAUTY VENTURES as the registered business name, Lashpro KE as the standard public brand, and “Girls Love Lashe” as the tagline. Complete the checks below before production handover. The studio postal/service address and phone numbers shown in policy pages still need confirmation.
 
 ## Business identity and contact details
-- [ ] Confirm the full registered legal name and any registered trading name that operates LashPro.
+- [x] Business identity supplied by the owner: LASHPRO BEAUTY VENTURES, trading as Lashpro KE; tagline: “Girls Love Lashe”. Confirm the exact legal spelling against the registration record during handover.
 - [ ] Publish the business's physical studio address and postal/service address.
 - [ ] Confirm the customer-care phone number and that support@lashpro.ke is monitored.
-- [ ] Confirm the correct legal notice name for the data controller and add the verified address/contact details to the Privacy Policy and Terms.
+- [x] Add the supplied registered business name and Lashpro KE trading brand to the Privacy Policy.
+- [ ] Confirm the correct legal notice name for the data controller and add the verified postal address/contact details to the Privacy Policy and Terms.
 
 ## Data protection operations
-- [ ] Determine and document whether LashPro must register as a data controller and/or processor with the Office of the Data Protection Commissioner (ODPC). The ODPC FAQ currently describes a general exemption only where BOTH annual turnover is below KSh 5 million AND staffing is fewer than 10, subject to categories that must register regardless. Verify the current rule and whether any exception applies to the actual activities.
+- [ ] The business owner states the business is exempt from ODPC registration. Confirm and retain the basis for that exemption with a qualified Kenyan privacy adviser. The [ODPC FAQ](https://www.odpc.go.ke/faqs/) describes a small-controller exemption subject to both turnover and staffing thresholds and categories that must register regardless; the Lashpro academy/training activity may need specific review.
 - [ ] Confirm which Fly.io, database, Cloudinary and email-service regions/processors are actually used in the live environment.
 - [ ] Review provider contracts, access controls, breach response, backups, deletion and any cross-border transfer safeguards.
 - [ ] Approve a retention schedule for customer accounts, order/transaction data, appointment records, support messages and security logs. Tax records generally have a five-year statutory retention period from the end of the reporting period, subject to exceptions and ongoing proceedings.

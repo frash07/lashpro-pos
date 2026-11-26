@@ -1,5 +1,5 @@
 {% extends "storefront/base.html" %}
-{% block title %}Checkout | LashPro{% endblock %}
+{% block title %}Checkout | Lashpro KE{% endblock %}
 {% block content %}
 <section class="page-heading"><p class="eyebrow"><span></span> CHECKOUT</p><h1>Almost <em>yours.</em></h1><p class="section-subtitle">Your order reserves the available items while the studio prepares collection.</p></section>
 <div class="checkout-layout">
@@ -17,14 +17,14 @@
       {% endfor %}
       <label class="legal-consent" for="{{ form.accept_terms.id_for_label }}">{{ form.accept_terms }}<span>I have read and agree to the <a href="{% url 'storefront:terms' %}">Terms of Service</a> and <a href="{% url 'storefront:returns' %}">Returns &amp; Refunds Policy</a>.</span></label>
       {% if form.accept_terms.errors %}<p class="legal-errors">{{ form.accept_terms.errors }}</p>{% endif %}
-      <div class="payment-notice"><strong>Pay at the studio</strong><span>No online payment is taken. The studio will confirm collection arrangements; payment is made at the studio.</span></div>
+      <div class="payment-notice"><strong>Manual M-Pesa after confirmation</strong><span>Wait for the studio to confirm your order and amount. Then Paybill <b>542542</b>, account <b>183288</b>. Staff will verify the transaction before marking it paid.</span></div>
       <button class="button button-dark" type="submit">Place order</button>
     </form>
   </section>
   <aside class="cart-summary checkout-summary"><p class="eyebrow"><span></span> YOUR ORDER</p>
     {% for item in items %}<div class="summary-line"><span>{{ item.quantity }} × {{ item.product.name }}</span><strong>KSh {{ item.line_total|floatformat:2 }}</strong></div>{% endfor %}
     <div class="summary-total"><span>Estimated total</span><strong>KSh {{ total|floatformat:2 }}</strong></div>
-    <p>Submitting reserves the requested stock but does not create a paid POS sale. LashPro staff will confirm and prepare your collection.</p>
+    <p>Submitting reserves the requested stock but does not create a paid POS sale. Lashpro KE staff will confirm your order before you pay.</p>
     <a class="text-link" href="{% url 'storefront:cart' %}">Edit bag</a>
   </aside>
 </div>

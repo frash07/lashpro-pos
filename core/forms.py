@@ -14,6 +14,7 @@ class IntegrationSettingsForm(forms.Form):
     )
     email_use_tls = forms.BooleanField(required=False, initial=True, label="Use TLS")
     email_from_email = forms.EmailField(required=False, label="From email address")
+    operations_notification_email = forms.EmailField(required=False, label="Booking and order alerts email")
     clear_email_password = forms.BooleanField(required=False, label="Remove saved SMTP password")
 
     # Africa's Talking SMS

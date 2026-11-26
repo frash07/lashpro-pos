@@ -307,7 +307,8 @@ class IntegrationSettingsAccessTests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(reverse("integrations-settings"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "M-Pesa STK Push")
+        self.assertContains(response, "Manual M-Pesa reconciliation")
+        self.assertContains(response, "STK Push is paused")
         self.assertContains(response, "KRA eTIMS")
 
     def test_cashier_cannot_open_integration_settings_page(self):
@@ -368,3 +369,4 @@ class SharedDatabaseProbeCommandTests(TestCase):
                 "--token",
                 "00000000-0000-0000-0000-000000000001",
             )
+

@@ -16,8 +16,9 @@ from catalog.models import Product, Service
 from customers.models import Customer
 from payments.models import CashSession, PaymentTransaction, SalePayment
 from commissions.models import CommissionLedgerEntry
+from inventory.models import InventoryMovement
 from .models import Sale, SaleLine, SaleRefund
-from .services import checkout_sale, record_sale_payment
+from .services import checkout_sale, issue_refund, record_sale_payment, request_sale_refund
 
 
 class CheckoutFlowTests(TestCase):
@@ -34,6 +35,7 @@ class CheckoutFlowTests(TestCase):
             password="test-password",
             role=User.Role.MANAGER,
         )
+        CashSession.objects.create(cashier=cls.manager, opened_by=cls.manager)
         cls.customer = Customer.objects.create(
             name="Jane Customer",
             phone="0712345678",
@@ -158,6 +160,58 @@ class CheckoutFlowTests(TestCase):
 
         self.assertEqual(Sale.objects.count(), before_sales)
         self.assertEqual(PaymentTransaction.objects.count(), before_payments)
+
+    def test_vat_is_extracted_from_the_gross_sale_total(self):
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"service_id": self.service.pk}],
+            payments=[{"method": "CASH", "amount": "2000.00"}],
+        )
+
+        self.assertEqual(sale.total_amount, Decimal("2000.00"))
+        self.assertEqual(sale.vat_amount, Decimal("275.86"))
+
+    def test_refund_requires_independent_manager_and_audits_restock(self):
+        sale = checkout_sale(
+            cashier=self.cashier,
+            items=[{"product_id": self.product.pk}],
+            payments=[{"method": "CASH", "amount": "500.00"}],
+        )
+        line = sale.lines.get(product=self.product)
+        refund = request_sale_refund(
+            sale=sale,
+            items=[{"sale_line_id": line.pk, "quantity": 1, "restock": True}],
+            method="CASH",
+            reason="Unopened item returned with receipt.",
+            requested_by=self.cashier,
+        )
+
+        with self.assertRaises(ValidationError):
+            issue_refund(refund=refund, approver=self.cashier)
+
+        payout = issue_refund(
+            refund=refund,
+            approver=self.manager,
+            review_reason="Return checked against the original receipt.",
+        )
+
+        refund.refresh_from_db()
+        self.product.refresh_from_db()
+        self.assertEqual(refund.status, SaleRefund.Status.ISSUED)
+        self.assertEqual(payout.amount, Decimal("500.00"))
+        self.assertEqual(self.product.on_hand, Decimal("10.000"))
+        self.assertTrue(InventoryMovement.objects.filter(
+            product=self.product,
+            movement_type=InventoryMovement.Type.RETURN,
+            sale_line=line,
+            actor=self.manager,
+        ).exists())
+        self.assertTrue(AuditEvent.objects.filter(
+            event_type=AuditEvent.EventType.REFUND,
+            object_type="sale_refund",
+            object_id=str(refund.pk),
+            approver=self.manager,
+        ).exists())
 
     def test_cash_overpayment_records_tender_and_change_separately(self):
         sale = checkout_sale(

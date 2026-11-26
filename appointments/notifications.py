@@ -15,22 +15,22 @@ logger = logging.getLogger(__name__)
 
 EVENT_COPY = {
     "REQUESTED": {
-        "subject": "We received your LashPro appointment request",
+        "subject": "We received your Lashpro KE appointment request",
         "heading": "Appointment request received",
         "body": "Your appointment request has been received. The studio will contact you after it has reviewed the schedule.",
     },
     "CONFIRMED": {
-        "subject": "Your LashPro appointment is confirmed",
+        "subject": "Your Lashpro KE appointment is confirmed",
         "heading": "Appointment confirmed",
         "body": "Your appointment is confirmed. We look forward to seeing you.",
     },
     "EXPIRED": {
-        "subject": "Your LashPro appointment request has expired",
+        "subject": "Your Lashpro KE appointment request has expired",
         "heading": "Appointment request expired",
         "body": "We could not confirm your request within the reservation window, so the time has been released. Please submit a new request or contact the studio.",
     },
     "CANCELLED": {
-        "subject": "Your LashPro appointment has been cancelled",
+        "subject": "Your Lashpro KE appointment has been cancelled",
         "heading": "Appointment cancelled",
         "body": "Your appointment has been cancelled. Contact the studio if you need assistance.",
     },
@@ -78,8 +78,13 @@ def _post_json(url, payload, headers, timeout=12):
 
 
 def _send_email(config, appointment, event, body):
-    recipient = (appointment.customer_email or "").strip()
-    if not recipient:
+    recipients = list(dict.fromkeys(
+        email for email in (
+            (appointment.customer_email or "").strip(),
+            (config.get("operations_notification_email") or "").strip(),
+        ) if email
+    ))
+    if not recipients:
         return
     from_email = config.get("email_from_email") or settings.DEFAULT_FROM_EMAIL
     if config.get("email_host"):
@@ -91,19 +96,21 @@ def _send_email(config, appointment, event, body):
             use_tls=bool(config.get("email_use_tls")),
             timeout=10,
         )
-        EmailMessage(
-            EVENT_COPY[event]["subject"], body, from_email, [recipient],
-            connection=connection,
-        ).send(fail_silently=False)
+        for recipient in recipients:
+            EmailMessage(
+                EVENT_COPY[event]["subject"], body, from_email, [recipient],
+                connection=connection,
+            ).send(fail_silently=False)
     else:
         # A console backend prints customer booking details to the process log.
         # Leave delivery unconfigured rather than leaking private information.
         if settings.DJANGO_ENV == "production" and settings.EMAIL_BACKEND.endswith("console.EmailBackend"):
             logger.warning("Booking email provider is not configured; notification not sent.")
             return
-        EmailMessage(
-            EVENT_COPY[event]["subject"], body, from_email, [recipient],
-        ).send(fail_silently=False)
+        for recipient in recipients:
+            EmailMessage(
+                EVENT_COPY[event]["subject"], body, from_email, [recipient],
+            ).send(fail_silently=False)
 
 
 def _send_sms(config, appointment, body):

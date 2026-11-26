@@ -1,6 +1,6 @@
 {% extends "base_admin.html" %}
 {% load static %}
-{% block title %}API Integrations · LashPro{% endblock %}
+{% block title %}API Integrations · Lashpro KE{% endblock %}
 {% block pos_page_title %}API integrations{% endblock %}
 {% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'core/integrations.css' %}">{% endblock %}
 {% block admin_content %}
@@ -24,6 +24,7 @@
         <div class="integration-field">{{ form.email_username.label_tag }}{{ form.email_username }}{{ form.email_username.errors }}</div>
         <div class="integration-field">{{ form.email_password.label_tag }}{{ form.email_password }}<small>{% if config_status.email_password %}A password is saved. Leave blank to keep it.{% else %}Enter your SMTP or app password.{% endif %}</small>{{ form.email_password.errors }}</div>
         <div class="integration-field">{{ form.email_from_email.label_tag }}{{ form.email_from_email }}{{ form.email_from_email.errors }}</div>
+        <div class="integration-field">{{ form.operations_notification_email.label_tag }}{{ form.operations_notification_email }}<small>Receives internal alerts for new appointment requests and storefront orders.</small>{{ form.operations_notification_email.errors }}</div>
         <div class="integration-field integration-check">{{ form.email_use_tls }}{{ form.email_use_tls.label_tag }}</div>
       </div>
       <label class="integration-clear">{{ form.clear_email_password }} {{ form.clear_email_password.label }}</label>
@@ -42,7 +43,7 @@
     </section>
 
     <section class="integration-card">
-      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp Business App + Cloud API</h2><p>Keep the owner's existing WhatsApp Business App and number through Meta's coexistence onboarding. LashPro uses the Cloud API for catalogue updates and order webhooks.</p></div><span class="integration-state">{% if config_status.whatsapp_commerce %}Commerce credentials saved{% elif config_status.whatsapp %}Messaging credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-card-heading"><div><p class="integration-kicker">03 · WHATSAPP</p><h2>WhatsApp Business App + Cloud API</h2><p>Keep the owner's existing WhatsApp Business App and number through Meta's coexistence onboarding. Lashpro KE uses the Cloud API for catalogue updates and order webhooks.</p></div><span class="integration-state">{% if config_status.whatsapp_commerce %}Commerce credentials saved{% elif config_status.whatsapp %}Messaging credentials saved{% else %}Not configured{% endif %}</span></div>
       <div class="integration-grid">
         <div class="integration-field wide">{{ form.whatsapp_access_token.label_tag }}{{ form.whatsapp_access_token }}<small>{% if config_status.whatsapp %}A token is saved. Leave blank to keep it.{% else %}Paste the access token issued after the number is connected through Meta coexistence onboarding.{% endif %}</small>{{ form.whatsapp_access_token.errors }}</div>
         <div class="integration-field">{{ form.whatsapp_phone_number_id.label_tag }}{{ form.whatsapp_phone_number_id }}{{ form.whatsapp_phone_number_id.errors }}</div>
@@ -54,7 +55,7 @@
       </div>
       <div class="integration-note">
         <strong>Meta webhook callback URL:</strong> <code>{{ whatsapp_webhook_url }}</code><br>
-        Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field. Incoming catalogue carts are validated against LashPro SKUs and Neon prices; successful imports appear under Online Orders with their source marked WhatsApp.
+        Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field. Incoming catalogue carts are validated against Lashpro KE SKUs and Neon prices; successful imports appear under Online Orders with their source marked WhatsApp.
       </div>
       <div class="integration-grid">
         <div class="integration-field">{{ form.whatsapp_language.label_tag }}{{ form.whatsapp_language }}{{ form.whatsapp_language.errors }}</div>
@@ -69,7 +70,7 @@
     </section>
 
     <section class="integration-card">
-      <div class="integration-card-heading"><div><p class="integration-kicker">04 · SAFARICOM DARAJA</p><h2>M-Pesa STK Push</h2><p>Enter your Daraja app credentials, Lipa Na M-Pesa passkey and business short code.</p></div><span class="integration-state">{% if config_status.mpesa %}Credentials saved{% else %}Not configured{% endif %}</span></div>
+      <div class="integration-card-heading"><div><p class="integration-kicker">04 · SAFARICOM DARAJA</p><h2>Manual M-Pesa reconciliation</h2><p>Customer-initiated Paybill payments are recorded by reference and remain pending until a manager verifies them.</p></div><span class="integration-state">{% if config_status.mpesa %}Credentials saved{% else %}Not configured{% endif %}</span></div>
       <div class="integration-grid">
         <div class="integration-field">{{ form.mpesa_environment.label_tag }}{{ form.mpesa_environment }}{{ form.mpesa_environment.errors }}</div>
         <div class="integration-field">{{ form.mpesa_shortcode.label_tag }}{{ form.mpesa_shortcode }}{{ form.mpesa_shortcode.errors }}</div>
@@ -82,9 +83,9 @@
         <div class="integration-field">{{ form.mpesa_account_reference.label_tag }}{{ form.mpesa_account_reference }}{{ form.mpesa_account_reference.errors }}</div>
         <div class="integration-field">{{ form.mpesa_transaction_description.label_tag }}{{ form.mpesa_transaction_description }}{{ form.mpesa_transaction_description.errors }}</div>
       </div>
-      <p class="integration-note">Use sandbox credentials while testing. Switch to production only after Safaricom has approved the shortcode, passkey and callback domain. STK requests require whole-KSh amounts and a Kenyan mobile number.</p>
+      <p class="integration-warning"><strong>STK Push is paused.</strong> New prompts and automatic reconciliation are disabled. Customers should use the published Paybill details; managers reconcile each submitted M-Pesa reference against the business statement.</p>
       <label class="integration-clear">{{ form.clear_mpesa }} {{ form.clear_mpesa.label }}</label>
-      <p class="integration-note">After saving the shortcode list, use the button below to register the C2B v2 callbacks with Safaricom. Incoming C2B payments are stored as confirmed but unallocated until a cashier matches them to a sale.</p>
+      <p class="integration-note">After saving the shortcode list, use the button below to register the C2B v2 callbacks with Safaricom. Incoming C2B callbacks are not allocated to sales automatically; cashiers must review and match each payment to a sale.</p>
     </section>
 
     <section class="integration-card">

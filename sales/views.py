@@ -1,10 +1,8 @@
 import json
-import secrets
 import uuid
 from io import BytesIO
 from decimal import Decimal
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -22,7 +20,7 @@ from inventory.services import available_stock_by_product
 from .forms import BalancePaymentForm, CheckoutDetailsForm, LineFormSet, PaymentFormSet
 from .models import Sale, SaleLine, SaleRefund
 from .services import checkout_sale, issue_refund, record_sale_payment, reject_refund, request_sale_refund
-from payments.mpesa import initiate_stk_push
+from core.public_throttle import public_rate_limit
 
 ALLOWED_ROLES = {User.Role.OWNER, User.Role.MANAGER, User.Role.CASHIER}
 
@@ -194,6 +192,7 @@ class CashSyncForm(forms.Form):
     amount = forms.DecimalField(min_value=Decimal("0.01"), max_digits=10, decimal_places=2)
 
 
+@public_rate_limit("pos-cash-sync", limits={"POST": (30, 60)})
 @never_cache
 @require_http_methods(["GET", "POST"])
 def cash_sync(request):
@@ -231,6 +230,7 @@ def cash_sync(request):
     return JsonResponse({"receipt": reverse("sales:receipt", kwargs={"token": sale.receipt_token})})
 
 
+@public_rate_limit("pos-checkout", limits={"GET": (120, 60), "POST": (30, 60)})
 @login_required(login_url="login")
 @never_cache
 def checkout(request):
@@ -250,61 +250,29 @@ def checkout(request):
                 for field_errors in payment_errors.values():
                     for error in field_errors:
                         messages.error(request, error)
+        if request.POST.get("checkout_payment_mode", "").upper() == "STK_PUSH":
+            messages.error(request, "STK Push is paused. Record the customer's manual M-Pesa transaction code instead.")
+            valid_details = valid_lines = valid_payments = False
         if valid_details and valid_lines and valid_payments:
             items, payments = _checkout_items(lines), []
-            stk_mode = request.POST.get("checkout_payment_mode", "").upper() == "STK_PUSH"
-            if not stk_mode:
-                for form in payments_formset:
-                    row = form.cleaned_data
-                    if row.get("DELETE") or row.get("amount") is None:
-                        continue
-                    payments.append({"method": row["method"], "amount": row["amount"], "reference": row.get("reference", "")})
+            for form in payments_formset:
+                row = form.cleaned_data
+                if row.get("DELETE") or row.get("amount") is None:
+                    continue
+                payments.append({"method": row["method"], "amount": row["amount"], "reference": row.get("reference", "")})
             try:
-                checkout_key = details.cleaned_data.get("idempotency_key")
                 sale = checkout_sale(
                     cashier=request.user,
                     customer=details.cleaned_data.get("customer"),
                     items=items,
-                    payments=[] if stk_mode else payments,
-                    idempotency_key=checkout_key,
+                    payments=payments,
+                    idempotency_key=details.cleaned_data.get("idempotency_key"),
                 )
             except ValidationError as exc:
                 for error in exc.messages:
                     messages.error(request, error)
             else:
-                if stk_mode:
-                    callback_token = secrets.token_urlsafe(48)
-                    callback_url = (
-                        settings.POS_BASE_URL.rstrip("/")
-                        + reverse("payments:mpesa-stk-callback", kwargs={"token": callback_token})
-                    )
-                    # Deterministic idempotency prevents a browser retry from sending a second prompt.
-                    stk_key = uuid.uuid5(uuid.NAMESPACE_URL, f"lashpro-pos-stk:{checkout_key}")
-                    try:
-                        push = initiate_stk_push(
-                            sale=sale,
-                            amount=sale.total_amount,
-                            phone=request.POST.get("mpesa_stk_phone", ""),
-                            callback_url=callback_url,
-                            callback_token=callback_token,
-                            idempotency_key=stk_key,
-                            actor=request.user,
-                        )
-                    except ValidationError as exc:
-                        for error in exc.messages:
-                            messages.error(request, error)
-                        messages.warning(request, "The sale was saved. Review its balance before attempting another payment.")
-                    else:
-                        if push.status == "PENDING":
-                            messages.success(request, "M-Pesa STK prompt sent. The payment will be recorded as paid only after Daraja confirms it.")
-                        elif push.status == "SUCCEEDED":
-                            messages.success(request, "M-Pesa payment already confirmed.")
-                        elif push.status == "UNKNOWN":
-                            messages.warning(request, "Daraja did not return a definite response. Do not send another STK prompt until the outcome is checked.")
-                        else:
-                            messages.error(request, "Daraja did not accept the STK request. The sale remains saved and unpaid.")
-                else:
-                    messages.success(request, f"Sale #{sale.pk} completed.")
+                messages.success(request, f"Sale #{sale.pk} completed. Manual M-Pesa entries remain pending manager verification.")
                 return redirect("sales:receipt", token=sale.receipt_token)
     else:
         initial_cart = []
@@ -533,15 +501,6 @@ def balance_payments(request):
     for sale in sales:
         sale.available_for_collection = sale.available_to_collect
         sale.payment_form_key = uuid.uuid4()
-    from core.models import IntegrationSettings
-    try:
-        integration_config = IntegrationSettings.get_solo().get_config()
-    except RuntimeError:
-        integration_config = {}
-    mpesa_stk_configured = all(
-        integration_config.get(key)
-        for key in ("mpesa_consumer_key", "mpesa_consumer_secret", "mpesa_shortcode", "mpesa_passkey")
-    )
     if request.method == "POST":
         allowed_sales = Sale.objects.filter(status=Sale.Status.COMPLETED)
         if not is_manager:
@@ -564,7 +523,6 @@ def balance_payments(request):
     return render(request, "sales/payments.html", {
         "sales": sales,
         "is_manager": is_manager,
-        "mpesa_stk_configured": mpesa_stk_configured,
     })
 
 

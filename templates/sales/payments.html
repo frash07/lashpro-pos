@@ -1,13 +1,13 @@
 {% extends "base_pos.html" %}
 
-{% block title %}Balance payments · LashPro{% endblock %}
+{% block title %}Balance payments · Lashpro KE{% endblock %}
 
 {% block pos_page_title %}Payments{% endblock %}
 
 {% block pos_main %}
-<nav class="workspace-shortcuts" aria-label="Related workflows"><a href="{% url 'sales:checkout' %}">New checkout</a><a href="{% url 'payments:c2b-inbox' %}">Incoming M-Pesa</a><a href="{% url 'payments:cash-session' %}">Cash session</a></nav>
-<main class="page operations-page"><h1>Collect a sale balance</h1><p>Collect cash or send an M-Pesa STK Push to the customer's phone. M-Pesa payments are recorded only after Safaricom confirms the callback; manual transaction references are not accepted.</p>
-{% if not mpesa_stk_configured %}<p class="message warning">M-Pesa STK Push is not configured. An owner can add Daraja credentials in Admin Suite → API Integrations.</p>{% endif %}
+<nav class="workspace-shortcuts" aria-label="Related workflows"><a href="{% url 'sales:checkout' %}">New checkout</a><a href="{% url 'payments:reconciliation' %}">Manager reconciliation</a><a href="{% url 'payments:c2b-inbox' %}">Incoming M-Pesa</a><a href="{% url 'payments:cash-session' %}">Cash session</a></nav>
+<main class="page operations-page"><h1>Collect a sale balance</h1><p>Collect cash or record a customer-initiated M-Pesa payment. Manual M-Pesa entries stay unverified until an owner or manager reconciles the reference.</p>
+<p class="message info">Paybill <strong>542542</strong> · Account <strong>183288</strong></p>
 {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
 {% for sale in sales %}<article class="card"><h2>{{ sale.receipt_number }} · {% if sale.storefront_order %}{{ sale.storefront_order.customer_name }}{% else %}{{ sale.customer.name|default:"Walk-in customer" }}{% endif %}{% if sale.training_enrollment %} · Training tuition{% endif %}</h2><p>{{ sale.created_at|date:"d M Y H:i" }} · Cashier {{ sale.cashier.get_full_name|default:sale.cashier.username }}{% if sale.storefront_order %} · Online order {{ sale.storefront_order.reference }}{% endif %}</p>
 <p>Total KSh {{ sale.total_amount|floatformat:2 }} · Confirmed KSh {{ sale.paid_amount|floatformat:2 }}{% if sale.unverified_amount %} · M-Pesa awaiting verification KSh {{ sale.unverified_amount|floatformat:2 }}{% endif %} · Available to collect KSh {{ sale.available_for_collection|floatformat:2 }}</p>
@@ -15,17 +15,12 @@
 <input type="hidden" name="method" value="CASH">
 <label>Cash received (KSh) <input type="number" name="amount" min="0.01" max="{{ sale.available_for_collection }}" step="0.01" required></label>
 <button type="submit">Record cash payment</button></form>
-{% if mpesa_stk_configured %}
-<form method="post" action="{% url 'payments:mpesa-stk-initiate' %}" class="stk-payment-form">
-  {% csrf_token %}
-  <input type="hidden" name="sale_id" value="{{ sale.pk }}">
-  <input type="hidden" name="idempotency_key" value="{{ sale.payment_form_key }}">
-  <label>Customer phone <input type="tel" name="phone" maxlength="20" placeholder="0712 345 678" required></label>
-  <label>STK amount (KSh) <input type="number" name="amount" min="1" max="{{ sale.available_for_collection }}" step="1" value="{{ sale.available_for_collection|floatformat:0 }}" required></label>
-  <button type="submit">Send M-Pesa STK Push</button>
-  <small>The phone owner must enter their M-Pesa PIN on the prompt.</small>
+<form method="post" class="manual-mpesa-form">
+  {% csrf_token %}<input type="hidden" name="sale" value="{{ sale.pk }}"><input type="hidden" name="idempotency_key" value="{{ sale.payment_form_key }}"><input type="hidden" name="method" value="MPESA">
+  <label>M-Pesa amount (KSh) <input type="number" name="amount" min="0.01" max="{{ sale.available_for_collection }}" step="0.01" required></label>
+  <label>M-Pesa transaction code <input type="text" name="reference" maxlength="50" autocomplete="off" required></label>
+  <button type="submit">Record pending M-Pesa</button>
 </form>
-{% endif %}
 {% else %}<p>There is no unallocated balance available. Review payment status before collecting again.</p>{% endif %}</article>{% empty %}<p>No completed sales are available.</p>{% endfor %}
 </main>
 {% endblock %}
