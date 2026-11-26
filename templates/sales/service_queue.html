@@ -1,11 +1,11 @@
 {% extends "base_pos.html" %}
 
-{% block title %}Service queue · LashPro{% endblock %}
+{% block title %}Service queue · Lashpro KE{% endblock %}
 
 {% block pos_page_title %}Service queue{% endblock %}
 
 {% block pos_main %}
-<header class="app-header"><a class="brand-lockup" href="{% if is_manager %}{% url 'sales:checkout' %}{% else %}{% url 'sales:services' %}{% endif %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>LashPro <small>KE</small></strong><span>Salon &amp; Academy</span></span></a>
+<header class="app-header"><a class="brand-lockup" href="{% if is_manager %}{% url 'sales:checkout' %}{% else %}{% url 'sales:services' %}{% endif %}"><span class="brand-mark" aria-hidden="true">✦</span><span class="brand-copy"><strong>Lashpro KE <small>KE</small></strong><span>Salon &amp; Academy</span></span></a>
   <nav class="mode-toggle" aria-label="Workspace">{% if is_manager %}<a class="mode-link" href="{% url 'sales:checkout' %}">Salon POS</a><a class="mode-link" href="{% url 'reporting:dashboard' %}">Admin portal</a>{% else %}<a class="mode-link is-active" href="{% url 'sales:services' %}" aria-current="page">My service queue</a>{% endif %}</nav>
   <div class="header-actions"><div class="user-chip"><span class="user-avatar" aria-hidden="true">{{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>{{ request.user.get_role_display }}</small></span></div><form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit" class="button-quiet">Sign out</button></form></div>
 </header>

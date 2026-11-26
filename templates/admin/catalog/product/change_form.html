@@ -1,7 +1,7 @@
 {% extends "admin/change_form.html" %}
 {% load static %}
 
-{% block title %}{% if add %}Add product{% else %}Edit product{% endif %} · LashPro KE{% endblock %}
+{% block title %}{% if add %}Add product{% else %}Edit product{% endif %} · Lashpro KE{% endblock %}
 
 {% block bodyclass %}{{ block.super }} lashpro-product-workspace{% endblock %}
 
@@ -19,7 +19,7 @@
 
 {% block content %}
   <header class="topbar product-form-topbar">
-    <a class="brand product-form-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+    <a class="brand product-form-brand" href="{% url 'sales:checkout' %}" aria-label="Lashpro KE Salon POS">
       <span class="brand-mark"><i data-lucide="sparkles"></i></span>
       <span>
         <span class="brand-name">LASHPRO <span>KE</span></span>
@@ -80,7 +80,7 @@
           <div>
             <div class="product-form-overline"><i data-lucide="package"></i> PRODUCT RECORD</div>
             <h2 id="product-form-panel-title">Product information</h2>
-            <p>Enter the details used across the LashPro studio.</p>
+            <p>Enter the details used across the Lashpro KE studio.</p>
           </div>
           <span class="product-form-state">{% if add %}New product{% else %}Edit product{% endif %}</span>
         </div>

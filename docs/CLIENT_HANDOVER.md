@@ -16,8 +16,9 @@ Status: live acceptance is not certified. Record date, accountable owner, redact
 
 ## Payment and provider acceptance
 
-- [ ] Daraja sandbox: STK success, rejection, cancellation, timeout, late/duplicate callback, callback correlation, wrong amount and duplicate receipt; confirm unknown outcomes are investigated without duplicate prompts.
-- [ ] Confirm business-approved live shortcode and callback registrations on pos.lashproke.cc. Test controlled low-value live STK and C2B and reconcile to Safaricom statement.
+- [ ] Confirm Paybill 542542/account 183288 against the business's Safaricom account. Test manual transaction-reference entry, duplicate-reference rejection, manager reconciliation and statement matching.
+- [ ] If STK Push is re-enabled in a later release, complete Daraja sandbox success, rejection, cancellation, timeout, late/duplicate callback, callback correlation, wrong amount and duplicate receipt checks before production use.
+- [ ] Confirm business-approved live C2B callback registrations on pos.lashproke.cc if enabled. Test a controlled low-value transaction and manually reconcile it to the Safaricom statement.
 - [ ] Confirm Paybill/Till inbox allocation permissions, correct payer/sale, no duplicate allocation, overpayment remains unallocated; establish escalation for unmatched funds.
 - [ ] Verify Meta coexistence for existing WhatsApp number, webhook signature, catalogue mapping and stock sync; test duplicate and insufficient-stock orders and fulfilment. Check scheduled sync logs and queue.
 - [ ] Verify booking notification email, SMS and WhatsApp templates (requested, confirmed, cancelled, expired); check delivered time in EAT.

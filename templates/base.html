@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#F8F3EE">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>{% block title %}LashPro POS{% endblock %}</title>
+  <title>{% block title %}Lashpro KE{% endblock %}</title>
   <link rel="manifest" href="{% static 'pwa/manifest.webmanifest' %}">
   <link rel="icon" type="image/png" sizes="48x48" href="{% static 'pwa/favicon-48.png' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'pwa/favicon-32.png' %}">
@@ -33,7 +33,7 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("{% url 'service_worker' %}", { scope: "/" })
-          .catch(() => console.warn("LashPro offline support could not be enabled."));
+          .catch(() => console.warn("Lashpro KE offline support could not be enabled."));
       });
     }
   </script>

@@ -10,6 +10,7 @@ from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
 from storefront.whatsapp_views import whatsapp_webhook
 urlpatterns = [
+    path("health", health_check, name="health"),
     path("healthz", health_check, name="health-check"),
     path("readyz", readiness_check, name="readiness-check"),
     path("sw.js", service_worker, name="service_worker"),

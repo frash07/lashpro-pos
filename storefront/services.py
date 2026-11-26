@@ -194,6 +194,7 @@ def create_storefront_order(
                     product=line.product,
                     quantity=Decimal(line.quantity).quantize(Decimal("0.001")),
                 )
+            transaction.on_commit(lambda order_id=order.pk: _notify_storefront_order(order_id))
     except IntegrityError:
         duplicate = StorefrontOrder.objects.filter(idempotency_key=key).first()
         if duplicate is None and external_order_id:
@@ -214,6 +215,13 @@ def create_storefront_order(
         raise ValidationError({"idempotency_key": "This checkout was already submitted. Review your order status."}) from None
 
     return order
+
+
+def _notify_storefront_order(order_id):
+    """Send customer and business order emails after a new request commits."""
+    from .notifications import send_storefront_order_notification
+
+    send_storefront_order_notification(order_id)
 
 
 

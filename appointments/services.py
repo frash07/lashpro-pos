@@ -13,6 +13,8 @@ from .models import Appointment, StaffAvailability, StaffTimeOff
 User = get_user_model()
 PROVIDER_ROLES = ("OWNER", "MANAGER", "TECHNICIAN", "TRAINER")
 SLOT_INTERVAL_MINUTES = 15
+SERVICE_OPEN_HOUR = 9
+SERVICE_CLOSE_HOUR = 18
 BOOKING_STATUSES = (
     Appointment.Status.REQUESTED,
     Appointment.Status.CONFIRMED,
@@ -119,6 +121,10 @@ def is_slot_available(*, service, staff, starts_at, exclude_appointment_id=None)
         return False
 
     local_start = starts_at.time().replace(tzinfo=None, second=0, microsecond=0)
+    opens = _local_datetime(starts_at.date(), datetime.min.time().replace(hour=SERVICE_OPEN_HOUR))
+    closes = _local_datetime(starts_at.date(), datetime.min.time().replace(hour=SERVICE_CLOSE_HOUR))
+    if starts_at < opens:
+        return False
     minutes_from_open = (
         local_start.hour * 60 + local_start.minute
         - (schedule.start_time.hour * 60 + schedule.start_time.minute)
@@ -127,7 +133,7 @@ def is_slot_available(*, service, staff, starts_at, exclude_appointment_id=None)
         return False
 
     ends_at = starts_at + timedelta(minutes=service.duration_minutes)
-    schedule_end = _local_datetime(starts_at.date(), schedule.end_time)
+    schedule_end = min(_local_datetime(starts_at.date(), schedule.end_time), closes)
     if ends_at > schedule_end:
         return False
     return not _slot_conflicts(
@@ -158,8 +164,10 @@ def get_available_slots(*, service, day):
     slots = []
     now = timezone.now()
     for schedule in schedules:
-        cursor = _local_datetime(day, schedule.start_time)
-        closing = _local_datetime(day, schedule.end_time)
+        opening = _local_datetime(day, datetime.min.time().replace(hour=SERVICE_OPEN_HOUR))
+        closing = _local_datetime(day, datetime.min.time().replace(hour=SERVICE_CLOSE_HOUR))
+        cursor = max(_local_datetime(day, schedule.start_time), opening)
+        closing = min(_local_datetime(day, schedule.end_time), closing)
         duration = timedelta(minutes=service.duration_minutes)
         while cursor + duration <= closing:
             ends_at = cursor + duration

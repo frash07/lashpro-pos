@@ -1,5 +1,5 @@
 {% extends "storefront/base.html" %}
-{% block title %}Your bag | LashPro{% endblock %}
+{% block title %}Your bag | Lashpro KE{% endblock %}
 {% block content %}
 <section class="page-heading"><p class="eyebrow"><span></span> YOUR SELECTION</p><h1>Your <em>bag.</em></h1><p class="section-subtitle">Review quantities and current catalogue prices before submitting an order request.</p></section>
 {% if items %}
@@ -15,9 +15,9 @@
         </article>
       {% endfor %}
     </div>
-    <aside class="cart-summary"><p class="eyebrow"><span></span> ORDER SUMMARY</p><div class="summary-total"><span>Estimated total</span><strong>KSh {{ total|floatformat:2 }}</strong></div><p>Prices are taken from the live LashPro catalogue and checked again when you submit the order.</p>{% if has_unavailable_items %}<button class="button button-dark" disabled>Update unavailable quantities</button>{% else %}<a class="button button-dark" href="{% url 'storefront:checkout' %}">Continue to checkout →</a>{% endif %}<a class="text-link" href="{% url 'storefront:home' %}#shop">Continue shopping</a></aside>
+    <aside class="cart-summary"><p class="eyebrow"><span></span> ORDER SUMMARY</p><div class="summary-total"><span>Estimated total</span><strong>KSh {{ total|floatformat:2 }}</strong></div><p>Prices are taken from the live Lashpro KE catalogue and checked again when you submit the order.</p>{% if has_unavailable_items %}<button class="button button-dark" disabled>Update unavailable quantities</button>{% else %}<a class="button button-dark" href="{% url 'storefront:checkout' %}">Continue to checkout →</a>{% endif %}<a class="text-link" href="{% url 'storefront:home' %}#shop">Continue shopping</a></aside>
   </div>
 {% else %}
-  <div class="empty-state"><span>✳</span><h2>Your bag is empty</h2><p>Browse the LashPro products and add items to begin.</p><a class="button button-dark" href="{% url 'storefront:home' %}#shop">Explore products</a></div>
+  <div class="empty-state"><span>✳</span><h2>Your bag is empty</h2><p>Browse the Lashpro KE products and add items to begin.</p><a class="button button-dark" href="{% url 'storefront:home' %}#shop">Explore products</a></div>
 {% endif %}
 {% endblock %}

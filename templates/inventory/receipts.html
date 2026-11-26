@@ -1,13 +1,13 @@
 {% extends "base_pos.html" %}
 {% load static %}
-{% block title %}Supplier receipt history · LashPro{% endblock %}
+{% block title %}Supplier receipt history · Lashpro KE{% endblock %}
 {% block head_extra %}{{ block.super }}
 <link rel="stylesheet" href="{% static 'inventory/receipts.css' %}">
 {% endblock %}
 {% block pos_page_title %}Supplier receipts{% endblock %}
 
 {% block pos_main %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
+<header><a class="brand" href="{% url 'sales:checkout' %}">Lashpro KE <small>POS</small></a><a href="{% url 'inventory:receive' %}">Receive stock</a></header>
 <main class="page inventory-receipts-page">
   <h1>Supplier receipt history</h1>
   <p>Supplier documents already posted to inventory. This register is read-only; corrections must be recorded as separate stock movements.</p>

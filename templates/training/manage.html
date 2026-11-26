@@ -1,11 +1,11 @@
 {% extends "base_pos.html" %}
 
-{% block title %}Manage training · LashPro{% endblock %}
+{% block title %}Manage training · Lashpro KE{% endblock %}
 
 {% block pos_page_title %}Manage academy{% endblock %}
 
 {% block pos_main %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a><a href="{% url 'training:dashboard' %}">Training dashboard</a><a href="{% url 'sales:checkout' %}">Checkout</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<header><a class="brand" href="{% url 'sales:checkout' %}">Lashpro KE <small>TRAINING</small></a><a href="{% url 'training:dashboard' %}">Training dashboard</a><a href="{% url 'sales:checkout' %}">Checkout</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
 <main class="page">
   <div class="heading"><div><small>COURSE SETUP</small><h1>Manage courses and cohorts</h1><p>Create training courses, then schedule a cohort with a trainer, dates, capacity and tuition.</p></div></div>
   {% if messages %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}

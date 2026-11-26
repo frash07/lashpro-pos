@@ -15,7 +15,7 @@ This is the canonical production deployment guide for the LashPro POS and storef
 | Email | Authenticated SMTP provider | Staff password recovery and transactional email |
 | DNS/TLS | Customer-owned domain with Fly certificates | Branded HTTPS access |
 
-The repository currently sets `primary_region = "ams"` in both Fly app configs. Confirm the actual Neon project region and compare it with the Fly app region; the two settings are independent. Keep the database region as close to the application Machines as practical to reduce round-trip latency. Region choice affects performance, not whether the apps share data.
+The production Fly app configs now set `primary_region = "jnb"` (Johannesburg). Confirm the Neon project region and compare it with the Fly app region before deployment; the two settings are independent. Keep the database region close to the application Machines to reduce round-trip latency. Region choice affects performance, not whether the apps share data.
 
 **Neon is the selected production PostgreSQL provider.** Do not provision or attach a separate Fly Managed Postgres database for either production app. Both apps must use the same Neon project, production branch and database. Confirm Neon TLS, compute availability, connection limits, branch retention and restore controls in the Neon console. Do not point one app at a development/staging branch.
 
@@ -183,6 +183,7 @@ For Neon, select one production branch and database. Set the same pooled `DATABA
 - Verify automatic backups are enabled and confirm their retention and recovery window in the provider console.
 - Make an additional encrypted off-provider backup on a documented schedule.
 - Perform a restore rehearsal to a **new, separate database** before live use and at regular intervals thereafter.
+- Create and verify a separate encrypted database backup every day; perform a restore drill to staging at least quarterly. This deployment uses Neon PostgreSQL and has no Fly volume to snapshot, so do not treat Fly volume snapshots as the database backup.
 - Record the recovery point objective (maximum acceptable data loss) and recovery time objective (maximum acceptable outage) with the business owner.
 - Keep the database secret and encryption key backups under separate access controls.
 - Never test restoration over the live production database.
@@ -299,7 +300,7 @@ After deployment, use separate named staff accounts and test with controlled tra
 - complete a product + service checkout;
 - print the receipt;
 - record a cash payment;
-- initiate a sandbox M-Pesa STK Push and confirm the payment remains pending until the successful Daraja callback;
+- record a manual M-Pesa Paybill transaction reference and confirm it stays pending until a manager reconciles it;
 - test a partial payment and repeat submission to confirm idempotency;
 - test refund request and independent manager approval;
 - verify stock movements, service consumables and commission ledger entries;
@@ -323,6 +324,8 @@ Do not declare production ready until all of the following are evidenced:
 - [ ] Migrations deploy successfully against the intended database.
 - [ ] At least two named owner/manager accounts exist.
 - [ ] Backups, off-provider copies and a restore rehearsal are complete.
+- [ ] Daily backup automation and a quarterly restore drill to staging have named owners and retained evidence.
+- [ ] Ruff lint and Trivy image scanning are green for the exact release image.
 - [ ] Monitoring, alerting and operational ownership are documented.
 - [ ] The production smoke test passes and the business owner accepts the release.
 

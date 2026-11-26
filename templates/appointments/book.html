@@ -1,5 +1,5 @@
 {% extends "storefront/base.html" %}
-{% block title %}Book an appointment | LashPro{% endblock %}
+{% block title %}Book an appointment | Lashpro KE{% endblock %}
 {% block content %}
 <section class="booking-heading">
   <p class="eyebrow"><span></span> THE LASHPRO EXPERIENCE</p>
@@ -41,7 +41,7 @@
           <div class="booking-field"><label for="{{ form.phone.id_for_label }}">Phone number</label>{{ form.phone }}{{ form.phone.errors }}</div>
           <div class="booking-field"><label for="{{ form.notes.id_for_label }}">Notes (optional)</label>{{ form.notes }}{{ form.notes.errors }}</div>
         </div>
-        <div class="booking-disclaimer">This submits an appointment request. The studio will confirm it; no payment is taken online.</div>
+        <div class="booking-disclaimer">This submits an appointment request. The studio will confirm the service and amount first. If payment is due, use Paybill <strong>542542</strong>, account <strong>183288</strong>; the team manually verifies M-Pesa before confirming payment. Appointment times are offered between 09:00 and 18:00 EAT.</div>
         <label class="legal-consent" for="{{ form.accept_terms.id_for_label }}">{{ form.accept_terms }}<span>I have read and agree to the <a href="{% url 'storefront:terms' %}">Terms of Service</a> and <a href="{% url 'storefront:returns' %}">Returns &amp; Refunds Policy</a>.</span></label>
         {% if form.accept_terms.errors %}<p class="legal-errors">{{ form.accept_terms.errors }}</p>{% endif %}
         <button class="button button-dark" type="submit">Request appointment <span aria-hidden="true">→</span></button>

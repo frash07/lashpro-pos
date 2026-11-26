@@ -1,8 +1,8 @@
 {% extends "admin/base.html" %}
 {% load static %}
-{% block title %}LashPro POS administration{% endblock %}
+{% block title %}Lashpro KE administration{% endblock %}
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">LashPro POS administration</a></h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Lashpro KE administration</a></h1>
 {% endblock %}
 {% block extrastyle %}
 {{ block.super }}
@@ -21,7 +21,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("{% url 'service_worker' %}", { scope: "/" })
-        .catch((error) => console.warn("LashPro offline support could not be enabled.", error));
+        .catch((error) => console.warn("Lashpro KE offline support could not be enabled.", error));
     });
   }
 </script>

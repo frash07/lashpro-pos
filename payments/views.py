@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import JsonResponse
+from django.http import HttpResponseGone, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
@@ -21,7 +21,7 @@ from .forms import CashSessionApprovalForm, CashSessionMovementForm, CloseCashSe
 from sales.models import Sale
 from .models import CashSession, CashSessionMovement, MpesaC2BPayment, MpesaStkPush, PaymentTransaction, RefundPayout
 from .mpesa import (
-    DarajaError, configured_c2b_shortcodes, initiate_stk_push,
+    DarajaError, configured_c2b_shortcodes,
     process_c2b_callback, process_stk_callback, register_c2b_urls,
 )
 from .stk_reconciliation import query_sandbox_stk
@@ -175,40 +175,9 @@ def _render_cash_session(request, own_session):
 @login_required(login_url="login")
 @require_POST
 def mpesa_stk_initiate(request):
-    if not _can_use_cash_tools(request.user):
-        raise PermissionDenied
-    sale = get_object_or_404(Sale, pk=request.POST.get("sale_id"), status=Sale.Status.COMPLETED)
-    if not _manager(request.user) and sale.cashier_id != request.user.pk:
-        raise PermissionDenied
-
-    callback_token = secrets.token_urlsafe(48)
-    callback_url = (
-        settings.POS_BASE_URL.rstrip("/")
-        + reverse("payments:mpesa-stk-callback", kwargs={"token": callback_token})
+    return HttpResponseGone(
+        "STK Push is paused. Use Paybill 542542, account 183288, and record the transaction reference for manual reconciliation."
     )
-    try:
-        push = initiate_stk_push(
-            sale=sale,
-            amount=request.POST.get("amount"),
-            phone=request.POST.get("phone"),
-            callback_url=callback_url,
-            callback_token=callback_token,
-            idempotency_key=request.POST.get("idempotency_key"),
-            actor=request.user,
-        )
-    except ValidationError as exc:
-        for error in exc.messages:
-            messages.error(request, error)
-    else:
-        if push.status == MpesaStkPush.Status.PENDING:
-            messages.success(request, f"M-Pesa prompt sent to {push.phone_number}. The sale is paid only after Daraja confirms the callback.")
-        elif push.status == MpesaStkPush.Status.SUCCEEDED:
-            messages.success(request, f"M-Pesa payment for {sale.receipt_number} is confirmed.")
-        elif push.status == MpesaStkPush.Status.UNKNOWN:
-            messages.warning(request, "Daraja did not return a definite response. Do not send another STK prompt until the payment outcome is checked.")
-        else:
-            messages.error(request, "The STK request was not accepted. Check the Daraja settings and try again.")
-    return redirect("sales:payments")
 
 
 @csrf_exempt

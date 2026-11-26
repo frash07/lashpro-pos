@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static %}
 
-{% block title %}{% if app_label == "axes" %}Security & access · LashPro KE{% else %}{{ title }}{% endif %}{% endblock %}
+{% block title %}{% if app_label == "axes" %}Security & access · Lashpro KE{% else %}{{ title }}{% endif %}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -18,9 +18,9 @@
 {% block content %}
 {% if app_label == "axes" %}
   <header class="topbar accesslog-admin-topbar">
-    <a class="brand accesslog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+    <a class="brand accesslog-admin-brand" href="{% url 'sales:checkout' %}" aria-label="Lashpro KE Salon POS">
       <span class="brand-mark"><i data-lucide="sparkles"></i></span>
-      <span class="brand-lockup"><span class="brand-name">LASHPRO <span>KE</span></span><span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span></span>
+      <span class="brand-lockup"><span class="brand-name">Lashpro KE</span><span class="brand-sub">Girls Love Lashe</span></span>
     </a>
     <nav class="mode-switch" aria-label="Application navigation">
       <a class="mode-btn" href="{% url 'sales:checkout' %}"><i data-lucide="shopping-bag"></i><span>Salon POS</span></a>
@@ -35,7 +35,7 @@
   <main class="main accesslog-admin-main axes-hub-main">
     <section class="view">
       <div class="page-heading accesslog-admin-heading">
-        <div class="accesslog-heading-copy"><div class="eyebrow">Security centre</div><h1>Security <em>&amp; access.</em></h1><p>Monitor authentication activity, investigate failed sign-ins and review access attempts across the LashPro workspace.</p></div>
+        <div class="accesslog-heading-copy"><div class="eyebrow">Security centre</div><h1>Security <em>&amp; access.</em></h1><p>Monitor authentication activity, investigate failed sign-ins and review access attempts across the Lashpro KE workspace.</p></div>
         <div class="heading-actions accesslog-heading-actions"><div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div><div class="soft-pill"><i data-lucide="shield-check"></i><span>Axes protection</span></div></div>
       </div>
       <nav class="accesslog-security-nav axes-hub-nav" aria-label="Security registers">

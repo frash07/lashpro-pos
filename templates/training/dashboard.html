@@ -1,14 +1,14 @@
 {% extends "base_pos.html" %}
 {% load static %}
 
-{% block title %}Lash-tech training · LashPro{% endblock %}
+{% block title %}Lash-tech training · Lashpro KE{% endblock %}
 {% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'training/training.css' %}">{% endblock %}
 
 {% block pos_page_title %}Academy{% endblock %}
 
 {% block pos_main %}
 <header>
-  {% if request.user.role == "TRAINER" %}<a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a>{% else %}<a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>TRAINING</small></a>{% endif %}
+  {% if request.user.role == "TRAINER" %}<a class="brand" href="{% url 'training:dashboard' %}">Lashpro KE <small>TRAINING</small></a>{% else %}<a class="brand" href="{% url 'sales:checkout' %}">Lashpro KE <small>TRAINING</small></a>{% endif %}
   <nav>{% if request.user.role != "TRAINER" %}<a href="{% url 'sales:checkout' %}">Checkout</a>{% endif %}{% if can_enroll %} · <a href="{% url 'training:enroll' %}">Enroll a student</a>{% endif %}{% if is_manager %} · <a href="{% url 'training:manage' %}">Courses &amp; cohorts</a>{% endif %}</nav>
   <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
 </header>

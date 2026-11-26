@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from accounts.models import User
 from core.admin_workspace import operational_workspace
+from core.public_throttle import public_rate_limit
 from catalog.models import Product
 from commissions.models import CommissionLedgerEntry, CommissionPayoutRecord
 from expenses.models import Expense
@@ -40,6 +41,7 @@ def _display_amount(amount):
     return f"{amount:,.2f}".rstrip("0").rstrip(".")
 
 
+@public_rate_limit("manager-reports", limits={"GET": (30, 60)})
 @login_required(login_url="login")
 def daily_report(request):
     if not (request.user.is_superuser or getattr(request.user, "role", None) in {User.Role.OWNER, User.Role.MANAGER}):

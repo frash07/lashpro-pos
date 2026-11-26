@@ -1,7 +1,7 @@
 {% extends "base_pos.html" %}
 {% load static %}
 
-{% block title %}Import products · LashPro{% endblock %}
+{% block title %}Import products · Lashpro KE{% endblock %}
 
 {% block head_extra %}
   {{ block.super }}
@@ -11,7 +11,7 @@
 {% block pos_page_title %}Import products{% endblock %}
 
 {% block pos_main %}
-<header><a class="brand" href="{% url 'sales:checkout' %}">LashPro <small>POS</small></a><a href="{% url 'inventory:receive' %}">Back to inventory</a></header>
+<header><a class="brand" href="{% url 'sales:checkout' %}">Lashpro KE <small>POS</small></a><a href="{% url 'inventory:receive' %}">Back to inventory</a></header>
 <main class="page product-import-page">
   <h1>Import products</h1>
   <p>Upload a CSV or Excel workbook to preview new products before saving. This import creates products only; existing SKUs are never overwritten.</p>

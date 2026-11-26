@@ -12,7 +12,7 @@
     <strong class="success-total">KSh {{ sale.total_amount|floatformat:"2g" }}</strong>
     {% with first_allocation=sale.payment_allocations.all|first %}
       {% if first_allocation.payment_transaction.method == "MPESA" and first_allocation.payment_transaction.status == "UNVERIFIED" %}
-        <p class="payment-confirmation">M-PESA reference recorded, awaiting verification</p>
+        <p class="payment-confirmation">Manual M-Pesa reference recorded, awaiting manager verification</p>
       {% elif first_allocation %}
         <p class="payment-confirmation">Payment received via {{ first_allocation.payment_transaction.get_method_display }}</p>
       {% else %}
@@ -28,7 +28,7 @@
 
   <article class="receipt-card" aria-label="Sale receipt">
     <header class="receipt-card-header">
-      <div class="receipt-brand"><img src="{% static 'img/logo-placeholder.svg' %}" alt=""><span><strong>Lashpro KE</strong><small>Beauty. Skills. Opportunities.</small></span></div>
+      <div class="receipt-brand"><img src="{% static 'img/logo-placeholder.svg' %}" alt=""><span><strong>Lashpro KE</strong><small>Girls Love Lashe</small></span></div>
       <div class="receipt-meta"><span>{% if sale.training_enrollment %}Tuition receipt{% else %}Receipt number{% endif %}</span><strong>{{ sale.receipt_number }}</strong><span>{{ sale.created_at|date:"d M Y, H:i" }}</span>{% if sale.storefront_order %}<span>Online order {{ sale.storefront_order.reference }}</span>{% endif %}{% if sale.training_enrollment %}<span>{{ sale.training_enrollment.cohort.course.name }} · {{ sale.training_enrollment.cohort.name }}</span>{% endif %}</div>
     </header>
     <div class="receipt-customer"><span>Client</span><strong>{% if sale.storefront_order %}{{ sale.storefront_order.customer_name }}{% else %}{{ sale.customer.name|default:"Walk-in customer" }}{% endif %}</strong></div>

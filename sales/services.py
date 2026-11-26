@@ -156,8 +156,7 @@ def _create_sale_line(*, sale, item):
 def record_sale_payment(*, sale, method, amount, reference="", actor=None, idempotency_key=None, expected_cash_session_id=None):
     """Record cash or a legacy M-Pesa reference against a completed sale.
 
-    New POS M-Pesa collection is STK-only. The legacy M-Pesa branch remains
-    solely to support historical records and controlled reconciliation workflows.
+    Manual M-Pesa references remain unverified until a manager reconciles them.
     A caller-supplied key makes repeated cash submissions safe.
     """
     sale_id = sale.pk if isinstance(sale, Sale) else sale

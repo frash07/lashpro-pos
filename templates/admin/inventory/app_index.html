@@ -1,7 +1,7 @@
 {% extends "admin/app_index.html" %}
 {% load static %}
 
-{% block title %}Inventory · LashPro KE{% endblock %}
+{% block title %}Inventory · Lashpro KE{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -14,11 +14,11 @@
 
 {% block content %}
   <header class="topbar inventory-hub-topbar">
-    <a class="brand inventory-hub-brand" href="{% url 'sales:checkout' %}" aria-label="LashPro Salon POS">
+    <a class="brand inventory-hub-brand" href="{% url 'sales:checkout' %}" aria-label="Lashpro KE Salon POS">
       <span class="brand-mark"><i data-lucide="sparkles"></i></span>
       <span>
         <span class="brand-name">LASHPRO <span>KE</span></span>
-        <span class="brand-sub">NAIROBI · PREMIER LASH &amp; ACADEMY</span>
+        <span class="brand-sub">Girls Love Lashe</span>
       </span>
     </a>
 
@@ -61,6 +61,7 @@
           <p>Keep stock movement traceable, adjustments accountable and treatment usage consistent.</p>
         </div>
         <div class="heading-actions">
+          <a class="button-primary button-link" href="{% url 'inventory:receive' %}"><i data-lucide="package-plus"></i> Receive stock</a>
           <div class="date-pill"><i data-lucide="calendar-days"></i><span>{% now "l, j F Y" %}</span></div>
           <div class="soft-pill"><i data-lucide="boxes"></i> Inventory workspace</div>
         </div>

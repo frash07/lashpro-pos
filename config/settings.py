@@ -114,7 +114,7 @@ STOREFRONT_BASE_URL = env(
 # Production defaults activate when DEBUG is off. Trust the forwarded HTTPS
 # header only when a proxy is configured to overwrite it on every request.
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
-SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=300 if not DEBUG else 0)
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000 if not DEBUG else 0)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
 SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=False)
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=15 * 60)

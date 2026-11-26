@@ -14,7 +14,15 @@ A newly-created appointment request sends an email and, when configured, an SMS 
 
 Provider delivery is best-effort: a provider outage is logged but does not undo or block a booking. Production booking emails are not sent through the console backend when SMTP is absent, to avoid logging customer information. Customers should still see the on-screen booking reference.
 
-## Safaricom Daraja STK Push
+## M-Pesa collection status — manual Paybill workflow
+
+STK Push initiation and automatic payment matching are paused. The public and POS checkout flows accept a customer-initiated M-Pesa transaction reference and keep it unverified until an owner or manager compares it with the Safaricom record. Paybill: **542542**. Account: **183288**. Do not instruct a customer to pay until the studio confirms the order/service and amount.
+
+The old callback endpoint remains only for requests already in flight before this change. It cannot start a new prompt. C2B callback ingestion, if already configured, records incoming payments without allocating them to a sale; a cashier must still review and match each transaction.
+
+STK Push may be restored only after a separate implementation, testing and deployment review. Do not rely on the setup instructions below for current payment collection.
+
+### Future STK Push implementation reference
 
 1. Create/enable a Daraja app and obtain its Consumer Key and Consumer Secret.
 2. Add the business short code, Lipa Na M-Pesa passkey, and select PayBill or Buy Goods according to the shortcode's product.

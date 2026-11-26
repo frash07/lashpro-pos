@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Certificate {{ certificate.certificate_number }} · LashPro{% endblock %}
+{% block title %}Certificate {{ certificate.certificate_number }} · Lashpro KE{% endblock %}
 {% block head_extra %}{{ block.super }}<link rel="stylesheet" href="{% static 'training/training.css' %}">{% endblock %}
 
 {% block content %}
-<header class="no-print"><a class="brand" href="{% url 'training:dashboard' %}">LashPro <small>TRAINING</small></a><a href="{% url 'training:cohort' certificate.enrollment.cohort.pk %}">Back to cohort</a><button type="button" onclick="window.print()">Print certificate</button><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
+<header class="no-print"><a class="brand" href="{% url 'training:dashboard' %}">Lashpro KE <small>TRAINING</small></a><a href="{% url 'training:cohort' certificate.enrollment.cohort.pk %}">Back to cohort</a><button type="button" onclick="window.print()">Print certificate</button><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></header>
 <main class="page">
   <article class="training-certificate{% if certificate.status == 'REVOKED' %} certificate-revoked{% endif %}">
     <p class="certificate-brand">LASHPRO BEAUTY STUDIO</p>
