@@ -67,7 +67,9 @@ jobs:
       - name: Check dependency consistency
         run: python -m pip check
       - name: Lint Python syntax and undefined names
-        run: python -m ruff check . --select E999,F821
+        run: |
+          python -m compileall -q .
+          python -m ruff check . --select F821
       - name: Enforce token-only CSS theme values in changed styles
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
@@ -203,3 +205,4 @@ jobs:
           flyctl deploy --config fly.toml --app lashpro-pos --remote-only --strategy rolling
           export FLY_API_TOKEN="$FLY_STOREFRONT_API_TOKEN"
           flyctl deploy --config fly.storefront.toml --app lashpro-storefront --remote-only --strategy rolling
+
