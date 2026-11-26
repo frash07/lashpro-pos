@@ -1,0 +1,11 @@
+vulnerabilities:
+  - id: CVE-2025-47273
+    purls:
+      - pkg:pypi/setuptools@70.3.0
+    statement: >-
+      The runtime Dockerfile removes setuptools and its metadata after wheel
+      installation. Trivy still identifies the package from the pinned Python
+      base image's immutable lower layer; it is absent from the merged runtime
+      filesystem. Recheck and remove this exception when the base image changes.
+    expired_at: 2026-12-31T00:00:00Z
+
