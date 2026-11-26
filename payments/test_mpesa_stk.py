@@ -41,14 +41,14 @@ class MpesaPhoneNormalizationTests(SimpleTestCase):
             with self.assertRaises(DarajaOutcomeUnknown):
                 _read_json_response(request)
 
-    def test_pos_payment_form_rejects_manual_mpesa_reference(self):
+    def test_pos_payment_form_accepts_manual_mpesa_reference(self):
         form = PaymentForm(data={
             "method": "MPESA",
             "amount": "1500.00",
             "reference": "QWE1234567",
         })
-        self.assertFalse(form.is_valid())
-        self.assertIn("STK Push", str(form.errors))
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["reference"], "QWE1234567")
 
 
 class MpesaStkCallbackTests(TestCase):
@@ -473,3 +473,4 @@ class MpesaStkCallbackTests(TestCase):
             }}})
         push.refresh_from_db()
         self.assertEqual(push.status, MpesaStkPush.Status.PENDING)
+
