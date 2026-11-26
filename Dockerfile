@@ -32,10 +32,10 @@ RUN apt-get update \
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /code /code
 
-# The Python base image also carries its original setuptools metadata. Remove
-# older metadata left in the base layer so scanners report the installed pin.
-RUN find /usr/local/lib/python3.13/site-packages -maxdepth 1 -type d \
-    -name 'setuptools-*.dist-info' ! -name 'setuptools-84.2.1.dist-info' \
+# Setuptools is only used while building wheels. Keep it out of the runtime
+# image, including the older package metadata inherited from the base layer.
+RUN find /usr/local/lib/python3.13/site-packages -mindepth 1 -maxdepth 1 \
+    \( -name 'setuptools' -o -name 'setuptools-*.dist-info' -o -name 'setuptools-*.egg-info' \) \
     -exec rm -rf {} +
 
 # Do not run the internet-facing WSGI process as root.
