@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /code
 
 COPY requirements.txt /tmp/requirements.txt
-RUN python -m pip install --no-cache-dir --upgrade pip 'setuptools>=78.1.1' \
+RUN python -m pip install --no-cache-dir --upgrade pip 'setuptools==84.2.1' \
     && python -m pip wheel --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.txt \
     && python -m pip install --no-cache-dir --no-index --find-links=/wheels -r /tmp/requirements.txt
 
@@ -31,6 +31,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /code /code
+
+# The Python base image also carries its original setuptools metadata. Remove
+# older metadata left in the base layer so scanners report the installed pin.
+RUN find /usr/local/lib/python3.13/site-packages -maxdepth 1 -type d \
+    -name 'setuptools-*.dist-info' ! -name 'setuptools-84.2.1.dist-info' \
+    -exec rm -rf {} +
 
 # Do not run the internet-facing WSGI process as root.
 RUN groupadd --system app \
