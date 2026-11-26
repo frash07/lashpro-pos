@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /code
 
 COPY requirements.txt /tmp/requirements.txt
-RUN python -m pip install --no-cache-dir --upgrade pip \
+RUN python -m pip install --no-cache-dir --upgrade pip 'setuptools>=78.1.1' \
     && python -m pip wheel --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.txt \
     && python -m pip install --no-cache-dir --no-index --find-links=/wheels -r /tmp/requirements.txt
 
@@ -42,3 +42,4 @@ USER app
 EXPOSE 8080
 
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "2", "--access-logfile", "-", "--access-logformat", "%(m)s %(s)s %(D)s", "--error-logfile", "-"]
+
