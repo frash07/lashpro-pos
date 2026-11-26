@@ -32,11 +32,9 @@ RUN apt-get update \
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /code /code
 
-# Setuptools is only used while building wheels. Keep it out of the runtime
-# image, including the older package metadata inherited from the base layer.
-RUN find /usr/local/lib/python3.13/site-packages -mindepth 1 -maxdepth 1 \
-    \( -name 'setuptools' -o -name 'setuptools-*.dist-info' -o -name 'setuptools-*.egg-info' \) \
-    -exec rm -rf {} +
+# Setuptools is only used while building wheels. Keep all bundled code and
+# metadata out of the runtime image, including artifacts inherited from base.
+RUN find /usr/local/lib/python3.13 -depth -iname '*setuptools*' -exec rm -rf {} +
 
 # Do not run the internet-facing WSGI process as root.
 RUN groupadd --system app \
