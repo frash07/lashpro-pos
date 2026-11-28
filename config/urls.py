@@ -9,6 +9,12 @@ from core.views import service_worker, admin_suite, home, integration_settings, 
 from accounts.auth_views import SafePasswordResetView
 from accounts.forms import StudioLoginForm
 from storefront.whatsapp_views import whatsapp_webhook
+
+# Keep Django Admin authentication utilities inside the same branded auth experience.
+admin.site.login_template = "registration/login.html"
+admin.site.password_change_template = "registration/admin_password_change_form.html"
+admin.site.password_change_done_template = "registration/password_change_done.html"
+
 urlpatterns = [
     path("health", health_check, name="health"),
     path("healthz", health_check, name="health-check"),

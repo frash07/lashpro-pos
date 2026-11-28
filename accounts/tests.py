@@ -146,7 +146,7 @@ class AuthAdminHubIntegrationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "People &amp; access")
-        self.assertContains(response, "Open permission groups")
+        self.assertContains(response, "Available registers")
         self.assertContains(response, "Staff directory")
         self.assertContains(response, reverse("admin:auth_group_changelist"))
         self.assertContains(response, reverse("admin:auth_group_add"))

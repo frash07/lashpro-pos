@@ -198,3 +198,10 @@
 @media (max-width:360px) {
   .standalone-admin .report-metric-grid { grid-template-columns:minmax(0,1fr); }
 }
+
+/* Standalone admin history and destructive-confirmation utilities. */
+.standalone-admin .delete-object-list { padding:14px 18px; margin:12px 0; border:1px solid var(--ui-border); border-radius:var(--lp-radius-md); background:var(--ui-surface-muted); overflow-wrap:anywhere; }
+.standalone-admin .delete-object-list ul { margin:0; padding-left:20px; }
+.standalone-admin .delete-object-list li { padding:4px 0; color:var(--ui-text); }
+.standalone-admin .delete-object-list ul ul { margin:4px 0 0; }
+.standalone-admin .register-record dd { overflow-wrap:anywhere; }

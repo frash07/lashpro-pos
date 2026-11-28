@@ -1,0 +1,11 @@
+{% extends "admin_workspace/base.html" %}
+{% load i18n %}
+{% block workspace %}
+<section class="welcome product-welcome"><div class="welcome-copy"><div class="eyebrow">{{ workspace_module }} · Record management</div><h1>Confirm deletion<em>.</em></h1><p>Review the affected records before proceeding. This action cannot be undone.</p></div><a class="product-button secondary" href="{{ workspace_list_url }}"><i data-lucide="arrow-left"></i> Cancel</a></section>
+{% if perms_lacking %}<section class="register-panel" role="alert"><div class="register-heading"><div><h2>Deletion not permitted</h2><p>Your account does not have permission to delete all related objects.</p></div></div>{{ perms_lacking|unordered_list }}</section>
+{% elif protected %}<section class="register-panel" role="alert"><div class="register-heading"><div><h2>Records are protected</h2><p>These objects cannot be deleted because other records depend on them.</p></div></div>{{ protected|unordered_list }}</section>
+{% else %}
+<section class="register-panel"><div class="register-heading"><div><div class="eyebrow">Permanent action</div><h2>Delete {{ object_name }}?</h2><p>Confirm that you want to permanently delete the following record and its deletable related objects.</p></div></div><div class="delete-object-list">{{ deleted_objects|unordered_list }}</div>
+<form method="post" class="register-form">{% csrf_token %}<input type="hidden" name="post" value="yes"><div class="operation-actions"><a class="product-button secondary" href="{{ workspace_list_url }}">Cancel</a><button type="submit" class="product-button danger"><i data-lucide="trash-2"></i> Yes, delete permanently</button></div></form></section>
+{% endif %}
+{% endblock %}

@@ -135,8 +135,16 @@ def operational_workspace(request, title, current):
 
 def _field_value(cl, obj, name):
     empty = cl.model_admin.get_empty_value_display()
-    if name == "status_badge" and cl.opts.app_label == "commissions":
-        return {"value": obj.get_status_display(), "tone": {"ISSUED": "positive", "REJECTED": "negative", "REQUESTED": "pending"}.get(obj.status, "neutral")}
+    if name == "status_badge":
+        display = getattr(obj, "get_status_display", None)
+        status = getattr(obj, "status", "")
+        value = display() if callable(display) else str(status)
+        tone = {
+            "SUCCEEDED": "positive", "ISSUED": "positive", "CONFIRMED": "positive",
+            "REJECTED": "negative", "FAILED": "negative",
+            "REQUESTED": "pending", "PENDING": "pending", "UNKNOWN": "pending",
+        }.get(status, "neutral")
+        return {"value": value, "tone": tone}
     if name == "verification_badge" and cl.opts.app_label == "commissions":
         status = obj.verification_status
         return {"value": {"CONFIRMED": "Confirmed", "REJECTED": "Rejected"}.get(status, "Unverified"), "tone": {"CONFIRMED": "positive", "REJECTED": "negative"}.get(status, "pending")}
@@ -201,6 +209,7 @@ def _list_context(request, context, cl):
         "payout_summary": (("Total issued", "total_issued", True), ("Cash", "cash_total", True), ("M-Pesa", "mpesa_total", True)),
         "payout_request_summary": (("Awaiting approval", "awaiting_count", False), ("Awaiting amount", "awaiting_amount", True), ("Issued", "issued_count", False), ("Issued amount", "issued_amount", True), ("Rejected", "rejected_count", False), ("Rejected amount", "rejected_amount", True)),
         "customer_summary": (("With phone", "with_phone", False), ("With completed sales", "with_sales", False), ("With notes", "with_notes", False)),
+        "stk_push_summary": (("Prompt sent", "pending_count", False), ("Awaiting callback", "unknown_count", False), ("Paid", "succeeded_count", False), ("Failed", "failed_count", False)),
     }
     stats = []
     for key, fields in summary_fields.items():
@@ -250,26 +259,44 @@ class StandaloneAdminWorkspaceMiddleware:
         template = ""
         if name == "index" and "app_list" in context:
             template = "admin_workspace/index.html"
-        elif name == "app_list" and match.kwargs.get("app_label") in MODULES and match.kwargs.get("app_label") != "auth" and "app_list" in context:
+        elif name == "app_list" and match.kwargs.get("app_label") in MODULES and "app_list" in context:
             app_label = match.kwargs["app_label"]
             template = "admin_workspace/index.html"
         else:
-            for suffix in ("_changelist", "_add", "_change"):
-                if name.endswith(suffix) and name[:-len(suffix)] in REGISTERS:
-                    register = name[:-len(suffix)]
-                    app_label = register.split("_", 1)[0]
-                    if register == "catalog_product" and suffix == "_changelist":
-                        return response
-                    if suffix == "_changelist" and "cl" in context:
-                        cl = context["cl"]
-                        # Editable lists need the native formset; none of the selected registers use them.
-                        if cl.list_editable or cl.is_popup:
+            password_suffix = "_password_change"
+            if name.endswith(password_suffix) and name[:-len(password_suffix)] in REGISTERS and "form" in context:
+                register = name[:-len(password_suffix)]
+                app_label = register.split("_", 1)[0]
+                template = "admin_workspace/password_change.html"
+            elif name == "auth_user_password_change" and "form" in context and context.get("opts"):
+                opts = context["opts"]
+                register = f"{opts.app_label}_{opts.model_name}"
+                if register in REGISTERS:
+                    app_label = opts.app_label
+                    template = "admin_workspace/password_change.html"
+            if not template:
+                for suffix in ("_changelist", "_add", "_change", "_history", "_delete"):
+                    if name.endswith(suffix) and name[:-len(suffix)] in REGISTERS:
+                        register = name[:-len(suffix)]
+                        app_label = register.split("_", 1)[0]
+                        if register == "catalog_product" and suffix == "_changelist":
                             return response
-                        _list_context(request, context, cl)
-                        template = "admin_workspace/change_list.html"
-                    elif suffix != "_changelist" and "adminform" in context:
-                        template = "admin_workspace/change_form.html"
-                    break
+                        if suffix == "_changelist" and "deletable_objects" in context and "queryset" in context:
+                            template = "admin_workspace/delete_selected_confirmation.html"
+                        elif suffix == "_changelist" and "cl" in context:
+                            cl = context["cl"]
+                            # Editable lists need the native formset; none of the selected registers use them.
+                            if cl.list_editable or cl.is_popup:
+                                return response
+                            _list_context(request, context, cl)
+                            template = "admin_workspace/change_list.html"
+                        elif suffix in {"_add", "_change"} and "adminform" in context:
+                            template = "admin_workspace/change_form.html"
+                        elif suffix == "_history" and "action_list" in context:
+                            template = "admin_workspace/history.html"
+                        elif suffix == "_delete" and "deleted_objects" in context:
+                            template = "admin_workspace/delete_confirmation.html"
+                        break
         if not template:
             return response
 
@@ -283,6 +310,8 @@ class StandaloneAdminWorkspaceMiddleware:
             "workspace_app": app_label,
             "workspace_register": register,
             "workspace_is_index": name == "index",
+            "workspace_is_history": name.endswith("_history"),
+            "workspace_is_delete": name.endswith("_delete"),
             "workspace_nav": _navigation(context, app_label, register, index=name == "index", user=request.user),
             "workspace_app_url": reverse("admin:app_list", kwargs={"app_label": app_label}) if app_label else "",
             "workspace_list_url": reverse(f"admin:{register}_changelist") if register else "",

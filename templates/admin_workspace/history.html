@@ -1,0 +1,10 @@
+{% extends "admin_workspace/base.html" %}
+{% block workspace %}
+<section class="welcome product-welcome"><div class="welcome-copy"><div class="eyebrow">{{ workspace_module }} · Audit trail</div><h1>Record history<em>.</em></h1><p>{{ object }}</p></div><a class="product-button secondary" href="{{ workspace_list_url }}"><i data-lucide="arrow-left"></i> Back to register</a></section>
+<section class="operation-section" aria-labelledby="history-heading"><div class="register-heading"><div><h2 id="history-heading">Recorded changes</h2><p>Administrative changes recorded for this object.</p></div></div>
+<div class="register-grid">
+{% for action in action_list %}
+<article class="register-record"><div class="register-record-top"><span class="register-record-icon"><i data-lucide="history"></i></span><span class="operation-status{% if action.is_addition %} positive{% elif action.is_deletion %} negative{% else %} pending{% endif %}">{% if action.is_addition %}Created{% elif action.is_deletion %}Deleted{% elif action.is_change %}Changed{% else %}Activity{% endif %}</span></div><div class="register-record-body"><h3>{{ action.action_time|date:"d M Y · H:i" }}</h3><dl class="record-fields"><div><dt>Performed by</dt><dd>{{ action.user|default:"Unknown user" }}</dd></div><div class="operation-wide"><dt>Change details</dt><dd>{{ action.get_change_message }}</dd></div></dl></div></article>
+{% empty %}<div class="product-empty"><i data-lucide="history"></i><h3>No history recorded</h3><p>There are no recorded administrative changes for this record.</p></div>{% endfor %}
+</div></section>
+{% endblock %}
